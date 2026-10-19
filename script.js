@@ -1,5 +1,5 @@
 /* ==========================================
-   StudentOS Authentication — JavaScript
+   StudentOS Authentication â€” JavaScript
    Frontend demo only
    ========================================== */
 
@@ -159,7 +159,7 @@ passwordInput.addEventListener("input", function() {
     loginError.classList.add("hidden");
 });
 
-loginForm.addEventListener("submit", function(event) {
+loginForm.addEventListener("submit", async function(event) {
     event.preventDefault();
 
     const emailValid = validateEmail(
@@ -170,51 +170,62 @@ loginForm.addEventListener("submit", function(event) {
     const passwordError = document.getElementById("passwordError");
     const password = passwordInput.value;
 
-    let passwordValid = true;
-
     if (!password.trim()) {
-        setError(
-            passwordInput,
-            passwordError,
-            "Please enter your password."
-        );
-
-        passwordValid = false;
-    } else if (password.length < 6) {
-        setError(
-            passwordInput,
-            passwordError,
-            "Password must contain at least 6 characters."
-        );
-
-        passwordValid = false;
-    } else {
-        clearFieldError(passwordInput, passwordError);
-    }
-
-    if (!emailValid || !passwordValid) {
-        loginError.classList.add("hidden");
-
-        const invalidInput = loginForm.querySelector(
-            ".invalid-input, [aria-invalid='true']"
-        );
-
-        if (invalidInput) {
-            invalidInput.focus();
-        }
-
+        setError(passwordInput, passwordError, "Please enter your password.");
         return;
     }
 
-    /*
-      Demo only: no authentication server is connected.
-      Valid-looking input does not mean the user is authenticated.
-    */
+    clearFieldError(passwordInput, passwordError);
 
-    loginError.classList.remove("hidden");
+    if (!emailValid) {
+        loginError.classList.add("hidden");
+        return;
+    }
 
-    loginError.textContent =
-        "Demo only: connect an authentication API to verify your credentials.";
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const originalText = submitButton ? submitButton.textContent : "";
+
+    loginError.classList.add("hidden");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Signing in...";
+    }
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/auth/signin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: emailInput.value.trim(),
+                password: password
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || "Sign-in failed. Check your email and password."
+            );
+        }
+
+        if (!data.access_token) {
+            throw new Error("The server did not return a session token.");
+        }
+
+        sessionStorage.setItem("studentos_access_token", data.access_token);
+        showToast("Signed in successfully.");
+        showScreen("successScreen");
+    } catch (error) {
+        loginError.textContent = error.message ||
+            "Unable to contact the server. Check that the backend is running.";
+        loginError.classList.remove("hidden");
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
+    }
 });
 
 /* Incorrect-password demonstration screen */
@@ -231,15 +242,14 @@ document
 
 /* Validation-state demonstration screen */
 
-document
-    .getElementById("validationForm")
-    .addEventListener("submit", function(event) {
-        event.preventDefault();
+const validationForm = document.getElementById("validationForm");
 
-        showToast(
-            "This screen demonstrates inline validation errors."
-        );
+if (validationForm) {
+    validationForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        showToast("This screen demonstrates inline validation errors.");
     });
+}
 
 /* ==========================================
    FORGOT PASSWORD
@@ -289,10 +299,10 @@ function updatePasswordRules() {
     ruleNumber.classList.toggle("valid", hasNumber);
 
     ruleLength.textContent =
-        `${hasLength ? "✓" : "○"} At least 8 characters`;
+        `${hasLength ? "âœ“" : "â—‹"} At least 8 characters`;
 
     ruleNumber.textContent =
-        `${hasNumber ? "✓" : "○"} Contains a number`;
+        `${hasNumber ? "âœ“" : "â—‹"} Contains a number`;
 }
 
 newPassword.addEventListener("input", updatePasswordRules);
@@ -416,9 +426,44 @@ document
 
         if (!valid) return;
 
-        showToast(
-            "Form validated. Connect your registration API to create an account."
-        );
+        (async () => {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/auth/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        full_name: fullName.value.trim(),
+                        email: registerEmail.value.trim(),
+                        password: registerPassword.value
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const detail = data.detail;
+                    const message = Array.isArray(detail)
+                        ? detail.map(item => item.msg).join(" ")
+                        : typeof detail === "string"
+                            ? detail
+                            : "Unable to create your account. Please try again.";
+
+                    showToast(message);
+                    return;
+                }
+
+                if (!data.access_token) {
+                    showToast("Account created, but no session was returned.");
+                    return;
+                }
+
+                sessionStorage.setItem("studentos_access_token", data.access_token);
+                showToast("Account created successfully!");
+                window.location.href = "index.html";
+            } catch (error) {
+                showToast("Cannot connect to StudentOS. Check that the backend is running.");
+            }
+        })();
     });
 
 /* Clear stale invalid styling while editing */
