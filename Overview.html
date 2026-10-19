@@ -1,0 +1,554 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentOS | Overview</title>
+    <link rel="stylesheet" href="./Overview.css">
+
+    <style>
+        /* Top bar alignment */
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .semester {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .semester-icon {
+            display: block;
+            flex-shrink: 0;
+            width: 15px;
+            height: 15px;
+        }
+
+        .notification-icon {
+            display: block;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #a78bfa;
+            border: 1px solid #101731;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <img src="./Logo.png" alt="StudentOS Logo" class="logo">
+                <span class="brand-text">Student<span class="brand-os">OS</span></span>
+            </div>
+
+            <!-- SIDEBAR NAVIGATION -->
+            <nav class="navigation">
+
+                <a href="./Overview.html" class="nav-link active" aria-current="page">
+                    <svg class="nav-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="2" width="7" height="9" rx="1.5"/>
+                        <rect x="14" y="2.5" width="7" height="5" rx="1.5"/>
+                        <rect x="3" y="15" width="7" height="5" rx="1.5"/>
+                        <rect x="13.5" y="11" width="7" height="9" rx="1.5"/>
+                    </svg>
+                    <span>Overview</span>
+                </a>
+
+                <a href="./Projects.html" class="nav-link">
+                    <svg class="nav-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="7" width="18" height="14" rx="2"/>
+                        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <path d="M3 12h18"/>
+                    </svg>
+                    <span>Projects &amp; Experience</span>
+                </a>
+
+                <!-- COLLEGE TIMELINE ICON: TWO CIRCLES WITH CURVED CONNECTOR -->
+                <a href="./CollegeTimeline.html" class="nav-link">
+                    <svg class="nav-icon"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <circle cx="6" cy="19" r="2.5"/>
+                        <path d="M8.5 19H15a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.5"/>
+                        <circle cx="18" cy="7" r="2.5"/>
+                    </svg>
+                    <span>College Timeline</span>
+                </a>
+
+                <a href="./CareerResume.html" class="nav-link">
+                    <svg class="nav-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M6 2h9l5 5v15H6z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M9 13h8M9 17h8"/>
+                    </svg>
+                    <span>Career &amp; Resume</span>
+                </a>
+
+                <a href="#" class="nav-link" id="aiNavLink">
+            <svg class="nav-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M12 2C12 8 16 12 22 12C16 12 12 16 12 22C12 16 8 12 2 12C8 12 12 8 12 2Z"/>
+            </svg>
+                    <span>AI Assistant</span>
+                </a>
+
+            </nav>
+
+            <!-- SIDEBAR BOTTOM -->
+            <div class="sidebar-bottom">
+
+                <!-- UPDATED SETTINGS & PRIVACY GEAR ICON -->
+
+                <a href="#" class="nav-link" id="settingsLink">
+                    <svg class="nav-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>Settings &amp; Privacy</span>
+                </a>
+
+
+                <!-- PROFILE CONNECTED TO MYPROFILE.HTML -->
+                <a href="./MyProfile.html" class="profile">
+                    <div class="avatar">AM</div>
+                    <div>
+                        <strong>Aarav Mehta</strong>
+                        <small>View my profile</small>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+
+            </div>
+        </aside>
+
+        <!-- MAIN DASHBOARD -->
+        <main class="main-content">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+
+                <div class="search-box">
+                    <span>⌕</span>
+                    <input
+                        type="search"
+                        id="searchInput"
+                        placeholder="Search courses, projects, documents..."
+                    >
+                    <kbd>⌘K</kbd>
+                </div>
+
+                <div class="top-actions">
+
+                    <!-- SEMESTER CALENDAR -->
+                    <button class="semester" type="button">
+                        <svg class="semester-icon"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="16" rx="2"/>
+                            <path d="M16 3v4M8 3v4M3 10h18"/>
+                        </svg>
+                        <span>Semester 7 · 2026-27</span>
+                    </button>
+
+                    <!-- NOTIFICATION BELL -->
+                    <button
+                        class="icon-button"
+                        id="notificationBtn"
+                        type="button"
+                        aria-label="Notifications"
+                    >
+                        <svg class="notification-icon"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M10 21h4"/>
+                        </svg>
+                        <span class="notification-dot" aria-hidden="true"></span>
+                    </button>
+
+                    <div class="avatar">AM</div>
+                </div>
+
+            </header>
+
+            <!-- WELCOME SECTION -->
+            <section class="welcome">
+                <div>
+                    <h1>Good morning, Aarav</h1>
+                    <p>
+                        Week 9 of Semester 7 · 3 deadlines this week and
+                        1 internship offer waiting for your reply.
+                    </p>
+                </div>
+
+                <div class="welcome-actions">
+                    <button class="btn secondary" id="addTaskBtn" type="button">
+                        ＋ Add task
+                    </button>
+
+                    <button class="btn primary" id="aiBtn" type="button">
+                        ✧ Ask AI Assistant
+                    </button>
+                </div>
+            </section>
+
+            <!-- GOALS SECTION -->
+            <section class="goals-section">
+
+                <div class="section-top">
+                    <div class="goal-icon">◎</div>
+
+                    <div class="section-title">
+                        <h2>Your goals</h2>
+                        <p>2 of 7 milestones done this month · keep the streak going</p>
+                    </div>
+
+                    <div class="goal-actions">
+                        <button class="btn secondary" id="addGoalBtn" type="button">
+                            ＋ Add goal
+                        </button>
+
+                        <button class="text-btn" id="viewGoalsBtn" type="button">
+                            View all goals ›
+                        </button>
+                    </div>
+                </div>
+
+                <div class="next-up">
+                    <span>⚑</span>
+                    <p>
+                        <b>Next up:</b> Mock interview #4 with the Placement Cell ·
+                        Oct 18 · moves "AI internship" to 70%
+                    </p>
+                    <button class="btn primary" id="prepareBtn" type="button">
+                        Prepare
+                    </button>
+                </div>
+
+                <div class="goal-grid">
+
+                    <!-- GOAL 1 -->
+                    <article class="goal-card">
+                        <div class="goal-heading">
+                            <div>
+                                <h3>Land an ML engineering internship</h3>
+                                <p>Career · Due Jan 2027</p>
+                            </div>
+                            <span class="badge purple">In progress</span>
+                        </div>
+
+                        <div class="progress-heading">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
+                            </div>
+                            <strong>65%</strong>
+                        </div>
+
+                        <ul class="check-list">
+                            <li class="done">
+                                <span>✓</span>
+                                <label>Complete ML specialization (Coursera)</label>
+                                <small>Done · Aug 2026</small>
+                            </li>
+                            <li class="done">
+                                <span>✓</span>
+                                <label>Build 2 end-to-end ML projects</label>
+                                <small>Done · Sep 2026</small>
+                            </li>
+                            <li>
+                                <span>○</span>
+                                <label>Do 5 mock interviews</label>
+                                <small>3 of 5</small>
+                            </li>
+                            <li>
+                                <span>○</span>
+                                <label>Apply to 15 roles</label>
+                                <small>6 of 15</small>
+                            </li>
+                        </ul>
+                    </article>
+
+                    <!-- GOAL 2 -->
+                    <article class="goal-card">
+                        <div class="goal-heading">
+                            <div>
+                                <h3>Maintain CGPA above 8.5</h3>
+                                <p>Academic · Semester 7</p>
+                            </div>
+                            <span class="badge green">On track</span>
+                        </div>
+
+                        <div class="progress-heading">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 80%"></div>
+                            </div>
+                            <strong>80%</strong>
+                        </div>
+
+                        <ul class="check-list">
+                            <li class="done">
+                                <span>✓</span>
+                                <label>Score 40+ in all internals</label>
+                                <small>Done</small>
+                            </li>
+                            <li>
+                                <span>○</span>
+                                <label>Keep attendance above 85% in every course</label>
+                                <small>5 of 6 courses</small>
+                            </li>
+                            <li>
+                                <span>○</span>
+                                <label>Finish end-sem revision plan</label>
+                                <small>Starts Nov 10</small>
+                            </li>
+                        </ul>
+                    </article>
+
+                </div>
+
+                <!-- SMALLER GOALS -->
+                <div class="small-goals" id="smallGoals">
+
+                    <div class="small-goal">
+                        <span class="small-goal-icon">◉</span>
+
+                        <div class="small-goal-info">
+                            <b>Publish capstone paper</b>
+                            <small>Research · Due Apr 2027</small>
+                        </div>
+
+                        <div class="small-progress">
+                            <span style="width: 30%"></span>
+                        </div>
+
+                        <span class="percentage">30%</span>
+                        <span>›</span>
+                    </div>
+
+                    <div class="small-goal">
+                        <span class="small-goal-icon">◉</span>
+
+                        <div class="small-goal-info">
+                            <b>Contribute to 3 open-source projects</b>
+                            <small>Personal · Due Mar 2027</small>
+                        </div>
+
+                        <div class="small-progress">
+                            <span style="width: 45%"></span>
+                        </div>
+
+                        <span class="percentage">45%</span>
+                        <span>›</span>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- BOTTOM CARDS -->
+            <section class="bottom-grid">
+
+                <!-- ACTIVE PROJECTS -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>Active projects</h2>
+                        <a href="./Projects.html">Projects &amp; Experience ›</a>
+                    </div>
+
+                    <div class="project">
+                        <div class="project-icon">&lt; &gt;</div>
+
+                        <div class="project-details">
+                            <div class="project-title">
+                                <b>Campus Lost &amp; Found</b>
+                                <span class="badge purple">In progress</span>
+                            </div>
+
+                            <p>Flutter · Firebase · 3 collaborators · next: claim flow</p>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%"></div>
+                            </div>
+                        </div>
+
+                        <span class="percentage">60%</span>
+                    </div>
+
+                    <div class="project">
+                        <div class="project-icon">✧</div>
+
+                        <div class="project-details">
+                            <div class="project-title">
+                                <b>Student productivity tracker</b>
+                                <span class="badge green">On track</span>
+                            </div>
+
+                            <p>HTML · CSS · JavaScript · dashboard UI</p>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 40%"></div>
+                            </div>
+                        </div>
+
+                        <span class="percentage">40%</span>
+                    </div>
+                </div>
+
+                <!-- UPCOMING DEADLINES -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>Upcoming deadlines</h2>
+                        <a href="#">Calendar ›</a>
+                    </div>
+
+                    <div id="deadlinesList">
+
+                        <div class="deadline">
+                            <span class="deadline-icon">▤</span>
+                            <div>
+                                <b>ML Assignment 3</b>
+                                <p>CS701 · Machine Learning</p>
+                            </div>
+                            <time>Oct 15</time>
+                        </div>
+
+                        <div class="deadline">
+                            <span class="deadline-icon">▤</span>
+                            <div>
+                                <b>Mid-sem exam</b>
+                                <p>CS703 · Operating Systems</p>
+                            </div>
+                            <time>Oct 21</time>
+                        </div>
+
+                        <div class="deadline">
+                            <span class="deadline-icon">◇</span>
+                            <div>
+                                <b>Internship offer reply</b>
+                                <p>Career · Respond to recruiter</p>
+                            </div>
+                            <time>Oct 23</time>
+                        </div>
+
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- ADD TASK / GOAL DIALOG -->
+    <dialog id="itemDialog">
+        <form id="itemForm">
+
+            <div class="dialog-header">
+                <h2 id="dialogTitle">Add task</h2>
+                <button type="button" id="closeDialog" aria-label="Close dialog">
+                    ×
+                </button>
+            </div>
+
+            <p>Enter the name below.</p>
+
+            <input
+                id="itemInput"
+                type="text"
+                placeholder="Enter task name"
+                required
+            >
+
+            <div class="dialog-actions">
+                <button type="button" class="btn secondary" id="cancelDialog">
+                    Cancel
+                </button>
+
+                <button type="submit" class="btn primary">
+                    Save
+                </button>
+            </div>
+
+        </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="./Overview.js"></script>
+</body>
+</html>
