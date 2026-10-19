@@ -1,9 +1,32 @@
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.students import router as students_router
+from app.api.tasks import router as tasks_router
+from app.api.student_context import router as student_context_router
+from app.api.auth import router as auth_router
+from app.api.otp import router as otp_router
 
 app = FastAPI(
     title="StudentOS API",
     description="Backend API for the StudentOS AI Mentor",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -22,17 +45,11 @@ def health_check():
         "service": "StudentOS API",
     }
 
-from app.api.students import router as students_router
 
 app.include_router(students_router)
-
-from app.api.tasks import router as tasks_router
-
 app.include_router(tasks_router)
-
-from app.api.student_context import router as student_context_router
 app.include_router(student_context_router)
-
-from app.api.auth import router as auth_router
-
 app.include_router(auth_router)
+app.include_router(otp_router)
+
+# Register the Plans router here once backend/app/api/plans.py exists.

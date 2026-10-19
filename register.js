@@ -1,4 +1,4 @@
-const registerForm = document.getElementById("registerForm");
+﻿const registerForm = document.getElementById("registerForm");
 
 const fullName = document.getElementById("fullName");
 const email = document.getElementById("registerEmail");
@@ -7,13 +7,12 @@ const confirmPassword = document.getElementById("confirmPassword");
 const agreeTerms = document.getElementById("agreeTerms");
 
 const errorBox = document.getElementById("registerError");
+const API_BASE = "http://127.0.0.1:8000";
 
 function showError(input, messageId, message) {
     const error = document.getElementById(messageId);
 
-    if (error) {
-        error.textContent = message;
-    }
+    if (error) error.textContent = message;
 
     if (input) {
         input.classList.toggle("invalid-input", Boolean(message));
@@ -31,19 +30,21 @@ function clearErrors() {
     errorBox.classList.add("hidden");
 }
 
+function showFormMessage(message) {
+    errorBox.textContent = message;
+    errorBox.classList.remove("hidden");
+}
+
 function isValidEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-/* Show or hide password */
 document.querySelectorAll("[data-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
         const input = document.getElementById(button.dataset.toggle);
-
         if (!input) return;
 
         const showPassword = input.type === "password";
-
         input.type = showPassword ? "text" : "password";
         button.setAttribute("aria-pressed", String(showPassword));
         button.setAttribute(
@@ -53,7 +54,6 @@ document.querySelectorAll("[data-toggle]").forEach((button) => {
     });
 });
 
-/* Clear field error while typing */
 [
     [fullName, "fullNameError"],
     [email, "registerEmailError"],
@@ -66,8 +66,7 @@ document.querySelectorAll("[data-toggle]").forEach((button) => {
     });
 });
 
-/* Form validation */
-registerForm.addEventListener("submit", (event) => {
+registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearErrors();
 
@@ -104,24 +103,67 @@ registerForm.addEventListener("submit", (event) => {
     if (!agreeTerms.checked) {
         document.getElementById("termsError").textContent =
             "Please agree to the Terms of Service and Privacy Policy.";
-
         valid = false;
     }
 
     if (!valid) return;
 
-    errorBox.textContent =
-        "Your details are valid. Connect an authentication backend to create your account.";
+    const submitButton = registerForm.querySelector(
+        'button[type="submit"], input[type="submit"]'
+    );
 
-    errorBox.classList.remove("hidden");
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                full_name: fullName.value.trim(),
+                email: email.value.trim(),
+                password: password.value
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const detail = data.detail;
+            const message = Array.isArray(detail)
+                ? detail.map((item) => item.msg).join(" ")
+                : typeof detail === "string"
+                    ? detail
+                    : "Unable to create your account. Please try again.";
+
+            showFormMessage(message);
+            return;
+        }
+
+        if (!data.access_token) {
+            showFormMessage(
+                "Your account was created, but no session was returned. Please contact support."
+            );
+            return;
+        }
+
+        sessionStorage.setItem("studentos_access_token", data.access_token);
+
+        showFormMessage("Account created successfully. Opening StudentOS...");
+
+        window.location.href = "index.html";
+    } catch (error) {
+        showFormMessage(
+            "Cannot connect to StudentOS. Please check that the backend is running."
+        );
+    } finally {
+        if (submitButton) submitButton.disabled = false;
+    }
 });
 
-/* Social sign-up demo */
 document.querySelectorAll("[data-provider]").forEach((button) => {
     button.addEventListener("click", () => {
-        errorBox.textContent =
-            `${button.dataset.provider} sign-up requires authentication setup.`;
-
-        errorBox.classList.remove("hidden");
+        showFormMessage(
+            `${button.dataset.provider} sign-up is not configured yet.`
+        );
     });
 });
