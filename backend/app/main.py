@@ -32,3 +32,7 @@ app.include_router(tasks_router)
 
 from app.api.student_context import router as student_context_router
 app.include_router(student_context_router)
+
+from app.api.auth import router as auth_router
+
+app.include_router(auth_router)
