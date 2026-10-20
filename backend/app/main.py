@@ -1,4 +1,4 @@
-
+from app.api.plans import router as plans_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -51,5 +51,5 @@ app.include_router(tasks_router)
 app.include_router(student_context_router)
 app.include_router(auth_router)
 app.include_router(otp_router)
+app.include_router(plans_router)
 
-# Register the Plans router here once backend/app/api/plans.py exists.
