@@ -383,7 +383,7 @@ document
         const registerEmail = document.getElementById("registerEmail");
         const registerPassword = document.getElementById("registerPassword");
 
-        const nameError = document.getElementById("nameError");
+        const nameError = document.getElementById("fullNameError");
 
         const registerEmailError =
             document.getElementById("registerEmailError");
@@ -458,8 +458,17 @@ document
                 }
 
                 sessionStorage.setItem("studentos_access_token", data.access_token);
-                showToast("Account created successfully!");
-                window.location.href = "index.html";
+
+                document.getElementById("successTitle").textContent =
+                    "Account created successfully!";
+
+                document.getElementById("successMessage").textContent =
+                    "Your StudentOS account has been created.";
+
+                document.getElementById("successDetail").textContent =
+                    "Your account is ready. You can continue to StudentOS.";
+
+                showScreen("successScreen");
             } catch (error) {
                 showToast("Cannot connect to StudentOS. Check that the backend is running.");
             }
