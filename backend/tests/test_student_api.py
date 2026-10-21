@@ -52,7 +52,8 @@ def test_get_missing_student_returns_404():
 
     with patch("app.api.students.engine.connect") as mock_connect:
         mock_connect.return_value.__enter__.return_value = mock_connection
-        response = client.get("/api/students/999999")
+        # Student 1 is authenticated, but the mocked database has no matching row.
+        response = client.get("/api/students/1")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Student not found"
@@ -79,9 +80,13 @@ def test_get_student_context_success():
 
     mock_connection = MagicMock()
     mock_connection.execute.return_value.mappings.return_value.first.return_value = profile
-    mock_connection.execute.return_value.mappings.return_value.all.return_value = [assessment]
+    mock_connection.execute.return_value.mappings.return_value.all.return_value = [
+        assessment
+    ]
 
-    with patch("app.context.student_context_builder.engine.connect") as mock_connect:
+    with patch(
+        "app.context.student_context_builder.engine.connect"
+    ) as mock_connect:
         mock_connect.return_value.__enter__.return_value = mock_connection
         response = client.get("/api/students/1/context")
 
@@ -136,7 +141,9 @@ def test_create_student_task_success():
     mock_connection = MagicMock()
     mock_connection.execute.return_value.first.return_value = (1,)
     mock_connection.execute.return_value.lastrowid = 10
-    mock_connection.execute.return_value.mappings.return_value.one.return_value = task_row
+    mock_connection.execute.return_value.mappings.return_value.one.return_value = (
+        task_row
+    )
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection
@@ -170,7 +177,9 @@ def test_update_student_task_success():
 
     mock_connection = MagicMock()
     mock_connection.execute.return_value.rowcount = 1
-    mock_connection.execute.return_value.mappings.return_value.one.return_value = updated_row
+    mock_connection.execute.return_value.mappings.return_value.one.return_value = (
+        updated_row
+    )
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection

@@ -8,14 +8,22 @@ from fastapi.testclient import TestClient
 from app.api.auth import require_student
 from app.main import app
 
+
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
 def clear_auth_override():
+    previous_override = app.dependency_overrides.get(require_student)
+
     app.dependency_overrides.pop(require_student, None)
+
     yield
+
     app.dependency_overrides.pop(require_student, None)
+
+    if previous_override is not None:
+        app.dependency_overrides[require_student] = previous_override
 
 
 def authenticated_student():
@@ -28,6 +36,7 @@ def authenticated_student():
 
 def sample_plan(status="DRAFT"):
     now = datetime(2026, 10, 20, 10, 0, 0)
+
     return {
         "plan_id": 5,
         "student_id": 7,
@@ -57,13 +66,17 @@ def test_create_plan_success():
     app.dependency_overrides[require_student] = authenticated_student
 
     connection = MagicMock()
+
     insert_result = MagicMock()
     insert_result.lastrowid = 5
 
     fetched_result = MagicMock()
     fetched_result.mappings.return_value.one.return_value = sample_plan()
 
-    connection.execute.side_effect = [insert_result, fetched_result]
+    connection.execute.side_effect = [
+        insert_result,
+        fetched_result,
+    ]
 
     with patch("app.api.plans.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = connection
@@ -105,10 +118,12 @@ def test_approve_plan_requires_review_status():
     app.dependency_overrides[require_student] = authenticated_student
 
     connection = MagicMock()
+
     current_result = MagicMock()
     current_result.mappings.return_value.first.return_value = {
         "status": "DRAFT"
     }
+
     connection.execute.return_value = current_result
 
     with patch("app.api.plans.engine.begin") as mock_begin:
@@ -124,10 +139,12 @@ def test_activate_plan_requires_approved_status():
     app.dependency_overrides[require_student] = authenticated_student
 
     connection = MagicMock()
+
     current_result = MagicMock()
     current_result.mappings.return_value.first.return_value = {
         "status": "REVIEW"
     }
+
     connection.execute.return_value = current_result
 
     with patch("app.api.plans.engine.begin") as mock_begin:
