@@ -1,9 +1,21 @@
-﻿from unittest.mock import MagicMock, patch
+﻿
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.api.auth import require_student
 
+
+def override_require_student():
+    return {
+        "student_id": 1,
+        "full_name": "Test Student",
+        "email": "test@example.com",
+    }
+
+
+app.dependency_overrides[require_student] = override_require_student
 client = TestClient(app)
 
 
@@ -24,7 +36,6 @@ def test_get_student_profile_success():
 
     with patch("app.api.students.engine.connect") as mock_connect:
         mock_connect.return_value.__enter__.return_value = mock_connection
-
         response = client.get("/api/students/1")
 
     assert response.status_code == 200
@@ -41,7 +52,6 @@ def test_get_missing_student_returns_404():
 
     with patch("app.api.students.engine.connect") as mock_connect:
         mock_connect.return_value.__enter__.return_value = mock_connection
-
         response = client.get("/api/students/999999")
 
     assert response.status_code == 404
@@ -73,7 +83,6 @@ def test_get_student_context_success():
 
     with patch("app.context.student_context_builder.engine.connect") as mock_connect:
         mock_connect.return_value.__enter__.return_value = mock_connection
-
         response = client.get("/api/students/1/context")
 
     assert response.status_code == 200
@@ -87,7 +96,6 @@ def test_get_student_context_success():
 def test_get_student_tasks_returns_list():
     with patch("app.api.tasks.engine.connect") as mock_connect:
         mock_connection = mock_connect.return_value.__enter__.return_value
-
         mock_connection.execute.return_value.first.return_value = (1,)
         mock_connection.execute.return_value.mappings.return_value.all.return_value = [
             {
@@ -111,6 +119,7 @@ def test_get_student_tasks_returns_list():
     assert data[0]["title"] == "Complete DBMS assignment"
     assert data[0]["status"] == "pending"
 
+
 def test_create_student_task_success():
     task_row = {
         "task_id": 10,
@@ -131,7 +140,6 @@ def test_create_student_task_success():
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection
-
         response = client.post(
             "/api/students/1/tasks",
             json={
@@ -166,7 +174,6 @@ def test_update_student_task_success():
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection
-
         response = client.put(
             "/api/students/1/tasks/10",
             json={"status": "completed"},
@@ -182,7 +189,6 @@ def test_delete_student_task_success():
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection
-
         response = client.delete("/api/students/1/tasks/10")
 
     assert response.status_code == 200
@@ -198,8 +204,14 @@ def test_delete_missing_student_task_returns_404():
 
     with patch("app.api.tasks.engine.begin") as mock_begin:
         mock_begin.return_value.__enter__.return_value = mock_connection
-
         response = client.delete("/api/students/1/tasks/999999")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Task not found"
+
+
+def test_task_routes_reject_different_student():
+    response = client.get("/api/students/2/tasks")
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You can only access your own tasks"

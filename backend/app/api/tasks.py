@@ -1,9 +1,10 @@
-﻿from datetime import datetime
+﻿
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 
+from app.api.auth import require_student
 from app.db.database import engine
 from app.schemas.task import StudentTaskCreate, StudentTaskUpdate
 
@@ -13,19 +14,33 @@ router = APIRouter(
 )
 
 
+def verify_student_owns_tasks(student_id: int, student: dict) -> None:
+    if student_id != student["student_id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only access your own tasks",
+        )
+
+
 def task_to_dict(row: Any) -> dict:
     return dict(row)
 
 
 @router.post("")
-def create_task(student_id: int, task: StudentTaskCreate):
+def create_task(
+    student_id: int,
+    task: StudentTaskCreate,
+    student: dict = Depends(require_student),
+):
+    verify_student_owns_tasks(student_id, student)
+
     with engine.begin() as connection:
-        student = connection.execute(
+        existing_student = connection.execute(
             text("SELECT student_id FROM students WHERE student_id = :id"),
             {"id": student_id},
         ).first()
 
-        if student is None:
+        if existing_student is None:
             raise HTTPException(status_code=404, detail="Student not found")
 
         result = connection.execute(
@@ -48,22 +63,30 @@ def create_task(student_id: int, task: StudentTaskCreate):
         task_id = result.lastrowid
 
         row = connection.execute(
-            text("SELECT * FROM student_tasks WHERE task_id = :id"),
-            {"id": task_id},
+            text("""
+                SELECT * FROM student_tasks
+                WHERE task_id = :id AND student_id = :student_id
+            """),
+            {"id": task_id, "student_id": student_id},
         ).mappings().one()
 
     return task_to_dict(row)
 
 
 @router.get("")
-def list_tasks(student_id: int):
+def list_tasks(
+    student_id: int,
+    student: dict = Depends(require_student),
+):
+    verify_student_owns_tasks(student_id, student)
+
     with engine.connect() as connection:
-        student = connection.execute(
+        existing_student = connection.execute(
             text("SELECT student_id FROM students WHERE student_id = :id"),
             {"id": student_id},
         ).first()
 
-        if student is None:
+        if existing_student is None:
             raise HTTPException(status_code=404, detail="Student not found")
 
         rows = connection.execute(
@@ -83,7 +106,10 @@ def update_task(
     student_id: int,
     task_id: int,
     task: StudentTaskUpdate,
+    student: dict = Depends(require_student),
 ):
+    verify_student_owns_tasks(student_id, student)
+
     updates = task.model_dump(exclude_unset=True)
 
     if not updates:
@@ -96,6 +122,7 @@ def update_task(
         )
 
     allowed_fields = {"title", "description", "due_date", "priority", "status"}
+
     if not set(updates).issubset(allowed_fields):
         raise HTTPException(status_code=400, detail="Invalid update fields")
 
@@ -104,7 +131,7 @@ def update_task(
     params.update({"student_id": student_id, "task_id": task_id})
 
     with engine.begin() as connection:
-        row = connection.execute(
+        result = connection.execute(
             text(f"""
                 UPDATE student_tasks
                 SET {assignments}
@@ -113,8 +140,8 @@ def update_task(
             params,
         )
 
-        if row.rowcount == 0:
-            exists = connection.execute(
+        if result.rowcount == 0:
+            existing_task = connection.execute(
                 text("""
                     SELECT task_id FROM student_tasks
                     WHERE task_id = :task_id AND student_id = :student_id
@@ -122,7 +149,7 @@ def update_task(
                 {"task_id": task_id, "student_id": student_id},
             ).first()
 
-            if exists is None:
+            if existing_task is None:
                 raise HTTPException(status_code=404, detail="Task not found")
 
         updated = connection.execute(
@@ -137,7 +164,13 @@ def update_task(
 
 
 @router.delete("/{task_id}")
-def delete_task(student_id: int, task_id: int):
+def delete_task(
+    student_id: int,
+    task_id: int,
+    student: dict = Depends(require_student),
+):
+    verify_student_owns_tasks(student_id, student)
+
     with engine.begin() as connection:
         result = connection.execute(
             text("""
@@ -150,4 +183,7 @@ def delete_task(student_id: int, task_id: int):
         if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="Task not found")
 
-    return {"message": "Task deleted successfully", "task_id": task_id}
+    return {
+        "message": "Task deleted successfully",
+        "task_id": task_id,
+    }
