@@ -1,4 +1,4 @@
-from app.api.plans import router as plans_router
+﻿from app.api.plans import router as plans_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,6 +23,8 @@ app.add_middleware(
         "http://127.0.0.1:5000",
         "http://localhost:5500",
         "http://127.0.0.1:5500",
+        "http://localhost:5501",
+        "http://127.0.0.1:5501",
     ],
     allow_credentials=False,
     allow_methods=["*"],
@@ -52,4 +54,9 @@ app.include_router(student_context_router)
 app.include_router(auth_router)
 app.include_router(otp_router)
 app.include_router(plans_router)
+
+
+
+
+
 
