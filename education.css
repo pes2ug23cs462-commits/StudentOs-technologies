@@ -1,0 +1,301 @@
+:root {
+    color-scheme: dark;
+}
+
+.education-content {
+    min-width: 0;
+    padding: 17px 22px 20px;
+}
+
+.education-content .content-heading {
+    margin-bottom: 17px;
+}
+
+.education-content .content-heading p {
+    max-width: 700px;
+}
+
+.programme-section h3,
+.section-heading h3 {
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.programme-section h3 {
+    margin-bottom: 9px;
+}
+
+.programme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+        "institution degree"
+        "branch roll"
+        "batch semester";
+    gap: 9px 10px;
+}
+
+.institution-field {
+    grid-area: institution;
+}
+
+.degree-field {
+    grid-area: degree;
+}
+
+.branch-field {
+    grid-area: branch;
+}
+
+.roll-field {
+    grid-area: roll;
+}
+
+.batch-field {
+    grid-area: batch;
+}
+
+.semester-field {
+    grid-area: semester;
+}
+
+.education-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+    color: var(--text-primary);
+    font-size: 10px;
+}
+
+.education-field > span:first-child {
+    font-size: 10px;
+}
+
+.education-field select,
+.locked-field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    border: 1px solid #2a3858;
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.education-field select {
+    max-width: 100%;
+    padding: 0 29px 0 10px;
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.education-field select:focus {
+    border-color: var(--purple);
+    outline: 2px solid rgb(167 123 255 / 18%);
+}
+
+.locked-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.locked-field input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0 34px 0 10px;
+    border: 0;
+    border-radius: inherit;
+    outline: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 10px;
+    cursor: not-allowed;
+}
+
+.locked-field svg {
+    position: absolute;
+    right: 9px;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--text-secondary);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    pointer-events: none;
+}
+
+.academic-section {
+    margin-top: 17px;
+}
+
+.section-heading {
+    margin-bottom: 9px;
+}
+
+.section-heading p {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 9px;
+}
+
+.record-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.record-card {
+    display: flex;
+    min-width: 0;
+    min-height: 49px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 7px 9px;
+    border: 1px solid #0d1429;
+    border-radius: 7px;
+    background: #090f20;
+}
+
+.record-card > span {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.record-card strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.semester-history {
+    margin-top: 8px;
+}
+
+.semester-row {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.semester-row summary {
+    display: flex;
+    min-height: 29px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-primary);
+    font-size: 10px;
+    list-style: none;
+    cursor: pointer;
+}
+
+.semester-row summary::-webkit-details-marker {
+    display: none;
+}
+
+.semester-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    color: var(--text-secondary);
+    font-size: 9px;
+}
+
+.semester-result strong {
+    color: var(--text-primary);
+    font-size: 9px;
+    font-weight: 500;
+}
+
+.semester-result svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    transition: transform 150ms ease;
+}
+
+.semester-row[open] .semester-result svg {
+    transform: rotate(90deg);
+}
+
+.semester-detail {
+    margin: 0;
+    padding: 0 0 9px;
+    color: var(--text-muted);
+    font-size: 9px;
+}
+
+@media (max-width: 1050px) {
+    .education-content {
+        padding: 17px;
+    }
+}
+
+@media (max-width: 760px) {
+    .education-content {
+        min-height: auto;
+        padding: 16px 13px;
+    }
+}
+
+@media (max-width: 520px) {
+    .programme-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "institution"
+            "degree"
+            "branch"
+            "roll"
+            "batch"
+            "semester";
+    }
+
+    .record-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .semester-row summary {
+        gap: 6px;
+    }
+
+    .semester-result {
+        gap: 7px;
+    }
+}
+
+/* Fix text appearing crossed out */
+.education-content,
+.education-content * {
+    text-decoration-line: none !important;
+    text-decoration-style: solid !important;
+}
+
+/* Keep form fields readable */
+.education-content select,
+.education-content input,
+.education-content label,
+.education-content p,
+.education-content h2,
+.education-content h3,
+.education-content span,
+.education-content strong,
+.education-content summary {
+    text-decoration: none !important;
+    opacity: 1;
+}

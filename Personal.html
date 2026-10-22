@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f1f">
+    <title>Personal Information | StudentOS</title>
+    <link rel="stylesheet" href="./MyProfile.css">
+    <link rel="stylesheet" href="./Personal.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="./Overview.html" class="brand">
+            <img src="./Logo.png" alt="StudentOS Logo">
+            <span class="brand-text">Student<span class="brand-os">OS</span></span>
+        </a>
+
+        <nav class="navigation" aria-label="Main navigation">
+            <a href="./Overview.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="2" width="7" height="9" rx="1.5"/><rect x="14" y="2.5" width="7" height="5" rx="1.5"/><rect x="3" y="15" width="7" height="5" rx="1.5"/><rect x="13.5" y="11" width="7" height="9" rx="1.5"/>
+                </svg><span>Overview</span>
+            </a>
+            <a href="./Projects.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>
+                </svg><span>Projects &amp; Experience</span>
+            </a>
+            <a href="./CollegeTimeline.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="6" cy="19" r="2.5"/><path d="M8.5 19H15a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.5"/><circle cx="18" cy="7" r="2.5"/>
+                </svg><span>College Timeline</span>
+            </a>
+            <a href="./CareerResume.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 3h8l5 5v13H5V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M8 13h8M8 17h8"/>
+                </svg><span>Career &amp; Resume</span>
+            </a>
+            <a href="./AIAssistant.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2C12 8 16 12 22 12 16 12 12 16 12 22 12 16 8 12 2 12 8 12 12 8 12 2Z"/>
+                </svg><span>AI Assistant</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="./SettingsPrivacy.html" class="nav-link" id="settingsLink">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+                </svg><span>Settings &amp; Privacy</span>
+            </a>
+            <a href="./MyProfile.html" class="profile active">
+                <span class="avatar">AM</span>
+                <span class="profile-info"><strong>Aarav Mehta</strong><small>View my profile</small></span>
+                <span class="profile-arrow" aria-hidden="true">›</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <label class="search-box">
+                <span aria-hidden="true">⌕</span>
+                <input id="globalSearch" type="search" placeholder="Search courses, projects, documents..." aria-label="Search courses, projects, documents">
+                <kbd>⌘K</kbd>
+            </label>
+            <div class="top-actions">
+                <div class="semester" aria-label="Current semester">
+                    <svg class="semester-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M7.5 3v4M16.5 3v4M3.5 10h17"/>
+                    </svg><span>Semester 7 · 2026-27</span>
+                </div>
+                <button class="icon-button" id="notificationBtn" type="button" aria-label="Notifications">
+                    <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>
+                    </svg><span class="notification-dot"></span>
+                </button>
+                <div class="avatar top-avatar" aria-label="Aarav Mehta">AM</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <section class="page-heading">
+                <div>
+                    <h1>My Profile</h1>
+                    <p>Your student record in one place. Changes save straight to your StudentOS account.</p>
+                </div>
+                <button class="btn secondary" id="publicProfileBtn" type="button">
+                    <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 4h6v6M20 4l-9 9M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    </svg><span>View public profile</span>
+                </button>
+            </section>
+
+            <section class="profile-layout">
+                <aside class="profile-sidebar">
+                    <div class="student-summary">
+                        <div class="avatar">AM</div>
+                        <div><strong>Aarav Mehta</strong><small>NIT23CS047</small></div>
+                    </div>
+                    <nav class="profile-navigation" aria-label="Profile sections">
+                        <a class="profile-nav-link active" href="./Personal.html" aria-current="page">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-2a6.5 6.5 0 0 1 13 0v2"/></svg><span>Personal Information</span>
+                        </a>
+                        <a class="profile-nav-link" href="./education.html" data-tab="education"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5L2 9Z"/><path d="M6 11v5c3.5 3 8.5 3 12 0v-5M22 9v6"/></svg><span>Education &amp; Academics</span></a>
+                        <button class="profile-nav-link" type="button" data-tab="achievements"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="m8.5 12-1 9 4.5-2.5 4.5 2.5-1-9"/></svg><span>Achievements &amp; Certificates</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="goals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg><span>Goals &amp; Skills</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="projects"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M8 12h8"/></svg><span>Projects &amp; Experience</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="career"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 3 8-8M15 6h6v6"/></svg><span>Career Profile</span></button>
+                        <a class="profile-nav-link" href="./MyProfile.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 3h9v11H3z"/><path d="M3 6V4h7l2 2"/></svg><span>Documents &amp; Links</span></a>
+                    </nav>
+                </aside>
+
+                <section class="personal-content" aria-labelledby="personalTitle">
+                    <div class="content-heading">
+                        <h2 id="personalTitle">Personal Information</h2>
+                        <p>Used for your dashboard greeting, mentor records and anything you choose to share.</p>
+                    </div>
+
+                    <form id="personalInformationForm">
+                        <section class="photo-section" aria-labelledby="photoTitle">
+                            <h3 id="photoTitle" class="visually-hidden">Profile photo</h3>
+                            <div class="photo-avatar" id="photoAvatar">
+                                <img id="profilePhotoPreview" alt="Profile photo preview" hidden>
+                                <span id="photoInitials">AM</span>
+                            </div>
+                            <div class="photo-details">
+                                <strong>Profile photo</strong>
+                                <small>JPG or PNG, at least 400 × 400 px</small>
+                            </div>
+                            <input id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+                            <button class="btn secondary photo-upload" id="uploadPhotoButton" type="button">Upload photo</button>
+                            <button class="text-button" id="removePhotoButton" type="button">Remove</button>
+                        </section>
+
+                        <section class="details-section" aria-labelledby="detailsTitle">
+                            <h3 id="detailsTitle">Basic details</h3>
+                            <div class="personal-fields">
+                                <label class="personal-field">
+                                    <span>Full name</span>
+                                    <input id="fullName" name="fullName" type="text" autocomplete="name" value="Aarav Mehta" required maxlength="100">
+                                </label>
+                                <label class="personal-field">
+                                    <span>Preferred name</span>
+                                    <input id="preferredName" name="preferredName" type="text" autocomplete="nickname" value="Aarav" maxlength="60">
+                                </label>
+                                <label class="personal-field">
+                                    <span>College email</span>
+                                    <span class="personal-input-wrap">
+                                        <input id="collegeEmail" name="collegeEmail" type="email" value="aarav.mehta@nits.edu.in" readonly>
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                                    </span>
+                                    <small>Managed by your college · verified</small>
+                                </label>
+                                <label class="personal-field">
+                                    <span>Personal email</span>
+                                    <input id="personalEmail" name="personalEmail" type="email" autocomplete="email" value="aarav.mehta@gmail.com" required>
+                                </label>
+                                <label class="personal-field">
+                                    <span>Phone</span>
+                                    <input id="phone" name="phone" type="tel" autocomplete="tel" value="+91 90000 12345">
+                                </label>
+                                <label class="personal-field">
+                                    <span>Date of birth</span>
+                                    <input id="dateOfBirth" name="dateOfBirth" type="date" value="2005-03-14">
+                                </label>
+                                <label class="personal-field">
+                                    <span>Hometown</span>
+                                    <input id="hometown" name="hometown" type="text" autocomplete="address-level2" value="Pune, Maharashtra" maxlength="100">
+                                </label>
+                                <label class="personal-field">
+                                    <span>Languages</span>
+                                    <input id="languages" name="languages" type="text" value="English, Hindi, Kannada" maxlength="120">
+                                </label>
+                            </div>
+                        </section>
+
+                        <section class="about-section">
+                            <label class="personal-field" for="aboutYou">
+                                <span>About you</span>
+                                <textarea id="aboutYou" name="aboutYou" rows="4" maxlength="500" placeholder="Tell mentors and recruiters a little about yourself."></textarea>
+                                <small><span id="aboutCount">0</span>/500 characters</small>
+                            </label>
+                        </section>
+
+                        <div class="form-footer">
+                            <p class="save-status" id="saveStatus" role="status" aria-live="polite"></p>
+                            <button class="btn primary" type="submit">Save changes</button>
+                        </div>
+                    </form>
+                </section>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="./Personal.js"></script>
+</body>
+</html>

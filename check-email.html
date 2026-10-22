@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudentOS — Check your email</title>
+
+    <link rel="stylesheet" href="check-email.css">
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <main class="check-email-page">
+
+        <!-- =========================
+             TOP RIGHT SUPPORT
+        ========================== -->
+
+        <div class="support">
+            Need help?
+            <a href="#">Contact support</a>
+        </div>
+
+
+        <!-- =========================
+             MAIN CONTENT
+        ========================== -->
+
+        <section class="check-email-card">
+
+            <!-- BACK TO SIGN IN -->
+
+            <!-- IMPORTANT:
+                 inext.html = your first/sign-in page
+            -->
+
+            <a href="inext.html" class="back-link">
+                <span class="arrow">←</span>
+                <span>Back to sign in</span>
+            </a>
+
+
+            <!-- =========================
+                 EMAIL ICON
+            ========================== -->
+
+            <div class="email-icon">
+
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+                    <rect
+                        x="3.5"
+                        y="5"
+                        width="17"
+                        height="14"
+                        rx="2"
+                        stroke="currentColor"
+                        stroke-width="1.5" />
+
+                    <path
+                        d="M4.5 7L12 12.5L19.5 7"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+
+                </svg>
+
+            </div>
+
+
+            <!-- =========================
+                 HEADING
+            ========================== -->
+
+            <h1>
+                Check your email
+            </h1>
+
+
+            <!-- =========================
+                 DESCRIPTION
+            ========================== -->
+
+            <p class="description">
+                We sent a password reset link to
+                <strong>alex@school.edu.</strong>
+                <br> The link expires in 30 minutes.
+            </p>
+
+
+            <!-- =========================
+                 INFORMATION BOX
+            ========================== -->
+
+            <div class="info-box">
+
+                <div class="info-icon">
+                    i
+                </div>
+
+                <div class="info-content">
+
+                    <div class="info-title">
+                        Didn't get the email?
+                    </div>
+
+                    <div class="info-text">
+                        Check your spam or promotions folder. You can
+                        <br> request a new link in 0:45.
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 OPEN EMAIL BUTTON
+            ========================== -->
+
+            <button class="primary-button" type="button">
+
+                Open email app
+
+            </button>
+
+
+            <!-- =========================
+                 RESEND BUTTON
+            ========================== -->
+
+            <button class="secondary-button" type="button" disabled>
+
+                Resend link in 0:45
+
+            </button>
+
+
+            <!-- =========================
+                 SIGN IN LINK
+            ========================== -->
+
+            <p class="signin-text">
+
+                Remembered it?
+
+                <a href="inext.html">
+                    Sign in
+                </a>
+
+            </p>
+
+        </section>
+
+
+        <!-- =========================
+             BOTTOM TERMS
+        ========================== -->
+
+        <p class="terms">
+
+            By continuing you agree to the StudentOS Terms of Service and Privacy Policy.
+
+        </p>
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
+
+    <script src="check-email.js"></script>
+
+</body>
+
+</html>

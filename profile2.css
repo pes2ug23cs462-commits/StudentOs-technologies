@@ -1,0 +1,132 @@
+/* ===== Goals ===== */
+
+.goal {
+    padding: 11px 12px 12px;
+    background: var(--item);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.goal-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.percent {
+    font-size: 10px;
+    font-weight: 500;
+    color: #c9cff0;
+}
+
+.progress {
+    height: 4px;
+    margin-top: 9px;
+    background: #1a2243;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.progress span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7c3aed, #6d28d9);
+}
+
+
+/* ===== Skills ===== */
+
+.skills-lead {
+    margin-top: -4px;
+    margin-bottom: 10px;
+}
+
+.skill-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.skill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.skill:last-child {
+    border-bottom: 0;
+}
+
+.select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.select-wrap select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    font: inherit;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: inherit;
+    padding: 5px 24px 5px 10px;
+    cursor: pointer;
+}
+
+.select-wrap select option {
+    background: var(--panel);
+    color: var(--text);
+}
+
+.select-wrap svg {
+    position: absolute;
+    right: 7px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+}
+
+.level-beginner {
+    color: var(--amber);
+    background: var(--amber-bg);
+    border-color: rgba(245, 158, 11, .35);
+}
+
+.level-intermediate {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-color: rgba(167, 139, 250, .35);
+}
+
+.level-advanced {
+    color: var(--green);
+    background: var(--green-bg);
+    border-color: rgba(74, 222, 128, .35);
+}
+
+.remove-btn {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    color: var(--muted);
+}
+
+.remove-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.remove-btn:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}

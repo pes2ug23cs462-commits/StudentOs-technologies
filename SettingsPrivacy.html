@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d1b">
+  <title>StudentOS | Settings &amp; Privacy</title>
+  <link rel="stylesheet" href="./SettingsPrivacy.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="./Overview.html" aria-label="StudentOS home">
+        <img src="./Logo.png" alt="" class="brand-logo">
+        <span>Student<span class="brand-accent">OS</span></span>
+      </a>
+
+      <nav class="primary-nav">
+        <a class="primary-link" href="./Overview.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Overview</span>
+        </a>
+        <a class="primary-link" href="./Projects.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>
+          <span>Projects &amp; Experience</span>
+        </a>
+        <a class="primary-link" href="./CollegeTimeline.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/><circle cx="18" cy="6" r="2.5"/></svg>
+          <span>College Timeline</span>
+        </a>
+        <a class="primary-link" href="./CareerResume.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg>
+          <span>Career &amp; Resume</span>
+        </a>
+        <a class="primary-link" href="./AIAssistant.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M3 12h3m12 0h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>
+          <span>AI Assistant</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a class="primary-link active" href="./SettingsPrivacy.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 3h-.4a2 2 0 0 0-2 2v.3a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.3a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.3a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V5a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Settings &amp; Privacy</span>
+        </a>
+        <a class="profile-link" href="./MyProfile.html">
+          <span class="avatar user-avatar">AM</span>
+          <span class="profile-copy"><strong>Aarav Mehta</strong><small>View my profile</small></span>
+          <span class="profile-chevron" aria-hidden="true">›</span>
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg>
+          <input type="search" placeholder="Search courses, projects, documents..." aria-label="Search courses, projects, documents">
+          <kbd>⌘K</kbd>
+        </label>
+        <div class="topbar-actions">
+          <div class="semester-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+            <span>Semester 7 · 2026-27</span>
+          </div>
+          <span class="icon-button notification-button" role="img" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+            <i aria-hidden="true"></i>
+          </span>
+          <span class="avatar top-avatar" aria-label="Aarav Mehta">AM</span>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div class="page-heading">
+          <h1>Settings &amp; Privacy</h1>
+          <p>Control your account, notifications and exactly who can see your data.</p>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-nav" aria-label="Settings sections" role="tablist">
+            <button class="settings-tab" id="accountTab" type="button" role="tab" aria-selected="false" aria-controls="accountPanel" data-panel="accountPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><span>Account</span>
+            </button>
+            <button class="settings-tab" id="notificationsTab" type="button" role="tab" aria-selected="false" aria-controls="notificationsPanel" data-panel="notificationsPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Notifications</span>
+            </button>
+            <button class="settings-tab active" id="visibilityTab" type="button" role="tab" aria-selected="true" aria-controls="visibilityPanel" data-panel="visibilityPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Privacy &amp; visibility</span>
+            </button>
+            <button class="settings-tab" id="permissionsTab" type="button" role="tab" aria-selected="false" aria-controls="visibilityPanel" data-panel="visibilityPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 11a3 3 0 1 0 0-6M18 14a5 5 0 0 1 3 4.5"/></svg><span>Access permissions</span>
+            </button>
+            <button class="settings-tab" id="dataTab" type="button" role="tab" aria-selected="false" aria-controls="dataPanel" data-panel="dataPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 14 9l6 2-6 2-2 6-2-6-6-2 6-2 2-6Z"/></svg><span>AI &amp; data use</span>
+            </button>
+            <button class="settings-tab" id="exportTab" type="button" role="tab" aria-selected="false" aria-controls="exportPanel" data-panel="exportPanel">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span>Export &amp; delete</span>
+            </button>
+          </nav>
+
+          <div class="settings-panels">
+            <section class="settings-panel" id="visibilityPanel" role="tabpanel" aria-labelledby="visibilityTab">
+              <section class="card visibility-card" aria-labelledby="visibilityTitle">
+                <h2 id="visibilityTitle">Profile visibility</h2>
+                <p class="card-description">Choose who can open your StudentOS profile. You can still share individual documents with anyone.</p>
+
+                <fieldset class="visibility-options" aria-label="Profile visibility">
+                  <label class="visibility-option">
+                    <input type="radio" name="profileVisibility" value="private">
+                    <span class="radio-indicator" aria-hidden="true"></span>
+                    <span class="option-copy"><strong>Only me</strong><small>Nobody else can see your profile.</small></span>
+                  </label>
+                  <label class="visibility-option selected">
+                    <input type="radio" name="profileVisibility" value="college" checked>
+                    <span class="radio-indicator" aria-hidden="true"></span>
+                    <span class="option-copy"><strong>My college</strong><small>Faculty mentors and the Placement Cell can view your profile, academics and resume.</small></span>
+                  </label>
+                  <label class="visibility-option">
+                    <input type="radio" name="profileVisibility" value="link">
+                    <span class="radio-indicator" aria-hidden="true"></span>
+                    <span class="option-copy"><strong>Anyone with the link</strong><small>Recruiters you share a link with can view your public profile. Grades stay hidden unless you allow them.</small></span>
+                  </label>
+                </fieldset>
+              </section>
+
+              <section class="card permissions-card" aria-labelledby="permissionsTitle">
+                <div class="card-heading">
+                  <h2 id="permissionsTitle">Access permissions</h2>
+                  <button class="text-action" id="inviteButton" type="button">Invite someone <span aria-hidden="true">›</span></button>
+                </div>
+                <div class="permission-table" role="table" aria-label="People and organizations with access">
+                  <div class="permission-row permission-header" role="row">
+                    <span role="columnheader">Who</span>
+                    <span role="columnheader">Can see</span>
+                    <span role="columnheader">Access until</span>
+                    <span class="action-column" aria-hidden="true"></span>
+                  </div>
+                  <div class="permission-list" id="permissionList">
+                    <div class="permission-row" role="row">
+                      <span class="person-cell" role="cell"><span class="avatar permission-avatar">KR</span><span class="person-copy"><strong>Dr. Kavita Rao</strong><small>Faculty mentor</small></span></span>
+                      <span class="access-cell" role="cell">Academics, goals, documents</span>
+                      <span class="expiry-cell" role="cell">No end date</span>
+                      <button class="revoke-button" type="button" aria-label="Revoke access for Dr. Kavita Rao">Revoke</button>
+                    </div>
+                    <div class="permission-row" role="row">
+                      <span class="person-cell" role="cell"><span class="avatar permission-avatar">PC</span><span class="person-copy"><strong>Placement Cell, NI</strong><small>Institution</small></span></span>
+                      <span class="access-cell" role="cell">Profile, resume, projects</span>
+                      <span class="expiry-cell" role="cell">31 Jul 2027</span>
+                      <button class="revoke-button" type="button" aria-label="Revoke access for Placement Cell, NI">Revoke</button>
+                    </div>
+                    <div class="permission-row" role="row">
+                      <span class="person-cell" role="cell"><span class="avatar permission-avatar">FR</span><span class="person-copy"><strong>Finlytics recruiting</strong><small>Shared via link · 2 views</small></span></span>
+                      <span class="access-cell" role="cell">Resume only</span>
+                      <span class="expiry-cell" role="cell">30 Nov 2026</span>
+                      <button class="revoke-button" type="button" aria-label="Revoke access for Finlytics recruiting">Revoke</button>
+                    </div>
+                  </div>
+                </div>
+                <p class="empty-permissions" id="emptyPermissions" hidden>No one has access yet. Invite someone to share your profile.</p>
+              </section>
+            </section>
+
+            <section class="settings-panel" id="accountPanel" role="tabpanel" aria-labelledby="accountTab" hidden>
+              <section class="card form-card">
+                <h2>Account</h2>
+                <p class="card-description">Manage your personal information and account security.</p>
+                <label class="field-label" for="fullName">Full name</label>
+                <input class="form-input" id="fullName" type="text" placeholder="Enter your name">
+                <label class="field-label" for="emailAddress">Email address</label>
+                <input class="form-input" id="emailAddress" type="email" placeholder="Enter your email">
+                <button class="primary-button" id="saveProfile" type="button">Save changes</button>
+                <p class="message" id="profileMessage" role="status" aria-live="polite"></p>
+                <div class="security-row">
+                  <div><h3>Password</h3><p class="card-description">Keep your account secure.</p></div>
+                  <button class="secondary-button" id="passwordBtn" type="button">Change password</button>
+                </div>
+                <p class="message" id="securityMessage" role="status" aria-live="polite"></p>
+              </section>
+            </section>
+
+            <section class="settings-panel" id="notificationsPanel" role="tabpanel" aria-labelledby="notificationsTab" hidden>
+              <section class="card toggle-card">
+                <h2>Notifications</h2>
+                <p class="card-description">Choose whether to receive reminders and updates.</p>
+                <label class="toggle-row"><span><strong>Study reminders</strong><small>Reminders for your study plans</small></span><input type="checkbox" checked></label>
+                <label class="toggle-row"><span><strong>Application updates</strong><small>Updates about your job applications</small></span><input type="checkbox" checked></label>
+              </section>
+            </section>
+
+            <section class="settings-panel" id="dataPanel" role="tabpanel" aria-labelledby="dataTab" hidden>
+              <section class="card toggle-card">
+                <h2>AI &amp; data use</h2>
+                <p class="card-description">Choose which information the AI Assistant can use.</p>
+                <label class="toggle-row"><span><strong>Academics &amp; grades</strong><small>Allow access to academic information</small></span><input type="checkbox" checked></label>
+                <label class="toggle-row"><span><strong>Skills &amp; projects</strong><small>Allow access to skills and project details</small></span><input type="checkbox" checked></label>
+                <label class="toggle-row"><span><strong>Internship tracker</strong><small>Allow access to application progress</small></span><input type="checkbox" checked></label>
+              </section>
+            </section>
+
+            <section class="settings-panel" id="exportPanel" role="tabpanel" aria-labelledby="exportTab" hidden>
+              <section class="card export-card">
+                <h2>Export &amp; delete</h2>
+                <p class="card-description">Manage a copy of your data or request account deletion.</p>
+                <p class="export-note">Data export and account deletion are not available in this version.</p>
+              </section>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="invite-dialog" id="inviteDialog" aria-labelledby="inviteTitle">
+    <form id="inviteForm" method="dialog">
+      <div class="dialog-heading"><h2 id="inviteTitle">Invite someone</h2><button class="dialog-close" type="button" id="closeInvite" aria-label="Close dialog">×</button></div>
+      <p class="card-description">Share access to your StudentOS profile.</p>
+      <label class="field-label" for="inviteName">Name or organization</label>
+      <input class="form-input" id="inviteName" name="name" required maxlength="60" placeholder="e.g. Alex Morgan">
+      <label class="field-label" for="inviteAccess">They can see</label>
+      <select class="form-input" id="inviteAccess" name="access">
+        <option>Profile, resume, projects</option>
+        <option>Academics, goals, documents</option>
+        <option>Resume only</option>
+      </select>
+      <label class="field-label" for="inviteExpiry">Access until</label>
+      <input class="form-input" id="inviteExpiry" name="expiry" type="date">
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="cancelInvite">Cancel</button><button class="primary-button" type="submit">Send invite</button></div>
+    </form>
+  </dialog>
+
+  <script src="./SettingsPrivacy.js"></script>
+</body>
+</html>

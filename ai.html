@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI &amp; data use – StudentOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ai.css">
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <img class="logo" src="Logo.png" alt="StudentOS logo" onerror="this.outerHTML='<span class=&quot;logo logo-fallback&quot;>S</span>'">
+                <span class="brand-name">Student<b>OS</b></span>
+            </div>
+
+            <nav class="nav">
+                <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</a>
+                <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>Projects &amp; Experience</a>
+                <a href="#"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/></svg>College Timeline</a>
+                <a href="#"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Career &amp; Resume</a>
+                <a href="#"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.100L19 10l-5.1 1.900L12 17l-1.9-5.100L5 10l5.1-1.900z"/><path d="M19 16l.7 1.800L21.5 18.500l-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/></svg>AI Assistant</a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <a href="#" class="nav-active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.800l.1.1a2 2 0 1 1-2.8 2.800l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.500V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.800l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.800l-.1-.1a2 2 0 1 1 2.8-2.800l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.500V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.800l-.1.1a1.7 1.7 0 0 0-.3 1.800V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings &amp; Privacy</a>
+                <a href="#" class="profile">
+                    <span class="avatar">AM</span>
+                    <span class="who"><strong>Aarav Mehta</strong><small>View my profile</small></span>
+                    <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+            <header class="topbar">
+                <label class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="search" id="search" placeholder="Search courses, projects, documents…">
+        <kbd>⌘K</kbd>
+      </label>
+                <div class="top-right">
+                    <button class="sem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Semester 7 · 2026–27</button>
+                    <button class="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><i></i></button>
+                    <span class="avatar sm">AM</span>
+                </div>
+            </header>
+
+            <main class="content">
+                <h1>Settings &amp; Privacy</h1>
+                <p class="sub">The AI Assistant is optional. You decide what it can read and whether your data helps improve StudentOS.</p>
+
+                <div class="layout">
+                    <nav class="subnav" id="subnav">
+                        <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Account</a>
+                        <a href="channel.html"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>Notifications</a>
+                        <a href="#"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Privacy &amp; visibility</a>
+                        <a href="#"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3-5.5 7-5.5s7 2 7 5.5M17 4a3.5 3.5 0 0 1 0 7M22 21c0-2.5-1.5-4.2-4-5"/></svg>Access permissions</a>
+                        <a href="ai.html" class="active" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>AI &amp; data use</a>
+                        <a href="#"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg>Export &amp; delete</a>
+                    </nav>
+
+                    <div class="panels">
+                        <section class="card">
+                            <h2>AI Assistant</h2>
+                            <ul class="rows">
+                                <li class="row">
+                                    <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>
+                                    <div class="txt"><strong>Use the AI Assistant</strong><small>Get suggestions on the Overview and chat in the AI Assistant workspace</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="assistant" checked><span></span></label>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <section class="card" id="readCard">
+                            <h2>What the assistant can read</h2>
+                            <ul class="rows plain">
+                                <li class="row">
+                                    <div class="txt"><strong>Academics &amp; grades</strong><small>Courses, SGPA/CGPA, attendance</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="academics" checked><span></span></label>
+                                </li>
+                                <li class="row">
+                                    <div class="txt"><strong>Goals &amp; skills</strong><small>Goals, milestones, skill levels</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="goals" checked><span></span></label>
+                                </li>
+                                <li class="row">
+                                    <div class="txt"><strong>Projects &amp; experience</strong><small>Project descriptions and internship details</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="projects" checked><span></span></label>
+                                </li>
+                                <li class="row">
+                                    <div class="txt"><strong>Internship tracker</strong><small>Applications and their status</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="tracker" checked><span></span></label>
+                                </li>
+                                <li class="row">
+                                    <div class="txt"><strong>Documents &amp; certificates</strong><small>Uploaded files — off by default</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="documents"><span></span></label>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <section class="card">
+                            <h2>Improving StudentOS</h2>
+                            <ul class="rows plain">
+                                <li class="row">
+                                    <div class="txt"><strong>Use my data to improve StudentOS</strong><small>Anonymised, and never shared outside StudentOS. Off by default.</small></div>
+                                    <label class="switch"><input type="checkbox" data-key="improve"><span></span></label>
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="ai.js"></script>
+</body>
+
+</html>

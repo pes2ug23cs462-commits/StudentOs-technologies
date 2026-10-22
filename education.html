@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f1f">
+    <title>Education &amp; Academics | StudentOS</title>
+    <link rel="stylesheet" href="./MyProfile.css">
+    <link rel="stylesheet" href="./education.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="./Overview.html" class="brand">
+            <img src="./Logo.png" alt="StudentOS Logo">
+            <span class="brand-text">Student<span class="brand-os">OS</span></span>
+        </a>
+        <nav class="navigation" aria-label="Main navigation">
+            <a href="./Overview.html" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="2" width="7" height="9" rx="1.5"/><rect x="14" y="2.5" width="7" height="5" rx="1.5"/><rect x="3" y="15" width="7" height="5" rx="1.5"/><rect x="13.5" y="11" width="7" height="9" rx="1.5"/></svg><span>Overview</span></a>
+            <a href="./Projects.html" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg><span>Projects &amp; Experience</span></a>
+            <a href="./CollegeTimeline.html" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2.5"/><path d="M8.5 19H15a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.5"/><circle cx="18" cy="7" r="2.5"/></svg><span>College Timeline</span></a>
+            <a href="./CareerResume.html" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l5 5v13H5V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M8 13h8M8 17h8"/></svg><span>Career &amp; Resume</span></a>
+            <a href="./AIAssistant.html" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2C12 8 16 12 22 12 16 12 12 16 12 22 12 16 8 12 2 12 8 12 12 8 12 2Z"/></svg><span>AI Assistant</span></a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="./SettingsPrivacy.html" class="nav-link" id="settingsLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Settings &amp; Privacy</span></a>
+            <a href="./MyProfile.html" class="profile active"><span class="avatar">AM</span><span class="profile-info"><strong>Aarav Mehta</strong><small>View my profile</small></span><span class="profile-arrow" aria-hidden="true">›</span></a>
+        </div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="Search courses, projects, documents..." aria-label="Search courses, projects, documents"><kbd>⌘K</kbd></label>
+            <div class="top-actions">
+                <div class="semester" aria-label="Current semester"><svg class="semester-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M7.5 3v4M16.5 3v4M3.5 10h17"/></svg><span>Semester 7 · 2026-27</span></div>
+                <button class="icon-button" id="notificationBtn" type="button" aria-label="Notifications"><svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="notification-dot"></span></button>
+                <div class="avatar top-avatar" aria-label="Aarav Mehta">AM</div>
+            </div>
+        </header>
+        <div class="page-content">
+            <section class="page-heading">
+                <div><h1>My Profile</h1><p>Your student record in one place. Changes save straight to your StudentOS account.</p></div>
+                <button class="btn secondary" id="publicProfileBtn" type="button"><svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>View public profile</span></button>
+            </section>
+            <section class="profile-layout">
+                <aside class="profile-sidebar">
+                    <div class="student-summary"><div class="avatar">AM</div><div><strong>Aarav Mehta</strong><small>NIT23CS047</small></div></div>
+                    <nav class="profile-navigation" aria-label="Profile sections">
+                        <a class="profile-nav-link" href="./Personal.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-2a6.5 6.5 0 0 1 13 0v2"/></svg><span>Personal Information</span></a>
+                        <a class="profile-nav-link active" href="./education.html" aria-current="page"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5L2 9Z"/><path d="M6 11v5c3.5 3 8.5 3 12 0v-5M22 9v6"/></svg><span>Education &amp; Academics</span></a>
+                        <button class="profile-nav-link" type="button" data-tab="achievements"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="m8.5 12-1 9 4.5-2.5 4.5 2.5-1-9"/></svg><span>Achievements &amp; Certificates</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="goals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></svg><span>Goals &amp; Skills</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="projects"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V4h8v3M8 12h8"/></svg><span>Projects &amp; Experience</span></button>
+                        <button class="profile-nav-link" type="button" data-tab="career"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 3 8-8M15 6h6v6"/></svg><span>Career Profile</span></button>
+                        <a class="profile-nav-link" href="./MyProfile.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 3h9v11H3z"/><path d="M3 6V4h7l2 2"/></svg><span>Documents &amp; Links</span></a>
+                    </nav>
+                </aside>
+                <section class="education-content" aria-labelledby="educationTitle">
+                    <div class="content-heading"><h2 id="educationTitle">Education &amp; Academics</h2><p>Your programme details and grade history. Grades sync from the registrar and can’t be edited here.</p></div>
+                    <section class="programme-section" aria-labelledby="programmeTitle">
+                        <h3 id="programmeTitle">Current programme</h3>
+                        <div class="programme-grid">
+                            <label class="education-field institution-field"><span>Institution</span><select id="institution" name="institution"><option selected>Northfield Institute of Technology</option><option>Other institution</option></select></label>
+                            <label class="education-field degree-field"><span>Degree</span><select id="degree" name="degree"><option selected>B.Tech</option><option>B.E.</option><option>M.Tech</option></select></label>
+                            <label class="education-field branch-field"><span>Branch</span><select id="branch" name="branch"><option selected>Computer Science &amp; Engineering</option><option>Information Technology</option><option>Electronics &amp; Communication</option></select></label>
+                            <label class="education-field roll-field"><span>Roll number</span><span class="locked-field"><input type="text" value="NIT23CS047" readonly aria-readonly="true"><svg viewBox="0 0 24 24" aria-label="Read only"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span></label>
+                            <label class="education-field batch-field"><span>Batch</span><select id="batch" name="batch"><option selected>2023 – 2027</option><option>2022 – 2026</option><option>2024 – 2028</option></select></label>
+                            <label class="education-field semester-field"><span>Current semester</span><select id="currentSemester" name="currentSemester"><option>Semester 5</option><option>Semester 6</option><option selected>Semester 7</option><option>Semester 8</option></select></label>
+                        </div>
+                    </section>
+                    <section class="academic-section" aria-labelledby="academicTitle">
+                        <div class="section-heading"><h3 id="academicTitle">Academic record</h3><p>Synced from the registrar · last updated 12 Oct 2026</p></div>
+                        <div class="record-grid" aria-label="Academic summary">
+                            <article class="record-card"><span>CGPA</span><strong>8.45</strong></article>
+                            <article class="record-card"><span>Last SGPA</span><strong>9.04</strong></article>
+                            <article class="record-card"><span>Credits</span><strong>132 / 160</strong></article>
+                            <article class="record-card"><span>Backlogs</span><strong>None</strong></article>
+                        </div>
+                        <div class="semester-history">
+                            <details class="semester-row"><summary><span>Semester 6</span><span class="semester-result"><span>25 credits</span><strong>SGPA 9.04</strong><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary><p class="semester-detail">Semester 6 record · 25 credits · SGPA 9.04</p></details>
+                            <details class="semester-row"><summary><span>Semester 5</span><span class="semester-result"><span>24 credits</span><strong>SGPA 8.72</strong><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></summary><p class="semester-detail">Semester 5 record · 24 credits · SGPA 8.72</p></details>
+                        </div>
+                    </section>
+                </section>
+            </section>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="./education.js"></script>
+</body>
+</html>

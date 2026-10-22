@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f1e">
+    <meta name="description" content="StudentOS — Your timetable, tasks, exams and deadlines in one calm, focused workspace.">
+
+    <title>StudentOS Technologies | Sign In</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Main JavaScript -->
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <main class="app-frame">
+
+        <!-- ======================================
+         LEFT BRAND PANEL
+         ====================================== -->
+
+        <aside class="brand-panel">
+
+            <!-- StudentOS brand -->
+            <a href="#" class="brand" aria-label="StudentOS home">
+                <img src="Logo.png" alt="StudentOS logo" class="brand-logo">
+                <span class="brand-name">StudentOS</span>
+            </a>
+
+            <!-- Brand content -->
+            <div class="brand-copy">
+
+                <span class="badge">
+          <i aria-hidden="true"></i>
+          Built for students
+        </span>
+
+                <h1>
+                    Plan smarter. Study<br> better. Stay ahead.
+                </h1>
+
+                <p class="brand-description">
+                    Your timetable, tasks, exams and deadlines — organised in one calm, focused workspace.
+                </p>
+
+                <!-- Features -->
+                <ul class="features">
+                    <li>
+                        <span class="check" aria-hidden="true">✓</span>
+                        <span>Your timetable, always in sync</span>
+                    </li>
+
+                    <li>
+                        <span class="check" aria-hidden="true">✓</span>
+                        <span>Every task and deadline in one view</span>
+                    </li>
+
+                    <li>
+                        <span class="check" aria-hidden="true">✓</span>
+                        <span>Smart reminders before anything slips</span>
+                    </li>
+                </ul>
+
+            </div>
+
+            <!-- Left footer -->
+            <footer class="brand-footer">
+                <span>LEARN · PLAN · BUILD · GROW</span>
+                <span>© 2026 StudentOS Technologies</span>
+            </footer>
+
+            <!-- Decorative circles -->
+            <div class="ring ring-a" aria-hidden="true"></div>
+            <div class="ring ring-b" aria-hidden="true"></div>
+
+        </aside>
+
+
+        <!-- ======================================
+         RIGHT AUTHENTICATION PANEL
+         ====================================== -->
+
+        <section class="auth-panel" aria-label="Account authentication">
+
+            <!-- Support link -->
+            <div class="support">
+                Need help?
+                <a href="mailto:support@studentos.example">
+          Contact support
+        </a>
+            </div>
+
+
+            <!-- ====================================
+           SCREEN 1: LOGIN
+           ==================================== -->
+
+            <section class="screen login-screen active" id="loginScreen" aria-labelledby="loginTitle">
+
+                <header class="screen-heading">
+                    <h2 id="loginTitle">Welcome back</h2>
+
+                    <p>
+                        Sign in to pick up your timetable and tasks right<br class="desktop-only"> where you left them.
+                    </p>
+                </header>
+
+                <form id="loginForm" novalidate>
+
+                    <!-- Email -->
+                    <div class="field">
+                        <label for="email">Email</label>
+
+                        <input id="email" name="email" type="email" placeholder="you@school.edu" autocomplete="email" aria-describedby="emailError" required>
+
+                        <small class="field-error" id="emailError" aria-live="polite"></small>
+                    </div>
+
+
+                    <!-- Password -->
+                    <div class="field">
+                        <label for="password">Password</label>
+
+                        <div class="password-field">
+                            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" aria-describedby="passwordError" required>
+
+                            <!-- Eye icon -->
+                            <button type="button" class="eye-button" data-toggle="password" aria-label="Show password" aria-pressed="false">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
+                  />
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+                        </div>
+
+                        <small class="field-error" id="passwordError" aria-live="polite"></small>
+                    </div>
+
+
+                    <!-- Remember me and forgot password -->
+                    <div class="form-options">
+
+                        <label class="remember">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                checked
+              >
+
+              <span class="checkbox-art" aria-hidden="true">✓</span>
+              <span>Keep me signed in</span>
+            </label>
+
+                        <a href="#forgot" data-screen="forgotScreen">
+              Forgot password?
+            </a>
+
+                    </div>
+
+
+                    <!-- Login error -->
+                    <p class="alert error-alert hidden" id="loginError" role="alert">
+                        Incorrect email or password. Please try again.
+                    </p>
+
+
+                    <!-- Sign-in button -->
+                    <button class="primary-button" type="submit">
+            Sign in
+          </button>
+
+
+                    <!-- Social divider -->
+                    <div class="separator">
+                        <span></span>
+                        <p>or continue with</p>
+                        <span></span>
+                    </div>
+
+
+                    <!-- ==================================
+               SOCIAL LOGIN BUTTONS
+               ================================== -->
+
+                    <div class="social-row">
+
+                        <!-- GOOGLE -->
+                        <button type="button" class="social-button" data-provider="Google" aria-label="Continue with Google">
+              <svg
+                class="social-icon google-icon"
+                viewBox="0 0 48 48"
+                aria-hidden="true"
+              >
+                <path
+                  fill="#4285F4"
+                  d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"
+                />
+
+                <path
+                  fill="#34A853"
+                  d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"
+                />
+
+                <path
+                  fill="#FBBC05"
+                  d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"
+                />
+
+                <path
+                  fill="#EA4335"
+                  d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"
+                />
+              </svg>
+
+              <span>Google</span>
+            </button>
+
+
+                        <!-- APPLE -->
+                        <button type="button" class="social-button" data-provider="Apple" aria-label="Continue with Apple">
+              <svg
+                class="social-icon apple-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M16.37 12.14c.03 3.25 2.85 4.33 2.88 4.35-.02.08-.45 1.55-1.49 3.07-.9 1.31-1.84 2.61-3.31 2.64-1.45.03-1.92-.85-3.58-.85-1.66 0-2.18.82-3.55.88-1.42.05-2.5-1.42-3.4-2.73-1.85-2.68-3.27-7.57-1.37-10.88a5.27 5.27 0 0 1 4.46-2.71c1.39-.03 2.7.94 3.56.94.85 0 2.45-1.16 4.13-.99.7.03 2.67.28 3.94 2.14-.1.06-2.35 1.37-2.32 4.14ZM13.65 3.8A5.07 5.07 0 0 1 17.4 2a5.15 5.15 0 0 1-1.2 3.79 4.32 4.32 0 0 1-3.67 1.75 4.75 4.75 0 0 1 1.12-3.74Z"
+                />
+              </svg>
+
+              <span>Apple</span>
+            </button>
+
+
+                        <!-- GITHUB -->
+                        <button type="button" class="social-button" data-provider="GitHub" aria-label="Continue with GitHub">
+              <svg
+                class="social-icon github-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12 .8a11.3 11.3 0 0 0-3.58 22.02c.57.1.77-.25.77-.55v-2.12c-3.14.68-3.8-1.33-3.8-1.33-.52-1.3-1.26-1.65-1.26-1.65-1.03-.7.08-.69.08-.69 1.14.08 1.74 1.17 1.74 1.17 1.02 1.74 2.68 1.24 3.33.95.1-.74.4-1.24.73-1.53-2.51-.29-5.15-1.26-5.15-5.6 0-1.24.44-2.25 1.17-3.04-.12-.29-.51-1.44.11-3 0 0 .95-.3 3.11 1.16a10.8 10.8 0 0 1 5.66 0c2.16-1.46 3.1-1.16 3.1-1.16.63 1.56.24 2.71.12 3 .73.8 1.17 1.8 1.17 3.04 0 4.35-2.65 5.3-5.17 5.59.41.36.77 1.04.77 2.1v3.11c0 .3.2.66.78.55A11.3 11.3 0 0 0 12 .8Z"
+                />
+              </svg>
+
+              <span>GitHub</span>
+            </button>
+
+                    </div>
+
+
+                    <!-- Create account -->
+                    <p class="account-link">
+                        Don't have an account?
+                        <a href="#register" data-screen="registerScreen">
+              Create one
+            </a>
+                    </p>
+
+                </form>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 2: INCORRECT PASSWORD EXAMPLE
+           ==================================== -->
+
+            <section class="screen login-screen" id="errorLoginScreen" aria-labelledby="errorLoginTitle">
+
+                <header class="screen-heading">
+                    <h2 id="errorLoginTitle">Welcome back</h2>
+                    <p>
+                        Sign in to pick up your timetable and tasks right<br> where you left them.
+                    </p>
+                </header>
+
+                <form id="errorLoginForm" novalidate>
+
+                    <div class="field">
+                        <label for="errorEmail">Email</label>
+                        <input id="errorEmail" name="errorEmail" type="email" value="student@school.edu" autocomplete="username">
+                    </div>
+
+                    <div class="field">
+                        <label for="errorPassword">Password</label>
+
+                        <div class="password-field">
+                            <input id="errorPassword" name="errorPassword" type="password" value="wrongpassword" class="invalid-input" autocomplete="current-password">
+
+                            <button type="button" class="eye-button" data-toggle="errorPassword" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+                        </div>
+
+                        <small class="field-error">
+              Incorrect password. Please try again.
+            </small>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember">
+              <input type="checkbox" checked>
+              <span class="checkbox-art" aria-hidden="true">✓</span>
+              <span>Keep me signed in</span>
+            </label>
+
+                        <a href="#forgot" data-screen="forgotScreen">
+              Forgot password?
+            </a>
+                    </div>
+
+                    <p class="alert error-alert" role="alert">
+                        Incorrect email or password. Please try again.
+                    </p>
+
+                    <button class="primary-button" type="submit">
+            Sign in
+          </button>
+
+                    <div class="separator">
+                        <span></span>
+                        <p>or continue with</p>
+                        <span></span>
+                    </div>
+
+                    <div class="social-row">
+                        <button type="button" class="social-button" data-provider="Google">
+              <svg class="social-icon google-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/>
+                <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/>
+                <path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/>
+                <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/>
+              </svg>
+              <span>Google</span>
+            </button>
+
+                        <button type="button" class="social-button" data-provider="Apple">
+              <svg class="social-icon apple-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M16.37 12.14c.03 3.25 2.85 4.33 2.88 4.35-.02.08-.45 1.55-1.49 3.07-.9 1.31-1.84 2.61-3.31 2.64-1.45.03-1.92-.85-3.58-.85-1.66 0-2.18.82-3.55.88-1.42.05-2.5-1.42-3.4-2.73-1.85-2.68-3.27-7.57-1.37-10.88a5.27 5.27 0 0 1 4.46-2.71c1.39-.03 2.7.94 3.56.94.85 0 2.45-1.16 4.13-.99.7.03 2.67.28 3.94 2.14-.1.06-2.35 1.37-2.32 4.14ZM13.65 3.8A5.07 5.07 0 0 1 17.4 2a5.15 5.15 0 0 1-1.2 3.79 4.32 4.32 0 0 1-3.67 1.75 4.75 4.75 0 0 1 1.12-3.74Z"/>
+              </svg>
+              <span>Apple</span>
+            </button>
+
+                        <button type="button" class="social-button" data-provider="GitHub">
+              <svg class="social-icon github-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M12 .8a11.3 11.3 0 0 0-3.58 22.02c.57.1.77-.25.77-.55v-2.12c-3.14.68-3.8-1.33-3.8-1.33-.52-1.3-1.26-1.65-1.26-1.65-1.03-.7.08-.69.08-.69 1.14.08 1.74 1.17 1.74 1.17 1.02 1.74 2.68 1.24 3.33.95.1-.74.4-1.24.73-1.53-2.51-.29-5.15-1.26-5.15-5.6 0-1.24.44-2.25 1.17-3.04-.12-.29-.51-1.44.11-3 0 0 .95-.3 3.11 1.16a10.8 10.8 0 0 1 5.66 0c2.16-1.46 3.1-1.16 3.1-1.16.63 1.56.24 2.71.12 3 .73.8 1.17 1.8 1.17 3.04 0 4.35-2.65 5.3-5.17 5.59.41.36.77 1.04.77 2.1v3.11c0 .3.2.66.78.55A11.3 11.3 0 0 0 12 .8Z"/>
+              </svg>
+              <span>GitHub</span>
+            </button>
+                    </div>
+
+                    <p class="account-link">
+                        Don't have an account?
+                        <a href="#register" data-screen="registerScreen">Create one</a>
+                    </p>
+
+                </form>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 3: FORGOT PASSWORD
+           ==================================== -->
+
+            <section class="screen compact-screen" id="forgotScreen" aria-labelledby="forgotTitle">
+
+                <div class="screen-symbol" aria-hidden="true">✉</div>
+
+                <h2 id="forgotTitle">Forgot password?</h2>
+
+                <p class="screen-description">
+                    No worries! Enter your registered email address and we'll help you reset your password.
+                </p>
+
+                <form id="forgotForm" novalidate>
+
+                    <div class="field">
+                        <label for="forgotEmail">Email</label>
+                        <input id="forgotEmail" type="email" placeholder="you@school.edu" autocomplete="email" required>
+                        <small class="field-error" id="forgotEmailError"></small>
+                    </div>
+
+                    <p class="alert error-alert hidden" id="forgotError" role="alert"></p>
+
+                    <button class="primary-button" type="submit">
+            Send reset link
+          </button>
+
+                    <button class="text-button" type="button" data-screen="loginScreen">
+            ← Back to sign in
+          </button>
+
+                </form>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 4: RESET PASSWORD
+           ==================================== -->
+
+            <section class="screen compact-screen" id="resetScreen" aria-labelledby="resetTitle">
+
+                <div class="screen-symbol" aria-hidden="true">🔒</div>
+
+                <h2 id="resetTitle">Create new password</h2>
+
+                <p class="screen-description">
+                    Choose a strong password to keep your StudentOS account secure.
+                </p>
+
+                <form id="resetForm" novalidate>
+
+                    <div class="field">
+                        <label for="newPassword">New password</label>
+
+                        <div class="password-field">
+                            <input id="newPassword" type="password" placeholder="Enter new password" autocomplete="new-password" required>
+
+                            <button type="button" class="eye-button" data-toggle="newPassword" aria-label="Show new password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+                        </div>
+
+                        <small class="field-error" id="newPasswordError"></small>
+                    </div>
+
+                    <div class="field">
+                        <label for="confirmPassword">Confirm password</label>
+                        <input id="confirmPassword" type="password" placeholder="Re-enter new password" autocomplete="new-password" required>
+                        <small class="field-error" id="confirmPasswordError"></small>
+                    </div>
+
+                    <div class="password-rules">
+                        <p>Password requirements</p>
+                        <span id="ruleLength">• At least 8 characters</span>
+                        <span id="ruleUpper">• One uppercase letter</span>
+                        <span id="ruleNumber">• One number</span>
+                    </div>
+
+                    <button class="primary-button" type="submit">
+            Reset password
+          </button>
+
+                    <button class="text-button" type="button" data-screen="loginScreen">
+            ← Back to sign in
+          </button>
+
+                </form>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 5: CREATE ACCOUNT
+           ==================================== -->
+
+            <section class="screen compact-screen" id="registerScreen" aria-labelledby="registerTitle">
+
+                <h2 id="registerTitle">Create your account</h2>
+
+                <p class="screen-description">
+                    Start planning smarter and stay ahead of your studies.
+                </p>
+
+                <form id="registerForm" novalidate>
+
+                    <div class="field">
+                        <label for="fullName">Full name</label>
+                        <input id="fullName" type="text" placeholder="Enter your full name" autocomplete="name" required>
+                        <small class="field-error" id="fullNameError"></small>
+                    </div>
+
+                    <div class="field">
+                        <label for="registerEmail">Email</label>
+                        <input id="registerEmail" type="email" placeholder="you@school.edu" autocomplete="email" required>
+                        <small class="field-error" id="registerEmailError"></small>
+                    </div>
+
+                    <div class="field">
+                        <label for="registerPassword">Password</label>
+
+                        <div class="password-field">
+                            <input id="registerPassword" type="password" placeholder="Create a password" autocomplete="new-password" required>
+
+                            <button type="button" class="eye-button" data-toggle="registerPassword" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+                        </div>
+
+                        <small class="field-error" id="registerPasswordError"></small>
+                    </div>
+
+                    <p class="alert error-alert hidden" id="registerError" role="alert"></p>
+
+                    <button class="primary-button" type="submit">
+            Create account
+          </button>
+
+                    <p class="account-link">
+                        Already have an account?
+                        <a href="#login" data-screen="loginScreen">Sign in</a>
+                    </p>
+
+                </form>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 6: SUCCESS
+           ==================================== -->
+
+            <section class="screen compact-screen" id="successScreen" aria-labelledby="successTitle">
+
+                <div class="success-symbol" aria-hidden="true">✓</div>
+
+                <h2 id="successTitle">You're all set!</h2>
+
+                <p class="screen-description" id="successMessage">
+                    Your request has been completed successfully.
+                </p>
+
+                <div class="success-panel">
+                    <span class="success-dot" aria-hidden="true">✓</span>
+                    <span id="successDetail">
+            You can continue to your StudentOS account.
+          </span>
+                </div>
+
+                <button class="primary-button" type="button" data-screen="loginScreen">
+          Back to sign in
+        </button>
+
+            </section>
+
+
+            <!-- Legal notice -->
+            <footer class="legal-footer">
+                By continuing, you agree to the StudentOS
+                <a href="#terms" data-screen="termsScreen">Terms of Service</a> and
+                <a href="#privacy" data-screen="privacyScreen">Privacy Policy</a>.
+            </footer>
+
+
+            <!-- ====================================
+           SCREEN 7: TERMS
+           ==================================== -->
+
+            <section class="screen compact-screen" id="termsScreen" aria-labelledby="termsTitle">
+                <h2 id="termsTitle">Terms of Service</h2>
+
+                <p class="screen-description">
+                    StudentOS helps students organise their timetables, tasks, exams and deadlines. Use the platform responsibly and keep your account credentials secure.
+                </p>
+
+                <button class="primary-button" type="button" data-screen="loginScreen">
+          Back to sign in
+        </button>
+            </section>
+
+
+            <!-- ====================================
+           SCREEN 8: PRIVACY
+           ==================================== -->
+
+            <section class="screen compact-screen" id="privacyScreen" aria-labelledby="privacyTitle">
+                <h2 id="privacyTitle">Privacy Policy</h2>
+
+                <p class="screen-description">
+                    Your privacy matters. A production StudentOS application should explain what information is collected, how it is used, how long it is retained, and how you can request access or deletion.
+                </p>
+
+                <button class="primary-button" type="button" data-screen="loginScreen">
+          Back to sign in
+        </button>
+            </section>
+
+
+            <!-- Toast notifications -->
+            <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        </section>
+    </main>
+</body>
+
+</html>

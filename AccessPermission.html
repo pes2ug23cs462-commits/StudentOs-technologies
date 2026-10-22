@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d1b">
+  <title>StudentOS | Access permissions</title>
+  <link rel="stylesheet" href="./AccessPermission.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="./Overview.html" aria-label="StudentOS home">
+        <img src="./Logo.png" alt="" class="brand-logo">
+        <span>Student<span class="brand-accent">OS</span></span>
+      </a>
+
+      <nav class="primary-nav">
+        <a class="primary-link" href="./Overview.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></a>
+        <a class="primary-link" href="./Projects.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg><span>Projects &amp; Experience</span></a>
+        <a class="primary-link" href="./CollegeTimeline.html"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/><circle cx="18" cy="6" r="2.5"/></svg><span>College Timeline</span></a>
+        <a class="primary-link" href="./CareerResume.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg><span>Career &amp; Resume</span></a>
+        <a class="primary-link" href="./AIAssistant.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M3 12h3m12 0h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg><span>AI Assistant</span></a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a class="primary-link active" href="./SettingsPrivacy.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 3h-.4a2 2 0 0 0-2 2v.3a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.3a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.3a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V5a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg><span>Settings &amp; Privacy</span>
+        </a>
+        <a class="profile-link" href="./MyProfile.html">
+          <span class="avatar user-avatar">AM</span>
+          <span class="profile-copy"><strong>Aarav Mehta</strong><small>View my profile</small></span>
+          <span class="profile-chevron" aria-hidden="true">›</span>
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg>
+          <input type="search" placeholder="Search courses, projects, documents..." aria-label="Search courses, projects, documents">
+          <kbd>⌘K</kbd>
+        </label>
+        <div class="topbar-actions">
+          <div class="semester-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+            <span>Semester 7 · 2026-27</span>
+          </div>
+          <span class="icon-button notification-button" role="img" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+            <i aria-hidden="true"></i>
+          </span>
+          <span class="avatar top-avatar" aria-label="Aarav Mehta">AM</span>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div class="page-heading">
+          <h1>Settings &amp; Privacy</h1>
+          <p>See and control everyone who can view your StudentOS data.</p>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-nav" aria-label="Settings sections">
+            <a class="settings-tab" href="./SettingsPrivacy.html"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><span>Account</span></a>
+            <a class="settings-tab" href="./SettingsPrivacy.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Notifications</span></a>
+            <a class="settings-tab" href="./SettingsPrivacy.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Privacy &amp; visibility</span></a>
+            <a class="settings-tab active" href="./AccessPermission.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 11a3 3 0 1 0 0-6M18 14a5 5 0 0 1 3 4.5"/></svg><span>Access permissions</span></a>
+            <a class="settings-tab" href="./SettingsPrivacy.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 14 9l6 2-6 2-2 6-2-6-6-2 6-2 2-6Z"/></svg><span>AI &amp; data use</span></a>
+            <a class="settings-tab" href="./SettingsPrivacy.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span>Export &amp; delete</span></a>
+          </nav>
+
+          <div class="settings-panels">
+            <section class="card pending-card" aria-labelledby="pendingTitle">
+              <h2 id="pendingTitle">Pending requests</h2>
+              <div class="request-list" id="requestList">
+                <article class="request-row" data-request-name="Dr. Sameer Joshi">
+                  <span class="avatar request-avatar" aria-hidden="true">SJ</span>
+                  <div class="request-copy">
+                    <strong>Dr. Sameer Joshi <span class="request-role">· Placement Officer</span></strong>
+                    <p>Requests view access to Academics and Resume until 31 Jul 2027</p>
+                  </div>
+                  <div class="request-actions">
+                    <button class="text-button decline-button" type="button">Decline</button>
+                    <button class="primary-button approve-button" type="button"><span aria-hidden="true">✓</span> Approve</button>
+                  </div>
+                </article>
+              </div>
+              <p class="empty-state" id="emptyRequests" hidden>No pending access requests.</p>
+            </section>
+
+            <section class="card people-card" aria-labelledby="peopleTitle">
+              <div class="card-heading">
+                <h2 id="peopleTitle">People with access</h2>
+                <button class="text-action" id="inviteButton" type="button">Invite someone <span aria-hidden="true">›</span></button>
+              </div>
+              <div class="people-table" role="table" aria-label="People and organizations with access">
+                <div class="people-row people-header" role="row">
+                  <span role="columnheader">Who</span>
+                  <span role="columnheader">Can see</span>
+                  <span role="columnheader">Access until</span>
+                  <span class="actions-heading" aria-hidden="true"></span>
+                </div>
+                <div class="people-list" id="peopleList">
+                  <article class="people-row" role="row" data-person="Dr. Kavita Rao" data-access="Academics, goals, documents" data-expiry="">
+                    <span class="person-cell" role="cell"><span class="avatar person-avatar">KR</span><span class="person-copy"><strong>Dr. Kavita Rao</strong><small>Faculty mentor</small></span></span>
+                    <span class="access-cell" role="cell">Academics, goals, documents</span>
+                    <span class="expiry-cell" role="cell">No end date</span>
+                    <span class="row-actions"><button class="edit-button" type="button">Edit</button><button class="revoke-button" type="button">Revoke</button></span>
+                  </article>
+                  <article class="people-row" role="row" data-person="Placement Cell, NI" data-access="Profile, resume, projects" data-expiry="2027-07-31">
+                    <span class="person-cell" role="cell"><span class="avatar person-avatar">PC</span><span class="person-copy"><strong>Placement Cell, NI</strong><small>Institution</small></span></span>
+                    <span class="access-cell" role="cell">Profile, resume, projects</span>
+                    <span class="expiry-cell" role="cell">31 Jul 2027</span>
+                    <span class="row-actions"><button class="edit-button" type="button">Edit</button><button class="revoke-button" type="button">Revoke</button></span>
+                  </article>
+                  <article class="people-row" role="row" data-person="Finlytics recruiting" data-access="Resume only" data-expiry="2026-11-30">
+                    <span class="person-cell" role="cell"><span class="avatar person-avatar">FR</span><span class="person-copy"><strong>Finlytics recruiting</strong><small>Shared via link · 2 views</small></span></span>
+                    <span class="access-cell" role="cell">Resume only</span>
+                    <span class="expiry-cell" role="cell">30 Nov 2026</span>
+                    <span class="row-actions"><button class="edit-button" type="button">Edit</button><button class="revoke-button" type="button">Revoke</button></span>
+                  </article>
+                  <article class="people-row" role="row" data-person="Rohan Mehta" data-access="Attendance, grades" data-expiry="">
+                    <span class="person-cell" role="cell"><span class="avatar person-avatar">RM</span><span class="person-copy"><strong>Rohan Mehta</strong><small>Parent · view only</small></span></span>
+                    <span class="access-cell" role="cell">Attendance, grades</span>
+                    <span class="expiry-cell" role="cell">No end date</span>
+                    <span class="row-actions"><button class="edit-button" type="button">Edit</button><button class="revoke-button" type="button">Revoke</button></span>
+                  </article>
+                </div>
+              </div>
+              <p class="empty-state" id="emptyPeople" hidden>No one has access yet. Invite someone to share your profile.</p>
+            </section>
+
+            <section class="card share-card" aria-labelledby="shareTitle">
+              <h2 id="shareTitle">Share links</h2>
+              <div class="share-list">
+                <article class="share-row" data-share-path="./MyProfile.html">
+                  <span class="share-icon" aria-hidden="true">↗</span>
+                  <div class="share-copy">
+                    <strong>Public profile link</strong>
+                    <span class="share-url">./MyProfile.html · 14 views · no expiry</span>
+                  </div>
+                  <div class="share-actions">
+                    <button class="copy-button" type="button"><span aria-hidden="true">⧉</span> Copy</button>
+                    <button class="disable-button" type="button">Disable</button>
+                  </div>
+                </article>
+                <article class="share-row" data-share-path="./CareerResume.html">
+                  <span class="share-icon" aria-hidden="true">↗</span>
+                  <div class="share-copy">
+                    <strong>Resume link for Finlytics</strong>
+                    <span class="share-url">./CareerResume.html · 2 views · expires 30 Nov 2026</span>
+                  </div>
+                  <div class="share-actions">
+                    <button class="copy-button" type="button"><span aria-hidden="true">⧉</span> Copy</button>
+                    <button class="disable-button" type="button">Disable</button>
+                  </div>
+                </article>
+              </div>
+            </section>
+            <p class="live-message" id="liveMessage" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="app-dialog" id="inviteDialog" aria-labelledby="inviteTitle">
+    <form id="inviteForm">
+      <div class="dialog-heading"><h2 id="inviteTitle">Invite someone</h2><button class="dialog-close" type="button" data-close-dialog aria-label="Close dialog">×</button></div>
+      <p class="dialog-description">Choose what they can view and how long access should last.</p>
+      <label class="field-label" for="inviteName">Name or organization</label>
+      <input class="form-input" id="inviteName" name="name" required maxlength="60" placeholder="e.g. Alex Morgan">
+      <label class="field-label" for="inviteRole">Role</label>
+      <input class="form-input" id="inviteRole" name="role" maxlength="50" placeholder="e.g. Faculty mentor">
+      <label class="field-label" for="inviteAccess">They can see</label>
+      <select class="form-input" id="inviteAccess" name="access">
+        <option>Profile, resume, projects</option>
+        <option>Academics, goals, documents</option>
+        <option>Resume only</option>
+        <option>Attendance, grades</option>
+      </select>
+      <label class="field-label" for="inviteExpiry">Access until</label>
+      <input class="form-input" id="inviteExpiry" name="expiry" type="date">
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close-dialog>Cancel</button><button class="primary-button" type="submit">Send invite</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="app-dialog" id="editDialog" aria-labelledby="editTitle">
+    <form id="editForm">
+      <div class="dialog-heading"><h2 id="editTitle">Edit access</h2><button class="dialog-close" type="button" data-close-dialog aria-label="Close dialog">×</button></div>
+      <p class="dialog-description" id="editPersonName"></p>
+      <label class="field-label" for="editAccess">Permitted data</label>
+      <select class="form-input" id="editAccess" name="access">
+        <option>Profile, resume, projects</option>
+        <option>Academics, goals, documents</option>
+        <option>Resume only</option>
+        <option>Attendance, grades</option>
+      </select>
+      <label class="field-label" for="editExpiry">Access until</label>
+      <input class="form-input" id="editExpiry" name="expiry" type="date">
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close-dialog>Cancel</button><button class="primary-button" type="submit">Save changes</button></div>
+    </form>
+  </dialog>
+
+  <script src="./AccessPermission.js"></script>
+</body>
+</html>

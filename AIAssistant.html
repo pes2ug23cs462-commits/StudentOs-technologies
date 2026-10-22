@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentOS | AI Assistant</title>
+  <link rel="stylesheet" href="AIAssistant.css">
+</head>
+<body>
+  <div class="app">
+
+    <aside class="sidebar">
+      <div class="logo"><span>✦</span> StudentOS</div>
+
+      <nav>
+        <a href="Overview.html">▦ <span>Overview</span></a>
+        <a href="#">♧ <span>Projects & Experience</span></a>
+        <a href="#">♧ <span>College Timeline</span></a>
+        <a href="CareerResume.html">▤ <span>Career & Resume</span></a>
+        <a href="AIAssistant.html" class="active">✧ <span>AI Assistant</span></a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a href="#">⚙ Settings & Privacy</a>
+        <div class="profile">
+          <span class="avatar">AM</span>
+          <div><b>Aarav Mehta</b><small>View my profile</small></div>
+          <span>›</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <input class="search" placeholder="⌕  Search courses, projects, documents...">
+        <div class="top-actions">
+          <span class="semester">▣ Semester 7 · 2026-27</span>
+          <span>♧</span><span class="avatar">AM</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="chat-column">
+          <div class="page-heading">
+            <div>
+              <h2>AI Assistant</h2>
+              <p>Optional. Ask about grades, goals or applications — it only sees the data you allow.</p>
+            </div>
+            <button class="outline" id="accessBtn">Optional · Data access</button>
+          </div>
+
+          <div class="chat-card">
+            <div class="date">Today · 9:42 AM</div>
+
+            <div class="suggestions">
+              <button>Plan my end-sem revision</button>
+              <button>AI track for 5.8 CGPA?</button>
+              <button>Summarise my Sem 6 results</button>
+              <button>Draft a cover letter for Fintlytics</button>
+            </div>
+
+            <div class="composer">
+              <input id="question" placeholder="Ask about your courses, goals or applications..." required>
+              <button class="send" id="sendBtn">➤ Send</button>
+            </div>
+            <p class="disclaimer">Answers can be wrong — check important details against your official records.</p>
+          </div>
+        </section>
+
+        <aside class="right-column">
+          <section class="panel recommendations">
+            <h3>Recommendations</h3>
+
+            <div class="recommendation">
+              <b>Add "Docker fundamentals" to your goals</b>
+              <p>Required in 4 of 5 roles you're tracking.</p>
+              <button class="add-goal">＋ Add to goals</button>
+              <button class="dismiss">Dismiss</button>
+            </div>
+
+            <div class="recommendation">
+              <b>Attend 3 more Economics lectures</b>
+              <p>You're at 74%; 75% is needed for end-sem eligibility.</p>
+              <button class="add-goal">＋ Add to goals</button>
+              <button class="dismiss">Dismiss</button>
+            </div>
+
+            <div class="recommendation">
+              <b>Ask Dr. Rao to verify your best-paper certificate</b>
+              <p>Pending for 6 months; verified evidence makes hiring stronger.</p>
+              <button class="add-goal">＋ Add to goals</button>
+              <button class="dismiss">Dismiss</button>
+            </div>
+          </section>
+
+          <section class="panel settings">
+            <h3>What the assistant can see <a href="#">Settings ›</a></h3>
+            <label>Academics & grades <input type="checkbox" checked></label>
+            <label>Skills & projects <input type="checkbox" checked></label>
+            <label>Internship tracker <input type="checkbox" checked></label>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="AIAssistant.js"></script>
+</body>
+</html>

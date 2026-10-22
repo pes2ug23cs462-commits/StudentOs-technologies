@@ -1,0 +1,554 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudentOS | Career &amp; Resume</title>
+    <link rel="stylesheet" href="./CareerResume.css">
+
+    <style>
+        /* Top bar alignment */
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Calendar and semester label stay on one line */
+        .top-actions .semester {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .top-actions .semester-icon {
+            display: block;
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        /* Notification button */
+        .top-actions button.icon-button {
+            box-sizing: border-box;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            min-width: 38px;
+            height: 38px;
+            min-height: 38px;
+            padding: 0;
+            border: 1px solid #293451;
+            border-radius: 10px;
+            background: #101731;
+            color: #e2e8f0;
+            cursor: pointer;
+            flex-shrink: 0;
+            line-height: 1;
+            box-shadow: none;
+        }
+
+        .top-actions button.icon-button:hover {
+            background: #151e3a;
+            border-color: #394666;
+        }
+
+        .top-actions button.icon-button svg.notification-icon {
+            display: block;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #e2e8f0;
+        }
+
+        /* Purple notification dot */
+        .top-actions button.icon-button .notification-dot {
+            display: block;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 7px;
+            height: 7px;
+            min-width: 7px;
+            min-height: 7px;
+            padding: 0;
+            border: 1px solid #101731;
+            border-radius: 50%;
+            background: #a78bfa;
+            box-sizing: border-box;
+        }
+
+        /* Avoid duplicate notification dots */
+        .top-actions button.icon-button::before,
+        .top-actions button.icon-button::after {
+            content: none;
+            display: none;
+        }
+
+        .top-actions .top-avatar {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a class="brand" href="./Overview.html">
+            <img src="./Logo.png" alt="StudentOS Logo">
+            <span class="brand-text">Student<span class="brand-os">OS</span></span>
+        </a>
+
+        <nav class="navigation">
+            <a href="./Overview.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="2" width="7" height="9" rx="1.5"/>
+                    <rect x="14" y="2.5" width="7" height="5" rx="1.5"/>
+                    <rect x="3" y="15" width="7" height="5" rx="1.5"/>
+                    <rect x="13.5" y="11" width="7" height="9" rx="1.5"/>
+                </svg>
+                <span>Overview</span>
+            </a>
+
+            <a href="./Projects.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="7" width="18" height="14" rx="2"/>
+                    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <path d="M8 7v14M16 7v14"/>
+                </svg>
+                <span>Projects &amp; Experience</span>
+            </a>
+
+                <a href="./CollegeTimeline.html" class="nav-link">
+                    <svg class="nav-icon"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <circle cx="6" cy="19" r="2.5"/>
+                        <path d="M8.5 19H15a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.5"/>
+                        <circle cx="18" cy="7" r="2.5"/>
+                    </svg>
+                    <span>College Timeline</span>
+                </a>
+
+            <a href="./CareerResume.html" class="nav-link active" aria-current="page">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2.5h8l5 5V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z"/>
+                    <path d="M14 2.5V8h5M8 13h8M8 17h8"/>
+                </svg>
+                <span>Career &amp; Resume</span>
+            </a>
+
+            <a href="./AIAssistant.html" class="nav-link" id="aiNavLink">
+            <svg class="nav-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M12 2C12 8 16 12 22 12C16 12 12 16 12 22C12 16 8 12 2 12C8 12 12 8 12 2Z"/>
+            </svg>
+                <span>AI Assistant</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+                <a href="#" class="nav-link" id="settingsLink">
+                    <svg class="nav-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>Settings &amp; Privacy</span>
+                </a>
+
+            <a href="./MyProfile.html" class="profile">
+                <div class="avatar">AM</div>
+                <div class="profile-info">
+                    <strong>Aarav Mehta</strong>
+                    <small>View my profile</small>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="topbar">
+            <label class="search-box">
+                <span>⌕</span>
+                <input id="searchInput" type="search" placeholder="Search courses, projects, documents...">
+                <kbd>⌘K</kbd>
+            </label>
+
+            <div class="top-actions">
+                <!-- SEMESTER CALENDAR -->
+                <button class="semester" type="button">
+                    <svg class="semester-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="16" rx="2"/>
+                        <path d="M16 3v4M8 3v4M3 10h18"/>
+                    </svg>
+                    <span>Semester 7 · 2026-27</span>
+                </button>
+
+                <!-- NOTIFICATION BELL -->
+                <button
+                    class="icon-button"
+                    id="notificationBtn"
+                    type="button"
+                    aria-label="Notifications"
+                >
+                    <svg class="notification-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.6"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M10 21h4"/>
+                    </svg>
+                    <span class="notification-dot" aria-hidden="true"></span>
+                </button>
+
+                <div class="avatar top-avatar">AM</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <section class="page-heading">
+                <div>
+                    <h1>Career &amp; Resume</h1>
+                    <p>Your target role, resume, portfolio and every application in one tracker.</p>
+                </div>
+
+                <div class="heading-actions">
+                    <button class="btn secondary" id="shareProfileBtn" type="button">
+                        <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/>
+                            <path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 19.2l1.7-1.7"/>
+                        </svg>
+                        <span>Share profile link</span>
+                    </button>
+
+                    <button class="btn primary" id="addApplicationBtn" type="button">
+                        <span aria-hidden="true">＋</span>
+                        <span>Add application</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- CAREER GOAL AND RESUME -->
+            <section class="top-grid">
+                <article class="panel career-panel">
+                    <div class="panel-heading">
+                        <h2>Career goal</h2>
+                        <button class="text-button" id="editGoalBtn" type="button">Edit ✎</button>
+                    </div>
+
+                    <div class="career-goal">
+                        <div class="goal-icon">◎</div>
+                        <div>
+                            <h3 id="careerGoalTitle">Machine Learning Engineer</h3>
+                            <p id="careerGoalSubtitle">Internship Jan–Jun 2027 → full-time after graduation (Jul 2027)</p>
+                        </div>
+                    </div>
+
+                    <div class="preferences">
+                        <span>Bengaluru</span>
+                        <span>Hyderabad</span>
+                        <span>Remote</span>
+                        <span>Product companies</span>
+                        <span>₹40k+/month stipend</span>
+                    </div>
+
+                    <div class="readiness">
+                        <div class="readiness-heading">
+                            <span>Application readiness</span>
+                            <span id="readinessCount">3 of 5 done</span>
+                        </div>
+
+                        <div class="progress-track">
+                            <span id="readinessBar"></span>
+                        </div>
+
+                        <div class="readiness-items">
+                            <label><input type="checkbox" checked> Resume updated this month</label>
+                            <label><input type="checkbox" checked> 2+ ML projects with repos</label>
+                            <label><input type="checkbox" checked> AWS certification</label>
+                            <label><input type="checkbox"> 5 mock interviews (3/5)</label>
+                            <label><input type="checkbox"> Portfolio website</label>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel resume-panel">
+                    <div class="panel-heading">
+                        <h2>Resume</h2>
+
+                        <button class="text-button versions-button" id="versionsBtn" type="button">
+                            <span>Versions (7)</span>
+                            <svg class="button-icon small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m9 18 6-6-6-6"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="resume-file">
+                        <div class="pdf-preview" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                        <div class="resume-details">
+                            <strong id="resumeFileName">Aarav_Mehta_Resume_v7.pdf</strong>
+                            <p>1 page · Updated 10 Oct 2026</p>
+                            <small>Tailored for ML roles</small>
+                        </div>
+                    </div>
+
+                    <div class="resume-actions">
+                        <button class="btn secondary" id="downloadResumeBtn" type="button">
+                            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3v12"/>
+                                <path d="m7 10 5 5 5-5"/>
+                                <path d="M5 17v3h14v-3"/>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+
+                        <button class="btn secondary" id="updateResumeBtn" type="button">
+                            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 16V4"/>
+                                <path d="m7 9 5-5 5 5"/>
+                                <path d="M5 17v3h14v-3"/>
+                            </svg>
+                            <span>Update</span>
+                        </button>
+                    </div>
+
+                    <p class="shared-note">
+                        <svg class="button-icon small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="8" r="3"/>
+                            <path d="M3 20v-2a6 6 0 0 1 12 0v2"/>
+                            <path d="M16 5a3 3 0 0 1 0 6"/>
+                            <path d="M18 14a5 5 0 0 1 3 4v2"/>
+                        </svg>
+                        <span>Shared with Placement Cell and 2 recruiters</span>
+                    </p>
+
+                    <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx" hidden>
+                </article>
+            </section>
+
+            <!-- INTERNSHIP TRACKER -->
+            <section class="panel tracker-panel">
+                <div class="panel-heading tracker-heading">
+                    <h2>Internship tracker</h2>
+                    <button class="text-button" id="viewTableBtn" type="button">View as table ›</button>
+                </div>
+
+                <div class="tracker-grid" id="trackerGrid">
+                    <div class="tracker-column" data-status="Applied">
+                        <div class="column-heading">
+                            <span>Applied</span>
+                            <span class="count">3</span>
+                        </div>
+
+                        <div class="application-list">
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Kestrel Pay</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>Backend Intern</p>
+                                <small>Applied 3 Oct</small>
+                            </article>
+
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Orbit Data</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>Data Science Intern</p>
+                                <small>Applied 6 Oct</small>
+                            </article>
+
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Tessera Cloud</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>SWE Intern</p>
+                                <small>Applied 8 Oct</small>
+                            </article>
+                        </div>
+                    </div>
+
+                    <div class="tracker-column" data-status="Interviewing">
+                        <div class="column-heading">
+                            <span>Interviewing</span>
+                            <span class="count purple-count">2</span>
+                        </div>
+
+                        <div class="application-list">
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Fintlytics</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>SDE Intern 2027</p>
+                                <small>Technical round · 22 Oct</small>
+                            </article>
+
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Lumen Health</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>ML Intern</p>
+                                <small>Online test · 19 Oct</small>
+                            </article>
+                        </div>
+                    </div>
+
+                    <div class="tracker-column" data-status="Offer">
+                        <div class="column-heading">
+                            <span>Offer</span>
+                            <span class="count green-count">1</span>
+                        </div>
+
+                        <div class="application-list">
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Nimbus Labs</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>ML Intern</p>
+                                <small class="offer-deadline">₹60k/month · reply by 5 Nov</small>
+                            </article>
+                        </div>
+                    </div>
+
+                    <div class="tracker-column" data-status="Not selected">
+                        <div class="column-heading">
+                            <span>Not selected</span>
+                            <span class="count">2</span>
+                        </div>
+
+                        <div class="application-list">
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Quanta Retail</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>SDE Intern</p>
+                                <small>28 Sep · Feedback requested</small>
+                            </article>
+
+                            <article class="application-card">
+                                <div class="application-top">
+                                    <strong>Arcadia Games</strong>
+                                    <button class="more-btn" type="button" aria-label="Application options">···</button>
+                                </div>
+                                <p>Gameplay Intern</p>
+                                <small>12 Sep</small>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- ADD APPLICATION DIALOG -->
+<dialog id="applicationDialog">
+    <form id="applicationForm">
+        <div class="dialog-heading">
+            <h2>Add application</h2>
+            <button type="button" id="closeDialog" class="close-btn" aria-label="Close">×</button>
+        </div>
+
+        <label for="companyInput">Company</label>
+        <input id="companyInput" name="company" required placeholder="Company name">
+
+        <label for="roleInput">Role</label>
+        <input id="roleInput" name="role" required placeholder="e.g. Software Engineering Intern">
+
+        <label for="statusInput">Status</label>
+        <select id="statusInput" name="status">
+            <option>Applied</option>
+            <option>Interviewing</option>
+            <option>Offer</option>
+            <option>Not selected</option>
+        </select>
+
+        <label for="dateInput">Date or next step</label>
+        <input id="dateInput" name="date" placeholder="e.g. Applied 18 Oct">
+
+        <div class="dialog-actions">
+            <button type="button" class="btn secondary" id="cancelDialog">Cancel</button>
+            <button type="submit" class="btn primary">Add application</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- EDIT CAREER GOAL DIALOG -->
+<dialog id="goalDialog">
+    <form id="goalForm">
+        <div class="dialog-heading">
+            <h2>Edit career goal</h2>
+            <button type="button" id="closeGoalDialog" class="close-btn" aria-label="Close">×</button>
+        </div>
+
+        <label for="goalTitleInput">Target role</label>
+        <input id="goalTitleInput" required value="Machine Learning Engineer">
+
+        <label for="goalSubtitleInput">Career plan</label>
+        <input id="goalSubtitleInput" required value="Internship Jan–Jun 2027 → full-time after graduation">
+
+        <div class="dialog-actions">
+            <button type="button" class="btn secondary" id="cancelGoalDialog">Cancel</button>
+            <button type="submit" class="btn primary">Save changes</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./CareerResume.js"></script>
+</body>
+</html>

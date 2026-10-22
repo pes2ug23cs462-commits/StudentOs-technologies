@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | StudentOS</title>
+    <link rel="stylesheet" href="./MyProfile.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <a href="./Overview.html" class="brand">
+            <img src="./Logo.png" alt="StudentOS Logo">
+            <span class="brand-text">Student<span class="brand-os">OS</span></span>
+        </a>
+
+        <nav class="navigation">
+            <a href="./Overview.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="2" width="7" height="9" rx="1.5"/>
+                <rect x="14" y="2.5" width="7" height="5" rx="1.5"/>
+                <rect x="3" y="15" width="7" height="5" rx="1.5"/>
+                <rect x="13.5" y="11" width="7" height="9" rx="1.5"/>
+                </svg>
+                <span>Overview</span>
+            </a>
+
+            <a href="./Projects.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="7" width="18" height="14" rx="2"/>
+                    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <path d="M3 12h18"/>
+                </svg>
+                <span>Projects &amp; Experience</span>
+            </a>
+
+                <a href="./CollegeTimeline.html" class="nav-link">
+                    <svg class="nav-icon"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <circle cx="6" cy="19" r="2.5"/>
+                        <path d="M8.5 19H15a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.5"/>
+                        <circle cx="18" cy="7" r="2.5"/>
+                    </svg>
+                    <span>College Timeline</span>
+                </a>
+
+            <a href="./CareerResume.html" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 3h8l5 5v13H5V4a1 1 0 0 1 1-1z"/>
+                    <path d="M14 3v5h5"/>
+                    <path d="M8 13h8M8 17h8"/>
+                </svg>
+                <span>Career &amp; Resume</span>
+            </a>
+
+            <a href="./AIAssistant.html" class="nav-link" id="aiNavLink">
+            <svg class="nav-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M12 2C12 8 16 12 22 12C16 12 12 16 12 22C12 16 8 12 2 12C8 12 12 8 12 2Z"/>
+            </svg>
+                <span>AI Assistant</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+                <a href="#" class="nav-link" id="settingsLink">
+                    <svg class="nav-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>Settings &amp; Privacy</span>
+                </a>
+            
+            <a href="./MyProfile.html" class="profile">
+                <a href="./MyProfile.html" class="profile active">
+                <div class="avatar">AM</div>
+                <div class="profile-info">
+                    <strong>Aarav Mehta</strong>
+                    <small>View my profile</small>
+
+                </div>
+                <span class="profile-arrow">›</span>
+                </a>
+            </a>
+           
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <label class="search-box">
+                <span>⌕</span>
+                <input id="globalSearch" type="search" placeholder="Search courses, projects, documents...">
+                <kbd>⌘K</kbd>
+            </label>
+
+            <div class="top-actions">
+                <button class="semester" type="button">
+                    <svg class="semester-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3.5" y="5" width="17" height="16" rx="2"/>
+                        <path d="M7.5 3v4M16.5 3v4M3.5 10h17"/>
+                    </svg>
+                    <span>Semester 7 · 2026-27</span>
+                </button>
+
+                <button class="icon-button" id="notificationBtn" type="button" aria-label="Notifications">
+                    <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M10 21h4"/>
+                    </svg>
+                    <span class="notification-dot"></span>
+                </button>
+
+                <div class="avatar top-avatar">AM</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <section class="page-heading">
+                <div>
+                    <h1>My Profile</h1>
+                    <p>Your student record in one place. Changes save straight to your StudentOS account.</p>
+                </div>
+
+                <button class="btn secondary" id="publicProfileBtn" type="button">
+                    <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 4h6v6M20 4l-9 9M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    </svg>
+                    <span>View public profile</span>
+                </button>
+            </section>
+
+            <section class="profile-layout">
+                <aside class="profile-sidebar">
+                    <div class="student-summary">
+                        <div class="avatar">AM</div>
+                        <div>
+                            <strong>Aarav Mehta</strong>
+                            <small>NIT23CS047</small>
+                        </div>
+                    </div>
+
+                    <nav class="profile-navigation">
+                        <a class="profile-nav-link" href="./Personal.html" data-tab="personal">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="3.5"/>
+                                <path d="M5.5 20v-2a6.5 6.5 0 0 1 13 0v2"/>
+                            </svg>
+                            <span>Personal Information</span>
+                        </a>
+
+                        <a class="profile-nav-link" href="./education.html" data-tab="education">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m2 9 10-5 10 5-10 5L2 9Z"/>
+                                <path d="M6 11v5c3.5 3 8.5 3 12 0v-5M22 9v6"/>
+                            </svg>
+                            <span>Education &amp; Academics</span>
+                        </a>
+
+                        <button class="profile-nav-link" type="button" data-tab="achievements">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="5"/>
+                                <path d="m8.5 12-1 9 4.5-2.5 4.5 2.5-1-9"/>
+                            </svg>
+                            <span>Achievements &amp; Certificates</span>
+                        </button>
+
+                        <button class="profile-nav-link" type="button" data-tab="goals">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="9"/>
+                                <circle cx="12" cy="12" r="5.5"/>
+                                <circle cx="12" cy="12" r="2"/>
+                            </svg>
+                            <span>Goals &amp; Skills</span>
+                        </button>
+
+                        <button class="profile-nav-link" type="button" data-tab="projects">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="7" width="18" height="14" rx="2"/>
+                                <path d="M8 7V4h8v3M8 12h8"/>
+                            </svg>
+                            <span>Projects &amp; Experience</span>
+                        </button>
+
+                        <button class="profile-nav-link" type="button" data-tab="career">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m3 17 6-6 4 3 8-8M15 6h6v6"/>
+                            </svg>
+                            <span>Career Profile</span>
+                        </button>
+
+                        <button class="profile-nav-link active" type="button" data-tab="documents" aria-current="page">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h7l2 3h9v11H3z"/>
+                                <path d="M3 6V4h7l2 2"/>
+                            </svg>
+                            <span>Documents &amp; Links</span>
+                        </button>
+                    </nav>
+                </aside>
+
+                <section class="documents-content">
+                    <div class="content-heading">
+                        <h2>Documents &amp; Links</h2>
+                        <p>Public links and the documents that back up your profile. Files stay private until you share them.</p>
+                    </div>
+
+                    <section class="links-section">
+                        <h3>Links</h3>
+
+                        <form id="linksForm">
+                            <div class="links-grid">
+                                <label class="field-group">
+                                    <span>GitHub</span>
+                                    <div class="input-with-icon">
+                                        <input type="url" id="githubLink" value="https://github.com/aaravm" placeholder="https://github.com/username">
+                                        <svg class="field-icon-svg github-icon" viewBox="0 0 24 24" aria-label="GitHub">
+                                            <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.05c-3.34.73-4.04-1.42-4.04-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.53.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.29-1.23 3.29-1.23.65 1.65.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.62-2.8 5.65-5.48 5.95.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.82.58A12.01 12.01 0 0 0 24 12C24 5.37 18.63 0 12 0Z"/>
+                                        </svg>
+                                    </div>
+                                </label>
+
+                                <label class="field-group">
+                                    <span>LinkedIn</span>
+                                    <div class="input-with-icon">
+                                        <input type="url" id="linkedinLink" value="https://linkedin.com/in/aarav-mehta" placeholder="https://linkedin.com/in/username">
+                                        <svg class="field-icon-svg chain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/>
+                                            <path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/>
+                                        </svg>
+                                    </div>
+                                </label>
+
+                                <label class="field-group">
+                                    <span>Portfolio website</span>
+                                    <div class="input-with-icon">
+                                        <input type="url" id="portfolioLink" placeholder="https://">
+                                        <svg class="field-icon-svg chain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/>
+                                            <path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/>
+                                        </svg>
+                                    </div>
+                                    <small>Optional — recruiters for ML roles often ask for one.</small>
+                                </label>
+
+                                <label class="field-group">
+                                    <span>Kaggle</span>
+                                    <div class="input-with-icon">
+                                        <input type="url" id="kaggleLink" value="https://kaggle.com/aaravm" placeholder="https://kaggle.com/username">
+                                        <svg class="field-icon-svg chain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/>
+                                            <path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/>
+                                        </svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="documents-section">
+                        <div class="documents-heading">
+                            <div>
+                                <h3>Documents</h3>
+                                <p id="storageSummary">23 files · 186 MB of 1 GB</p>
+                            </div>
+
+                            <button class="btn primary upload-button" id="uploadDocumentBtn" type="button">
+                                <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 16V4M7 9l5-5 5 5M5 16v4h14v-4"/>
+                                </svg>
+                                <span>Upload</span>
+                            </button>
+
+                            <input type="file" id="documentFileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" multiple hidden>
+                        </div>
+
+                        <div class="document-list" id="documentList">
+                            <article class="document-item">
+                                <div class="document-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 3h8l5 5v13H6z"/>
+                                        <path d="M14 3v5h5M9 13h6M9 17h6"/>
+                                    </svg>
+                                </div>
+                                <div class="document-info">
+                                    <strong>Semester 6 grade card</strong>
+                                    <small>Transcript · 12 Oct 2026</small>
+                                </div>
+                                <span class="verification verified">Verified</span>
+                                <button class="download-document" type="button" data-file="semester6-grade-card.pdf">Download</button>
+                            </article>
+
+                            <article class="document-item">
+                                <div class="document-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 3h8l5 5v13H6z"/>
+                                        <path d="M14 3v5h5M9 13h6M9 17h6"/>
+                                    </svg>
+                                </div>
+                                <div class="document-info">
+                                    <strong>Finlytics internship completion letter</strong>
+                                    <small>Experience letter · 30 Jul 2026</small>
+                                </div>
+                                <span class="verification verified">Verified</span>
+                                <button class="download-document" type="button" data-file="finlytics-completion-letter.pdf">Download</button>
+                            </article>
+
+                            <article class="document-item">
+                                <div class="document-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 3h8l5 5v13H6z"/>
+                                        <path d="M14 3v5h5M9 13h6M9 17h6"/>
+                                    </svg>
+                                </div>
+                                <div class="document-info">
+                                    <strong>Best paper certificate</strong>
+                                    <small>Certificate · 21 Mar 2026</small>
+                                </div>
+                                <span class="verification pending">Pending</span>
+                                <button class="download-document" type="button" data-file="best-paper-certificate.pdf">Download</button>
+                            </article>
+                        </div>
+
+                        <p class="empty-documents" id="emptyDocuments" hidden>No documents match your search.</p>
+                    </section>
+                </section>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="./MyProfile.js"></script>
+</body>
+</html>

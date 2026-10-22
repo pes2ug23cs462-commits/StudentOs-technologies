@@ -1,0 +1,467 @@
+/* =========================================================
+   STUDENTOS — CHECK YOUR EMAIL
+   ========================================================= */
+
+
+/* -------------------------
+   RESET
+------------------------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background: #080c1b;
+    color: #f5f5ff;
+}
+
+
+/* -------------------------
+   MAIN PAGE
+------------------------- */
+
+.check-email-page {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background: #080c1b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+
+/* -------------------------
+   TOP RIGHT SUPPORT
+------------------------- */
+
+.support {
+    position: absolute;
+    top: 34px;
+    right: 5.5%;
+    font-size: 13px;
+    font-weight: 400;
+    color: #8f96b3;
+    white-space: nowrap;
+}
+
+.support a {
+    color: #b58cff;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.support a:hover {
+    color: #c6a6ff;
+}
+
+
+/* -------------------------
+   MAIN CONTENT
+------------------------- */
+
+.check-email-card {
+    width: 100%;
+    max-width: 520px;
+    margin-top: 125px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+/* -------------------------
+   BACK TO SIGN IN
+------------------------- */
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #b58cff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    margin-bottom: 28px;
+}
+
+.back-link:hover {
+    color: #c5a8ff;
+}
+
+.back-link .arrow {
+    font-size: 17px;
+    line-height: 1;
+    font-weight: 400;
+}
+
+
+/* -------------------------
+   EMAIL ICON
+------------------------- */
+
+.email-icon {
+    width: 52px;
+    height: 52px;
+    border: 1px solid #9a61ff;
+    border-radius: 13px;
+    background: rgba(111, 55, 225, 0.12);
+    color: #b98aff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    box-shadow: 0 0 0 1px rgba(132, 75, 255, 0.08), 0 8px 25px rgba(86, 38, 190, 0.08);
+}
+
+.email-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+
+/* -------------------------
+   HEADING
+------------------------- */
+
+.check-email-card h1 {
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.7px;
+    color: #f5f5ff;
+    margin-bottom: 10px;
+}
+
+
+/* -------------------------
+   DESCRIPTION
+------------------------- */
+
+.description {
+    font-size: 16px;
+    line-height: 1.55;
+    font-weight: 400;
+    color: #aab1cc;
+    margin-bottom: 26px;
+}
+
+.description strong {
+    color: #f1f1fa;
+    font-weight: 600;
+}
+
+
+/* -------------------------
+   INFORMATION BOX
+------------------------- */
+
+.info-box {
+    width: 100%;
+    min-height: 76px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    border: 1px solid #8353d8;
+    border-radius: 8px;
+    background: rgba(77, 39, 145, 0.18);
+    margin-bottom: 16px;
+}
+
+
+/* -------------------------
+   INFO ICON
+------------------------- */
+
+.info-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 1px solid #a982ff;
+    border-radius: 50%;
+    color: #b991ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 1px;
+}
+
+
+/* -------------------------
+   INFO CONTENT
+------------------------- */
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.info-title {
+    font-size: 12px;
+    line-height: 17px;
+    font-weight: 600;
+    color: #e9e7f7;
+}
+
+.info-text {
+    font-size: 12px;
+    line-height: 17px;
+    font-weight: 400;
+    color: #969db8;
+}
+
+
+/* -------------------------
+   PRIMARY BUTTON
+------------------------- */
+
+.primary-button {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 7px;
+    background: #7135ed;
+    color: #ffffff;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 20px rgba(108, 47, 229, 0.22);
+    margin-bottom: 8px;
+}
+
+.primary-button:hover {
+    background: #7d42f5;
+    box-shadow: 0 10px 25px rgba(108, 47, 229, 0.32);
+}
+
+.primary-button:active {
+    transform: translateY(1px);
+}
+
+
+/* -------------------------
+   SECONDARY BUTTON
+------------------------- */
+
+.secondary-button {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #252f4c;
+    border-radius: 7px;
+    background: #131a32;
+    color: #777f9d;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: not-allowed;
+    opacity: 1;
+    margin-bottom: 19px;
+}
+
+
+/* -------------------------
+   SIGN IN TEXT
+------------------------- */
+
+.signin-text {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    line-height: 20px;
+    color: #8991ae;
+    font-weight: 400;
+}
+
+.signin-text a {
+    color: #b58cff;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 3px;
+}
+
+.signin-text a:hover {
+    color: #c5a8ff;
+}
+
+
+/* -------------------------
+   BOTTOM TERMS
+------------------------- */
+
+.terms {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    text-align: center;
+    color: #626b89;
+    font-size: 11px;
+    line-height: 17px;
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+
+/* -------------------------
+   LARGE DESKTOP
+------------------------- */
+
+@media (min-width: 1400px) {
+    .check-email-card {
+        max-width: 520px;
+        margin-top: 125px;
+    }
+    .check-email-card h1 {
+        font-size: 32px;
+    }
+    .description {
+        font-size: 16px;
+    }
+}
+
+
+/* -------------------------
+   LAPTOP / DESKTOP
+------------------------- */
+
+@media (max-width: 1200px) {
+    .check-email-card {
+        max-width: 500px;
+        margin-top: 120px;
+    }
+    .check-email-card h1 {
+        font-size: 30px;
+    }
+    .description {
+        font-size: 15px;
+    }
+}
+
+
+/* -------------------------
+   TABLET
+------------------------- */
+
+@media (max-width: 768px) {
+    .support {
+        top: 24px;
+        right: 30px;
+        font-size: 12px;
+    }
+    .check-email-card {
+        width: calc(100% - 50px);
+        max-width: 520px;
+        margin-top: 110px;
+    }
+    .back-link {
+        font-size: 14px;
+        margin-bottom: 25px;
+    }
+    .check-email-card h1 {
+        font-size: 28px;
+    }
+    .description {
+        font-size: 15px;
+    }
+    .info-box {
+        padding: 13px 14px;
+    }
+    .terms {
+        bottom: 22px;
+        font-size: 10px;
+    }
+}
+
+
+/* -------------------------
+   MOBILE
+------------------------- */
+
+@media (max-width: 480px) {
+    .support {
+        top: 20px;
+        right: 20px;
+        font-size: 11px;
+    }
+    .check-email-card {
+        width: calc(100% - 40px);
+        margin-top: 95px;
+    }
+    .back-link {
+        font-size: 13px;
+        gap: 7px;
+        margin-bottom: 24px;
+    }
+    .back-link .arrow {
+        font-size: 16px;
+    }
+    .email-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .email-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    .check-email-card h1 {
+        font-size: 25px;
+        letter-spacing: -0.4px;
+    }
+    .description {
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 22px;
+    }
+    .info-box {
+        padding: 12px;
+        gap: 9px;
+    }
+    .info-title {
+        font-size: 11px;
+    }
+    .info-text {
+        font-size: 11px;
+        line-height: 16px;
+    }
+    .primary-button {
+        height: 44px;
+        font-size: 13px;
+    }
+    .secondary-button {
+        height: 40px;
+        font-size: 11px;
+    }
+    .signin-text {
+        font-size: 12px;
+    }
+    .terms {
+        bottom: 18px;
+        font-size: 9px;
+    }
+}
