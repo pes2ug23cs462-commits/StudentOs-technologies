@@ -1,0 +1,61 @@
+
+{
+  "student_id": "test_student_001",
+  "is_synthetic": true,
+  "profile": {
+    "first_name": "Aarav",
+    "education_level": "First-year undergraduate",
+    "field_of_study": "Computer Science",
+    "career_goal": "Become a Machine Learning Engineer",
+    "experience_level": "Beginner",
+    "preferred_learning_style": "Practical projects",
+    "preferred_response_style": "Friendly, clear, step-by-step",
+    "available_minutes_per_day": 60,
+    "preferred_language": "English"
+  },
+  "goals": [
+    {
+      "goal_id": "test_goal_001",
+      "title": "Learn Python fundamentals",
+      "status": "in_progress"
+    },
+    {
+      "goal_id": "test_goal_002",
+      "title": "Build a first machine learning project",
+      "status": "not_started"
+    }
+  ],
+  "assessments": [
+    {
+      "assessment_id": "test_assessment_001",
+      "category": "Python",
+      "score": 70,
+      "max_score": 100
+    },
+    {
+      "assessment_id": "test_assessment_002",
+      "category": "Mathematics",
+      "score": 55,
+      "max_score": 100
+    },
+    {
+      "assessment_id": "test_assessment_003",
+      "category": "Machine Learning",
+      "score": 35,
+      "max_score": 100
+    }
+  ],
+  "progress": {
+    "completed_tasks": 3,
+    "pending_tasks": 2,
+    "current_streak_days": 2
+  },
+  "preferences": {
+    "wants_short_explanations": true,
+    "wants_examples": true,
+    "wants_daily_study_plans": true
+  },
+  "conversation_summary": "",
+  "persistent_memory": [],
+  "llm_context": "TEST DATA ONLY. Student Aarav is a first-year Computer Science undergraduate who wants to become a Machine Learning Engineer. He is a beginner, prefers practical projects and friendly step-by-step explanations, and can study for 60 minutes per day. Assessment scores: Python 70%, Mathematics 55%, Machine Learning 35%. Personalize guidance around these details without assuming that assessment scores fully represent his ability."
+}
