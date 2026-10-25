@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy
+PyMySQL
+pydantic-settings
+pwdlib[argon2]
+python-multipart==0.0.32

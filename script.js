@@ -1,10 +1,15 @@
+
 /* ==========================================
    StudentOS Authentication — JavaScript
-   Frontend demo only
+   Backend-connected authentication
    ========================================== */
 
 const screens = document.querySelectorAll(".screen");
 const toast = document.getElementById("toast");
+
+const API_BASE_URL = "http://127.0.0.1:8000";
+const TOKEN_KEY = "studentos_access_token";
+const DASHBOARD_URL = "./Overview.html";
 
 /* Switch between authentication screens */
 
@@ -41,9 +46,20 @@ function showToast(message) {
     }, 2800);
 }
 
+/* Navigate to the dashboard in the current tab */
+
+function openDashboard(accessToken) {
+    if (!accessToken) {
+        throw new Error("No access token was returned by the server.");
+    }
+
+    sessionStorage.setItem(TOKEN_KEY, accessToken);
+    window.location.href = DASHBOARD_URL;
+}
+
 /* Navigation links */
 
-document.addEventListener("click", function(event) {
+document.addEventListener("click", function (event) {
     const screenLink = event.target.closest("[data-screen]");
 
     if (screenLink) {
@@ -56,9 +72,7 @@ document.addEventListener("click", function(event) {
 
     if (infoLink) {
         event.preventDefault();
-        showToast(
-            infoLink.dataset.info + " page is a demo placeholder."
-        );
+        showToast(infoLink.dataset.info + " page is a demo placeholder.");
     }
 
     const providerButton = event.target.closest("[data-provider]");
@@ -73,14 +87,13 @@ document.addEventListener("click", function(event) {
 
 /* Show or hide passwords */
 
-document.querySelectorAll("[data-toggle]").forEach(function(button) {
-    button.addEventListener("click", function() {
+document.querySelectorAll("[data-toggle]").forEach(function (button) {
+    button.addEventListener("click", function () {
         const input = document.getElementById(button.dataset.toggle);
 
         if (!input) return;
 
         const reveal = input.type === "password";
-
         input.type = reveal ? "text" : "password";
 
         button.setAttribute(
@@ -118,7 +131,6 @@ function clearFieldError(input, errorElement) {
 
 function validateEmail(input, errorElement) {
     const value = input.value.trim();
-
     let message = "";
 
     if (!value) {
@@ -128,7 +140,6 @@ function validateEmail(input, errorElement) {
     }
 
     setError(input, errorElement, message);
-
     return !message;
 }
 
@@ -141,25 +152,17 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const loginError = document.getElementById("loginError");
 
-emailInput.addEventListener("input", function() {
-    clearFieldError(
-        emailInput,
-        document.getElementById("emailError")
-    );
-
+emailInput.addEventListener("input", function () {
+    clearFieldError(emailInput, document.getElementById("emailError"));
     loginError.classList.add("hidden");
 });
 
-passwordInput.addEventListener("input", function() {
-    clearFieldError(
-        passwordInput,
-        document.getElementById("passwordError")
-    );
-
+passwordInput.addEventListener("input", function () {
+    clearFieldError(passwordInput, document.getElementById("passwordError"));
     loginError.classList.add("hidden");
 });
 
-loginForm.addEventListener("submit", function(event) {
+loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const emailValid = validateEmail(
@@ -170,58 +173,70 @@ loginForm.addEventListener("submit", function(event) {
     const passwordError = document.getElementById("passwordError");
     const password = passwordInput.value;
 
-    let passwordValid = true;
-
     if (!password.trim()) {
-        setError(
-            passwordInput,
-            passwordError,
-            "Please enter your password."
-        );
-
-        passwordValid = false;
-    } else if (password.length < 6) {
-        setError(
-            passwordInput,
-            passwordError,
-            "Password must contain at least 6 characters."
-        );
-
-        passwordValid = false;
-    } else {
-        clearFieldError(passwordInput, passwordError);
-    }
-
-    if (!emailValid || !passwordValid) {
-        loginError.classList.add("hidden");
-
-        const invalidInput = loginForm.querySelector(
-            ".invalid-input, [aria-invalid='true']"
-        );
-
-        if (invalidInput) {
-            invalidInput.focus();
-        }
-
+        setError(passwordInput, passwordError, "Please enter your password.");
         return;
     }
 
-    /*
-      Demo only: no authentication server is connected.
-      Valid-looking input does not mean the user is authenticated.
-    */
+    clearFieldError(passwordInput, passwordError);
 
-    loginError.classList.remove("hidden");
+    if (!emailValid) {
+        loginError.classList.add("hidden");
+        return;
+    }
 
-    loginError.textContent =
-        "Demo only: connect an authentication API to verify your credentials.";
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const originalText = submitButton ? submitButton.textContent : "";
+
+    loginError.classList.add("hidden");
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Signing in...";
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/signin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: emailInput.value.trim(),
+                password: password,
+            }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || "Sign-in failed. Check your email and password."
+            );
+        }
+
+        if (!data.access_token) {
+            throw new Error("The server did not return a session token.");
+        }
+
+        openDashboard(data.access_token);
+    } catch (error) {
+        loginError.textContent =
+            error.message ||
+            "Unable to contact the server. Check that the backend is running.";
+
+        loginError.classList.remove("hidden");
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
+    }
 });
 
 /* Incorrect-password demonstration screen */
 
 document
     .getElementById("errorLoginForm")
-    .addEventListener("submit", function(event) {
+    .addEventListener("submit", function (event) {
         event.preventDefault();
 
         showToast(
@@ -231,15 +246,14 @@ document
 
 /* Validation-state demonstration screen */
 
-document
-    .getElementById("validationForm")
-    .addEventListener("submit", function(event) {
-        event.preventDefault();
+const validationForm = document.getElementById("validationForm");
 
-        showToast(
-            "This screen demonstrates inline validation errors."
-        );
+if (validationForm) {
+    validationForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        showToast("This screen demonstrates inline validation errors.");
     });
+}
 
 /* ==========================================
    FORGOT PASSWORD
@@ -249,11 +263,11 @@ const forgotForm = document.getElementById("forgotForm");
 const forgotEmail = document.getElementById("forgotEmail");
 const forgotError = document.getElementById("forgotError");
 
-forgotEmail.addEventListener("input", function() {
+forgotEmail.addEventListener("input", function () {
     clearFieldError(forgotEmail, forgotError);
 });
 
-forgotForm.addEventListener("submit", function(event) {
+forgotForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
     const valid = validateEmail(forgotEmail, forgotError);
@@ -263,11 +277,7 @@ forgotForm.addEventListener("submit", function(event) {
         return;
     }
 
-    /*
-      Demo navigation only.
-      No email is actually sent.
-    */
-
+    // Demo navigation only. No reset email is sent.
     showScreen("emailSentScreen");
 });
 
@@ -299,27 +309,21 @@ newPassword.addEventListener("input", updatePasswordRules);
 
 document
     .getElementById("resetForm")
-    .addEventListener("submit", function(event) {
+    .addEventListener("submit", function (event) {
         event.preventDefault();
 
-        const newPasswordError =
-            document.getElementById("newPasswordError");
-
+        const newPasswordError = document.getElementById("newPasswordError");
         const confirmPasswordError =
             document.getElementById("confirmPasswordError");
 
         let valid = true;
 
-        if (
-            newPassword.value.length < 8 ||
-            !/\d/.test(newPassword.value)
-        ) {
+        if (newPassword.value.length < 8 || !/\d/.test(newPassword.value)) {
             setError(
                 newPassword,
                 newPasswordError,
                 "Use at least 8 characters and include a number."
             );
-
             valid = false;
         } else {
             clearFieldError(newPassword, newPasswordError);
@@ -331,32 +335,21 @@ document
                 confirmPasswordError,
                 "Please confirm your password."
             );
-
             valid = false;
-        } else if (
-            confirmPassword.value !== newPassword.value
-        ) {
+        } else if (confirmPassword.value !== newPassword.value) {
             setError(
                 confirmPassword,
                 confirmPasswordError,
                 "Passwords do not match."
             );
-
             valid = false;
         } else {
-            clearFieldError(
-                confirmPassword,
-                confirmPasswordError
-            );
+            clearFieldError(confirmPassword, confirmPasswordError);
         }
 
         if (!valid) return;
 
-        /*
-          Demo only: a secure backend is required
-          to actually update an account password.
-        */
-
+        // Demo only: password reset requires a backend endpoint.
         showScreen("successScreen");
     });
 
@@ -366,18 +359,16 @@ document
 
 document
     .getElementById("registerForm")
-    .addEventListener("submit", function(event) {
+    .addEventListener("submit", function (event) {
         event.preventDefault();
 
         const fullName = document.getElementById("fullName");
         const registerEmail = document.getElementById("registerEmail");
         const registerPassword = document.getElementById("registerPassword");
 
-        const nameError = document.getElementById("nameError");
-
+        const nameError = document.getElementById("fullNameError");
         const registerEmailError =
             document.getElementById("registerEmailError");
-
         const registerPasswordError =
             document.getElementById("registerPasswordError");
 
@@ -389,7 +380,6 @@ document
                 nameError,
                 "Please enter your full name."
             );
-
             valid = false;
         } else {
             clearFieldError(fullName, nameError);
@@ -405,26 +395,76 @@ document
                 registerPasswordError,
                 "Use at least 8 characters."
             );
-
             valid = false;
         } else {
-            clearFieldError(
-                registerPassword,
-                registerPasswordError
-            );
+            clearFieldError(registerPassword, registerPasswordError);
         }
 
         if (!valid) return;
 
-        showToast(
-            "Form validated. Connect your registration API to create an account."
+        const submitButton = document.querySelector(
+            '#registerForm button[type="submit"]'
         );
+        const originalText = submitButton ? submitButton.textContent : "";
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating account...";
+        }
+
+        (async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        full_name: fullName.value.trim(),
+                        email: registerEmail.value.trim(),
+                        password: registerPassword.value,
+                    }),
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const detail = data.detail;
+
+                    const message = Array.isArray(detail)
+                        ? detail.map((item) => item.msg).join(" ")
+                        : typeof detail === "string"
+                            ? detail
+                            : "Unable to create your account. Please try again.";
+
+                    showToast(message);
+                    return;
+                }
+
+                if (!data.access_token) {
+                    showToast(
+                        "Account created, but no session was returned."
+                    );
+                    return;
+                }
+
+                openDashboard(data.access_token);
+            } catch (error) {
+                console.error("Signup failed:", error);
+                showToast(
+                    "Cannot connect to StudentOS. Check that the backend is running."
+                );
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                }
+            }
+        })();
     });
 
 /* Clear stale invalid styling while editing */
 
-document.querySelectorAll(".field input").forEach(function(input) {
-    input.addEventListener("input", function() {
+document.querySelectorAll(".field input").forEach(function (input) {
+    input.addEventListener("input", function () {
         if (input.getAttribute("aria-invalid") === "true") {
             input.removeAttribute("aria-invalid");
             input.classList.remove("invalid-input");

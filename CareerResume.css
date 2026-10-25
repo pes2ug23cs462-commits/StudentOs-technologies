@@ -1,0 +1,1066 @@
+
+:root {
+    --bg: #0b1020;
+    --sidebar: #111831;
+    --panel: #111a32;
+    --panel-alt: #0d1429;
+    --border: #24304e;
+    --text: #eef1ff;
+    --muted: #929db8;
+    --purple: #7139ed;
+    --purple-light: #a78bfa;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    color: inherit;
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--purple-light);
+    outline-offset: 2px;
+}
+
+/* MAIN LAYOUT */
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 200px;
+    flex: 0 0 200px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 13px 10px 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+}
+
+.brand {
+    height: 37px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2px;
+    margin-bottom: 22px;
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: -0.3px;
+}
+
+.brand img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.brand-os {
+    color: #b8a0ff;
+}
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-link {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: #a5b0cc;
+    font-size: 11px;
+    transition: background 0.18s, color 0.18s;
+}
+
+.nav-link:hover {
+    background: #192441;
+    color: #fff;
+}
+
+.nav-link.active {
+    color: #c9b8ff;
+    background: #261b4c;
+}
+
+.nav-icon {
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+}
+
+/* SIDEBAR PROFILE */
+
+.sidebar-bottom {
+    margin-top: auto;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 5px 14px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #29204f;
+    color: #c8b8ff;
+    font-size: 10px;
+}
+
+.profile-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.profile-info strong {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.profile-info small {
+    font-size: 9px;
+    color: var(--muted);
+}
+
+.arrow {
+    margin-left: auto;
+    color: #aab4cb;
+}
+
+/* MAIN CONTENT */
+
+.main-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.topbar {
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 20px;
+    background: #101731;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-box {
+    width: min(380px, 48%);
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 9px;
+    border: 1px solid #293653;
+    border-radius: 7px;
+    background: #0c1328;
+    color: #8d9ab8;
+}
+
+.search-box input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 10px;
+}
+
+.search-box input::placeholder {
+    color: #8d9ab8;
+}
+
+.search-box kbd {
+    white-space: nowrap;
+    border: 1px solid #303b58;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 9px;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.semester,
+.icon-button {
+    height: 33px;
+    border: 1px solid #293653;
+    border-radius: 7px;
+    background: #11172b;
+    color: #e0e6f7;
+}
+
+.semester {
+    padding: 0 10px;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.icon-button {
+    position: relative;
+    width: 33px;
+    flex: 0 0 33px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 13px;
+}
+
+.icon-button::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    top: 4px;
+    right: 4px;
+    border-radius: 50%;
+    background: var(--purple-light);
+}
+
+.top-avatar {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+}
+
+/* PAGE HEADING */
+
+.page-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 22px 28px;
+}
+
+.page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 17px;
+}
+
+.page-heading h1 {
+    margin: 0 0 5px;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.35px;
+}
+
+.page-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.heading-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* BUTTONS */
+
+.btn {
+    min-height: 33px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 550;
+    white-space: nowrap;
+}
+
+.btn.primary {
+    background: var(--purple);
+    color: white;
+}
+
+.btn.primary:hover {
+    background: #824cf4;
+}
+
+.btn.secondary {
+    background: #151e38;
+    border-color: #303b5b;
+    color: #e0e6f7;
+}
+
+.btn.secondary:hover {
+    background: #1c2847;
+}
+
+/* PANELS */
+
+.panel {
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 15px;
+}
+
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.panel-heading h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.text-button {
+    padding: 2px 0;
+    border: 0;
+    background: transparent;
+    color: #bba6ff;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.text-button:hover {
+    color: white;
+}
+
+/* CAREER AND RESUME ROW */
+
+.top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.9fr);
+    gap: 14px;
+    align-items: stretch;
+    margin-bottom: 15px;
+}
+
+.career-panel,
+.resume-panel {
+    min-height: 165px;
+}
+
+.career-goal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.goal-icon {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: #251a4a;
+    color: #bba6ff;
+    font-size: 15px;
+}
+
+.career-goal h3 {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.career-goal p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.preferences {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #222d49;
+    color: #a8b4ce;
+    font-size: 8px;
+}
+
+/* APPLICATION READINESS */
+
+.readiness {
+    padding-top: 11px;
+}
+
+.readiness-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 9px;
+}
+
+.readiness-heading span:last-child {
+    color: var(--muted);
+}
+
+.progress-track {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #292f4e;
+}
+
+.progress-track span {
+    display: block;
+    width: 60%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #7839f2, #a56aff);
+    transition: width 0.2s;
+}
+
+.readiness-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 9px;
+}
+
+.readiness-items label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #aeb8d0;
+    font-size: 8px;
+    cursor: pointer;
+}
+
+.readiness-items input {
+    width: 11px;
+    height: 11px;
+    margin: 0;
+    accent-color: #8b5cf6;
+}
+
+/* RESUME CARD */
+
+.resume-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.pdf-preview {
+    width: 37px;
+    height: 48px;
+    flex: 0 0 37px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 5px;
+    border: 1px solid #34405f;
+    border-radius: 4px;
+    background: #0c1328;
+}
+
+.pdf-preview span {
+    height: 2px;
+    border-radius: 2px;
+    background: #65728e;
+}
+
+.pdf-preview span:nth-child(2) {
+    width: 70%;
+}
+
+.pdf-preview span:nth-child(3) {
+    width: 85%;
+}
+
+.pdf-preview span:nth-child(4) {
+    width: 55%;
+}
+
+.resume-details {
+    min-width: 0;
+}
+
+.resume-details strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 9px;
+    font-weight: 550;
+}
+
+.resume-details p {
+    margin: 4px 0;
+    color: var(--muted);
+    font-size: 8px;
+}
+
+.resume-details small {
+    color: #bba6ff;
+    font-size: 8px;
+}
+
+.resume-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 12px;
+}
+
+.resume-actions .btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 29px;
+    font-size: 9px;
+}
+
+.shared-note {
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 8px;
+}
+
+/* INTERNSHIP TRACKER */
+
+.tracker-panel {
+    padding: 15px 13px;
+}
+
+.tracker-heading {
+    margin-bottom: 13px;
+}
+
+.tracker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    align-items: start;
+}
+
+.tracker-column {
+    min-width: 0;
+    min-height: 130px;
+    padding: 8px;
+    border-radius: 7px;
+    background: #0c1327;
+}
+
+.column-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    margin-bottom: 9px;
+    color: #e0e6f7;
+    font-size: 9px;
+}
+
+.count {
+    min-width: 15px;
+    padding: 2px 4px;
+    text-align: center;
+    border-radius: 4px;
+    background: #27314d;
+    color: #d9e0f2;
+    font-size: 8px;
+}
+
+.purple-count {
+    background: #302054;
+    color: #c9b8ff;
+}
+
+.green-count {
+    background: #103b2d;
+    color: #6ee7b7;
+}
+
+.application-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.application-card {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid #222e4b;
+    border-radius: 6px;
+    background: #141d36;
+}
+
+.application-card[hidden] {
+    display: none;
+}
+
+.application-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.application-top strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.application-card p {
+    margin: 4px 0 3px;
+    color: #b2bdd4;
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+.application-card small {
+    display: block;
+    color: #8996b2;
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+.application-card .offer-deadline {
+    color: #6ee7a8;
+}
+
+.more-btn {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0 2px;
+    background: transparent;
+    color: #9aa7c2;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.more-btn:hover {
+    color: white;
+}
+
+/* TABLE VIEW */
+
+.tracker-grid.table-view {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+}
+
+.tracker-grid.table-view .tracker-column {
+    min-height: 0;
+}
+
+.tracker-grid.table-view .application-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* DIALOGS */
+
+dialog {
+    width: min(420px, calc(100% - 30px));
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 22px;
+    border: 1px solid #344061;
+    border-radius: 12px;
+    background: #111a32;
+    color: var(--text);
+    box-shadow: 0 20px 70px #0008;
+}
+
+dialog::backdrop {
+    background: #030611bd;
+    backdrop-filter: blur(4px);
+}
+
+dialog form {
+    display: flex;
+    flex-direction: column;
+}
+
+.dialog-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dialog-heading h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-btn {
+    border: 0;
+    background: transparent;
+    color: #aeb8d0;
+    font-size: 23px;
+}
+
+dialog label {
+    margin: 12px 0 6px;
+    color: #dce3f5;
+    font-size: 10px;
+}
+
+dialog input,
+dialog select {
+    width: 100%;
+    min-height: 36px;
+    padding: 9px;
+    border: 1px solid #2c3858;
+    border-radius: 6px;
+    background: #0b1228;
+    color: var(--text);
+    font-size: 11px;
+}
+
+dialog input::placeholder {
+    color: #7885a3;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+/* TOAST */
+
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 50;
+    max-width: calc(100vw - 40px);
+    padding: 11px 15px;
+    border: 1px solid #40316e;
+    border-radius: 8px;
+    background: #201840;
+    color: #e6ddff;
+    font-size: 11px;
+    box-shadow: 0 8px 30px #0005;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* RESPONSIVE */
+
+@media (min-width: 1400px) {
+    .sidebar {
+        width: 200px;
+        flex-basis: 200px;
+    }
+
+    .page-content {
+        padding: 24px 25px;
+    }
+
+    .panel {
+        padding: 17px;
+    }
+}
+
+@media (max-width: 1000px) {
+    .sidebar {
+        width: 172px;
+        flex-basis: 172px;
+    }
+
+    .page-content {
+        padding: 17px 14px;
+    }
+
+    .top-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tracker-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .sidebar {
+        width: 58px;
+        flex-basis: 58px;
+        padding: 12px 5px;
+    }
+
+    .brand {
+        justify-content: center;
+        padding: 0;
+        margin-bottom: 22px;
+    }
+
+    .brand-text,
+    .nav-link span,
+    .profile-info,
+    .arrow {
+        display: none;
+    }
+
+    .nav-link {
+        justify-content: center;
+        padding: 0;
+        gap: 0;
+    }
+
+    .nav-icon {
+        width: 15px;
+        height: 15px;
+        flex-basis: 15px;
+    }
+
+    .profile {
+        justify-content: center;
+        padding: 10px 0;
+    }
+
+    .topbar {
+        padding: 0 9px;
+        gap: 7px;
+    }
+
+    .search-box {
+        width: 45%;
+        gap: 5px;
+    }
+
+    .search-box kbd {
+        display: none;
+    }
+
+    .top-actions {
+        gap: 5px;
+    }
+
+    .semester {
+        max-width: 100px;
+        overflow: hidden;
+        padding: 0 6px;
+        font-size: 8px;
+    }
+
+    .page-content {
+        padding: 15px 10px;
+    }
+
+    .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .heading-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .tracker-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tracker-grid.table-view .application-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+/* =========================================
+   FIGMA-MATCHED CAREER & RESUME BUTTONS
+   ========================================= */
+
+/* Consistent inline SVG icons */
+.button-icon {
+    display: block;
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    stroke: currentColor;
+}
+
+/* Smaller icons for inline text actions */
+.small-icon {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+}
+
+/* Share profile link button */
+.heading-actions #shareProfileBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.heading-actions #shareProfileBtn .button-icon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Keep heading actions on one line when space permits */
+.heading-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Resume card heading and Versions link */
+.resume-panel .panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.versions-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 2px 0;
+    border: 0;
+    background: transparent;
+    color: #bba6ff;
+    font: inherit;
+    font-size: 9px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.versions-button:hover {
+    color: #ffffff;
+}
+
+/* Download and Update buttons */
+.resume-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.resume-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+    min-height: 29px;
+    padding: 0 10px;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.resume-actions .btn .button-icon {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 11px;
+}
+
+/* Shared with Placement Cell and recruiters */
+.shared-note {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.shared-note .button-icon {
+    flex: 0 0 10px;
+    width: 10px;
+    height: 10px;
+}
+
+/* Keep SVGs from stretching inside flex layouts */
+.btn .button-icon,
+.text-button .button-icon {
+    flex-shrink: 0;
+}
+
+/* Small-screen adjustments */
+@media (max-width: 600px) {
+    .heading-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .heading-actions #shareProfileBtn,
+    .heading-actions #addApplicationBtn {
+        flex: 1;
+    }
+
+    .resume-actions {
+        gap: 7px;
+    }
+}

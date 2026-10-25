@@ -1,0 +1,390 @@
+/* ===== Sub lead text ===== */
+
+.sub-lead {
+    margin-top: -4px;
+    margin-bottom: 10px;
+    font-size: 10.5px;
+    color: var(--muted);
+}
+
+
+/* ===== Open to opportunities banner ===== */
+
+.opp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(109, 79, 224, 0.16);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    border-radius: 9px;
+}
+
+.opp-text strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.opp-text small {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: var(--muted);
+}
+
+
+/* ===== Toggle switch ===== */
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 26px;
+    height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.toggle input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+.toggle .track {
+    position: absolute;
+    inset: 0;
+    border-radius: 99px;
+    background: #2b3459;
+    transition: background 0.2s;
+}
+
+.toggle .track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s;
+}
+
+.toggle input:checked+.track {
+    background: #6d4fe0;
+}
+
+.toggle input:checked+.track::after {
+    transform: translateX(12px);
+}
+
+.toggle input:focus-visible+.track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+
+/* larger toggle (banner) */
+
+.toggle.lg {
+    width: 30px;
+    height: 17px;
+}
+
+.toggle.lg .track::after {
+    width: 13px;
+    height: 13px;
+}
+
+.toggle.lg input:checked+.track::after {
+    transform: translateX(13px);
+}
+
+
+/* ===== Form ===== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #c3c9de;
+}
+
+.control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 11px;
+    background: #0b1127;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.15s;
+}
+
+.control:hover {
+    border-color: #2a3560;
+}
+
+.control:focus-within {
+    border-color: var(--accent);
+}
+
+.control input,
+.control select {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+}
+
+.control select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 18px;
+}
+
+.control select option {
+    background: var(--panel);
+    color: var(--text);
+}
+
+.control svg {
+    width: 12px;
+    height: 12px;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.control select+svg {
+    position: absolute;
+    right: 11px;
+}
+
+.control-click,
+.control-click input {
+    cursor: pointer;
+}
+
+
+/* hidden native month picker (still opens the calendar) */
+
+.hidden-picker {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+
+/* disabled / locked field */
+
+.control.disabled {
+    background: transparent;
+    cursor: not-allowed;
+}
+
+.control.disabled:hover {
+    border-color: var(--border);
+}
+
+.control.disabled input {
+    color: var(--muted-2);
+    cursor: not-allowed;
+}
+
+
+/* ===== Resume ===== */
+
+.resume-title {
+    margin-top: 24px;
+    margin-bottom: 4px;
+}
+
+.resume {
+    position: relative;
+}
+
+.resume-btn {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    background: #0b1127;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    transition: border-color 0.15s;
+}
+
+.resume-btn:hover {
+    border-color: #2a3560;
+}
+
+.resume-btn[aria-expanded="true"] {
+    border-color: var(--accent);
+}
+
+.file-ico {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    color: #c3c9de;
+    background: var(--panel-2);
+    flex-shrink: 0;
+}
+
+.file-ico svg {
+    width: 13px;
+    height: 13px;
+}
+
+.resume-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.resume-text strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.resume-text small {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: var(--muted-2);
+}
+
+.resume-chev {
+    width: 12px;
+    height: 12px;
+    color: var(--muted);
+    transition: transform 0.15s;
+}
+
+.resume-btn[aria-expanded="true"] .resume-chev {
+    transform: rotate(180deg);
+}
+
+.resume-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    padding: 5px;
+    background: var(--panel-2);
+    border: 1px solid #2a3560;
+    border-radius: 9px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.resume-menu[hidden] {
+    display: none;
+}
+
+.resume-menu li {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.resume-menu li:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.resume-menu li.selected {
+    background: var(--accent-bg);
+}
+
+.resume-menu strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.resume-menu small {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: var(--muted-2);
+}
+
+
+/* ===== Note ===== */
+
+.note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    font-size: 9.5px;
+    color: var(--muted);
+}
+
+.note svg {
+    width: 11px;
+    height: 11px;
+}
+
+
+/* ===== Saved toast ===== */
+
+.toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    padding: 8px 14px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid #2a3560;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* ===== Responsive ===== */
+
+@media (max-width: 760px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
