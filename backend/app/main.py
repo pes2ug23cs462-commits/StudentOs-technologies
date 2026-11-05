@@ -1,4 +1,4 @@
-﻿
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,9 +6,11 @@ from app.api.plans import router as plans_router
 from app.api.students import router as students_router
 from app.api.tasks import router as tasks_router
 from app.api.goals import router as goals_router
+from app.api.skills import router as skills_router
 from app.api.student_context import router as student_context_router
 from app.api.auth import router as auth_router
 from app.api.otp import router as otp_router
+from app.api.assistant import router as assistant_router
 from app.api.profile_documents import (
     router as profile_documents_router,
 )
@@ -57,9 +59,10 @@ def health_check():
 app.include_router(students_router)
 app.include_router(tasks_router)
 app.include_router(goals_router)
+app.include_router(skills_router)
 app.include_router(student_context_router)
 app.include_router(auth_router)
 app.include_router(otp_router)
 app.include_router(plans_router)
 app.include_router(profile_documents_router)
-
+app.include_router(assistant_router)

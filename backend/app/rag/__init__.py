@@ -1,0 +1,63 @@
+"""StudentOS RAG (Retrieval-Augmented Generation) package."""
+
+from app.rag.chunker import (
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_TARGET_CHUNK_SIZE,
+    DocumentChunk,
+    chunk_document,
+    chunk_text,
+    make_chunk_id,
+    split_text_recursive,
+)
+from app.rag.parser import (
+    MIN_EXTRACTED_CHARS,
+    SUPPORTED_EXTENSIONS,
+    CorruptedFileError,
+    DocumentParsingError,
+    EmptyDocumentError,
+    ExtractedPage,
+    ParsedDocument,
+    ScannedDocumentError,
+    UnsupportedFormatError,
+    normalize_whitespace,
+    parse_document,
+)
+from app.rag.vector_store import (
+    DEFAULT_COLLECTION_NAME,
+    PAGE_NUMBER_SENTINEL,
+    InvalidStudentError,
+    RetrievedChunk,
+    VectorStore,
+    VectorStoreError,
+    page_to_sentinel,
+    sentinel_to_page,
+)
+
+__all__ = [
+    "DEFAULT_CHUNK_OVERLAP",
+    "DEFAULT_TARGET_CHUNK_SIZE",
+    "DocumentChunk",
+    "chunk_document",
+    "chunk_text",
+    "make_chunk_id",
+    "split_text_recursive",
+    "MIN_EXTRACTED_CHARS",
+    "SUPPORTED_EXTENSIONS",
+    "CorruptedFileError",
+    "DocumentParsingError",
+    "EmptyDocumentError",
+    "ExtractedPage",
+    "ParsedDocument",
+    "ScannedDocumentError",
+    "UnsupportedFormatError",
+    "normalize_whitespace",
+    "parse_document",
+    "DEFAULT_COLLECTION_NAME",
+    "PAGE_NUMBER_SENTINEL",
+    "InvalidStudentError",
+    "RetrievedChunk",
+    "VectorStore",
+    "VectorStoreError",
+    "page_to_sentinel",
+    "sentinel_to_page",
+]

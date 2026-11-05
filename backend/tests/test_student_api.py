@@ -1,4 +1,4 @@
-﻿
+
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
@@ -224,3 +224,20 @@ def test_task_routes_reject_different_student():
 
     assert response.status_code == 403
     assert response.json()["detail"] == "You can only access your own tasks"
+
+
+def test_get_student_context_rejects_different_student():
+    response = client.get("/api/students/2/context")
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You can only access your own context"
+
+
+def test_get_student_context_requires_authentication():
+    prev_override = app.dependency_overrides.pop(require_student, None)
+    try:
+        response = client.get("/api/students/1/context")
+        assert response.status_code == 401
+    finally:
+        if prev_override is not None:
+            app.dependency_overrides[require_student] = prev_override

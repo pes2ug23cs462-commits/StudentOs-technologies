@@ -5,3 +5,7 @@ PyMySQL
 pydantic-settings
 pwdlib[argon2]
 python-multipart==0.0.32
+chromadb==1.5.9
+groq==1.7.0
+python-docx==1.2.0
+PyMuPDF==2.1
