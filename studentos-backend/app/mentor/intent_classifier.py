@@ -42,6 +42,7 @@ INTENT_TO_ROUTE: dict[str, str] = {
     "motivation_support": "mentor_conversation",
     "roadmap_creation": "roadmap_workflow",
     "roadmap_update": "roadmap_workflow",
+    "roadmap_approval": "roadmap_workflow",
     "roadmap_view": "roadmap_workflow",
     "resource_recommendation": "resource_workflow",
     "task_management": "task_workflow",
@@ -62,6 +63,7 @@ INTENT_TO_ACTION: dict[str, str] = {
     "motivation_support": "provide_motivation_support",
     "roadmap_creation": "create_roadmap",
     "roadmap_update": "update_roadmap",
+    "roadmap_approval": "approve_roadmap",
     "roadmap_view": "view_roadmap",
     "resource_recommendation": "recommend_resources",
     "task_management": "manage_task",
@@ -123,9 +125,24 @@ PATTERNS: dict[str, list[str]] = {
         r"\b(show|list|view)\b.{0,30}\b(my )?(pending )?(tasks|todos|to-dos)\b",
         r"\btask\b.{0,30}\b(tomorrow|today|tonight|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
     ],
+
+    "roadmap_approval": [
+        r"\b(approve|confirm|accept|activate|finalize)\b.{0,45}\b(my )?(learning )?roadmap\b",
+        r"\b(my )?(learning )?roadmap\b.{0,35}\b(approve|confirm|accept|activate|finalize)\b",
+        r"\bi approve\b.{0,30}\b(plan|roadmap)\b",
+    ],
     "roadmap_update": [
-        r"\b(update|change|modify|reorder|edit|remove|add)\b.{0,45}\b(my )?(existing )?(learning )?(roadmap|learning path)\b",
-        r"\b(my )?(roadmap|learning path)\b.{0,35}\b(update|change|modify|edit|remove|add)\b",
+    # Direct update requests
+        r"\b(update|change|modify|reorder|edit|remove|add|revise|shorten|expand|simplify)\b.{0,45}\b(my )?(existing )?(learning )?(roadmap|learning path)\b",
+
+    # Requests that mention the roadmap first
+        r"\b(my )?(existing )?(roadmap|learning path)\b.{0,45}\b(update|change|modify|edit|remove|add|revise|shorten|expand|simplify)\b",
+
+    # Natural language: "Make my existing roadmap shorter"
+        r"\b(make|keep)\s+my\s+(existing\s+)?(learning\s+)?(roadmap|learning path)\b.{0,45}\b(shorter|longer|simpler|easier|harder|more detailed|more practice)\b",
+
+    # Natural language: "Make it shorter" when roadmap is mentioned
+        r"\b(make|keep)\b.{0,35}\b(shorter|longer|simpler|easier|harder)\b.{0,35}\b(roadmap|learning path)\b",
     ],
     "roadmap_creation": [
         r"\b(create|make|build|generate|prepare|design)\b.{0,45}\b(learning )?roadmap\b",
@@ -421,6 +438,23 @@ def classify_intent(
     else:
         primary = "unclear"
 
+    # Prevent conflicting roadmap intents from becoming secondary actions.
+    if primary in (
+        "roadmap_update",
+        "roadmap_creation",
+        "roadmap_approval",
+    ):
+        intents = [
+            item for item in intents
+            if item not in (
+                "roadmap_update",
+                "roadmap_creation",
+                "roadmap_view",
+                "roadmap_approval",
+            )
+        ]
+        intents.insert(0, primary)
+
     # If rules cannot classify, optionally ask Groq. It is not called for every
     # message because that adds latency and cost and may override good rule matches.
     if primary == "unclear" and use_groq:
@@ -436,6 +470,9 @@ def classify_intent(
     if not intents or primary == "unclear":
         intents = ["unclear"]
         primary = "unclear"
+
+    # Prevent conflicting roadmap intents from becoming secondary actions.
+
 
     # Ensure primary intent is first and remove duplicate intents, preserving order.
     intents = list(dict.fromkeys(intents))
@@ -503,6 +540,13 @@ def run_tests() -> bool:
         ("I feel stuck and need motivation", "motivation_support"),
         ("Create a task and then show my roadmap", "task_management"),
         ("Show my roadmap and create a task", "roadmap_view"),
+        ("Make my existing roadmap shorter and add more practice", "roadmap_update"),
+        ("Shorten my roadmap", "roadmap_update"),
+        ("Update my existing roadmap", "roadmap_update"),
+        ("Approve my roadmap", "roadmap_approval"),
+        ("I approve my learning roadmap", "roadmap_approval"),
+        ("Please confirm my roadmap", "roadmap_approval"),
+        ("Activate my roadmap", "roadmap_approval"),
     ]
 
     failures = 0
