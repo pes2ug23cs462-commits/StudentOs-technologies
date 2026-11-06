@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from copy import deepcopy
 
 from app.mentor.intent_classifier import classify_intent
 from app.mentor.nodes import dispatch_mentor_node
+from app.mentor.context_engine import build_context_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +71,7 @@ def build_mentor_state(
     student_id: str,
     message: str,
     student_context: dict[str, Any] | None = None,
+    conversation_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build initial state for a mentor request.
@@ -84,6 +87,9 @@ def build_mentor_state(
 
     if student_context is not None and not isinstance(student_context, dict):
         raise ValueError("student_context must be a dictionary when provided")
+
+    if conversation_state is not None and not isinstance(conversation_state, dict):
+        raise ValueError("conversation_state must be a dictionary when provided")
 
     classification = classify_intent(message)
     if not isinstance(classification, dict):
@@ -109,20 +115,40 @@ def build_mentor_state(
     if not isinstance(entities, dict):
         entities = {}
 
+
+    # Normalize student context before passing it to mentor nodes.
+    # Roadmap creation requires the student's daily available study time.
+    is_roadmap_request = primary_intent in {"roadmap_creation", "plan_create"}
+
+    context_snapshot = build_context_snapshot(
+        student_context,
+        require_available_time=is_roadmap_request,
+    )
+
+    normalized_context = context_snapshot["context"]
+
+    # The request's student_id is authoritative.
+    normalized_context["student_id"] = student_id.strip()
+
+    # Preserve caller-managed conversation state without mutating its input.
+    normalized_conversation_state = deepcopy(conversation_state or {})
+
     return {
         "student_id": student_id.strip(),
         "message": message.strip(),
-        "student_context": student_context or {},
+        "student_context": normalized_context,
+        "context_snapshot": context_snapshot,
+        "conversation_state": normalized_conversation_state,
+        "missing_context_fields": context_snapshot["missing_fields"],
+        "context_complete": context_snapshot["is_complete"],
         "classification": classification,
         "primary_intent": primary_intent,
         "secondary_intents": secondary_intents,
         "entities": entities,
         "route": route_intent(primary_intent),
-        "needs_clarification": bool(
-            classification.get(
-                "needs_clarification",
-                primary_intent == "unclear",
-            )
+        "needs_clarification": (
+            bool(classification.get("needs_clarification"))
+            or bool(context_snapshot["missing_fields"])
         ),
         "status": "classified",
         "response": None,
@@ -134,6 +160,7 @@ def run_mentor_router(
     student_id: str,
     message: str,
     student_context: dict[str, Any] | None = None,
+    conversation_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Backward-compatible classification-only entry point.
@@ -144,6 +171,7 @@ def run_mentor_router(
         student_id=student_id,
         message=message,
         student_context=student_context,
+        conversation_state=conversation_state,
     )
     logger.info(
         "Mentor request classified: student_id=%s intent=%s route=%s",
@@ -158,6 +186,7 @@ def run_mentor_workflow(
     student_id: str,
     message: str,
     student_context: dict[str, Any] | None = None,
+    conversation_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Execute the initial end-to-end mentor workflow:
@@ -170,6 +199,7 @@ def run_mentor_workflow(
         student_id=student_id,
         message=message,
         student_context=student_context,
+        conversation_state=conversation_state,
     )
 
     logger.info(
