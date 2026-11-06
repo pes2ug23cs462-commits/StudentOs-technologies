@@ -92,17 +92,37 @@ class GroqLLMProvider:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            content = completion.choices[0].message.content
+
+            
+            choice = completion.choices[0]
+            content = choice.message.content
+
+            
+            
+
+            
+
             if not content or not content.strip():
-                raise LLMProviderError("Groq returned an empty response.")
+                raise LLMProviderError(
+                    "Groq returned an empty response."
+                )
+
             return content.strip()
 
+
         except (RateLimitError, APIConnectionError, APIStatusError) as exc:
-            logger.warning("Groq API request failed: %s", type(exc).__name__)
+            status_code = getattr(exc, "status_code", None)
+
+            logger.error(
+                "Groq API request failed | type=%s | status_code=%s | details=%s",
+                type(exc).__name__,
+                status_code,
+                str(exc),
+            )
+
             raise LLMProviderError(
-                "The AI service request failed. Check API access, rate limits, "
-                "network connectivity, and the configured model."
-            ) from exc
+                "The AI service request failed. Check the backend logs for details."
+            )from exc
         except LLMProviderError:
             raise
         except Exception as exc:
@@ -129,6 +149,7 @@ class GroqLLMProvider:
             raise ValueError("user_message cannot be empty")
 
         try:
+            
             completion = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -146,7 +167,14 @@ class GroqLLMProvider:
                 max_tokens=max_tokens,
                 response_format={"type": "json_object"},
             )
-            content = completion.choices[0].message.content
+
+            
+
+            choice = completion.choices[0]
+            content = choice.message.content
+
+            
+
             if not content or not content.strip():
                 raise LLMProviderError("Groq returned an empty JSON response.")
 
@@ -159,10 +187,24 @@ class GroqLLMProvider:
             logger.warning("Groq returned invalid JSON")
             raise LLMProviderError("The AI service returned invalid JSON.") from exc
         except (RateLimitError, APIConnectionError, APIStatusError) as exc:
-            logger.warning("Groq API request failed: %s", type(exc).__name__)
+            response_body = None
+
+            if getattr(exc, "response", None) is not None:
+                try:
+                    response_body = exc.response.text
+                except Exception:
+                    response_body = "Could not read response body"
+
+            logger.error(
+                "Groq JSON request failed | type=%s | status=%s | details=%s | body=%s",
+                type(exc).__name__,
+                getattr(exc, "status_code", None),
+                str(exc),
+                response_body,
+            )
+
             raise LLMProviderError(
-                "The AI service request failed. Check API access, rate limits, "
-                "network connectivity, and the configured model."
+                "The AI service request failed. Check backend logs for details."
             ) from exc
         except LLMProviderError:
             raise
