@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+/* ---------- Design tokens (from the StudentOS Figma file) ---------- */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Surfaces */
+  --color-ink: #0b0b0d;          /* app background */
+  --color-panel: #0f0f11;        /* sidebar, side panels */
+  --color-raised: #17161b;       /* drawers, popovers */
+  --color-field: #1b1a1f;        /* inputs */
+  --color-scrim: #000000;        /* behind dialogs */
+
+  /* Brand */
+  --color-accent: #00e1f5;       /* primary cyan */
+  --color-accent-hover: #5beaf8;
+  --color-plum: #260b41;         /* active nav */
+  --color-plum-strong: #3a1466;  /* user bubbles, upcoming sessions */
+  --color-violet-glow: #4c1d95;
+
+  --animate-spin-slow: spin 1.4s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-slide-in: slide-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-dot: dot 1.2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes dot {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-ink);
+  }
+  body {
+    @apply bg-ink text-white antialiased;
+  }
+  ::selection {
+    background: rgb(0 225 245 / 0.3);
+  }
+  /* Thin dark scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+/* Purple glow at the top of every app page, faint teal at bottom-right */
+@utility app-glow {
+  background:
+    radial-gradient(60% 45% at 50% -8%, rgb(88 24 160 / 0.55), transparent 70%),
+    radial-gradient(40% 35% at 95% 85%, rgb(0 140 150 / 0.10), transparent 70%),
+    var(--color-ink);
+}
+
+@utility auth-form-bg {
+  background: radial-gradient(70% 50% at 100% 0%, rgb(76 29 149 / 0.18), transparent 70%), #07060c;
+}
+
+@utility card-glow {
+  background:
+    radial-gradient(80% 120% at 50% 0%, rgb(76 29 149 / 0.18), transparent 70%),
+    rgb(255 255 255 / 0.025);
+}
+
+/* ---------- Auth hero animations ---------- */
+@keyframes hero-rise {
+  from { opacity: 0; translate: 0 26px; filter: blur(6px); }
+  to { opacity: 1; translate: 0 0; filter: blur(0); }
+}
+@keyframes hero-pop {
+  0% { opacity: 0; scale: 0.6; }
+  70% { opacity: 1; scale: 1.06; }
+  100% { opacity: 1; scale: 1; }
+}
+@keyframes hero-orbit { to { rotate: 360deg; } }
+@keyframes hero-orbit-rev { to { rotate: -360deg; } }
+@keyframes hero-glow {
+  0%, 100% { filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.6)); }
+  50% { filter: drop-shadow(0 0 55px rgba(124, 58, 237, 0.95)) drop-shadow(0 0 18px rgba(34, 211, 238, 0.35)); }
+}
+@keyframes hero-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+@keyframes hero-bar { from { scale: 1 0; } to { scale: 1 1; } }
+@keyframes hero-ring { from { stroke-dashoffset: 94.2; } }
+@keyframes hero-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+@keyframes hero-shimmer { to { background-position: 200% center; } }
+@keyframes hero-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.55); }
+  100% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+}
+@keyframes hero-horizon {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+@keyframes hero-scan {
+  from { translate: -120% 0; }
+  to { translate: 220% 0; }
+}
+
+@utility hero-in {
+  opacity: 0;
+  animation: hero-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+@utility hero-pop {
+  opacity: 0;
+  animation: hero-pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+/* Respect “reduce motion” in the OS settings. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-in,
+  .hero-pop {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  [data-hero] *,
+  [data-hero] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Light theme (from the Figma “Onboarding 01 · Welcome” light frame).
+   Tailwind colours read CSS variables, so swapping them here flips every
+   screen: “white” becomes the dark text colour, “black” becomes white,
+   and the accent turns green as in the design.
+------------------------------------------------------------------ */
+html.light {
+  color-scheme: light;
+  --color-white: #0f172a;        /* text */
+  --color-black: #ffffff;        /* text on accent buttons */
+  --color-ink: #f3f5fc;          /* page */
+  --color-panel: #ffffff;        /* sidebar */
+  --color-raised: #ffffff;       /* drawers, popovers */
+  --color-field: #ffffff;        /* inputs */
+  --color-scrim: #1e1b3a;
+  --color-accent: #16a34a;       /* green accent */
+  --color-accent-hover: #15803d;
+  --color-plum: #d9d2fc;         /* active nav */
+  --color-plum-strong: #e6e0fd;  /* user bubbles, sessions */
+
+  /* Accent shades used for highlights → greens */
+  --color-cyan-200: #15803d;
+  --color-cyan-300: #16a34a;
+  --color-cyan-400: #22c55e;
+  --color-emerald-300: #15803d;
+  --color-emerald-400: #16a34a;
+  --color-emerald-500: #22c55e;
+  --color-rose-200: #be123c;
+  --color-rose-300: #be123c;
+  --color-rose-400: #e11d48;
+  --color-amber-200: #b45309;
+  --color-amber-300: #b45309;
+  --color-violet-200: #6d28d9;
+  --color-violet-300: #7c3aed;
+  --color-violet-400: #895efa;   /* “OS” in the wordmark */
+}
+html.light body {
+  background: var(--color-ink);
+}
+html.light ::selection {
+  background: rgb(22 163 74 / 0.18);
+}
+html.light * {
+  scrollbar-color: rgb(15 23 42 / 0.15) transparent;
+}
+/* Page background: purple glow at the top, mint glow on the right */
+html.light .app-glow {
+  background:
+    radial-gradient(52% 42% at 52% 0%, rgb(178 166 250 / 0.85), transparent 75%),
+    radial-gradient(32% 38% at 86% 60%, rgb(160 220 196 / 0.65), transparent 72%),
+    var(--color-ink);
+}
+html.light .auth-form-bg {
+  background:
+    radial-gradient(70% 45% at 70% 0%, rgb(180 170 250 / 0.45), transparent 70%),
+    radial-gradient(50% 40% at 100% 90%, rgb(167 222 200 / 0.4), transparent 70%),
+    #f6f7fd;
+}
+/* Cards and buttons: solid white with a hairline border and soft shadow */
+html.light :where(.card-glow),
+html.light :where(.bg-white\/\[0\.025\]),
+html.light :where(.bg-white\/\[0\.03\]),
+html.light :where(.bg-white\/\[0\.035\]) {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.03), 0 6px 20px rgb(60 50 120 / 0.05);
+}
+html.light :where(.bg-white\/\[0\.04\]),
+html.light :where(.bg-white\/\[0\.05\]) {
+  background-color: #ffffff;
+}
+html.light :where(.border-white\/\[0\.06\]),
+html.light :where(.border-white\/\[0\.07\]),
+html.light :where(.border-white\/\[0\.08\]) {
+  border-color: #e9ecf4;
+}
+html.light :where(.border-white\/10) {
+  border-color: #e3e6ef;
+}
+
+/* Auth illustration, light version (Figma “Proto · Sign up” light frame) */
+.hero-light-only { display: none; }
+html.light .hero-dark-only { display: none; }
+html.light .hero-light-only {
+  display: block;
+  background:
+    radial-gradient(38% 34% at 50% 46%, rgb(196 181 253 / 0.75), transparent 72%),
+    radial-gradient(60% 40% at 50% 0%, rgb(221 214 254 / 0.6), transparent 70%),
+    radial-gradient(40% 30% at 15% 95%, rgb(186 230 253 / 0.35), transparent 70%);
+}
+html.light .hero-root { background: #f1f2fb; }
+html.light .hero-star { background: #a5b4fc; }
+html.light .hero-horizon {
+  border-top-color: rgb(165 180 252 / 0.9);
+  box-shadow: 0 -8px 40px rgb(147 197 253 / 0.35);
+  background: radial-gradient(50% 40% at 50% 0%, rgb(191 219 254 / 0.35), transparent 70%);
+}
+html.light .hero-glass {
+  background: rgb(255 255 255 / 0.9);
+  border-color: #ebedf5;
+  box-shadow: 0 10px 30px rgb(60 50 120 / 0.10), 0 1px 2px rgb(15 23 42 / 0.04);
+}
+html.light .hero-track { background: #e6e8f0; }
+html.light .hero-bar-violet { background: #afa6f1; }
+html.light .hero-dot { box-shadow: 0 0 10px rgb(22 163 74 / 0.6); }
+html.light .hero-plan {
+  background-image: linear-gradient(90deg, #67b1ff, #8b9cff, #67b1ff);
+}
+html.light [data-hero] img { filter: drop-shadow(0 10px 30px rgb(124 58 237 / 0.35)); }
+html.light .hero-track > div { box-shadow: none; }
