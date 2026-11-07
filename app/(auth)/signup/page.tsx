@@ -47,7 +47,7 @@ export default function SignUpPage() {
       setLoading(false);
       return;
     }
-    router.push("/onboarding");
+    router.push("/setup/academic");
   };
 
   const errorCount = Object.values(errors).filter(Boolean).length;

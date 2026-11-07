@@ -36,6 +36,7 @@ import { ThemeSync } from "@/components/ui/theme-toggle";
 import { takePendingName } from "./auth";
 import { auth, db } from "./firebase";
 import { isPast } from "./selectors";
+import { emptySetup, type SetupData } from "./setup";
 import { TODAY, uid, weekStart } from "./utils";
 
 /* ------------------------------------------------------------------
@@ -60,6 +61,8 @@ export interface AppState {
   /** Monday of week 1 of the plan */
   planStart?: string;
   onboarding: { step: OnboardingStep; answers: OnboardingAnswers; done: boolean };
+  /** Profile setup (academic, goals, skills, assessment). Missing on older accounts. */
+  setup?: SetupData;
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";
@@ -130,7 +133,8 @@ type Action =
   | { type: "commitments"; commitments: Commitment[] }
   | { type: "toast/push"; toast: Toast }
   | { type: "toast/dismiss"; id: string }
-  | { type: "chat/minimized"; value: boolean };
+  | { type: "chat/minimized"; value: boolean }
+  | { type: "setup"; patch: Partial<SetupData> };
 
 function sortSessions(list: StudySession[]) {
   return [...list].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
@@ -256,6 +260,8 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, toasts: [...state.toasts.slice(-2), action.toast] };
     case "toast/dismiss":
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
+    case "setup":
+      return { ...state, setup: { ...(state.setup ?? emptySetup()), ...action.patch } };
     case "chat/minimized":
       return { ...state, chatMinimized: action.value };
     default:
@@ -292,6 +298,7 @@ function makeActions(dispatch: React.Dispatch<Action>) {
     removeGoal: (id: string) => dispatch({ type: "goal/remove", id }),
     setCommitments: (commitments: Commitment[]) => dispatch({ type: "commitments", commitments }),
     setChatMinimized: (value: boolean) => dispatch({ type: "chat/minimized", value }),
+    setSetup: (patch: Partial<SetupData>) => dispatch({ type: "setup", patch }),
   };
 }
 

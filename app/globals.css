@@ -256,3 +256,104 @@ html.light .hero-plan {
 }
 html.light [data-hero] img { filter: drop-shadow(0 10px 30px rgb(124 58 237 / 0.35)); }
 html.light .hero-track > div { box-shadow: none; }
+
+/* ------------------------------------------------------------------
+   Profile setup pages
+------------------------------------------------------------------ */
+@utility setup-bg {
+  background:
+    radial-gradient(50% 40% at 15% 0%, rgb(76 29 149 / 0.35), transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, rgb(0 140 150 / 0.12), transparent 70%),
+    var(--color-ink);
+}
+html.light .setup-bg {
+  background:
+    radial-gradient(45% 40% at 10% 0%, rgb(199 210 254 / 0.9), transparent 70%),
+    radial-gradient(40% 45% at 100% 10%, rgb(221 214 254 / 0.8), transparent 70%),
+    radial-gradient(40% 40% at 90% 100%, rgb(204 251 241 / 0.6), transparent 70%),
+    #eef0fb;
+}
+.setup-left {
+  background:
+    radial-gradient(70% 40% at 30% 0%, rgb(124 58 237 / 0.16), transparent 70%),
+    radial-gradient(70% 50% at 50% 70%, rgb(124 58 237 / 0.10), transparent 70%),
+    rgb(255 255 255 / 0.015);
+}
+html.light .setup-left {
+  background:
+    radial-gradient(70% 40% at 30% 0%, rgb(224 231 255 / 0.9), transparent 70%),
+    radial-gradient(70% 50% at 50% 70%, rgb(237 233 254 / 0.9), transparent 70%),
+    #f6f7fd;
+}
+
+@keyframes setup-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+@keyframes setup-glow {
+  0%, 100% { filter: drop-shadow(0 4px 10px rgb(79 70 229 / 0.30)); }
+  50% { filter: drop-shadow(0 6px 22px rgb(124 58 237 / 0.60)) drop-shadow(0 0 10px rgb(34 211 238 / 0.25)); }
+}
+@keyframes setup-shine {
+  0%, 70% { translate: -120% 0; }
+  100% { translate: 120% 0; }
+}
+@keyframes setup-twinkle {
+  0%, 100% { opacity: 0.35; scale: 0.8; }
+  50% { opacity: 1; scale: 1.15; }
+}
+@keyframes setup-enter {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes setup-book-in {
+  from { opacity: 0; translate: 0 18px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes setup-pop {
+  0% { scale: 0.6; opacity: 0; }
+  70% { scale: 1.08; opacity: 1; }
+  100% { scale: 1; }
+}
+
+.setup-mark img { animation: setup-glow 4s ease-in-out infinite; }
+.setup-mark-shine {
+  overflow: hidden;
+  -webkit-mask: url("/studentos-mark.png") center / contain no-repeat;
+  mask: url("/studentos-mark.png") center / contain no-repeat;
+}
+.setup-mark-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.75) 50%, transparent 65%);
+  animation: setup-shine 4.5s ease-in-out infinite;
+}
+.setup-hero-mark {
+  animation: setup-pop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s both;
+}
+.setup-float { animation: setup-bob 5.5s ease-in-out infinite; }
+.setup-float > span { animation: setup-pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.setup-twinkle { animation: setup-twinkle 2.8s ease-in-out infinite; }
+.setup-book {
+  margin-inline: auto;
+  rotate: var(--r, 0deg);
+  animation: setup-book-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.setup-book:nth-child(2) { animation-delay: 0.08s; }
+.setup-book:nth-child(3) { animation-delay: 0.16s; }
+.setup-enter { animation: setup-enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.setup-orbit-in { animation: setup-pop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-mark img,
+  .setup-mark-shine::after,
+  .setup-hero-mark,
+  .setup-float,
+  .setup-float > span,
+  .setup-twinkle,
+  .setup-book,
+  .setup-enter,
+  .setup-orbit-in,
+  .setup-orbit-in * { animation: none !important; }
+}

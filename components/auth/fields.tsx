@@ -49,7 +49,7 @@ export function SocialButtons({ layout, disabled, onError }: { layout: "row" | "
     setBusy(p);
     const res = await signInWithProvider(p);
     if (res.ok) {
-      router.push(res.isNew ? "/onboarding" : "/dashboard");
+      router.push(res.isNew ? "/setup/academic" : "/dashboard");
       return;
     }
     setBusy(null);

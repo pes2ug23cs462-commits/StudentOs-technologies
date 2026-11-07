@@ -97,3 +97,35 @@ export const LinkedInIcon = ({ size = 14 }: { size?: number }) => (
     <path fill="#fff" d="M7 9.5H4.5V19H7V9.5zM5.7 5.2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM19.5 13.4c0-2.3-1.2-3.1-2.9-3.1-1.2 0-2 .7-2.3 1.2V9.5h-2.5V19h2.5v-5c0-1.1.5-1.8 1.4-1.8 1 0 1.3.8 1.3 1.8v5h2.5v-5.6z" />
   </svg>
 );
+
+/* ---------- Profile setup icons ---------- */
+export const SearchIcon = make(<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>, "SearchIcon");
+export const BriefcaseIcon = make(<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" /></>, "BriefcaseIcon");
+export const GridIcon = make(<><rect x="4" y="4" width="6.5" height="6.5" rx="2" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="2" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="2" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" /></>, "GridIcon");
+export const OpenBookIcon = make(<path d="M12 6.5C10 5 7 4.5 3 5v13c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5zM12 6.5v13" />, "OpenBookIcon");
+export const CompassIcon = make(<><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5z" /></>, "CompassIcon");
+export const BarChartIcon = make(<path d="M5 20v-6M10 20V9M15 20v-9M20 20V5M3 20h18" />, "BarChartIcon");
+export const PaletteIcon = make(<><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-1.2-1-1.5-1-2.5s.7-1.5 1.7-1.5H17a4 4 0 0 0 4-4c0-4.7-4-8.5-9-8.5z" /><circle cx="7.5" cy="11" r="1" /><circle cx="10" cy="7" r="1" /><circle cx="15" cy="7.5" r="1" /></>, "PaletteIcon");
+export const FlaskIcon = make(<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3M7.5 15h9" />, "FlaskIcon");
+export const UsersIcon = make(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" /></>, "UsersIcon");
+export const TrophyIcon = make(<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8 21h8M9.5 17h5v4h-5z" />, "TrophyIcon");
+export const BulbIcon = make(<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />, "BulbIcon");
+export const DollarIcon = make(<><circle cx="12" cy="12" r="9" /><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2a2.5 2 0 0 1-2.5-1.5M12 6v1.5M12 16.5V18" /></>, "DollarIcon");
+export const CubeIcon = make(<path d="M12 3 4 7.5v9L12 21l8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9" />, "CubeIcon");
+export const DotsIcon = make(<path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={3.2} />, "DotsIcon");
+export const LaptopIcon = make(<><rect x="4" y="5" width="16" height="11" rx="1.5" /><path d="M2 19h20" /></>, "LaptopIcon");
+export const SproutIcon = make(<path d="M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 10c0-4 3-6 7-6 0 4-3 6-7 6z" />, "SproutIcon");
+export const CrownIcon = make(<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" />, "CrownIcon");
+export const BotIcon = make(<><rect x="4" y="8" width="16" height="11" rx="3" /><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5" /><circle cx="12" cy="3.5" r="1" /></>, "BotIcon");
+export const StarIcon = make(<path d="m12 3 2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.8z" />, "StarIcon");
+export const LayersIcon = make(<path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5" />, "LayersIcon");
+export const BuildingIcon = make(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M9 11h.01M15 11h.01" />, "BuildingIcon");
+export const ShieldIcon = make(<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z" />, "ShieldIcon");
+export const FileIcon = make(<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></>, "FileIcon");
+export const FolderIcon = make(<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />, "FolderIcon");
+export const VideoIcon = make(<><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></>, "VideoIcon");
+export const MegaphoneIcon = make(<path d="M3 10v4h4l7 4V6L7 10zM17 9a4 4 0 0 1 0 6M7 14l1.5 5" />, "MegaphoneIcon");
+export const SparkleIcon = make(<path d="M12 3c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z" fill="currentColor" stroke="none" />, "SparkleIcon");
+export const CodeIcon = make(<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />, "CodeIcon");
+export const RocketIcon = make(<path d="M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-4-4zM9 11l-4 1-2 3 4 1M13 15l-1 4-3 2-1-4M15.5 8.5h.01" />, "RocketIcon");
+export const XSmallIcon = make(<path d="M17 7 7 17M7 7l10 10" />, "XSmallIcon");
