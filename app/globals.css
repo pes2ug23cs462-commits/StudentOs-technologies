@@ -357,3 +357,83 @@ html.light .setup-left {
   .setup-orbit-in,
   .setup-orbit-in * { animation: none !important; }
 }
+
+/* Resume: print only the page preview. */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  #resume-print, #resume-print * { visibility: visible !important; }
+  #resume-print {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    transform: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Certificate: print only the certificate, landscape. */
+@page cert { size: A4 landscape; margin: 0; }
+@media print {
+  #cert-print, #cert-print * { visibility: visible !important; }
+  #cert-print {
+    page: cert;
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Assistant welcome: 3D StudentOS logo */
+@keyframes logo3d-turn {
+  0%, 100% { transform: rotateY(-28deg) rotateX(8deg); }
+  50% { transform: rotateY(28deg) rotateX(-6deg); }
+}
+@keyframes logo3d-float {
+  0%, 100% { transform: translateY(-6px); }
+  50% { transform: translateY(6px); }
+}
+@keyframes logo3d-shadow {
+  0%, 100% { transform: translateX(-50%) scaleX(0.85); opacity: 0.5; }
+  50% { transform: translateX(-50%) scaleX(1.05); opacity: 0.8; }
+}
+@keyframes logo3d-glow {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.95); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.06); }
+}
+@keyframes logo3d-shine {
+  0%, 55% { background-position: 160% 0; }
+  100% { background-position: -60% 0; }
+}
+@keyframes logo3d-ring { to { rotate: 360deg; } }
+.logo3d-spin { animation: logo3d-turn 7s ease-in-out infinite; }
+.logo3d-float { animation: logo3d-float 4s ease-in-out infinite; }
+.logo3d-shadow { animation: logo3d-shadow 4s ease-in-out infinite; }
+.logo3d-glow {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.45), rgba(34, 211, 238, 0.18) 45%, transparent 70%);
+  filter: blur(8px);
+  animation: logo3d-glow 4s ease-in-out infinite;
+}
+.logo3d-shine {
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: logo3d-shine 5s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+.logo3d-ring { animation: logo3d-ring 9s linear infinite; }
+.logo3d-ring-rev { animation: logo3d-ring 13s linear infinite reverse; }
+@media (prefers-reduced-motion: reduce) {
+  .logo3d-spin, .logo3d-float, .logo3d-shadow, .logo3d-glow, .logo3d-shine, .logo3d-ring, .logo3d-ring-rev { animation: none; }
+}

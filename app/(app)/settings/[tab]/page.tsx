@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { photoFromFile } from "@/lib/photo";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/drawer";
-import { BellIcon, ChatIcon, LockIcon, SlidersIcon, UserIcon } from "@/components/ui/icons";
+import { BellIcon, ChatIcon, LockIcon, SlidersIcon, TrophyIcon, UserIcon } from "@/components/ui/icons";
+import { CertificatesPanel } from "@/components/learn/certificates-panel";
 import { Avatar, Card, ChipGroup, Input, Label, SwitchRow } from "@/components/ui/primitives";
 import { profileLine } from "@/components/shell/sidebar";
 import { HOURS_OPTIONS, REST_OPTIONS, SESSION_OPTIONS, TIME_OPTIONS } from "@/lib/labels";
@@ -16,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { key: "profile", label: "Profile", Icon: UserIcon },
+  { key: "certificates", label: "Certifications", Icon: TrophyIcon },
   { key: "study", label: "Study preferences", Icon: SlidersIcon },
   { key: "notifications", label: "Notifications", Icon: BellIcon },
   { key: "assistant", label: "Assistant", Icon: ChatIcon },
@@ -62,6 +65,7 @@ export default function SettingsPage() {
         </nav>
         <div className="min-w-0 max-w-[720px] space-y-4">
           {active === "profile" && <ProfileTab />}
+          {active === "certificates" && <CertificatesPanel />}
           {active === "study" && <StudyTab />}
           {active === "notifications" && <NotificationsTab />}
           {active === "assistant" && <AssistantTab />}
@@ -76,6 +80,8 @@ export default function SettingsPage() {
 function ProfileTab() {
   const { state, actions } = useStore();
   const [draft, setDraft] = useState<Profile>(state.profile);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.profile);
   const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement>) => setDraft((d) => ({ ...d, [k]: e.target.value }));
   const fields: [keyof Profile, string][] = [
@@ -90,14 +96,52 @@ function ProfileTab() {
     <>
       <Panel title="Profile" sub="This is how you appear in StudentOS and on any plan you share.">
         <div className="flex items-center gap-3">
-          <Avatar name={draft.name} size={40} />
+          <Avatar name={draft.name} src={state.profile.photo} size={56} />
           <div className="flex-1">
             <p className="text-[13.5px] font-semibold text-white">{draft.name || "Your name"}</p>
             <p className="text-[11px] text-white/50">{profileLine(draft)}</p>
           </div>
-          <Button size="sm" onClick={() => actions.toast("Photo upload is coming soon.")}>
-            Change photo
-          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            aria-label="Upload profile photo"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              setPhotoBusy(true);
+              try {
+                const photo = await photoFromFile(file);
+                actions.setProfile({ ...state.profile, photo });
+                setDraft((d) => ({ ...d, photo }));
+                actions.toast("Profile photo updated.");
+              } catch (err) {
+                actions.toast(err instanceof Error ? err.message : "Couldn’t use that image.");
+              } finally {
+                setPhotoBusy(false);
+              }
+            }}
+          />
+          <div className="flex flex-wrap justify-end gap-2">
+            {state.profile.photo && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  actions.setProfile({ ...state.profile, photo: "" });
+                  setDraft((d) => ({ ...d, photo: "" }));
+                  actions.toast("Photo removed.");
+                }}
+              >
+                Remove
+              </Button>
+            )}
+            <Button size="sm" loading={photoBusy} onClick={() => fileRef.current?.click()}>
+              {state.profile.photo ? "Change photo" : "Upload photo"}
+            </Button>
+          </div>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {fields.map(([k, label]) => (

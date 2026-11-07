@@ -20,7 +20,8 @@ import { ArrowLeftIcon, ChatIcon, HomeIcon, MaximizeIcon, MinimizeIcon, PlanIcon
 import { LogoMark } from "@/components/ui/primitives";
 import { Stepper } from "@/components/ui/stepper";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { OfflineError, askAssistant, generatePlan } from "@/lib/assistant";
+import { AssistantError, OfflineError, askAssistant, generatePlan } from "@/lib/assistant";
+import { buildContext } from "@/lib/ai-context";
 import { hoursLabel, shortGoal, timesLabel } from "@/lib/labels";
 import { useStore } from "@/lib/store";
 import type { OnboardingStep } from "@/lib/types";
@@ -82,10 +83,11 @@ export default function OnboardingPage() {
     setMessages((m) => (retryId ? m.map((x) => (x.id === id ? { ...x, failed: false } : x)) : [...m, { id, role: "user", text, time: clockTime() }]));
     setThinking(true);
     try {
-      const reply = await askAssistant(text);
+      const reply = await askAssistant(text, { context: buildContext(state), tone: state.assistant.tone });
       setMessages((m) => [...m, { id: ++msgId.current, role: "assistant", text: reply, time: clockTime() }]);
     } catch (e) {
       if (e instanceof OfflineError) setMessages((m) => m.map((x) => (x.id === id ? { ...x, failed: true } : x)));
+      else if (e instanceof AssistantError) setMessages((m) => [...m, { id: ++msgId.current, role: "assistant", text: e.message, time: clockTime() }]);
     } finally {
       setThinking(false);
     }

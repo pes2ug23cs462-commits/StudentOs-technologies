@@ -4,6 +4,7 @@
    so they never deal with Firebase errors directly.
 ------------------------------------------------------------------ */
 
+import { setChatsUnlocked } from "./chats";
 import { FirebaseError } from "firebase/app";
 import {
   GithubAuthProvider,
@@ -152,6 +153,7 @@ export async function sendPasswordReset(email: string): Promise<{ ok: true } | {
 }
 
 export async function logOut() {
+  setChatsUnlocked(false);
   await signOut(auth);
 }
 

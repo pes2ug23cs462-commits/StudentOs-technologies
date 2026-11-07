@@ -14,6 +14,8 @@ export interface Profile {
   degree: string;
   timezone: string;
   language: string;
+  /** small JPEG data URL (about 200×200), stored with the profile */
+  photo?: string;
 }
 
 export interface Commitment {
@@ -58,6 +60,10 @@ export interface StudySession {
   /** Minutes actually studied (set when a session is finished). */
   studiedMinutes?: number;
   feeling?: "too-easy" | "about-right" | "too-hard";
+  /** StudentOS video course to open when the session starts */
+  courseId?: string;
+  /** uploaded study material to open when the session starts */
+  materialId?: string;
 }
 
 export interface Milestone {
@@ -86,6 +92,8 @@ export interface Goal {
   examDate?: string;
   revisionHours?: number;
   topics?: { label: string; selected: boolean }[];
+  /** StudentOS video course this goal is learned with */
+  courseId?: string;
 }
 
 export interface Course {

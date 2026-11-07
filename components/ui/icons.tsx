@@ -123,6 +123,10 @@ export const BuildingIcon = make(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v
 export const ShieldIcon = make(<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z" />, "ShieldIcon");
 export const FileIcon = make(<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></>, "FileIcon");
 export const FolderIcon = make(<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />, "FolderIcon");
+export const ThumbUpIcon = make(<><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z" /><path d="M7 10l4-7a2.5 2.5 0 0 1 2.5 2.7L13 9h5.6a2 2 0 0 1 2 2.4l-1.6 7.6a2 2 0 0 1-2 1.6H7" /></>, "ThumbUpIcon");
+export const PinIcon = make(<><path d="M12 17v5" /><path d="M9 3h6l-1 6 4 4H6l4-4z" /></>, "PinIcon");
+export const ShareIcon = make(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4" /></>, "ShareIcon");
+export const UnlockIcon = make(<><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 7.5-2" /></>, "UnlockIcon");
 export const VideoIcon = make(<><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></>, "VideoIcon");
 export const MegaphoneIcon = make(<path d="M3 10v4h4l7 4V6L7 10zM17 9a4 4 0 0 1 0 6M7 14l1.5 5" />, "MegaphoneIcon");
 export const SparkleIcon = make(<path d="M12 3c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z" fill="currentColor" stroke="none" />, "SparkleIcon");

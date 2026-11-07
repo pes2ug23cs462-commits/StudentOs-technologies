@@ -8,7 +8,8 @@ import { MilestoneList, PlanStats, SessionRows, WeekNav } from "@/components/pla
 import { Button, IconButton } from "@/components/ui/button";
 import { AlertCircleIcon, ArrowRightIcon, CheckCircleIcon, CheckIcon, ClockIcon, GripIcon, MaximizeIcon, MinimizeIcon, PlayIcon, SlidersIcon, XIcon } from "@/components/ui/icons";
 import { Card, LogoMark, Notice, Pill, Segmented, fieldClass } from "@/components/ui/primitives";
-import { askAssistant } from "@/lib/assistant";
+import { AssistantError, askAssistant } from "@/lib/assistant";
+import { buildContext } from "@/lib/ai-context";
 import { PLAN_WEEKS } from "@/lib/mock-data";
 import { countable, findClash, nextSession, sessionsInRange } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
@@ -254,10 +255,10 @@ function AssistantPanel() {
     setLog((l) => [...l, { role: "user", text: q }]);
     setBusy(true);
     try {
-      const a = await askAssistant(q);
+      const a = await askAssistant(q, { context: buildContext(state), tone: state.assistant.tone });
       setLog((l) => [...l, { role: "assistant", text: a }]);
-    } catch {
-      setLog((l) => [...l, { role: "assistant", text: "I couldn’t reach the server. Check your connection and try again." }]);
+    } catch (e) {
+      setLog((l) => [...l, { role: "assistant", text: e instanceof AssistantError ? e.message : "I couldn’t reach the server. Check your connection and try again." }]);
     } finally {
       setBusy(false);
     }

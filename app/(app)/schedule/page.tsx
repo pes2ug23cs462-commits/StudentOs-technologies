@@ -1,7 +1,9 @@
 "use client";
 
+import { startSession } from "@/lib/start-session";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { TimelineSection } from "@/components/timeline/timeline-section";
 import { AddSessionDrawer } from "@/components/calendar/add-session-drawer";
 import { WeekCalendar } from "@/components/calendar/week-calendar";
 import { RescheduleDrawer } from "@/components/reschedule/reschedule-drawer";
@@ -16,8 +18,17 @@ import { TODAY, addDays, addMinutes, cn, fmt, toMinutes, weekStart } from "@/lib
 type View = "day" | "week";
 
 export default function SchedulePage() {
+  return (
+    <Suspense fallback={null}>
+      <Schedule />
+    </Suspense>
+  );
+}
+
+function Schedule() {
   const router = useRouter();
   const params = useSearchParams();
+  const section = params.get("tab") === "timeline" ? "timeline" : "week";
   const { state } = useStore();
   const view: View = params.get("view") === "day" ? "day" : "week";
   const [anchor, setAnchor] = useState(TODAY);
@@ -35,15 +46,49 @@ export default function SchedulePage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-white">Schedule</h1>
-          <p className="mt-1 text-[13px] text-white/55">{view === "day" ? fmt.long(anchor) : "Your planned sessions around college and commitments."}</p>
+          <p className="mt-1 text-[13px] text-white/55">
+            {section === "timeline" ? "Your study week and your path through college, in one place." : view === "day" ? fmt.long(anchor) : "Your planned sessions around college and commitments."}
+          </p>
         </div>
+        {section === "week" && (
         <div className="flex gap-2">
           <Segmented value={view} onChange={setView} options={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }]} />
           <Button icon={<PlusIcon size={14} />} onClick={() => setAdding(true)}>
             Add session
           </Button>
         </div>
+        )}
       </div>
+
+      <div role="tablist" aria-label="Schedule sections" className="mt-5 flex gap-1 border-b border-white/10">
+        {(
+          [
+            ["week", "This week", CalendarIcon],
+            ["timeline", "College timeline", FlagIcon],
+          ] as const
+        ).map(([key, label, Icon]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={section === key}
+            onClick={() => router.replace(key === "week" ? "/schedule" : "/schedule?tab=timeline")}
+            className={cn(
+              "-mb-px flex items-center gap-2 border-b-2 px-3.5 py-2.5 text-[13px] font-medium transition",
+              section === key ? "border-accent text-white" : "border-transparent text-white/55 hover:text-white",
+            )}
+          >
+            <Icon size={14} /> {label}
+          </button>
+        ))}
+      </div>
+
+      {section === "timeline" ? (
+        <div className="mt-6">
+          <TimelineSection />
+        </div>
+      ) : (
+      <>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <div className="flex gap-1.5">
@@ -99,6 +144,8 @@ export default function SchedulePage() {
 
       <AddSessionDrawer open={adding} onClose={() => setAdding(false)} defaultDate={anchor} />
       <RescheduleDrawer session={rescheduling} open={!!rescheduling} onClose={() => setRescheduling(null)} />
+      </>
+      )}
     </div>
   );
 }
@@ -164,7 +211,7 @@ function SessionDetail({ session, onReschedule }: { session: StudySession; onRes
             Accept suggestion
           </Button>
         ) : session.status !== "completed" ? (
-          <Button variant="primary" className="w-full" icon={<PlayIcon size={10} />} onClick={() => router.push(`/session/${session.id}`)}>
+          <Button variant="primary" className="w-full" icon={<PlayIcon size={10} />} onClick={() => startSession(session, state.goals, actions, router.push)}>
             Start session
           </Button>
         ) : (

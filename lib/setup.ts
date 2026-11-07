@@ -222,7 +222,7 @@ export const LEVEL_INFO: Record<Level, { label: string; sub: string }> = {
 export const PLAN_FEATURES = {
   free: [
     "Dashboard",
-    "Learning resources (open courses, limited)",
+    "Video courses inside StudentOS + 2 StudentOS certificates",
     "Projects & experience",
     "College timeline",
     "Resume creator",
@@ -230,8 +230,8 @@ export const PLAN_FEATURES = {
   ],
   premium: [
     "Dashboard",
-    "All learning resources + AI notes and recommendations",
-    "StudentOS certificate on completion",
+    "All video courses + AI notes and recommendations",
+    "Unlimited StudentOS certificates",
     "Projects & experience",
     "College timeline",
     "AI resume creator",

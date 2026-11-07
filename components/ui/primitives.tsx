@@ -391,7 +391,12 @@ export function ProgressBar({ value, className }: { value: number; className?: s
 }
 
 /* ---------- Avatar ---------- */
-export function Avatar({ name, size = 28, className }: { name: string; size?: number; className?: string }) {
+export function Avatar({ name, size = 28, className, src }: { name: string; size?: number; className?: string; src?: string }) {
+  if (src)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt={name} width={size} height={size} className={cn("inline-block shrink-0 rounded-full border border-white/15 object-cover", className)} style={{ width: size, height: size }} />
+    );
   const initials = name
     .split(/\s+/)
     .filter(Boolean)

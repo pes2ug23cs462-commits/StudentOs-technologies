@@ -37,6 +37,10 @@ import { takePendingName } from "./auth";
 import { auth, db } from "./firebase";
 import { isPast } from "./selectors";
 import { emptySetup, type SetupData } from "./setup";
+import type { Entry, Library, ResumeData, TimelineEvent } from "./free";
+import type { Learning } from "./learn";
+import type { MaterialMeta } from "./materials";
+import type { ChatLock, ChatMeta } from "./chats";
 import { TODAY, uid, weekStart } from "./utils";
 
 /* ------------------------------------------------------------------
@@ -63,6 +67,19 @@ export interface AppState {
   onboarding: { step: OnboardingStep; answers: OnboardingAnswers; done: boolean };
   /** Profile setup (academic, goals, skills, assessment). Missing on older accounts. */
   setup?: SetupData;
+  /** Free-version features */
+  library?: Library;
+  entries?: Entry[];
+  timeline?: TimelineEvent[];
+  resume?: ResumeData;
+  /** Video courses: module progress, notes, quiz results, certificates */
+  learning?: Learning;
+  /** Uploaded study materials (names only; text is stored separately) */
+  materials?: MaterialMeta[];
+  /** Saved AI Assistant chats (titles only; messages are stored separately) */
+  chats?: ChatMeta[];
+  /** PIN for locked chats (salted hash) */
+  chatLock?: ChatLock;
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";
@@ -134,7 +151,8 @@ type Action =
   | { type: "toast/push"; toast: Toast }
   | { type: "toast/dismiss"; id: string }
   | { type: "chat/minimized"; value: boolean }
-  | { type: "setup"; patch: Partial<SetupData> };
+  | { type: "setup"; patch: Partial<SetupData> }
+  | { type: "patch"; patch: Partial<AppState> };
 
 function sortSessions(list: StudySession[]) {
   return [...list].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
@@ -260,6 +278,8 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, toasts: [...state.toasts.slice(-2), action.toast] };
     case "toast/dismiss":
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
+    case "patch":
+      return { ...state, ...action.patch };
     case "setup":
       return { ...state, setup: { ...(state.setup ?? emptySetup()), ...action.patch } };
     case "chat/minimized":
@@ -299,6 +319,8 @@ function makeActions(dispatch: React.Dispatch<Action>) {
     setCommitments: (commitments: Commitment[]) => dispatch({ type: "commitments", commitments }),
     setChatMinimized: (value: boolean) => dispatch({ type: "chat/minimized", value }),
     setSetup: (patch: Partial<SetupData>) => dispatch({ type: "setup", patch }),
+    /** Replace top-level parts of the state (library, entries, timeline, resume). */
+    patch: (patch: Partial<AppState>) => dispatch({ type: "patch", patch }),
   };
 }
 

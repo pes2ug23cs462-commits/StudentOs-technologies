@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { COURSES, matchCourse } from "@/lib/learn";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Drawer } from "@/components/ui/drawer";
 import { ArrowRightIcon, CheckCircleIcon, CheckIcon, FlagIcon, InfoIcon, PlanIcon, PlayIcon, AlertCircleIcon } from "@/components/ui/icons";
-import { Chip, FieldError, Input, Label, Notice, OptionCard, Pill, ProgressBar } from "@/components/ui/primitives";
+import { Chip, ChipGroup, FieldError, Input, Label, Notice, OptionCard, Pill, ProgressBar } from "@/components/ui/primitives";
 import { countable, sessionsInRange, weekStats } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { Goal, GoalType } from "@/lib/types";
@@ -24,6 +25,7 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
   const router = useRouter();
   const [kind, setKind] = useState<GoalType>("course");
   const [course, setCourse] = useState("");
+  const [linked, setLinked] = useState<string>("auto");
   const [target, setTarget] = useState("");
   const [hours, setHours] = useState("3");
   const [touched, setTouched] = useState(false);
@@ -52,20 +54,21 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
         examDate: kind === "exam" ? target : undefined,
         revisionHours: kind === "exam" ? Number(hours) || 6 : undefined,
         hoursPerWeek: `${hours} h`,
+        courseId: linked === "auto" ? matchCourse(course)?.id ?? "none" : linked,
       },
       { id: uid("co"), name: course.trim(), meta: kind === "course" ? "Online · self-paced" : kind === "exam" ? "College course" : "Personal project", goalId: id },
     );
     actions.toast("Goal saved — StudentOS is drafting a plan for it.");
     setBusy(false);
     onClose();
-    router.push("/goals");
+    router.push("/learn?tab=goals");
   };
 
   return (
     <Drawer
       open
       onClose={onClose}
-      eyebrow="Courses & goals"
+      eyebrow="My goals"
       title="Add a new goal"
       subtitle="StudentOS builds a plan for it after you save"
       footer={
@@ -93,6 +96,19 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
           <Label htmlFor="g-course">{kind === "project" ? "Project name" : "Course or subject"}</Label>
           <Input id="g-course" value={course} onChange={(e) => setCourse(e.target.value)} placeholder={kind === "exam" ? "e.g. Operating Systems" : "e.g. CS50’s Introduction to AI with Python"} invalid={touched && !!errors.course} />
           {touched && <FieldError>{errors.course}</FieldError>}
+        </div>
+        <div>
+          <Label>Learn it with a StudentOS video course</Label>
+          <ChipGroup
+            options={[
+              { value: "auto", label: matchCourse(course) ? `${matchCourse(course)!.title} (suggested)` : "None" },
+              ...COURSES.filter((c) => c.id !== matchCourse(course)?.id).map((c) => ({ value: c.id, label: c.title })),
+              ...(matchCourse(course) ? [{ value: "none", label: "None" }] : []),
+            ]}
+            value={linked}
+            onChange={setLinked}
+          />
+          <p className="mt-1.5 text-[11px] text-white/45">Its sessions open this course, with the timer, when you press Start session.</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -141,7 +157,7 @@ function EditGoalForm({ goal, onClose }: { goal: Goal; onClose: () => void }) {
     <Drawer
       open
       onClose={onClose}
-      eyebrow="Courses & goals"
+      eyebrow="My goals"
       title="Edit goal"
       subtitle={goal.title}
       footer={
@@ -332,7 +348,7 @@ function TargetForm({ goal, onClose }: { goal: Goal; onClose: () => void }) {
     <Drawer
       open
       onClose={onClose}
-      eyebrow="Courses & goals"
+      eyebrow="My goals"
       title="Update target date"
       subtitle={goal.title}
       footer={

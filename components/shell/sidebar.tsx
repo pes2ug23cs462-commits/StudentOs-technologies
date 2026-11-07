@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarIcon,
+  FileIcon,
+  FolderIcon,
+  VideoIcon,
   ChatIcon,
   ChevronDownIcon,
   HomeIcon,
@@ -12,10 +15,11 @@ import {
   PlanIcon,
   PlusIcon,
   SettingsIcon,
-  TargetIcon,
   UserIcon,
 } from "@/components/ui/icons";
 import { Avatar, LogoMark, Wordmark } from "@/components/ui/primitives";
+import { ChatListItem } from "@/components/chat/chat-list-item";
+import { sortChats } from "@/lib/chats";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logOut } from "@/lib/auth";
 import { useStore } from "@/lib/store";
@@ -26,8 +30,10 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard", Icon: HomeIcon, match: ["/dashboard"] },
   { href: "/assistant", label: "AI Assistant", Icon: ChatIcon, match: ["/assistant", "/onboarding"] },
   { href: "/study-plan", label: "Study Plan", Icon: PlanIcon, match: ["/study-plan", "/plan", "/session"] },
-  { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule"] },
-  { href: "/goals", label: "Courses & Goals", Icon: TargetIcon, match: ["/goals"] },
+  { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule", "/timeline"] },
+  { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals"] },
+  { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
+  { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
 ];
 
 export function profileLine(p: Profile) {
@@ -43,7 +49,7 @@ function NavItem({ href, label, Icon, active, onNavigate }: { href: string; labe
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-9 items-center gap-3 rounded-lg px-3 text-[13px] transition",
+        "relative flex h-[34px] items-center gap-3 rounded-lg px-3 text-[13px] transition",
         active ? "bg-plum font-medium text-white" : "text-white/75 hover:bg-white/[0.05] hover:text-white",
       )}
     >
@@ -102,7 +108,7 @@ function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
         aria-expanded={open}
         className="flex w-full items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left hover:bg-white/[0.04]"
       >
-        <Avatar name={state.profile.name} size={30} />
+        <Avatar name={state.profile.name} src={state.profile.photo} size={30} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[12.5px] font-medium text-white">{state.profile.name}</span>
           <span className="block truncate text-[10.5px] text-white/50">{profileLine(state.profile)}</span>
@@ -118,7 +124,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const isActive = (match: string[]) => match.some((m) => pathname === m || pathname.startsWith(m + "/"));
 
   return (
-    <aside className="flex h-full w-[228px] flex-col border-r border-white/[0.06] bg-panel px-[13px] pt-5 pb-3">
+    <aside className="flex h-full w-[228px] flex-col overflow-y-auto border-r border-white/[0.06] bg-panel px-[13px] pt-5 pb-3">
       <Link href="/dashboard" onClick={onNavigate} className="mb-5 flex items-center gap-2 px-1.5">
         <LogoMark size={26} />
         <Wordmark className="text-[16px]" />
@@ -132,29 +138,59 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <PlusIcon size={14} /> Ask StudentOS
       </Link>
 
-      <nav className="flex flex-col gap-1" aria-label="Main">
+      <nav className="flex flex-col gap-0.5" aria-label="Main">
         {NAV.map((n) => (
           <NavItem key={n.href} href={n.href} label={n.label} Icon={n.Icon} active={isActive(n.match)} onNavigate={onNavigate} />
         ))}
       </nav>
 
-      <p className="mt-6 mb-2 px-3 text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">Recent conversations</p>
-      <div className="flex flex-col">
-        <Link href="/onboarding" onClick={onNavigate} className="truncate rounded-md px-3 py-1.5 text-[12px] text-white/65 hover:bg-white/[0.04] hover:text-white">
-          Setting up your first plan
-        </Link>
-        <Link href="/assistant?c=cs50-week-2" onClick={onNavigate} className="truncate rounded-md px-3 py-1.5 text-[12px] text-white/65 hover:bg-white/[0.04] hover:text-white">
-          CS50 week 2 — questions
-        </Link>
-      </div>
+      <RecentChats onNavigate={onNavigate} />
 
       <div className="mt-auto flex flex-col gap-1.5">
         <ThemeToggle stretch className="mb-1" />
-        <NavItem href="/settings/profile" label="Settings" Icon={SettingsIcon} active={isActive(["/settings"])} onNavigate={onNavigate} />
+        <NavItem href="/settings/profile" label="Settings" Icon={SettingsIcon} active={isActive(["/settings", "/certificates"])} onNavigate={onNavigate} />
         <div className="mt-1.5 border-t border-white/[0.07] pt-2.5">
           <UserMenu onNavigate={onNavigate} />
         </div>
       </div>
     </aside>
+  );
+}
+
+/* Saved AI Assistant chats (newest first). */
+function RecentChats({ onNavigate }: { onNavigate?: () => void }) {
+  const { state } = useStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  // which chat is open (read from the URL without needing a Suspense boundary)
+  const [openId, setOpenId] = useState<string | null>(null);
+  useEffect(() => {
+    setOpenId(new URLSearchParams(window.location.search).get("c"));
+  });
+  const chats = sortChats(state.chats).slice(0, 6);
+  return (
+    <>
+      <p className="mt-5 mb-1.5 px-3 text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">Recent conversations</p>
+      <div className="flex flex-col">
+        {!state.planAcceptedOn && (
+          <Link href="/onboarding" onClick={onNavigate} className="truncate rounded-md px-3 py-1.5 text-[12px] text-white/65 hover:bg-white/[0.04] hover:text-white">
+            Setting up your first plan
+          </Link>
+        )}
+        {chats.map((c) => (
+          <ChatListItem
+            key={c.id}
+            chat={c}
+            active={pathname === "/assistant" && openId === c.id}
+            onOpen={() => {
+              router.push(`/assistant?c=${c.id}`);
+              onNavigate?.();
+            }}
+            onDeleted={() => pathname === "/assistant" && openId === c.id && router.replace("/assistant")}
+          />
+        ))}
+        {chats.length === 0 && state.planAcceptedOn && <p className="px-3 py-1.5 text-[11.5px] text-white/40">Your AI chats will appear here.</p>}
+      </div>
+    </>
   );
 }

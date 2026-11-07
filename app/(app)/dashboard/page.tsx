@@ -1,5 +1,6 @@
 "use client";
 
+import { startSession } from "@/lib/start-session";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -176,7 +177,7 @@ function FullDashboard({ first }: { first: string }) {
               <h2 className="mt-auto pt-8 text-[22px] font-semibold tracking-tight text-white">{next.title}</h2>
               <p className="mt-2 max-w-[560px] text-[12.5px] leading-relaxed text-white/55">Objective: {next.objective}</p>
               <div className="mt-4 flex gap-2">
-                <Button variant="primary" size="sm" icon={<PlayIcon size={10} />} onClick={() => router.push(`/session/${next.id}`)}>
+                <Button variant="primary" size="sm" icon={<PlayIcon size={10} />} onClick={() => startSession(next, state.goals, actions, router.push)}>
                   Start session
                 </Button>
                 <Button size="sm" icon={<CalendarIcon size={13} />} onClick={() => setRescheduling(next)}>
@@ -196,8 +197,8 @@ function FullDashboard({ first }: { first: string }) {
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <p className="text-[13px] font-semibold text-white">Current goal</p>
-              <Link href="/goals" className="flex items-center gap-0.5 text-[11.5px] text-cyan-300 hover:underline">
-                Courses & Goals <ChevronRightIcon size={12} />
+              <Link href="/learn?tab=goals" className="flex items-center gap-0.5 text-[11.5px] text-cyan-300 hover:underline">
+                My goals <ChevronRightIcon size={12} />
               </Link>
             </div>
             <p className="mt-3 text-[14px] font-semibold text-white">{goal.title}</p>

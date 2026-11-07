@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Drawer } from "@/components/ui/drawer";
 import { AlertCircleIcon, CheckCircleIcon } from "@/components/ui/icons";
 import { Chip, ChipGroup, FieldError, Input, Label, Notice, fieldClass } from "@/components/ui/primitives";
+import { COURSES, courseForSession } from "@/lib/learn";
 import { findClash, sessionsOn } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
@@ -29,6 +30,7 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
   const [start, setStart] = useState("16:00");
   const [minutes, setMinutes] = useState(60);
   const [goalId, setGoalId] = useState<string>(goals[0]?.id ?? "none");
+  const [courseId, setCourseId] = useState<string>("auto");
   const [touched, setTouched] = useState(false);
 
   const clash = findClash(state, date, start, minutes);
@@ -37,6 +39,7 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
   const ok = !clash && !late;
   const titleError = touched && !title.trim() ? "Give the session a name." : "";
 
+  const autoCourse = courseForSession({ title, goalId: goalId === "none" ? "" : goalId }, goals);
   const goalOptions = [
     ...goals.map((g) => ({ value: g.id, label: g.type === "exam" ? `${g.course.split(" ")[0] === "Database" ? "DBMS" : g.course} exam` : `${g.course} · Week ${g.currentWeek ?? 1}` })),
     { value: "none", label: "No goal" },
@@ -62,6 +65,7 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
       tasks: [],
       notes: "",
       countsToward: goal ? `${goal.course} · Week ${goal.currentWeek ?? 1}` : "No goal",
+      ...(courseId !== "auto" ? { courseId } : {}),
     };
     if (kind === "Commitment") {
       actions.setCommitments([...state.commitments, { id: uid("c"), name: title.trim(), days: [weekdayIndex(date)], start, end: addMinutes(start, minutes) }]);
@@ -134,6 +138,21 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
           <div>
             <Label>Counts toward</Label>
             <ChipGroup options={goalOptions} value={goalId} onChange={setGoalId} />
+          </div>
+        )}
+        {kind !== "Commitment" && (
+          <div>
+            <Label>Open when the session starts</Label>
+            <ChipGroup
+              options={[
+                { value: "auto", label: autoCourse ? `${autoCourse.title} (suggested)` : "Nothing" },
+                ...COURSES.filter((c) => c.id !== autoCourse?.id).map((c) => ({ value: c.id, label: c.title })),
+                ...(autoCourse ? [{ value: "none", label: "Nothing" }] : []),
+              ]}
+              value={courseId}
+              onChange={setCourseId}
+            />
+            <p className="mt-1.5 text-[11px] text-white/45">Press Start session and this course opens with the timer.</p>
           </div>
         )}
         {clash ? (

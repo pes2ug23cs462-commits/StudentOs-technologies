@@ -5,6 +5,31 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // A student's saved AI Assistant conversations.
+    match /users/{uid}/chats/{chatId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Public read-only copies of chats a student chose to share (link only, no listing).
+    match /shared/{shareId} {
+      allow get: if true;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+    // Text of a student's uploaded study materials.
+    match /users/{uid}/materials/{materialId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Certificates: anyone with the ID can check one on /verify (no listing).
+    // A student can only create their own, once, and never change it.
+    match /certificates/{certId} {
+      allow get: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.id == certId;
+      allow update, delete: if false;
+    }
     // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;

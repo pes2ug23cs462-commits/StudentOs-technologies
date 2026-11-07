@@ -2,66 +2,28 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { courseForSession } from "@/lib/learn";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, ClockIcon, PauseIcon, PlayIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, ClockIcon, PlayIcon } from "@/components/ui/icons";
 import { Card, Checkbox, Pill, ProgressBar, Segmented, Textarea } from "@/components/ui/primitives";
 import { countable, sessionNumber, sessionsInRange } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
 import { cn, fmt, weekStart } from "@/lib/utils";
 
-type Phase = "ready" | "running" | "paused" | "done";
-
-const mmss = (sec: number) => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
-
-function Ring({ progress, tone, children }: { progress: number; tone: "idle" | "run" | "pause"; children: React.ReactNode }) {
-  const r = 88;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="relative h-[210px] w-[210px]">
-      <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
-        <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="7" />
-        {tone !== "idle" && (
-          <circle
-            cx="100"
-            cy="100"
-            r={r}
-            fill="none"
-            stroke={tone === "run" ? "#00e1f5" : "#fbbf24"}
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeDasharray={c}
-            strokeDashoffset={c * (1 - progress)}
-            className="transition-[stroke-dashoffset] duration-1000 ease-linear"
-            style={{ filter: `drop-shadow(0 0 6px ${tone === "run" ? "rgba(0,225,245,0.6)" : "rgba(251,191,36,0.5)"})` }}
-          />
-        )}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>
-    </div>
-  );
-}
+type Phase = "ready" | "done";
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { state, actions } = useStore();
   const session = state.sessions.find((s) => s.id === id);
+  const linkedCourse = session ? courseForSession(session, state.goals) : undefined;
 
   const [phase, setPhase] = useState<Phase>(session?.status === "completed" ? "done" : "ready");
-  const [elapsed, setElapsed] = useState(0);
   const [notes, setNotes] = useState(session?.notes ?? "");
   const [nudge, setNudge] = useState<"open" | "added" | "dismissed">("open");
-  const tick = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (phase !== "running") return;
-    tick.current = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => {
-      if (tick.current) clearInterval(tick.current);
-    };
-  }, [phase]);
 
   // Keep notes saved as you type.
   useEffect(() => {
@@ -81,25 +43,42 @@ export default function SessionPage() {
     );
   }
 
-  const total = session.minutes * 60;
-  const remaining = Math.max(0, total - elapsed);
   const { index, total: count } = sessionNumber(state.sessions, session.id);
   const doneTasks = session.tasks.filter((t) => t.done).length;
   const currentTask = session.tasks.find((t) => !t.done);
   const goal = state.goals.find((g) => g.id === session.goalId);
 
   const finish = () => {
-    const studied = Math.max(1, Math.round(elapsed / 60)) || session.minutes;
-    actions.updateSession(session.id, { status: "completed", studiedMinutes: phase === "ready" ? session.minutes : studied });
+    actions.updateSession(session.id, { status: "completed", studiedMinutes: session.studiedMinutes ?? session.minutes });
     setPhase("done");
   };
 
   const statusPill = {
     ready: <Pill tone="violet" dot>Ready to start</Pill>,
-    running: <Pill tone="cyan" dot>In progress</Pill>,
-    paused: <Pill tone="amber" dot>Paused</Pill>,
     done: <Pill tone="green" dot>Completed</Pill>,
   }[phase];
+
+  const startCard = (
+    <Card className="flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 text-accent">
+        <PlayIcon size={18} />
+      </span>
+      <p className="mt-4 text-[17px] font-semibold text-white">{session.minutes}-minute session</p>
+      <p className="mt-1 max-w-sm text-[12.5px] text-white/55">
+        {linkedCourse ? `Study ${linkedCourse.title} in Learning, then come back and mark this session done.` : "Work through the tasks, then mark this session done."}
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {linkedCourse && (
+          <Button variant="primary" icon={<PlayIcon size={11} />} onClick={() => router.push(`/learn/${linkedCourse.id}`)}>
+            Open {linkedCourse.title}
+          </Button>
+        )}
+        <Button variant={linkedCourse ? "secondary" : "primary"} icon={<CheckIcon size={13} />} onClick={finish}>
+          Mark session done
+        </Button>
+      </div>
+    </Card>
+  );
 
   return (
     <div className="px-6 py-6 lg:px-8">
@@ -124,44 +103,7 @@ export default function SessionPage() {
         {phase === "done" ? (
           <Completed session={session} />
         ) : (
-          <Card className={cn("flex min-h-[420px] flex-col items-center justify-center p-8", phase === "running" && "border-cyan-400/30")}>
-            <Ring progress={elapsed / total} tone={phase === "ready" ? "idle" : phase === "running" ? "run" : "pause"}>
-              <span className="text-[46px] font-semibold tracking-tight text-white tabular-nums">{mmss(phase === "ready" ? total : remaining)}</span>
-              <span className="mt-1 text-[11px] text-white/50">
-                {phase === "ready" ? `${session.minutes}-minute session` : phase === "paused" ? `Paused · ${mmss(elapsed)} studied` : `remaining · ${mmss(elapsed)} studied`}
-              </span>
-            </Ring>
-            <div className="mt-6 flex gap-2">
-              {phase === "ready" && (
-                <Button variant="primary" icon={<PlayIcon size={11} />} onClick={() => setPhase("running")}>
-                  Start session
-                </Button>
-              )}
-              {phase === "running" && (
-                <>
-                  <Button icon={<PauseIcon size={12} />} onClick={() => setPhase("paused")}>
-                    Pause
-                  </Button>
-                  <Button variant="primary" icon={<CheckIcon size={13} />} onClick={finish}>
-                    Finish session
-                  </Button>
-                </>
-              )}
-              {phase === "paused" && (
-                <>
-                  <Button variant="primary" icon={<PlayIcon size={11} />} onClick={() => setPhase("running")}>
-                    Resume
-                  </Button>
-                  <Button icon={<CheckIcon size={13} />} onClick={finish}>
-                    Finish session
-                  </Button>
-                </>
-              )}
-            </div>
-            <p className="mt-3 text-[11.5px] text-white/45">
-              {phase === "ready" ? "The timer starts when you press Start." : phase === "running" ? "Pausing keeps your place. Finish early any time." : "Timer stopped. Your progress is kept while paused."}
-            </p>
-          </Card>
+          startCard
         )}
 
         {phase === "done" ? (
@@ -191,7 +133,7 @@ export default function SessionPage() {
                         {t.detail && <span className="block text-[10.5px] text-white/40">{t.detail}</span>}
                       </span>
                     </Checkbox>
-                    {phase !== "ready" && currentTask?.id === t.id && (
+                    {currentTask?.id === t.id && (
                       <Pill tone="cyan" className="ml-auto">
                         Now
                       </Pill>
