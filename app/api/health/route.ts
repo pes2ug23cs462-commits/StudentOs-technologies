@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/server/auth";
 import { adminPing } from "@/lib/server/firestore-admin";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 type Check = { id: string; label: string; ok: boolean; optional?: boolean; detail: string };
 
 const timeout = () => AbortSignal.timeout(15_000);

@@ -8,6 +8,9 @@ import { sanitizeCourses } from "@/lib/catalog";
 import { AiError, chat } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 function parse(raw: string) {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");

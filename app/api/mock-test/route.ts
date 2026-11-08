@@ -9,6 +9,9 @@ import { AiError, chat } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 import { isPremium } from "@/lib/server/premium";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 const s = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const LEVELS: Record<string, string> = {
   beginner: "easy (basic definitions and direct concepts)",

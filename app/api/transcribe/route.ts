@@ -5,6 +5,9 @@
 import { NextResponse } from "next/server";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function POST(req: Request) {

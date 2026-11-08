@@ -10,6 +10,9 @@ import { NextResponse } from "next/server";
 import { AiError, chat } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 const s = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const code = (v: unknown) => String(v ?? "").slice(0, 8000);
 const list = (v: unknown, n: number, max: number) => (Array.isArray(v) ? v : []).map((x) => s(x, max)).filter(Boolean).slice(0, n);

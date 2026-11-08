@@ -7,6 +7,9 @@
 import { NextResponse } from "next/server";
 import { YtError, searchVideos } from "@/lib/server/youtube";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") ?? "").trim().toLowerCase().replace(/\s+/g, " ");

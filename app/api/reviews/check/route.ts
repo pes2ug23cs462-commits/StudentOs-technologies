@@ -11,6 +11,9 @@ import { AiError, chat } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 import { adminConfigured, adminGet, adminUpdate } from "@/lib/server/firestore-admin";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 // links, social handles and phone numbers (“B.Com” / “M.Com” are degrees, not links)
 const LINK = /(https?:\/\/|www\.|\b[a-z0-9-]{2,}\.(com|in|net|org|io|co|xyz|app|link)\b|@[a-z0-9_]{3,}|\b\d{10}\b|\+91|telegram|whatsapp|t\.me)/i;
 

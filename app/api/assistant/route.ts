@@ -7,6 +7,9 @@ import { NextResponse } from "next/server";
 import { AiError, chat, type ChatMessage, type ContentPart } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 
+/** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
+export const maxDuration = 60;
+
 const TONES: Record<string, string> = {
   encouraging: "Be warm and encouraging, but honest.",
   direct: "Be brief and direct. No filler.",
