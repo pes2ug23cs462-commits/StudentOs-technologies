@@ -123,6 +123,13 @@ export default function AssistantPage() {
       asked.current = true;
       send("Can you revise my study plan?");
     }
+    // From the landing page demo: /assistant?ask=…
+    const ask = params.get("ask")?.trim();
+    if (ask && !asked.current) {
+      asked.current = true;
+      router.replace("/assistant");
+      send(ask.slice(0, 500));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 

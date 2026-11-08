@@ -9,6 +9,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import { CertificateView } from "@/components/learn/certificate-view";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
@@ -281,6 +282,9 @@ function CoursesScreen() {
 }
 
 function AssistantScreen() {
+  const cta = usePrimaryCta();
+  const router = useRouter();
+  const [ask, setAsk] = useState("");
   return (
     <div className="flex h-full flex-col p-5">
       <p className="flex items-center gap-1.5 text-[14px] font-semibold text-white">
@@ -294,21 +298,37 @@ function AssistantScreen() {
           <Typing text="GST ek hi tax hai jo goods aur services ki sale pe lagta hai. State ke andar CGST + SGST lagta hai, dusre state mein bechne pe IGST. Chaho to iska 5-question quiz bana doon?" start={0.6} speed={18} />
         </div>
       </div>
-      <div className="land-screen-in flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2" style={d(0.5)}>
-        <span className="flex-1 text-[11.5px] text-white/40">Ask anything, or attach your notes…</span>
-        <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-accent text-black">
-          <span className="absolute inset-0 animate-ping rounded-full bg-accent/50" />
-          <MicIcon size={13} className="relative" />
-        </span>
-      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const q = ask.trim();
+          // signed in: open the real assistant with the question; otherwise sign up first
+          router.push(cta.signedIn ? (q ? `/assistant?ask=${encodeURIComponent(q.slice(0, 500))}` : "/assistant") : "/signup");
+        }}
+        className="land-screen-in flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 focus-within:border-accent/60"
+        style={d(0.5)}
+      >
+        <input
+          value={ask}
+          onChange={(e) => setAsk(e.target.value)}
+          placeholder={cta.signedIn ? "Ask anything…" : "Ask anything — sign up free to get an answer"}
+          aria-label="Ask the StudentOS assistant"
+          className="min-w-0 flex-1 bg-transparent py-1 text-[12.5px] text-white outline-none placeholder:text-white/40"
+        />
+        <button type="submit" aria-label={cta.signedIn ? "Ask" : "Sign up to ask"} className="relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-accent text-black transition hover:brightness-110">
+          {!ask && <span className="absolute inset-0 animate-ping rounded-full bg-accent/50" />}
+          {ask ? <ArrowRightIcon size={14} className="relative" /> : <MicIcon size={13} className="relative" />}
+        </button>
+      </form>
     </div>
   );
 }
 
 function CertificateScreen() {
   return (
-    <div className="flex h-full items-center justify-center p-4">
-      <div className="land-screen-in relative w-full overflow-hidden rounded-lg shadow-2xl" style={d(0.1)}>
+    <div className="flex h-full items-center justify-center p-4 [container-type:size]">
+      {/* as big as fits both ways, so the whole certificate always shows */}
+      <div className="land-screen-in relative aspect-[297/210] w-[min(100cqw,141.4cqh)] overflow-hidden rounded-lg shadow-2xl" style={d(0.1)}>
         <CertificateView cert={{ id: "2026-SAMPLE", name: "Your Name", course: "Accounting, Tally & GST", duration: "9 h 40 min", level: "Beginner", date: "Sample certificate", score: "5/5", modules: 3 }} />
         <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/35 to-transparent [animation:land-sweep_3.2s_ease-in-out_infinite]" />
       </div>
