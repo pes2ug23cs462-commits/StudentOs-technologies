@@ -23,7 +23,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { auth, db, firebaseConfigured } from "./firebase";
 
 export type AuthErrorCode =
   | "email-in-use"
@@ -36,6 +36,8 @@ export type AuthErrorCode =
   | "not-enabled"
   | "account-exists"
   | "recent-login"
+  | "domain"
+  | "config"
   | "unknown";
 export type AuthResult = { ok: true; name: string; email: string; isNew?: boolean } | { ok: false; code: AuthErrorCode };
 export type SocialProvider = "google" | "github" | "linkedin";
@@ -51,6 +53,8 @@ export const authErrorText: Record<AuthErrorCode, { title: string; body: string 
   "not-enabled": { title: "This sign-in method isn’t available yet", body: "Use Google, GitHub or your email for now." },
   "account-exists": { title: "This email uses a different sign-in method", body: "Log in the way you signed up — with email or with Google." },
   "recent-login": { title: "Please log in again first", body: "For your security, log out, log back in, then try again." },
+  domain: { title: "This website isn’t allowed to sign in yet", body: "Add this domain in Firebase → Authentication → Settings → Authorized domains, then try again." },
+  config: { title: "Sign-in isn’t set up on this deploy", body: "The Firebase settings are missing. Add the NEXT_PUBLIC_FIREBASE_… variables in Vercel and redeploy." },
   unknown: { title: "Something went wrong", body: "Please try again." },
 };
 
@@ -79,6 +83,13 @@ function toCode(err: unknown): AuthErrorCode {
       return "account-exists";
     case "auth/requires-recent-login":
       return "recent-login";
+    case "auth/unauthorized-domain":
+      return "domain";
+    case "auth/invalid-api-key":
+    case "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
+    case "auth/configuration-not-found":
+    case "auth/auth-domain-config-required":
+      return "config";
     default:
       if (err) console.error(err);
       return "unknown";
@@ -124,6 +135,7 @@ export async function logIn(input: { email: string; password: string; remember: 
 }
 
 export async function signInWithProvider(provider: SocialProvider): Promise<AuthResult> {
+  if (!firebaseConfigured) return { ok: false, code: "config" };
   if (provider === "linkedin") return { ok: false, code: "not-enabled" };
   try {
     const p = provider === "github" ? new GithubAuthProvider() : new GoogleAuthProvider();
