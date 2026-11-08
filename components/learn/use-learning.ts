@@ -6,6 +6,9 @@ import { useStore } from "@/lib/store";
 
 const blankModule: ModuleProgress = { t: 0, d: 0, done: false, notes: "" };
 
+/** Defaults for a course the student hasn't opened before. */
+const fresh = () => ({ startedAt: new Date().toISOString(), attempts: 0, best: 0 });
+
 export function useLearning() {
   const { state, actions } = useStore();
   const learning = state.learning ?? emptyLearning();
@@ -30,7 +33,7 @@ export function useLearning() {
     const l = latest.current;
     commit({
       ...l,
-      courses: { ...l.courses, [id]: { startedAt: new Date().toISOString(), attempts: 0, best: 0, ...l.courses[id], ...patch } },
+      courses: { ...l.courses, [id]: { ...fresh(), ...l.courses[id], ...patch } },
     });
   };
 

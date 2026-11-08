@@ -91,7 +91,7 @@ function HeroScene() {
           { pos: "bottom-[10%] left-[2%]", depth: 38, delay: 0.8, icon: "megaphone" as const, tone: "amber" as const, t: "Marketing", s: "Reach every campus" },
           { pos: "bottom-[2%] right-[4%]", depth: 46, delay: 1, icon: "quiz" as const, tone: "violet" as const, t: "Content", s: "Tell our story" },
         ].map((c, i) => (
-          <div key={c.t} className={cn("absolute", c.pos, i % 2 && "hidden sm:block")} style={layer(c.depth)}>
+          <div key={c.t} className={cn("absolute", c.pos, i % 2 === 1 && "hidden sm:block")} style={layer(c.depth)}>
             <div className="hero-in" style={d(c.delay)}>
               <Glass className="flex items-center gap-3 p-3 pr-4" style={{ animation: `hero-bob ${6 + i}s ease-in-out ${i * 0.4}s infinite` }}>
                 <FancyIcon name={c.icon} tone={c.tone} size={40} />
