@@ -25,7 +25,7 @@ export function BuildProgress({ answers }: { answers: OnboardingAnswers }) {
   return (
     <Card glow className="mt-4 p-5">
       <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
-        <SpinnerIcon size={15} className="animate-spin text-cyan-300" /> Preparing your personalised plan…
+        <SpinnerIcon size={15} className="animate-spin text-accent" /> Preparing your personalised plan…
       </p>
       <ul className="mt-3 divide-y divide-white/[0.07] border-t border-white/[0.07]">
         {steps.map((s, i) => {
@@ -36,7 +36,7 @@ export function BuildProgress({ answers }: { answers: OnboardingAnswers }) {
                 {state === "done" ? (
                   <CheckCircleIcon size={15} className="text-emerald-400" />
                 ) : state === "active" ? (
-                  <SpinnerIcon size={15} className="animate-spin text-cyan-300" />
+                  <SpinnerIcon size={15} className="animate-spin text-accent" />
                 ) : (
                   <ClockIcon size={15} className="text-white/40" />
                 )}

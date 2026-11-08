@@ -1,7 +1,7 @@
 /* POST /api/course-quiz  { title, level, modules: [{ title, about, video }] }
    Writes the final-quiz question pool for a personalised course, from what its
    modules (and the videos the student watched) cover.
-   Returns { questions: [{ q, options[4], answer }] }. */
+   Returns { questions: [{ q, options[4], answer, hint, module }] }. */
 
 import { NextResponse } from "next/server";
 import { sanitizeQuiz } from "@/lib/catalog";
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { title?: string; level?: string; modules?: { title?: string; about?: string; video?: string }[] };
-  const modules = (b.modules ?? []).slice(0, 6).map((m) => `- ${s(m.title, 80)}: ${s(m.about, 200)}${m.video ? ` (video watched: "${s(m.video, 120)}")` : ""}`);
+  const modules = (b.modules ?? []).slice(0, 6).map((m, i) => `${i}. ${s(m.title, 80)}: ${s(m.about, 200)}${m.video ? ` (video watched: "${s(m.video, 120)}")` : ""}`);
   if (!s(b.title, 80) || !modules.length) return NextResponse.json({ error: "failed" }, { status: 400 });
   const quota = takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
@@ -24,7 +24,8 @@ ${modules.join("\n")}
 
 Write 10 multiple-choice questions spread across the modules. Test core ideas a student who watched these lessons should know — no trick questions, no trivia about the video itself.
 Each question has exactly 4 short options and exactly one correct answer. Facts must be correct; for India-specific topics (GST, tax, exams) use current Indian rules.
-Reply with JSON only: [{"q":"...","options":["a","b","c","d"],"answer":0}] where answer is the index (0-3) of the correct option.`;
+Also give each question a "hint": one short sentence that nudges the student toward the idea without naming or giving away the correct option, and "module": the number of the module it comes from.
+Reply with JSON only: [{"q":"...","options":["a","b","c","d"],"answer":0,"hint":"...","module":0}] where answer is the index (0-3) of the correct option.`;
 
   try {
     for (let attempt = 0; attempt < 2; attempt++) {

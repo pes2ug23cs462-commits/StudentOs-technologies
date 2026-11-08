@@ -43,7 +43,7 @@ export function PlanVideos({ goal }: { goal: Goal }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
-            <VideoIcon size={15} className="text-cyan-300" /> Videos for your plan
+            <VideoIcon size={15} className="text-accent" /> Videos for your plan
           </p>
           <p className="mt-1 text-[12px] text-white/55">Most viewed and liked videos for {subject}, picked for your next sessions. They play inside StudentOS.</p>
         </div>

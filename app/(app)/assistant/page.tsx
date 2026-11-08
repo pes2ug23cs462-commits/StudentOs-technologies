@@ -256,7 +256,7 @@ export default function AssistantPage() {
               ].map(({ Icon, title, sub, q }) => (
                 <button key={title} type="button" onClick={() => send(q)} className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition hover:border-white/15 hover:bg-white/[0.06]">
                   <span className="flex items-center gap-2 text-[13px] font-semibold text-white">
-                    <Icon size={14} className="text-cyan-300" /> {title}
+                    <Icon size={14} className="text-accent" /> {title}
                   </span>
                   <span className="mt-1.5 block text-[11px] leading-relaxed text-white/50">{sub}</span>
                 </button>

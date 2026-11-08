@@ -29,7 +29,14 @@ export interface QuizQuestion {
   options: string[];
   /** index into options */
   answer: number;
+  /** a nudge that doesn't give the answer away */
+  hint?: string;
+  /** index of the module the question comes from */
+  module?: number;
 }
+
+/** Hints a student can use in one quiz attempt. */
+export const QUIZ_HINTS = 2;
 
 export interface Course {
   id: string;

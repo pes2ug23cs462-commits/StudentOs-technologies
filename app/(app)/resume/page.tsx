@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { PageHeader, PremiumNote } from "@/components/free/parts";
+import { PageHeader } from "@/components/free/parts";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon, FileIcon, PlusIcon } from "@/components/ui/icons";
 import { Card, Checkbox, Input, Label, Textarea } from "@/components/ui/primitives";
@@ -12,6 +12,8 @@ import { allCourses, certLabel } from "@/lib/learn";
 
 type Cert = { title: string; issuer: string; id: string; date: string };
 import { useStore, type AppState } from "@/lib/store";
+import { AiResume } from "@/components/resume/ai-resume";
+import { entryPoints } from "@/lib/resume-ai";
 import { cn } from "@/lib/utils";
 
 /** First-time resume, filled from the profile, setup answers and projects. */
@@ -72,7 +74,7 @@ export default function ResumePage() {
     <div className="px-6 py-7 lg:px-8">
       <PageHeader
         title="Resume Creator"
-        sub="Fill in the form — your resume updates on the right. Projects and skills come from your profile."
+        sub="Fill in the form or let AI write it for your target role — your resume updates on the right."
         actions={
           <>
             <Button onClick={() => (actions.patch({ resume: starter(state) }), actions.toast("Resume refilled from your profile."))}>Refill from profile</Button>
@@ -86,6 +88,13 @@ export default function ResumePage() {
       <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,460px)_1fr] xl:grid-cols-[minmax(0,420px)_1fr]">
         {/* Form */}
         <div className="space-y-3">
+          <AiResume
+            r={r}
+            entries={entries.filter((e) => r.entryIds.includes(e.id))}
+            certs={certs.map((c) => `${c.title}, ${c.issuer}`)}
+            profile={[state.setup?.academic.course, state.setup?.academic.field, state.setup?.academic.year].filter(Boolean).join(" · ")}
+            set={set}
+          />
           <Section title="Personal details">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -179,11 +188,30 @@ export default function ResumePage() {
                 <Link href="/projects" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-accent hover:underline">
                   <PlusIcon size={12} /> Add more
                 </Link>
+                {entries.filter((e) => r.entryIds.includes(e.id) && r.bullets?.[e.id] !== undefined).map((e) => (
+                  <div key={e.id} className="rounded-xl border border-violet-400/25 bg-violet-500/[0.05] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label htmlFor={`rb-${e.id}`}>Resume points · {e.title}</Label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const b = { ...(r.bullets ?? {}) };
+                          delete b[e.id];
+                          set({ bullets: b });
+                        }}
+                        className="mb-1.5 text-[11.5px] text-white/50 hover:text-white"
+                      >
+                        Use original
+                      </button>
+                    </div>
+                    <Textarea id={`rb-${e.id}`} rows={4} value={r.bullets![e.id]} onChange={(ev) => set({ bullets: { ...(r.bullets ?? {}), [e.id]: ev.target.value } })} />
+                    <p className="mt-1 text-[11px] text-white/40">One point per line. Only your resume uses this; the project itself is unchanged.</p>
+                  </div>
+                ))}
               </>
             )}
           </Section>
 
-          <PremiumNote title="AI resume writer">Premium will rewrite your points with strong action verbs and tailor your resume to a job description.</PremiumNote>
         </div>
 
         {/* Preview */}
@@ -193,7 +221,7 @@ export default function ResumePage() {
             <span className="text-[11.5px] text-white/45">Professional template · A4</span>
           </div>
           <div className="overflow-x-auto rounded-xl bg-black/20 p-4">
-            <ResumeSheet r={r} entries={entries.filter((e) => r.entryIds.includes(e.id))} certs={certs} photo={state.profile.photo} />
+            <ResumeSheet r={r} entries={entries.filter((e) => r.entryIds.includes(e.id)).map((e) => ({ ...e, description: entryPoints(r, e) }))} certs={certs} photo={state.profile.photo} />
           </div>
         </div>
       </div>

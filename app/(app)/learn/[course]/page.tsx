@@ -84,6 +84,9 @@ export default function CoursePage() {
                     ? ` · ${hms(video.secs)}`
                     : ""}
               </p>
+              <Link href={`/learn?tab=materials&m=notes&topic=${encodeURIComponent(`${mod.title} (${course.title})`)}`} className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-violet-400 hover:underline">
+                ✦ AI notes for this module <span className="rounded-full bg-violet-500/15 px-1.5 text-[9.5px] font-semibold">PRO</span>
+              </Link>
             </div>
             <div className="w-full sm:w-[220px]">
               {done.includes(lessonIdx) ? (

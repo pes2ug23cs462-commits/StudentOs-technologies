@@ -180,7 +180,7 @@ function Flow({ session, onClose }: { session: StudySession; onClose: () => void
                 </Link>
               ) : (
                 <button type="button" onClick={() => setStep("custom")} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left hover:bg-white/[0.06]">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
                     <CalendarIcon size={14} />
                   </span>
                   <span className="flex-1">
@@ -248,11 +248,11 @@ function CustomPicker({ session, picked, onPick }: { session: StudySession; pick
         onClick={() => onPick({ date: day, start: t, minutes })}
         className={cn(
           "rounded-lg border px-2 py-2 text-center transition",
-          sel ? "border-cyan-400/70 bg-cyan-400/10" : free ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]" : "cursor-not-allowed border-dashed border-white/10 opacity-60",
+          sel ? "border-accent/70 bg-accent/10" : free ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]" : "cursor-not-allowed border-dashed border-white/10 opacity-60",
         )}
       >
-        <span className={cn("block text-[12.5px] font-semibold", sel ? "text-cyan-300" : "text-white")}>{fmt.time(t)}</span>
-        <span className={cn("block text-[10px]", sel ? "text-cyan-300" : "text-white/45")}>{sel ? "Selected" : label}</span>
+        <span className={cn("block text-[12.5px] font-semibold", sel ? "text-accent" : "text-white")}>{fmt.time(t)}</span>
+        <span className={cn("block text-[10px]", sel ? "text-accent" : "text-white/45")}>{sel ? "Selected" : label}</span>
       </button>
     );
   };
@@ -278,13 +278,13 @@ function CustomPicker({ session, picked, onPick }: { session: StudySession; pick
                 onClick={() => setDay(d)}
                 className={cn(
                   "rounded-lg border py-2 text-center transition",
-                  sel ? "border-cyan-400/70 bg-cyan-400/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]",
+                  sel ? "border-accent/70 bg-accent/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.07]",
                   n === 0 && "cursor-not-allowed opacity-40",
                 )}
               >
-                <span className={cn("block text-[10.5px]", sel ? "text-cyan-300" : "text-white/50")}>{SHORT_DAY(d)}</span>
-                <span className={cn("block text-[17px] font-semibold", sel ? "text-cyan-300" : "text-white")}>{fmt.dayNum(d)}</span>
-                <span className={cn("block text-[9.5px]", sel ? "text-cyan-300" : "text-white/45")}>{n === 0 ? "Full" : sunday(d) ? "Buffer" : `${n} free`}</span>
+                <span className={cn("block text-[10.5px]", sel ? "text-accent" : "text-white/50")}>{SHORT_DAY(d)}</span>
+                <span className={cn("block text-[17px] font-semibold", sel ? "text-accent" : "text-white")}>{fmt.dayNum(d)}</span>
+                <span className={cn("block text-[9.5px]", sel ? "text-accent" : "text-white/45")}>{n === 0 ? "Full" : sunday(d) ? "Buffer" : `${n} free`}</span>
               </button>
             );
           })}
@@ -341,26 +341,26 @@ function ReviewChanges({ session, picked, remind, setRemind, calendar, setCalend
       : { icon: <AlertCircleIcon size={14} className="text-amber-300" />, title: `${session.short} target moves to ${fmt.short(addDays(picked.date, 1)).replace(/ \w+$/, "")}`, sub: "2 days later — still inside this week’s buffer", badge: <Pill tone="amber">Moved</Pill> },
   ];
   if (!onTrack)
-    rows.push({ icon: <RepeatIcon size={14} className="text-cyan-300" />, title: "2 later sessions shift by a day", sub: "Next lecture → Sat · next problem set → Tue", badge: <Pill tone="cyan">Auto-adjusted</Pill> });
+    rows.push({ icon: <RepeatIcon size={14} className="text-accent" />, title: "2 later sessions shift by a day", sub: "Next lecture → Sat · next problem set → Tue", badge: <Pill tone="cyan">Auto-adjusted</Pill> });
   if (dayMin > 0)
     rows.push({ icon: <AlertCircleIcon size={14} className="text-amber-300" />, title: `${fmt.dowLong(picked.date)} becomes a ${dayH} h study day`, sub: `Still under your ${DAILY_LIMIT_H} h daily limit`, badge: <Pill tone="amber">{dayH} h</Pill> });
   rows.push({ icon: <FlagIcon size={14} className="text-emerald-400" />, title: "Finish date unchanged", sub: "Your plan still ends on the same day", badge: <Pill tone="green">No change</Pill> });
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 rounded-xl border border-cyan-400/30 bg-cyan-400/[0.04] p-4">
+      <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.04] p-4">
         <div className="flex-1">
           <p className="text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">From</p>
           <p className="mt-1 text-[15px] font-semibold text-white/60 line-through">{fmt.short(session.date)}</p>
           <p className="text-[11px] text-white/45">{fmt.range(session.start, session.minutes)} · {session.minutes} min</p>
         </div>
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/15 text-cyan-300">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
           <ArrowRightIcon size={14} />
         </span>
         <div className="flex-1">
-          <p className="text-[10px] font-semibold tracking-[0.08em] text-cyan-300 uppercase">To</p>
+          <p className="text-[10px] font-semibold tracking-[0.08em] text-accent uppercase">To</p>
           <p className="mt-1 text-[15px] font-semibold text-white">{fmt.short(picked.date)}</p>
-          <p className="text-[11px] text-cyan-300">{fmt.range(picked.start, picked.minutes)} · {picked.minutes} min</p>
+          <p className="text-[11px] text-accent">{fmt.range(picked.start, picked.minutes)} · {picked.minutes} min</p>
         </div>
       </div>
 

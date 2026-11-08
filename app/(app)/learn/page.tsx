@@ -7,7 +7,7 @@ import { GoalsSection } from "@/components/goals/goals-section";
 import { FilterPills, FreeBadge, PageHeader, PremiumNote } from "@/components/free/parts";
 import { useLearning } from "@/components/learn/use-learning";
 import { TrophyIcon, CheckCircleIcon, ClockIcon, FolderIcon, PinIcon, PlayIcon, TargetIcon, VideoIcon } from "@/components/ui/icons";
-import { MaterialsSection } from "@/components/learn/materials-section";
+import { MaterialsHub } from "@/components/notes/materials-hub";
 import { cn } from "@/lib/utils";
 import { Card, EmptyState, Pill } from "@/components/ui/primitives";
 import { COURSES, isVideoCourse, videoCourse, FREE_CERT_LIMIT, QUIZ_SECONDS, QUIZ_SIZE, certCount, courseForGoal, coursePercent, courseStats, moduleKey, thumb } from "@/lib/learn";
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshIcon } from "@/components/ui/icons";
 import { LEVEL_INFO } from "@/lib/setup";
 import { PopularVideos } from "@/components/learn/popular-videos";
+import { usePremium } from "@/lib/premium";
 
 type Tab = "for-you" | "mine";
 const LEVEL_TONE = { beginner: "green", intermediate: "cyan", advanced: "violet" } as const;
@@ -42,6 +43,7 @@ function Learn() {
   const params = useSearchParams();
   const section = (SECTIONS.find((x) => x.key === params.get("tab"))?.key ?? "courses") as Section;
   const { state, learning, removeCourse, setCourse } = useLearning();
+  const { premium } = usePremium();
   // Courses made for this student from their profile and assessment.
   const catalog = useCatalog();
   // refresh stored YouTube details older than 30 days (YouTube policy)
@@ -94,7 +96,7 @@ function Learn() {
       {section === "videos" && <PopularVideos interests={state.setup?.goals.interests ?? []} />}
       {section === "materials" && (
         <div className="mt-6">
-          <MaterialsSection />
+          <MaterialsHub />
         </div>
       )}
       {section === "goals" && (
@@ -113,7 +115,7 @@ function Learn() {
         <Card className="p-4">
           <p className="text-[11.5px] text-white/50">Certificates earned</p>
           <p className="mt-1 text-[20px] font-semibold text-white">
-            {certs} <span className="text-[13px] font-normal text-white/45">/ {FREE_CERT_LIMIT} on Free</span>
+            {certs} <span className="text-[13px] font-normal text-white/45">{premium ? "· unlimited" : `/ ${FREE_CERT_LIMIT} on Free`}</span>
           </p>
           {certs > 0 && (
             <Link href="/settings/certificates" className="mt-1 inline-block text-[12px] text-accent hover:underline">
@@ -247,11 +249,11 @@ function Learn() {
       )}
 
       <div className="mt-6 grid gap-3 lg:grid-cols-2">
-        <PremiumNote title="Unlimited certificates">
-          Free includes {FREE_CERT_LIMIT} StudentOS certificates. Premium will unlock a certificate for every course you pass.
+        <PremiumNote title={premium ? "Unlimited certificates are on" : "Unlimited certificates"} href={premium ? "/settings/certificates" : "/premium"} cta={premium ? "My certificates" : "See Premium"}>
+          {premium ? "You get a StudentOS certificate for every course you pass." : `Free includes ${FREE_CERT_LIMIT} StudentOS certificates. Premium gives you a certificate for every course you pass.`}
         </PremiumNote>
-        <PremiumNote title="AI notes from every video">
-          Premium will turn each module into short notes and suggest what to revise before the quiz.
+        <PremiumNote title="AI notes and revision" href={premium ? "/learn?tab=materials&m=notes" : "/premium"} cta={premium ? "Open AI Notes" : "See Premium"}>
+          Turn any topic, your notes or a PDF into short notes and flashcards, and get reminders on what to revise.
         </PremiumNote>
       </div>
       <p className="mt-4 flex items-center gap-1.5 text-[11.5px] text-white/40">

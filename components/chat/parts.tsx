@@ -68,7 +68,7 @@ export function AnswerChip({ children, onEdit }: { children: ReactNode; onEdit?:
         <CheckCircleIcon size={13} className="shrink-0 text-emerald-400" />
         <span className="truncate">{children}</span>
         {onEdit && (
-          <button type="button" onClick={onEdit} className="font-medium text-cyan-300 hover:underline">
+          <button type="button" onClick={onEdit} className="font-medium text-accent hover:underline">
             Edit
           </button>
         )}
@@ -83,7 +83,7 @@ export function Thinking() {
       <LogoMark size={22} />
       <span className="flex h-6 items-center gap-1 rounded-full bg-white/[0.06] px-2.5" aria-label="StudentOS is thinking">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="h-1.5 w-1.5 animate-dot rounded-full bg-cyan-300" style={{ animationDelay: `${i * 0.18}s` }} />
+          <span key={i} className="h-1.5 w-1.5 animate-dot rounded-full bg-accent" style={{ animationDelay: `${i * 0.18}s` }} />
         ))}
       </span>
       <span className="text-[12px] text-white/50">Thinking…</span>

@@ -21,7 +21,7 @@ const ACCEPT_MATERIALS = ".pdf,.docx,.pptx,.txt,.md,.csv,image/png,image/jpeg,im
 
 type Job = { id: string; name: string; status: string; error?: string };
 
-export function MaterialsSection() {
+export function MaterialsSection({ onNotes }: { onNotes?: (m: MaterialMeta) => void } = {}) {
   const { state, actions } = useStore();
   const router = useRouter();
   const materials = state.materials ?? [];
@@ -200,6 +200,11 @@ export function MaterialsSection() {
                   <Button size="xs" variant="primary" icon={<TrophyIcon size={12} />} onClick={() => setQuizFor(m)}>
                     Quick revision
                   </Button>
+                  {onNotes && (
+                    <Button size="xs" icon={<BookIcon size={12} />} onClick={() => onNotes(m)}>
+                      AI notes
+                    </Button>
+                  )}
                   <button type="button" aria-label={`Delete ${m.name}`} onClick={() => setConfirmDelete(m.id)} className="ml-auto rounded-md p-1.5 text-white/40 hover:bg-white/[0.06] hover:text-rose-400">
                     <TrashIcon size={14} />
                   </button>

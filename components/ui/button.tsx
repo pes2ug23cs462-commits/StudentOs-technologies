@@ -8,22 +8,22 @@ type Size = "xs" | "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-accent text-black font-semibold shadow-[0_0_22px_rgba(0,225,245,0.28)] hover:bg-accent-hover disabled:shadow-none",
+    "bg-accent text-black font-semibold shadow-[0_6px_20px_-6px_rgba(124,58,237,0.55)] hover:bg-accent-hover active:scale-[0.98] disabled:shadow-none",
   secondary: "border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.09]",
   ghost: "text-white/85 hover:bg-white/[0.06] hover:text-white",
   danger: "border border-rose-500/50 text-rose-400 hover:bg-rose-500/10",
   link: "text-accent hover:underline px-0! h-auto!",
 };
 const sizes: Record<Size, string> = {
-  xs: "h-8 px-3 text-[12px] gap-1.5 rounded-md",
-  sm: "h-9 px-3.5 text-[13px] gap-1.5 rounded-lg",
-  md: "h-10 px-4 text-[13.5px] gap-2 rounded-lg",
-  lg: "h-11 px-5 text-[14px] gap-2 rounded-lg",
+  xs: "h-8 px-3 text-[12px] gap-1.5 rounded-lg",
+  sm: "h-9 px-3.5 text-[13px] gap-1.5 rounded-xl",
+  md: "h-10 px-4 text-[13.5px] gap-2 rounded-xl",
+  lg: "h-11 px-5 text-[14px] gap-2 rounded-xl",
 };
 
 export function buttonClass(variant: Variant = "secondary", size: Size = "md", className?: string) {
   return cn(
-    "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition outline-none",
+    "inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition duration-200 outline-none",
     "focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed disabled:opacity-50",
     variants[variant],
     sizes[size],

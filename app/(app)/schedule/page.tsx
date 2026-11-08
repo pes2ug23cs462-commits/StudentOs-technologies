@@ -263,7 +263,7 @@ function DayList({ date, onSelect, selectedId }: { date: string; onSelect: (s: S
                   "rounded-lg px-3.5 py-2.5 text-left",
                   r.kind === "commitment" && "cursor-default border border-white/[0.08] bg-white/[0.05]",
                   r.kind === "optional" && "cursor-default border border-dashed border-white/20 bg-black/40",
-                  r.kind === "session" && r.session?.status === "planned" && "border border-cyan-400/60 bg-plum-strong",
+                  r.kind === "session" && r.session?.status === "planned" && "border border-accent/60 bg-plum-strong",
                   r.kind === "session" && r.session?.status === "completed" && "border border-emerald-400/40 bg-emerald-500/10",
                   r.kind === "session" && r.session?.status === "missed" && "border border-rose-400/45 bg-rose-500/10",
                   r.session?.id === selectedId && "ring-1 ring-accent",

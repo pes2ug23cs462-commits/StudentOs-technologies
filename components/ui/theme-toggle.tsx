@@ -41,7 +41,7 @@ export function ThemeToggle({ className, stretch }: { className?: string; stretc
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] transition",
               stretch && "flex-1",
-              active ? "bg-cyan-400/15 text-cyan-300" : "text-white/55 hover:text-white",
+              active ? "bg-accent/15 text-accent" : "text-white/55 hover:text-white",
             )}
           >
             <Icon size={12} />

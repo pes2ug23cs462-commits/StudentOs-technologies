@@ -60,7 +60,7 @@ export function Drawer({
         <div className="border-b border-white/[0.07] px-6 pt-5 pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              {eyebrow && <p className="text-[10.5px] font-semibold tracking-[0.08em] text-cyan-300 uppercase">{eyebrow}</p>}
+              {eyebrow && <p className="text-[10.5px] font-semibold tracking-[0.08em] text-accent uppercase">{eyebrow}</p>}
               <h2 className="mt-1 text-[19px] font-semibold tracking-tight text-white">{title}</h2>
               {subtitle && <p className="mt-1 text-[12px] text-white/55">{subtitle}</p>}
             </div>

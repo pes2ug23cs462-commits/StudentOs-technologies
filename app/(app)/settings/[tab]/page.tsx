@@ -61,7 +61,7 @@ export default function SettingsPage() {
               )}
             >
               {active === key && <span className="absolute top-1.5 bottom-1.5 -left-2 hidden w-[3px] rounded-r bg-accent lg:block" />}
-              <Icon size={15} className={active === key ? "text-cyan-300" : ""} />
+              <Icon size={15} className={active === key ? "text-accent" : ""} />
               {label}
             </Link>
           ))}

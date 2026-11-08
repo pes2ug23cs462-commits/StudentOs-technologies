@@ -111,7 +111,7 @@ export default function StudyPlanPage() {
         <div className="mt-3 grid grid-cols-2 border-b border-white/[0.08] md:grid-cols-4">
           {state.milestones.map((m, i) => (
             <button key={m.id} type="button" onClick={() => setMilestone(i)} className={cn("-mb-px border-b-2 py-3 pr-3 text-left transition", milestone === i ? "border-accent" : "border-transparent hover:border-white/20")}>
-              <p className={cn("text-[11px] font-medium", i === 0 ? "text-cyan-300" : "text-white/50")}>{m.label}</p>
+              <p className={cn("text-[11px] font-medium", i === 0 ? "text-accent" : "text-white/50")}>{m.label}</p>
               <p className="mt-1 text-[13px] font-semibold text-white">{m.title}</p>
               <p className="mt-0.5 text-[11px] text-white/45">By {fmt.dayMonth(m.due)}</p>
             </button>
@@ -127,7 +127,7 @@ export default function StudyPlanPage() {
       <Card className="mt-4 overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-5">
           <p className="text-[14px] font-semibold text-white">Planned sessions</p>
-          <Link href="/schedule" className="flex items-center gap-0.5 text-[11.5px] text-cyan-300 hover:underline">
+          <Link href="/schedule" className="flex items-center gap-0.5 text-[11.5px] text-accent hover:underline">
             Open schedule <ChevronRightIcon size={12} />
           </Link>
         </div>

@@ -36,7 +36,7 @@ export function MiniChat() {
         <p className="mt-2.5 text-[11.5px] leading-relaxed text-white/65">“{STEP_PROMPTS[step] ?? STEP_PROMPTS[0]}”</p>
         <Link
           href="/onboarding"
-          className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-accent text-[12.5px] font-semibold text-black shadow-[0_0_22px_rgba(0,225,245,0.28)] hover:bg-accent-hover"
+          className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-accent text-[12.5px] font-semibold text-black shadow-[0_0_22px_rgba(139,92,246,0.28)] hover:bg-accent-hover"
         >
           <ChatIcon size={13} /> Reopen chat
         </Link>

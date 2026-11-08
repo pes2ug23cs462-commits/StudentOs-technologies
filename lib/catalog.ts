@@ -108,7 +108,17 @@ export function sanitizeQuiz(raw: unknown): QuizQuestion[] {
   }
   if (!Array.isArray(arr)) return [];
   return arr
-    .map((x) => x as { q?: unknown; options?: unknown[]; answer?: unknown })
-    .map((x) => ({ q: clean(x.q, 200), options: (Array.isArray(x.options) ? x.options : []).map((o) => clean(o, 120)).slice(0, 4), answer: Number(x.answer) }))
+    .map((x) => x as { q?: unknown; options?: unknown[]; answer?: unknown; hint?: unknown; module?: unknown })
+    .map((x) => {
+      const hint = clean(x.hint, 200);
+      const module = Number(x.module);
+      return {
+        q: clean(x.q, 200),
+        options: (Array.isArray(x.options) ? x.options : []).map((o) => clean(o, 120)).slice(0, 4),
+        answer: Number(x.answer),
+        ...(hint ? { hint } : {}),
+        ...(Number.isInteger(module) && module >= 0 && module < 12 ? { module } : {}),
+      };
+    })
     .filter((x) => x.q && x.options.length === 4 && x.options.every(Boolean) && Number.isInteger(x.answer) && x.answer >= 0 && x.answer < 4);
 }

@@ -9,8 +9,8 @@ export function PageHeader({ title, sub, actions }: { title: string; sub: string
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="text-[28px] font-semibold tracking-tight text-white">{title}</h1>
-        <p className="mt-1 text-[13px] text-white/55">{sub}</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-white">{title}</h1>
+        <p className="mt-1 text-[13.5px] text-white/60">{sub}</p>
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -18,7 +18,7 @@ export function PageHeader({ title, sub, actions }: { title: string; sub: string
 }
 
 /* “Premium” callout used where the free plan stops. */
-export function PremiumNote({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
+export function PremiumNote({ title, children, className, href, cta = "See Premium" }: { title: string; children: ReactNode; className?: string; href?: string; cta?: string }) {
   return (
     <div className={cn("flex items-start gap-3 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] p-4", className)}>
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6366f1] text-white">
@@ -27,9 +27,14 @@ export function PremiumNote({ title, children, className }: { title: string; chi
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-white">
           {title}
-          <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10.5px] font-semibold text-violet-400">Premium · coming soon</span>
+          <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10.5px] font-semibold text-violet-400">{href ? "Premium" : "Premium · coming soon"}</span>
         </p>
         <p className="mt-1 text-[12.5px] leading-relaxed text-white/60">{children}</p>
+        {href && (
+          <Link href={href} className="mt-2 inline-block text-[12.5px] font-semibold text-violet-400 hover:underline">
+            {cta} →
+          </Link>
+        )}
       </div>
     </div>
   );

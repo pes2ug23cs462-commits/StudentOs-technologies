@@ -31,7 +31,7 @@ export function Brand({ className }: { className?: string }) {
       <AnimatedMark size={46} />
       <span>
         <span className="block text-[27px] leading-none font-bold tracking-tight text-white">
-          Student<span className="text-cyan-300">OS</span>
+          Student<span className="text-accent">OS</span>
         </span>
         <span className="mt-1.5 block text-[10.5px] font-semibold tracking-[0.22em] text-white/55">LEARN · PLAN · BUILD · GROW</span>
       </span>

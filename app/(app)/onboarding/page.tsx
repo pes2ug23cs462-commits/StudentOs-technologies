@@ -230,8 +230,8 @@ export default function OnboardingPage() {
             { Icon: ChatIcon, title: "What will you ask me?", sub: "See the questions first", onClick: () => setShowQuestions(true) },
             { Icon: HomeIcon, title: "Look around first", sub: "Open the dashboard; resume any time", onClick: minimise },
           ].map(({ Icon, title, sub, onClick }) => (
-            <button key={title} type="button" onClick={onClick} className="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3.5 text-left transition hover:border-cyan-400/40 hover:bg-white/[0.06]">
-              <Icon size={15} className="text-cyan-300" />
+            <button key={title} type="button" onClick={onClick} className="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3.5 text-left transition hover:border-accent/40 hover:bg-white/[0.06]">
+              <Icon size={15} className="text-accent" />
               <span className="mt-2.5 block text-[12.5px] font-semibold text-white">{title}</span>
               <span className="mt-1 block text-[11px] text-white/45">{sub}</span>
             </button>

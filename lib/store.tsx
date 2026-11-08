@@ -41,6 +41,9 @@ import type { Entry, Library, ResumeData, TimelineEvent } from "./free";
 import type { Learning } from "./learn";
 import type { MaterialMeta } from "./materials";
 import type { ChatLock, ChatMeta } from "./chats";
+import type { InterviewRecord } from "./interview";
+import type { NoteSet } from "./notes";
+import type { TestRecord } from "./tests";
 import { TODAY, addDays, uid, weekStart } from "./utils";
 
 /* ------------------------------------------------------------------
@@ -80,6 +83,12 @@ export interface AppState {
   chats?: ChatMeta[];
   /** PIN for locked chats (salted hash) */
   chatLock?: ChatLock;
+  /** Premium: past mock interviews (newest first) */
+  interviews?: InterviewRecord[];
+  /** Premium: past mock tests (newest first) */
+  tests?: TestRecord[];
+  /** Premium: AI notes and flashcards (newest first) */
+  notes?: NoteSet[];
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";

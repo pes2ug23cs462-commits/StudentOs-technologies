@@ -5,13 +5,15 @@ import { verifyUrl } from "@/components/learn/certificate-view";
 import { useLearning } from "@/components/learn/use-learning";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, FileIcon, TrophyIcon } from "@/components/ui/icons";
-import { FREE_CERT_LIMIT, allCourses, certLabel, courseDuration, moduleKey } from "@/lib/learn";
+import { FREE_CERT_LIMIT, allCourses, certLabel, courseDuration, moduleKey, newCertId } from "@/lib/learn";
+import { usePremium } from "@/lib/premium";
 import { LEVEL_INFO } from "@/lib/setup";
 import { hms } from "@/lib/youtube";
 
 /** The student’s StudentOS certificates, for the profile. */
 export function CertificatesPanel({ compactView = false }: { compactView?: boolean }) {
-  const { state, learning, actions } = useLearning();
+  const { state, learning, actions, setCourse } = useLearning();
+  const { premium } = usePremium();
   const earned = allCourses(learning).filter((c) => learning.courses[c.id]?.certId).map((c) => {
     const cp = learning.courses[c.id];
     const secs = c.modules.map((m) => learning.modules[moduleKey(c.id, m.id)]?.d ?? 0);
@@ -37,7 +39,7 @@ export function CertificatesPanel({ compactView = false }: { compactView?: boole
             <TrophyIcon size={16} className="text-accent" /> Certifications
           </h2>
           <p className="mt-1 text-[11.5px] text-white/50">
-            StudentOS certificates you earned by finishing a course and passing its quiz · {earned.length}/{FREE_CERT_LIMIT} on the Free plan
+            StudentOS certificates you earned by finishing a course and passing its quiz · {premium ? `${earned.length} · unlimited with Premium` : `${earned.length}/${FREE_CERT_LIMIT} on the Free plan`}
           </p>
         </div>
         <Link href="/learn" className="text-[12.5px] text-accent hover:underline">
@@ -89,11 +91,24 @@ export function CertificatesPanel({ compactView = false }: { compactView?: boole
         </ul>
       )}
 
-      {passedNoCert.length > 0 && (
-        <p className="mt-3 text-[11.5px] text-white/45">
-          Also passed: {passedNoCert.map((c) => c.title).join(", ")}. Certificates for these unlock with Premium.
-        </p>
-      )}
+      {passedNoCert.length > 0 &&
+        (premium ? (
+          <ul className="mt-3 space-y-2">
+            {passedNoCert.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] px-4 py-3">
+                <span className="text-[12.5px] text-white/75">You passed <b className="text-white">{c.title}</b>. Your Premium certificate is ready.</span>
+                <Button size="xs" variant="primary" onClick={() => { setCourse(c.id, { certId: newCertId() }); actions.toast("Certificate unlocked"); }}>
+                  Get certificate
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-[11.5px] text-white/45">
+            Also passed: {passedNoCert.map((c) => c.title).join(", ")}. Certificates for these unlock with{" "}
+            <Link href="/premium" className="text-violet-400 hover:underline">Premium</Link>.
+          </p>
+        ))}
     </div>
   );
 }

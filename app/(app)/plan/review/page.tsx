@@ -343,13 +343,13 @@ function AcceptedPanel({ total }: { total: number }) {
         </ul>
       </Card>
       {first && (
-        <Card className="border-cyan-400/30 bg-cyan-400/[0.04] p-4">
+        <Card className="border-accent/30 bg-accent/[0.04] p-4">
           <p className="text-[10.5px] font-semibold tracking-[0.08em] text-white/50 uppercase">First session</p>
           <p className="mt-2 text-[14px] font-semibold text-white">{first.title}</p>
           <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-white/60">
             <ClockIcon size={12} /> {fmt.short(first.date)} · {fmt.time(first.start)} · {first.minutes} min
           </p>
-          <Link href={`/session/${first.id}`} className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-black shadow-[0_0_22px_rgba(0,225,245,0.3)] hover:bg-accent-hover">
+          <Link href={`/session/${first.id}`} className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-black shadow-[0_0_22px_rgba(139,92,246,0.3)] hover:bg-accent-hover">
             <PlayIcon size={11} /> Start First Study Session
           </Link>
           <p className="mt-2.5 text-[11px] text-white/45">You can also start early — the timer only runs while you study.</p>

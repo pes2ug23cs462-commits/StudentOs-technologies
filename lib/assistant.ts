@@ -27,6 +27,7 @@ const MESSAGES: Record<string, string> = {
   "daily-limit": "You’ve reached today’s free limit for the assistant. It resets tomorrow.",
   "slow-down": "That’s a lot of messages in a minute. Wait a few seconds and try again.",
   busy: "The AI is busy right now. Try again in a minute.",
+  premium: "This is a Premium feature.",
   failed: "I couldn’t get an answer right now. Please try again.",
   "no-key":
     process.env.NODE_ENV === "development"
@@ -145,4 +146,17 @@ export async function writeCourseQuiz(course: Course, l: Learning): Promise<Quiz
     modules: course.modules.map((m) => ({ title: m.title, about: m.about, video: l.modules[moduleKey(course.id, m.id)]?.ytTitle ?? "" })),
   });
   return sanitizeQuiz(j.questions ?? []);
+}
+
+/** One hint per quiz question (never the answer). */
+export async function quizHints(course: string, questions: { q: string; options: string[] }[]): Promise<string[]> {
+  const j = await postAi<{ hints?: string[] }>("/api/quiz-help", { action: "hints", course, questions: questions.map(({ q, options }) => ({ q, options })) });
+  return j.hints ?? [];
+}
+
+export type QuizReview = { summary: string; rewatch: string[]; tips: string[] };
+
+/** Study advice after a quiz: what to rewatch and revise. */
+export async function quizReview(o: { course: string; modules: string[]; score: number; total: number; missed: { q: string; module?: number }[] }): Promise<QuizReview> {
+  return postAi<QuizReview>("/api/quiz-help", { action: "review", ...o });
 }

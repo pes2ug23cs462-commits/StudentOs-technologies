@@ -198,7 +198,7 @@ function FullDashboard({ first }: { first: string }) {
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <p className="text-[13px] font-semibold text-white">Current goal</p>
-              <Link href="/learn?tab=goals" className="flex items-center gap-0.5 text-[11.5px] text-cyan-300 hover:underline">
+              <Link href="/learn?tab=goals" className="flex items-center gap-0.5 text-[11.5px] text-accent hover:underline">
                 My goals <ChevronRightIcon size={12} />
               </Link>
             </div>
@@ -242,7 +242,7 @@ function FullDashboard({ first }: { first: string }) {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-[14px] font-semibold text-white">This week</p>
-            <Link href="/schedule" className="flex items-center gap-0.5 text-[11.5px] text-cyan-300 hover:underline">
+            <Link href="/schedule" className="flex items-center gap-0.5 text-[11.5px] text-accent hover:underline">
               Open schedule <ChevronRightIcon size={12} />
             </Link>
           </div>
@@ -255,7 +255,7 @@ function FullDashboard({ first }: { first: string }) {
               <AlertCircleIcon size={12} className="text-rose-400" /> {stats.missed} missed
             </span>
             <span className="flex items-center gap-1">
-              <ClockIcon size={12} className="text-cyan-300" /> {stats.upcoming} upcoming
+              <ClockIcon size={12} className="text-accent" /> {stats.upcoming} upcoming
             </span>
           </p>
         </Card>
@@ -265,7 +265,7 @@ function FullDashboard({ first }: { first: string }) {
           <p className="text-[14px] font-semibold text-white">Upcoming deadlines</p>
           <ul className="mt-2 divide-y divide-white/[0.06]">
             {[
-              ...(next ? [{ icon: <FlagIcon size={13} className="text-cyan-300" />, title: next.short, sub: `Week ${next.week} checkpoint`, date: addDays(weekStart(next.date), 6) }] : []),
+              ...(next ? [{ icon: <FlagIcon size={13} className="text-accent" />, title: next.short, sub: `Week ${next.week} checkpoint`, date: addDays(weekStart(next.date), 6) }] : []),
               ...state.goals.filter((g) => g.type === "exam" && g.examDate).map((g) => ({ icon: <AlertCircleIcon size={13} className="text-amber-300" />, title: g.shortTitle, sub: g.hasPlan ? "Revision planned" : "No revision plan yet", date: g.examDate! })),
               ...state.milestones.filter((m) => m.due >= TODAY).slice(0, 1).map((m) => ({ icon: <TargetIcon size={13} className="text-violet-300" />, title: `Milestone: ${m.title}`, sub: m.label, date: m.due })),
             ]
@@ -356,7 +356,7 @@ function WeekStrip({ sessions, start }: { sessions: StudySession[]; start: strin
         ) : list.length && list.every((s) => s.status === "completed") ? (
           <CheckCircleIcon size={13} className="text-emerald-400" />
         ) : list.some((s) => s.status === "planned") ? (
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
         ) : fmt.dow(d) === "Sun" ? (
           <span className="text-[10px] text-white/45">Rest</span>
         ) : null;

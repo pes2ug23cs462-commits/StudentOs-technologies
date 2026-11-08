@@ -3,6 +3,8 @@
    Respects the assistant settings (use schedule / use progress). */
 
 import { goalProgress } from "./goal-progress";
+import { isDue } from "./notes";
+import { testAnalytics } from "./tests";
 import { allCourses, courseStats, emptyLearning } from "./learn";
 import { INTERESTS, LEVEL_INFO } from "./setup";
 import type { AppState } from "./store";
@@ -22,6 +24,10 @@ export function buildContext(state: AppState): string {
   const skills = state.setup?.skills.familiar?.filter((s) => s !== "No specific skills yet");
   if (skills?.length) lines.push(`Skills: ${skills.join(", ")}`);
   lines.push(`Study preferences: ${state.prefs.hours} hours per week, ${state.prefs.sessionLength}-min sessions, prefers ${state.prefs.times.join("/") || "any time"}, rest day ${state.prefs.restDay}`);
+  const ts = testAnalytics(state.tests ?? []);
+  if (ts) lines.push(`Mock tests: ${ts.tests} taken, average ${ts.avg}%${ts.weak.length ? `, weak topics: ${ts.weak.map((w) => `${w.topic} (${w.acc}%)`).join(", ")}` : ""}`);
+  const dueNotes = (state.notes ?? []).filter((n) => isDue(n));
+  if (dueNotes.length) lines.push(`Notes due for revision today: ${dueNotes.map((n) => n.title).join(", ")}`);
 
   if (state.goals.length) {
     lines.push("Goals:");

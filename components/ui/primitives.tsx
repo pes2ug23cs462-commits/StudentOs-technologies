@@ -27,7 +27,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/[0.08] backdrop-blur-sm",
+        "rounded-2xl border border-white/[0.08] backdrop-blur-sm",
         glow ? "card-glow" : "bg-white/[0.025]",
         className,
       )}
@@ -50,7 +50,7 @@ export function SectionTitle({ children, action, className }: { children: ReactN
 /* ---------- Pills / badges ---------- */
 type Tone = "cyan" | "green" | "red" | "amber" | "violet" | "gray";
 const tones: Record<Tone, string> = {
-  cyan: "bg-cyan-400/12 text-cyan-300 border-cyan-400/20",
+  cyan: "bg-accent/12 text-accent border-accent/20",
   green: "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
   red: "bg-rose-500/12 text-rose-300 border-rose-400/20",
   amber: "bg-amber-400/12 text-amber-300 border-amber-400/20",
@@ -94,7 +94,7 @@ export function Chip({
       className={cn(
         "inline-flex h-[34px] items-center gap-1.5 rounded-lg border px-3 text-[12.5px] font-medium transition",
         selected
-          ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-300"
+          ? "border-accent/60 bg-accent/10 text-accent"
           : invalid
             ? "border-white/10 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]"
             : "border-white/10 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]",
@@ -285,7 +285,7 @@ export function OptionCard({
       onClick={onSelect}
       className={cn(
         "flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-left transition",
-        checked ? "border-cyan-400/70 bg-cyan-400/[0.07]" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+        checked ? "border-accent/70 bg-accent/[0.07]" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
         className,
       )}
     >
@@ -293,7 +293,7 @@ export function OptionCard({
       <span className="min-w-0 flex-1">
         <span className="block text-[14px] font-semibold text-white">{title}</span>
         {lines?.map((l, i) => (
-          <span key={i} className={cn("block text-[12px]", i === 0 && checked ? "text-cyan-300" : "text-white/50")}>
+          <span key={i} className={cn("block text-[12px]", i === 0 && checked ? "text-accent" : "text-white/50")}>
             {l}
           </span>
         ))}
@@ -315,12 +315,12 @@ export function Label({ htmlFor, children, hint }: { htmlFor?: string; children:
 
 export const fieldClass = (invalid?: boolean, active?: boolean) =>
   cn(
-    "h-10 w-full rounded-lg border px-3.5 text-[13px] text-white placeholder:text-white/35 outline-none transition",
+    "h-10 w-full rounded-xl border px-3.5 text-[13px] text-white placeholder:text-white/35 outline-none transition",
     invalid
       ? "border-rose-400/70 bg-rose-500/20 focus:border-rose-300"
       : active
-        ? "border-cyan-400/70 bg-cyan-400/15"
-        : "border-white/[0.08] bg-field focus:border-cyan-400/60 focus:bg-cyan-400/[0.06]",
+        ? "border-accent/70 bg-accent/15"
+        : "border-white/[0.08] bg-field focus:border-accent/70 focus:bg-accent/[0.05]",
   );
 
 export function Input({ invalid, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
@@ -331,7 +331,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
   return (
     <textarea
       className={cn(
-        "w-full resize-none rounded-lg border border-white/[0.08] bg-field px-3.5 py-3 text-[13px] text-white placeholder:text-white/35 outline-none focus:border-cyan-400/60",
+        "w-full resize-none rounded-xl border border-white/[0.08] bg-field px-3.5 py-3 text-[13px] text-white placeholder:text-white/35 outline-none focus:border-accent/70",
         className,
       )}
       {...rest}
@@ -367,7 +367,7 @@ export function Notice({
     error: "border-rose-500/35 bg-rose-500/[0.07] text-rose-400",
     warning: "border-amber-400/30 bg-amber-400/[0.07] text-amber-300",
     success: "border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-300",
-    info: "border-cyan-400/25 bg-cyan-400/[0.06] text-cyan-300",
+    info: "border-accent/25 bg-accent/[0.06] text-accent",
   }[tone];
   const DefaultIcon = tone === "info" ? InfoIcon : tone === "success" ? CheckIcon : AlertCircleIcon;
   return (

@@ -21,7 +21,7 @@ function DetailCard({ title, status, onEdit, rows }: { title: string; status: St
         )}
         <span className="text-[12.5px] font-semibold text-white">{title}</span>
         {status !== "pending" && onEdit && (
-          <button type="button" onClick={onEdit} className="ml-auto text-[11px] font-medium text-cyan-300 hover:underline">
+          <button type="button" onClick={onEdit} className="ml-auto text-[11px] font-medium text-accent hover:underline">
             {status === "missing" ? "Fix" : "Edit"}
           </button>
         )}

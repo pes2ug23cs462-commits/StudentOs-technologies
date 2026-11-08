@@ -62,7 +62,7 @@ export function WeekCalendar({
       <div className="grid grid-cols-[52px_repeat(7,minmax(0,1fr))] border-b border-white/[0.07]">
         <div />
         {days.map((d) => (
-          <div key={d} className={cn("px-2 py-2.5 text-[11.5px] font-medium", d === TODAY && showStatus ? "text-cyan-300" : "text-white/70")}>
+          <div key={d} className={cn("px-2 py-2.5 text-[11.5px] font-medium", d === TODAY && showStatus ? "text-accent" : "text-white/70")}>
             {fmt.dow(d)} {fmt.dayNum(d)}
           </div>
         ))}
@@ -192,7 +192,7 @@ export function WeekCalendar({
 
               {/* now line */}
               {isToday && (
-                <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-accent shadow-[0_0_8px_rgba(0,225,245,0.7)]" style={{ top: y(`${NOW.getHours()}:${NOW.getMinutes()}`) }} />
+                <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-accent shadow-[0_0_8px_rgba(139,92,246,0.7)]" style={{ top: y(`${NOW.getHours()}:${NOW.getMinutes()}`) }} />
               )}
             </div>
           );

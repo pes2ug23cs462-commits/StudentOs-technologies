@@ -6,10 +6,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PremiumNote } from "@/components/free/parts";
 import { useLearning } from "@/components/learn/use-learning";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, CheckCircleIcon, ClockIcon, TrophyIcon, XCircleIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, BulbIcon, CheckCircleIcon, ClockIcon, PlayIcon, SparkleIcon, TrophyIcon, XCircleIcon } from "@/components/ui/icons";
 import { Card, EmptyState } from "@/components/ui/primitives";
-import { FREE_CERT_LIMIT, QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, certCount, courseStats, drawQuiz, findCourse, newCertId, quizPool, type QuizQuestion } from "@/lib/learn";
-import { writeCourseQuiz } from "@/lib/assistant";
+import { FREE_CERT_LIMIT, QUIZ_HINTS, QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, certCount, courseStats, drawQuiz, findCourse, newCertId, quizPool, type QuizQuestion } from "@/lib/learn";
+import { quizHints, quizReview, writeCourseQuiz, type QuizReview } from "@/lib/assistant";
+import { usePremium } from "@/lib/premium";
 import { cn } from "@/lib/utils";
 
 type Phase = "intro" | "running" | "result";
@@ -17,6 +18,7 @@ type Phase = "intro" | "running" | "result";
 export default function QuizPage() {
   const { course: courseId } = useParams<{ course: string }>();
   const { learning, setCourse } = useLearning();
+  const { premium } = usePremium();
   const course = findCourse(courseId, learning);
   const [phase, setPhase] = useState<Phase>("intro");
   const [qs, setQs] = useState<QuizQuestion[]>([]);
@@ -25,6 +27,10 @@ export default function QuizPage() {
   const [left, setLeft] = useState(QUIZ_SECONDS);
   const [result, setResult] = useState<{ score: number; cert: "new" | "limit" | "none"; timedOut: boolean } | null>(null);
   const finished = useRef(false);
+  // hints: one per question (from the quiz or written on start); a few can be opened per attempt
+  const [hints, setHints] = useState<string[]>([]);
+  const [opened, setOpened] = useState<number[]>([]);
+  const [review, setReview] = useState<QuizReview | "busy" | "failed" | null>(null);
 
   const finish = useCallback(
     (final: (number | null)[], timedOut: boolean) => {
@@ -37,7 +43,7 @@ export default function QuizPage() {
       const patch: Parameters<typeof setCourse>[1] = { attempts: (cp?.attempts ?? 0) + 1, best: Math.max(cp?.best ?? 0, score) };
       if (passed) {
         patch.passedAt = cp?.passedAt ?? new Date().toISOString();
-        if (cp?.certId || certCount(learning) < FREE_CERT_LIMIT) {
+        if (cp?.certId || premium || certCount(learning) < FREE_CERT_LIMIT) {
           patch.certId = cp?.certId ?? newCertId();
           cert = "new";
         } else cert = "limit";
@@ -45,8 +51,16 @@ export default function QuizPage() {
       setCourse(course.id, patch);
       setResult({ score, cert, timedOut });
       setPhase("result");
+      setReview("busy");
+      quizReview({
+        course: course.title,
+        modules: course.modules.map((m) => m.title),
+        score,
+        total: qs.length,
+        missed: qs.flatMap((q, k) => (final[k] === q.answer ? [] : [{ q: q.q, ...(q.module !== undefined ? { module: q.module } : {}) }])),
+      }).then(setReview, () => setReview("failed"));
     },
-    [course, qs, learning, setCourse],
+    [course, qs, learning, setCourse, premium],
   );
 
   // countdown
@@ -124,7 +138,15 @@ export default function QuizPage() {
     setI(0);
     setLeft(QUIZ_SECONDS);
     setResult(null);
+    setReview(null);
+    setOpened([]);
+    setHints(drawn.map((q) => q.hint ?? ""));
     setPhase("running");
+    if (drawn.some((q) => !q.hint))
+      quizHints(course.title, drawn).then(
+        (h) => setHints((cur) => cur.map((x, k) => x || h[k] || "")),
+        () => setHints((cur) => cur.map((x) => x || "Think about the main idea of the module this question comes from.")),
+      );
   };
 
   const back = (
@@ -159,7 +181,7 @@ export default function QuizPage() {
             <h1 className="mt-4 text-[22px] font-semibold text-white">{course.title} · final quiz</h1>
             <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-white/60">
               {QUIZ_SIZE} questions from this course. You have <b className="text-white">{QUIZ_SECONDS} seconds</b> for all of them. Get{" "}
-              {QUIZ_PASS === QUIZ_SIZE ? "every answer" : `${QUIZ_PASS} answers`} right to unlock your certificate. You can retry with new questions.
+              {QUIZ_PASS === QUIZ_SIZE ? "every answer" : `${QUIZ_PASS} answers`} right to unlock your certificate. You can use {QUIZ_HINTS} hints, and retry with new questions.
             </p>
             <p className="mt-3 text-[11.5px] text-white/45">Tip: press 1–4 to answer.</p>
             {pool.length >= QUIZ_SIZE ? (
@@ -228,6 +250,23 @@ export default function QuizPage() {
                   </button>
                 ))}
               </div>
+              <div className="mt-4">
+                {opened.includes(i) ? (
+                  <p className="flex items-start gap-2 rounded-lg border border-amber-300/25 bg-amber-300/[0.07] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/80">
+                    <BulbIcon size={14} className="mt-0.5 shrink-0 text-amber-300" />
+                    {hints[i] || "Getting your hint…"}
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={opened.length >= QUIZ_HINTS}
+                    onClick={() => setOpened((o) => [...o, i])}
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-amber-300 hover:underline disabled:cursor-not-allowed disabled:text-white/35 disabled:no-underline"
+                  >
+                    <BulbIcon size={13} /> {opened.length >= QUIZ_HINTS ? "No hints left" : `Show a hint (${QUIZ_HINTS - opened.length} left)`}
+                  </button>
+                )}
+              </div>
               <div className="mt-5 flex justify-between">
                 <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => setI(i - 1)}>
                   Previous
@@ -273,8 +312,8 @@ export default function QuizPage() {
                   </Link>
                 </>
               ) : (
-                <PremiumNote title={`You’ve used your ${FREE_CERT_LIMIT} free certificates`} className="mt-5 text-left">
-                  Your pass is saved. Premium will unlock a certificate for this course and every course after it.
+                <PremiumNote title={`You’ve used your ${FREE_CERT_LIMIT} free certificates`} className="mt-5 text-left" href="/premium">
+                  Your pass is saved. With Premium you get a certificate for this course and every course after it, no retest needed.
                 </PremiumNote>
               )
             ) : (
@@ -291,6 +330,43 @@ export default function QuizPage() {
                   </Button>
                 </div>
               </>
+            )}
+            {review && (
+              <div className="mt-6 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] p-4 text-left">
+                <p className="flex items-center gap-2 text-[13.5px] font-semibold text-white">
+                  <SparkleIcon size={14} className="text-violet-300" /> AI recommendation
+                </p>
+                {review === "busy" ? (
+                  <p className="mt-2 text-[12.5px] text-white/55">Looking at your answers…</p>
+                ) : review === "failed" ? (
+                  <p className="mt-2 text-[12.5px] text-white/55">Couldn’t get advice right now. {result.score >= QUIZ_PASS ? "" : "Rewatch the modules you found hard and try again."}</p>
+                ) : (
+                  <>
+                    {review.summary && <p className="mt-2 text-[13px] leading-relaxed text-white/75">{review.summary}</p>}
+                    {review.rewatch.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[11.5px] font-semibold tracking-wide text-white/45 uppercase">Rewatch</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {review.rewatch.map((m) => (
+                            <Link key={m} href={`/learn/${course.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[12px] text-white/80 hover:border-violet-400/50">
+                              <PlayIcon size={11} /> {m}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {review.tips.length > 0 && (
+                      <ul className="mt-3 space-y-1.5">
+                        {review.tips.map((tip) => (
+                          <li key={tip} className="flex gap-2 text-[12.5px] leading-relaxed text-white/70">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" /> {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
             )}
           </Card>
         )}

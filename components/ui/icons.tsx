@@ -135,3 +135,5 @@ export const RocketIcon = make(<path d="M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-4-4zM9 11
 export const XSmallIcon = make(<path d="M17 7 7 17M7 7l10 10" />, "XSmallIcon");
 export const HeartIcon = make(<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />, "HeartIcon");
 export const SendIcon = make(<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z" />, "SendIcon");
+export const StopIcon = make(<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none" />, "StopIcon");
+export const VolumeIcon = make(<><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></>, "VolumeIcon");

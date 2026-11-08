@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
+import { TargetIcon,
   CalendarIcon,
   FileIcon,
   FolderIcon,
@@ -13,7 +13,7 @@ import {
   HomeIcon,
   LogOutIcon,
   PlanIcon,
-  PlusIcon,
+  SparkleIcon,
   SettingsIcon,
   UserIcon,
 } from "@/components/ui/icons";
@@ -26,6 +26,8 @@ import { useStore } from "@/lib/store";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+const PRO = new Set(["/tests"]);
+
 const NAV = [
   { href: "/dashboard", label: "Dashboard", Icon: HomeIcon, match: ["/dashboard"] },
   { href: "/assistant", label: "AI Assistant", Icon: ChatIcon, match: ["/assistant", "/onboarding"] },
@@ -34,6 +36,7 @@ const NAV = [
   { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals"] },
   { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
   { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
+  { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/premium"] },
 ];
 
 export function profileLine(p: Profile) {
@@ -49,15 +52,16 @@ function NavItem({ href, label, Icon, active, onNavigate }: { href: string; labe
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-[34px] items-center gap-3 rounded-lg px-3 text-[13px] transition",
-        active ? "bg-plum font-medium text-white" : "text-white/75 hover:bg-white/[0.05] hover:text-white",
+        "relative flex h-9 items-center gap-3 rounded-xl px-3 text-[13px] transition duration-200",
+        active ? "bg-plum font-semibold text-white" : "text-white/70 hover:bg-white/[0.05] hover:text-white",
       )}
     >
       {active && <span className="absolute top-1.5 bottom-1.5 -left-[13px] w-[3px] rounded-r bg-accent" />}
-      <span className={active ? "text-cyan-300" : "text-white/70"}>
+      <span className={active ? "text-accent" : "text-white/60"}>
         <Icon size={16} />
       </span>
       {label}
+      {PRO.has(href) && <span className="ml-auto rounded-full bg-violet-500/20 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-violet-200">PRO</span>}
     </Link>
   );
 }
@@ -133,9 +137,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         href="/assistant"
         onClick={onNavigate}
-        className="mb-5 flex h-9 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] text-[12.5px] font-medium text-white transition hover:bg-white/[0.09]"
+        className="mb-5 flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 text-[13px] font-semibold text-[#ffffff] shadow-[0_8px_22px_-8px_rgba(124,58,237,0.7)] transition duration-200 hover:brightness-110"
       >
-        <PlusIcon size={14} /> Ask StudentOS
+        <SparkleIcon size={14} /> Ask StudentOS
       </Link>
 
       <nav className="flex flex-col gap-0.5" aria-label="Main">

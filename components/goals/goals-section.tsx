@@ -37,7 +37,7 @@ export function GoalsSection() {
             {p.course && p.total > 0 && ` · ${p.doneSessions} of ${p.total} sessions`}
           </span>
           {p.course && (
-            <button type="button" onClick={() => router.push(`/learn/${p.course!.id}`)} className="font-medium text-cyan-300 hover:underline">
+            <button type="button" onClick={() => router.push(`/learn/${p.course!.id}`)} className="font-medium text-accent hover:underline">
               {p.pct === 0 ? "Start course" : p.pct === 100 ? "View course" : "Continue course"} →
             </button>
           )}

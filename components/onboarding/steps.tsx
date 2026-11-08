@@ -222,7 +222,7 @@ export function CommitmentList({ list, onChange }: { list: Commitment[]; onChang
       {adding ? (
         <AddCommitment onAdd={(c) => (onChange([...list, c]), setAdding(false))} onCancel={() => setAdding(false)} />
       ) : (
-        <button type="button" onClick={() => setAdding(true)} className="flex items-center gap-2 px-3 py-1.5 text-[12.5px] font-medium text-white hover:text-cyan-300">
+        <button type="button" onClick={() => setAdding(true)} className="flex items-center gap-2 px-3 py-1.5 text-[12.5px] font-medium text-white hover:text-accent">
           <PlusIcon size={14} /> Add commitment
         </button>
       )}
@@ -339,7 +339,7 @@ export function SummaryCard({ answers, onEdit, onBuild }: { answers: OnboardingA
           <div key={r.label} className="grid grid-cols-[110px_1fr_auto] items-center gap-3 py-3 text-[12.5px]">
             <dt className="text-white/50">{r.label}</dt>
             <dd className="text-white/90">{r.value}</dd>
-            <button type="button" onClick={() => onEdit(r.step)} className="text-[11.5px] font-medium text-cyan-300 hover:underline">
+            <button type="button" onClick={() => onEdit(r.step)} className="text-[11.5px] font-medium text-accent hover:underline">
               Edit
             </button>
           </div>

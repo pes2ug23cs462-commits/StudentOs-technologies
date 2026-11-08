@@ -185,4 +185,8 @@ export interface ResumeData {
   /** ids of Entries to include */
   entryIds: string[];
   template: "classic" | "modern" | "professional"; // only "professional" is used now
+  /** resume-only points per entry (AI-written or edited); the entry itself is unchanged */
+  bullets?: Record<string, string>;
+  /** the role or job description the resume is tailored to */
+  target?: string;
 }

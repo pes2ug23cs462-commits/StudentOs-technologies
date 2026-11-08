@@ -89,8 +89,8 @@ export function MilestoneList({ milestones, currentWeek = 1 }: { milestones: Mil
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {milestones.map((m, i) => (
-        <div key={m.id} className={cn("rounded-xl border p-4", i === 0 ? "border-cyan-400/40 bg-cyan-400/[0.05]" : "border-white/[0.08] bg-white/[0.03]")}>
-          <p className={cn("text-[11px] font-medium", i === 0 ? "text-cyan-300" : "text-white/50")}>{m.label}</p>
+        <div key={m.id} className={cn("rounded-xl border p-4", i === 0 ? "border-accent/40 bg-accent/[0.05]" : "border-white/[0.08] bg-white/[0.03]")}>
+          <p className={cn("text-[11px] font-medium", i === 0 ? "text-accent" : "text-white/50")}>{m.label}</p>
           <p className="mt-1 text-[14px] font-semibold text-white">{m.title}</p>
           <p className="mt-1 text-[11.5px] text-white/50">By {fmt.dayMonth(m.due)}</p>
           {i === 0 && <p className="mt-2 text-[11px] text-white/45">You’re in week {currentWeek}.</p>}

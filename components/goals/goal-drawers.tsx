@@ -286,7 +286,7 @@ export function ReviewGoalDrawer({ goal, onClose, onUpdateDate }: { goal: Goal |
         <div>
           <div className="mb-1.5 flex justify-between text-[12.5px]">
             <span className="font-medium text-white">Course progress</span>
-            <span className="text-cyan-300">{goalProgress(goal, state).pct}%</span>
+            <span className="text-accent">{goalProgress(goal, state).pct}%</span>
           </div>
           <ProgressBar value={goalProgress(goal, state).pct} />
         </div>
@@ -298,7 +298,7 @@ export function ReviewGoalDrawer({ goal, onClose, onUpdateDate }: { goal: Goal |
               const badge = m.due < TODAY ? <Pill tone="green">Done</Pill> : i === current ? <Pill tone="cyan">In progress</Pill> : i === current + 1 ? <Pill>Next</Pill> : i === state.milestones.length - 1 ? <Pill tone="violet">Final</Pill> : <Pill>Later</Pill>;
               return (
                 <li key={m.id} className="flex items-center gap-3 px-3.5 py-3">
-                  {i === current ? <PlayIcon size={11} className="text-cyan-300" /> : <FlagIcon size={13} className="text-white/55" />}
+                  {i === current ? <PlayIcon size={11} className="text-accent" /> : <FlagIcon size={13} className="text-white/55" />}
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12.5px] font-medium text-white">
                       {m.label} · {m.title}
@@ -367,19 +367,19 @@ function TargetForm({ goal, onClose }: { goal: Goal; onClose: () => void }) {
       }
     >
       <div className="space-y-5">
-        <div className="flex items-center gap-3 rounded-xl border border-cyan-400/30 bg-cyan-400/[0.04] p-4">
+        <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.04] p-4">
           <div className="flex-1">
             <p className="text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">Current target</p>
             <p className="mt-1 text-[17px] font-semibold text-white">{fmt.medium(goal.target)}</p>
             <p className="text-[11px] text-white/50">{goal.hoursPerWeek ?? "~4½ h"} a week</p>
           </div>
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/15 text-cyan-300">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
             <ArrowRightIcon size={14} />
           </span>
           <div className="flex-1">
-            <p className="text-[10px] font-semibold tracking-[0.08em] text-cyan-300 uppercase">New target</p>
+            <p className="text-[10px] font-semibold tracking-[0.08em] text-accent uppercase">New target</p>
             <p className="mt-1 text-[17px] font-semibold text-white">{newDate ? fmt.medium(newDate) : "—"}</p>
-            <p className="text-[11px] text-cyan-300">{pace}</p>
+            <p className="text-[11px] text-accent">{pace}</p>
           </div>
         </div>
         <div>
