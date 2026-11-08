@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each student can only read and write their own data: users/{their uid}.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // A student's saved AI Assistant conversations.
+    match /users/{uid}/chats/{chatId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Public read-only copies of chats a student chose to share (link only, no listing).
+    match /shared/{shareId} {
+      allow get: if true;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+    // Text of a student's uploaded study materials.
+    match /users/{uid}/materials/{materialId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Certificates: anyone with the ID can check one on /verify (no listing).
+    // A student can only create their own, once, and never change it.
+    // They can delete it when they delete their account.
+    match /certificates/{certId} {
+      allow get: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.id == certId;
+      allow update: if false;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    // Student reviews of StudentOS: one per student (id = their uid).
+    // Anyone can read approved ones; a student can read, write and delete their own.
+    // New or edited reviews must be unapproved; StudentOS approves them in the console.
+    match /reviews/{uid} {
+      allow get: if resource.data.approved == true || (request.auth != null && request.auth.uid == uid);
+      allow list: if resource.data.approved == true;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.approved == false
+        && request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.text is string && request.resource.data.text.size() >= 20 && request.resource.data.text.size() <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 60
+        && request.resource.data.role is string && request.resource.data.role.size() <= 90;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
