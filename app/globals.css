@@ -655,9 +655,3 @@ html.light .tok-f { color: #1d4ed8; }
 html.light .tok-s { color: #15803d; }
 html.light .tok-n { color: #c2410c; }
 html.light .tok-c { color: #94a3b8; }
-
-/* FAQ text reveal: each letter fades in from a blur */
-@keyframes faq-letter { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
-.faq-letter { animation: faq-letter 0.3s ease-out both; }
-@media (prefers-reduced-motion: reduce) { .faq-letter { animation: none; } }
-

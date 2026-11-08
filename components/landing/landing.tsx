@@ -15,8 +15,6 @@ import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site
 import { ReviewsStrip } from "@/components/site/reviews";
 import { Eyebrow, Glass, TiltCard, Typing, delay as d, reducedMotion, usePointerVars, useScrollProgress } from "@/components/site/motion";
 import { SiteShell, usePrimaryCta } from "@/components/site/site-shell";
-import { Journey } from "@/components/landing/journey";
-import { TextRevealFaqs, type FaqItem } from "@/components/landing/text-reveal-faqs";
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -52,17 +50,16 @@ const FREE: { text: string; icon: FancyIconName; tone: FancyTone }[] = [
   { text: "Resume creator, projects and college timeline", icon: "resume", tone: "indigo" },
 ];
 
-const FAQ: FaqItem[] = [
+const FAQ: { q: string; a: ReactNode }[] = [
   { q: "Is StudentOS free?", a: "Yes. The Free plan includes the study planner, personalised courses, the AI assistant (with a daily limit), 2 certificates and more. Premium features will be optional." },
   { q: "Is it only for engineering students?", a: "No. Courses and plans are made from your own degree, interests and assessment, so a B.Com, BBA, B.Sc or B.A. student gets courses for their field, not programming." },
   { q: "Where do the videos come from?", a: "From YouTube. For every topic we pick the most viewed and liked long-form lessons, and they play inside StudentOS with YouTube’s official player." },
   { q: "Are the certificates official?", a: "They are StudentOS certificates of completion. Each has an ID and QR code so a college or recruiter can check it is real. They are not university degrees." },
   {
     q: "What happens to my data?",
-    a: "Only you can see your account. You can download or delete your data at any time.",
-    extra: (
+    a: (
       <>
-        Read the{" "}
+        Only you can see your account. You can download or delete your data at any time. Read the{" "}
         <Link href="/privacy" className="text-accent hover:underline">
           Privacy Policy
         </Link>
@@ -539,7 +536,6 @@ export function Landing() {
   return (
     <SiteShell>
       <Hero />
-      <Journey cta={cta} />
 
       {/* degree marquee */}
       <section className="border-y border-white/[0.06] bg-white/[0.015] py-6">
@@ -612,8 +608,22 @@ export function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="reveal mx-auto max-w-[1080px] scroll-mt-20 px-5 pb-24">
-        <TextRevealFaqs items={FAQ} />
+      <section id="faq" className="mx-auto max-w-[820px] scroll-mt-20 px-5 pb-24">
+        <div className="reveal text-center">
+          <Eyebrow>FAQ</Eyebrow>
+          <h2 className="mt-3 text-[34px] font-semibold tracking-tight sm:text-[40px]">Questions, answered</h2>
+        </div>
+        <div className="reveal mt-10 divide-y divide-white/[0.08] rounded-2xl border border-white/10 bg-white/[0.015]">
+          {FAQ.map((f) => (
+            <details key={f.q} className="group px-5 py-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[14.5px] font-medium text-white">
+                {f.q}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/15 text-[15px] text-white/55 transition duration-300 group-open:rotate-45 group-open:border-accent group-open:text-accent">+</span>
+              </summary>
+              <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/60">{f.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
 
       {/* final call */}
