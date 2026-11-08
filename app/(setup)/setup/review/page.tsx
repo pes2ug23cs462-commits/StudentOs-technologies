@@ -6,7 +6,7 @@ import { BackButton, Icon, NextButton } from "@/components/setup/fields";
 import { ProgressCard, SetupShell } from "@/components/setup/shell";
 import { useSetup, useStepGuard } from "@/components/setup/use-setup";
 import { PencilIcon } from "@/components/ui/icons";
-import { AREAS, INTERESTS, PRIMARY_GOALS, SKILL_LEVELS, STUDENT_TYPES, labelOf } from "@/lib/setup";
+import { AREAS, INTERESTS, SKILL_LEVELS, STUDENT_TYPES, academicForm, labelOf, primaryGoalsFor } from "@/lib/setup";
 import { cn } from "@/lib/utils";
 
 function Tags({ items, tone }: { items: string[]; tone: "green" | "violet" }) {
@@ -67,7 +67,8 @@ export default function ReviewPage() {
   const allowed = useStepGuard(4);
   if (!allowed) return null;
   const { academic: a, goals: g, skills: s } = setup;
-  const primary = labelOf(PRIMARY_GOALS, g.primary);
+  const primary = labelOf(primaryGoalsFor(a.type), g.primary);
+  const form = academicForm(a.type);
   const keySkills = Object.entries(s.areaLevels)
     .filter(([, lv]) => lv !== "beginner")
     .map(([k]) => labelOf(AREAS, k).replace(" / Programming", "").replace(" (please specify)", ""));
@@ -96,11 +97,12 @@ export default function ReviewPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Section icon="cap" iconTone="bg-indigo-500/12 text-indigo-500" title="Academic Details" sub="Your educational background" href="/setup/academic" tone="bg-indigo-500/[0.03]">
           <Row icon="building" label="Student Type">{none(labelOf(STUDENT_TYPES, a.type))}</Row>
-          <Row icon="building" label="College / University">{none(a.college)}</Row>
-          <Row icon="book" label="Course / Degree">{none(a.course)}</Row>
-          <Row icon="layers" label="Current Year">{none(a.year)}</Row>
-          <Row icon="file" label="Field of Study">{none(a.field)}</Row>
-          <Row icon="calendar" label="Expected Graduation">{none(a.graduation)}</Row>
+          <Row icon="building" label={form.place.label}>{none(a.college)}</Row>
+          {form.course && <Row icon="book" label={form.course.label}>{none(a.course)}</Row>}
+          <Row icon="layers" label={form.year.label.replace("?", "")}>{none(a.year)}</Row>
+          {form.field && <Row icon="file" label={form.field.label}>{none(a.field)}</Row>}
+          {form.specialization && <Row icon="grid" label={form.specialization.label.replace("?", "")}>{none(a.specialization)}</Row>}
+          {form.graduation && <Row icon="calendar" label={form.graduation.label}>{none(a.graduation)}</Row>}
         </Section>
 
         <Section icon="target" iconTone="bg-emerald-500/12 text-emerald-500" title="Goals & Interests" sub="Your goals and areas of interest" href="/setup/goals" tone="bg-emerald-500/[0.04]">

@@ -8,7 +8,7 @@ import { useSetup, useStepGuard } from "@/components/setup/use-setup";
 import { BellIcon, BotIcon, CheckIcon, ChevronDownIcon, ClockIcon, SearchIcon, SparkleIcon } from "@/components/ui/icons";
 import { ProgressBar } from "@/components/ui/primitives";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { ASSESSMENT_SECONDS, QUESTIONS, computeLevel } from "@/lib/setup";
+import { ASSESSMENT_SECONDS, computeLevel, questionsFor } from "@/lib/setup";
 import { cn } from "@/lib/utils";
 
 const NAV = ["Academic Details", "Goals & Interests", "Skills & Experience", "Review & Continue", "Assessment"];
@@ -17,6 +17,7 @@ export default function AssessmentPage() {
   const router = useRouter();
   const { setup, setAnswer, profileName, actions } = useSetup();
   const allowed = useStepGuard(5);
+  const QUESTIONS = questionsFor(setup.academic.type);
   const firstOpen = QUESTIONS.findIndex((q) => !setup.assessment[q.id]);
   const [i, setI] = useState(firstOpen === -1 ? 0 : firstOpen);
   const [missing, setMissing] = useState(false);

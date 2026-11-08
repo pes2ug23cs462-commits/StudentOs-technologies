@@ -5,7 +5,7 @@ import { useState } from "react";
 import { BackButton, CheckPill, ErrorText, FieldLabel, Icon, NextButton, SelectTile } from "@/components/setup/fields";
 import { ProgressCard, SetupShell, StepHeading } from "@/components/setup/shell";
 import { toggle, useSetup, useStepGuard } from "@/components/setup/use-setup";
-import { AREAS, EXPERIENCE, FAMILIAR, SKILL_LEVELS, TOOLS, type AreaLevel } from "@/lib/setup";
+import { AREAS, FAMILIAR, SKILL_LEVELS, TOOLS, experienceFor, type AreaLevel } from "@/lib/setup";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +90,7 @@ export default function SkillsPage() {
               Do you have any relevant experience?
             </FieldLabel>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-2">
-              {EXPERIENCE.map((e) => {
+              {experienceFor(setup.academic.type).map((e) => {
                 const on = s.experience.includes(e.value);
                 return (
                   <button

@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { AiError, chat, type ChatMessage, type ContentPart } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
+import { ACTIONS_PROMPT } from "@/lib/assistant-actions";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -17,16 +18,18 @@ const TONES: Record<string, string> = {
 };
 
 function systemPrompt(context: string, tone: string) {
-  return `You are StudentOS Assistant, the study helper inside StudentOS, a study planner for college students in India.
+  return `You are StudentOS Assistant, the study helper inside StudentOS, a study app for students in India (college, school and working learners).
 You help with: planning study weeks around college, explaining concepts from their courses, exam and placement preparation, projects, internships and resumes.
 ${TONES[tone] ?? TONES.encouraging}
 Rules:
 - Reply in the same language and script the student writes in (English, Hindi, Hinglish, Kannada or any other Indian language).
 - Keep answers short and practical: usually under 180 words. Use short bullet points or numbered steps when listing.
 - Use the student details below to personalise answers. Never invent their sessions, grades or deadlines; if something isn't in the details, say so or ask.
-- You can't change their schedule yourself. When they want to move or add sessions, tell them what you suggest and point them to Schedule, Study Plan or the Reschedule button.
+- To move an existing session, point them to the Reschedule button on Schedule or Study Plan.
 - Don't write graded assignments or exam answers for them to submit; teach and give hints instead.
 - If someone seems in distress, respond kindly and suggest talking to someone they trust or a counsellor.
+
+${ACTIONS_PROMPT}
 
 Student details (from their StudentOS account, may be incomplete):
 ${context.slice(0, 3500)}`;

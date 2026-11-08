@@ -6,7 +6,7 @@
 
 import type { Course, CourseLevel, Module, QuizQuestion } from "./learn";
 import { areasFromAcademics } from "./learn";
-import { AREAS, INTERESTS, PRIMARY_GOALS, type SetupData } from "./setup";
+import { AREAS, INTERESTS, PRIMARY_GOALS, studentLine, type SetupData } from "./setup";
 import { TOPICS } from "./youtube";
 
 const label = (list: { value: string; label: string }[], v: string) => list.find((x) => x.value === v)?.label ?? v;
@@ -19,6 +19,7 @@ export function profileForCourses(setup: SetupData | undefined) {
   const k = setup.skills;
   const lines = [
     `Student type: ${a.type || "college"}`,
+    a.type && a.type !== "college" ? `About: ${studentLine(a)}` : "",
     [a.course, a.field, a.specialization].filter(Boolean).length ? `Studying: ${[a.course, a.field, a.specialization].filter(Boolean).join(", ")}` : "",
     a.year ? `Year: ${a.year}` : "",
     g.primary ? `Main goal: ${label(PRIMARY_GOALS, g.primary)}` : "",

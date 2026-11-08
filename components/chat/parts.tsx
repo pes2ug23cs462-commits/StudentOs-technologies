@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { ArrowRightIcon, CheckCircleIcon, AlertCircleIcon, FileIcon, MicIcon, PaperclipIcon, RefreshIcon, XIcon } from "@/components/ui/icons";
+import { ArrowUpIcon, CheckCircleIcon, AlertCircleIcon, FileIcon, MicIcon, PaperclipIcon, RefreshIcon, XIcon } from "@/components/ui/icons";
 import { ACCEPT, MAX_FILES, readAttachment, type Attachment } from "@/lib/attachments";
 import { MAX_RECORD_SECONDS, VOICE_LANGS, startRecording, transcribe, type Recorder } from "@/lib/voice";
 import { LogoMark } from "@/components/ui/primitives";
@@ -224,17 +224,34 @@ export function Composer({
     }
   };
 
+  // grow with the text, up to about 8 lines
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [text]);
+
+  const langShort: Record<string, string> = { "en-IN": "EN", "hi-IN": "हि", "kn-IN": "ಕ" };
+  const iconBtn = "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition disabled:opacity-40";
+
   return (
-    <div className={cn("rounded-xl border border-white/[0.08] bg-raised/90 p-3.5 backdrop-blur transition", disabled && "opacity-60", listening && "border-rose-400/40")}>
+    <div
+      className={cn(
+        "rounded-2xl border border-white/[0.09] bg-raised/90 p-2.5 pl-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur transition focus-within:border-accent/50 focus-within:shadow-[0_0_0_3px_rgb(167_139_250/0.12),0_8px_30px_rgba(0,0,0,0.18)]",
+        disabled && "opacity-60",
+        listening && "border-rose-400/50 focus-within:border-rose-400/50",
+      )}
+    >
       {(files.length > 0 || reading > 0) && (
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-2 pt-1">
           {files.map((f) => (
-            <span key={f.id} className="flex max-w-[240px] items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] py-1 pr-1 pl-1.5 text-[12px] text-white/85">
+            <span key={f.id} className="flex max-w-[240px] items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-1 pr-1 pl-1.5 text-[12px] text-white/85">
               {f.kind === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={f.dataUrl} alt="" className="h-7 w-7 rounded object-cover" />
+                <img src={f.dataUrl} alt="" className="h-7 w-7 rounded-lg object-cover" />
               ) : (
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-white/[0.06] text-white/60">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
                   <FileIcon size={13} />
                 </span>
               )}
@@ -242,28 +259,28 @@ export function Composer({
                 <span className="block truncate">{f.name}</span>
                 <span className="block text-[10.5px] text-white/45">{f.kind === "image" ? "Image" : fileLabel(f.name, f.pages)}</span>
               </span>
-              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((cur) => cur.filter((x) => x.id !== f.id))} className="rounded p-1 text-white/50 hover:bg-white/[0.08] hover:text-white">
+              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((cur) => cur.filter((x) => x.id !== f.id))} className="rounded-full p-1 text-white/50 hover:bg-white/[0.08] hover:text-white">
                 <XIcon size={12} />
               </button>
             </span>
           ))}
-          {reading > 0 && <span className="flex items-center rounded-lg border border-dashed border-white/15 px-3 py-1 text-[12px] text-white/55">Reading file…</span>}
+          {reading > 0 && <span className="flex items-center rounded-xl border border-dashed border-white/15 px-3 py-1 text-[12px] text-white/55">Reading file…</span>}
         </div>
       )}
       <textarea
         ref={ref}
-        rows={tall ? 3 : 2}
+        rows={tall ? 2 : 1}
         value={text}
         disabled={disabled}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKey}
         onPaste={(e) => allowFiles && e.clipboardData.files.length > 0 && (e.preventDefault(), addFiles(e.clipboardData.files))}
-        placeholder={listening ? "Recording… speak now, then tap the mic to stop" : transcribing ? "Turning your voice into text…" : placeholder}
+        placeholder={listening ? "Recording… speak now, then tap stop" : transcribing ? "Turning your voice into text…" : placeholder}
         aria-label="Message StudentOS"
-        className="w-full resize-none bg-transparent text-[13.5px] text-white placeholder:text-white/45 outline-none"
+        className={cn("block w-full resize-none bg-transparent py-1.5 pr-1 text-[14px] leading-relaxed text-white placeholder:text-white/40 outline-none", tall && "min-h-[56px]")}
       />
       {error && <p className="mb-1 text-[11.5px] text-amber-400">{error}</p>}
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-1.5 flex items-center gap-1.5">
         {allowFiles && (
           <>
             <input ref={fileRef} type="file" multiple accept={ACCEPT} className="hidden" onChange={(e) => (addFiles(e.target.files), (e.target.value = ""))} />
@@ -273,53 +290,71 @@ export function Composer({
               title="Attach a PDF, notes, code or a photo"
               disabled={disabled || files.length >= MAX_FILES}
               onClick={() => fileRef.current?.click()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/70 hover:bg-white/[0.06] disabled:opacity-40"
+              className={cn(iconBtn, "-ml-1 text-white/65 hover:bg-white/[0.07] hover:text-white")}
             >
-              <PaperclipIcon size={14} />
+              <PaperclipIcon size={16} />
             </button>
           </>
         )}
-        {tools}
-        <span className="ml-auto hidden text-[11px] text-white/40 sm:block">{listening ? `Recording ${Math.floor(recSecs / 60)}:${String(recSecs % 60).padStart(2, "0")} (max ${MAX_RECORD_SECONDS}s) · tap mic to stop` : transcribing ? "Converting…" : "Enter to send · Shift + Enter for a new line"}</span>
-        <select
-          aria-label="Voice typing language"
-          value={lang}
-          disabled={listening}
-          onChange={(e) => {
-            setLang(e.target.value);
-            try {
-              localStorage.setItem("studentos:voice-lang", e.target.value);
-            } catch {
-              /* ignore */
-            }
-          }}
-          className="h-8 rounded-lg border border-white/10 bg-transparent px-1.5 text-[11.5px] text-white/70 outline-none hover:bg-white/[0.06] [&>option]:bg-[#1a1a1f] [&>option]:text-white"
-        >
-          {VOICE_LANGS.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          aria-label={listening ? "Stop voice typing" : "Voice typing"}
-          aria-pressed={listening}
-          title="Voice typing"
-          disabled={disabled || transcribing}
-          onClick={toggleMic}
-          className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", listening ? "animate-pulse bg-rose-500/90 text-[#ffffff]" : "text-white/60 hover:bg-white/[0.06]")}
-        >
-          <MicIcon size={15} />
-        </button>
+        {tools && <div className="flex min-w-0 flex-wrap items-center gap-1.5 [&>button]:rounded-full [&>button]:px-3">{tools}</div>}
+        <span className="ml-auto hidden truncate pr-1 text-[11px] text-white/35 md:block">
+          {listening ? `Recording ${Math.floor(recSecs / 60)}:${String(recSecs % 60).padStart(2, "0")} · max ${MAX_RECORD_SECONDS}s` : transcribing ? "Converting…" : text ? "Shift + Enter for a new line" : ""}
+        </span>
+
+        {/* voice: language + mic in one pill */}
+        <div className={cn("flex h-9 shrink-0 items-center rounded-full border border-white/10 bg-white/[0.03] md:ml-0", "ml-auto", listening && "border-rose-400/50 bg-rose-500/10")}>
+          <label className="relative flex h-full items-center">
+            <span className="sr-only">Voice typing language</span>
+            <select
+              aria-label="Voice typing language"
+              title="Voice typing language"
+              value={lang}
+              disabled={listening}
+              onChange={(e) => {
+                setLang(e.target.value);
+                try {
+                  localStorage.setItem("studentos:voice-lang", e.target.value);
+                } catch {
+                  /* ignore */
+                }
+              }}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            >
+              {VOICE_LANGS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            <span aria-hidden className="pointer-events-none flex items-center gap-0.5 pr-1 pl-3 text-[11.5px] font-semibold text-white/70">
+              {langShort[lang] ?? "EN"}
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
+          </label>
+          <button
+            type="button"
+            aria-label={listening ? "Stop voice typing" : "Voice typing"}
+            aria-pressed={listening}
+            title={listening ? "Stop" : "Voice typing"}
+            disabled={disabled || transcribing}
+            onClick={toggleMic}
+            className={cn("flex h-9 w-9 items-center justify-center rounded-full transition", listening ? "bg-rose-500 text-[#ffffff]" : "text-white/70 hover:bg-white/[0.07] hover:text-white")}
+          >
+            {listening ? <span className="h-3 w-3 rounded-[3px] bg-current" /> : <MicIcon size={16} />}
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={send}
           aria-label="Send"
+          title="Send (Enter)"
           disabled={!canSend}
-          className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", canSend ? "bg-accent text-black" : "bg-white/[0.07] text-white/60")}
+          className={cn(iconBtn, canSend ? "bg-accent text-black shadow-[0_4px_14px_rgb(124_58_237/0.4)] hover:brightness-110" : "bg-white/[0.07] text-white/45")}
         >
-          <ArrowRightIcon size={14} />
+          <ArrowUpIcon size={16} />
         </button>
       </div>
     </div>

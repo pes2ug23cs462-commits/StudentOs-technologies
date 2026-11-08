@@ -82,6 +82,77 @@ export const COLLEGE_SUGGESTIONS = [
 ];
 export const graduationYears = (from = new Date().getFullYear()) => Array.from({ length: 8 }, (_, i) => String(from + i));
 
+/* What step 1 asks depends on who the student is. The answers go into the same
+   fields (so the rest of the app keeps working), only the labels and choices change:
+   - school: course = board, year = class, field = stream, graduation = year school ends
+   - professional: college = company, course = highest qualification, year = experience,
+     specialization = current role
+   - other: college = institute (optional), course = highest qualification, year = what
+     they are doing now, specialization = what they want to learn */
+export const BOARDS = ["CBSE", "ICSE / ISC", "State Board", "IB", "Cambridge (IGCSE)", "NIOS", "Other"];
+export const CLASSES = ["Class 8", "Class 9", "Class 10", "Class 11", "Class 12", "Other"];
+export const STREAMS = ["Science (PCM)", "Science (PCB)", "Science (PCMB)", "Commerce", "Arts / Humanities", "Not chosen yet"];
+export const QUALIFICATIONS = ["Class 12 / PUC", "Diploma", "B.Tech / B.E.", "B.Sc", "B.Com", "B.A.", "BBA", "BCA", "M.Tech", "M.Sc", "MBA", "MCA", "PhD", "Other"];
+export const EXPERIENCE_YEARS = ["Under 1 year", "1 – 3 years", "3 – 5 years", "5 – 10 years", "10+ years"];
+export const OTHER_STATUS = ["Gap year", "Preparing for exams", "Self-learning", "Returning to study", "Looking for work", "Other"];
+export const INDUSTRIES = ["IT & Software", "Finance & Banking", "Sales & Marketing", "Manufacturing", "Healthcare", "Education", "Government", "Design & Media", "Other"];
+
+export type AcademicForm = {
+  place: { label: string; placeholder: string; required: boolean; suggest: boolean };
+  course: { label: string; placeholder: string; options: string[]; required: boolean } | null;
+  year: { label: string; options: string[] };
+  field: { label: string; placeholder: string; options: string[] } | null;
+  specialization: { label: string; placeholder: string; required: boolean } | null;
+  graduation: { label: string } | null;
+};
+
+export function academicForm(type: StudentType | ""): AcademicForm {
+  if (type === "school")
+    return {
+      place: { label: "School Name", placeholder: "Enter your school name", required: true, suggest: false },
+      course: { label: "Board", placeholder: "e.g. CBSE, ICSE, State Board", options: BOARDS, required: false },
+      year: { label: "Current Class", options: CLASSES },
+      field: { label: "Stream", placeholder: "For Class 11 and 12", options: STREAMS },
+      specialization: null,
+      graduation: { label: "Year you finish school" },
+    };
+  if (type === "professional")
+    return {
+      place: { label: "Company / Organisation", placeholder: "Where you work (optional)", required: false, suggest: false },
+      course: { label: "Highest Qualification", placeholder: "e.g. B.Tech, B.Com, MBA", options: QUALIFICATIONS, required: true },
+      year: { label: "Work Experience", options: EXPERIENCE_YEARS },
+      field: { label: "Industry", placeholder: "e.g. IT, Finance, Marketing", options: INDUSTRIES },
+      specialization: { label: "Current Role", placeholder: "e.g. Sales executive, Software tester", required: true },
+      graduation: null,
+    };
+  if (type === "other")
+    return {
+      place: { label: "Institute / Organisation", placeholder: "If you are part of one (optional)", required: false, suggest: true },
+      course: { label: "Highest Qualification", placeholder: "e.g. Class 12, B.Com, Diploma", options: QUALIFICATIONS, required: true },
+      year: { label: "What are you doing now?", options: OTHER_STATUS },
+      field: { label: "Field of Study", placeholder: "e.g. Science, Arts, Commerce", options: FIELDS },
+      specialization: { label: "What do you want to learn?", placeholder: "e.g. Spoken English, Excel, Coding", required: false },
+      graduation: null,
+    };
+  return {
+    place: { label: "College / University Name", placeholder: "Search or enter your college/university name", required: true, suggest: true },
+    course: { label: "Course / Degree", placeholder: "e.g. B.Tech, B.Sc, B.Com, B.A., MBA, etc.", options: COURSES, required: true },
+    year: { label: "Current Year of Study", options: YEARS },
+    field: { label: "Field of Study", placeholder: "e.g. Science, Arts, Commerce, Management, etc.", options: FIELDS },
+    specialization: { label: "Are you pursuing any specific specialization?", placeholder: "e.g. Computer Science, Psychology, Economics, etc.", required: false },
+    graduation: { label: "Expected Graduation Year" },
+  };
+}
+
+/** One line describing the student, for the AI and for headings. */
+export function studentLine(a: SetupData["academic"] | undefined) {
+  if (!a) return "";
+  if (a.type === "school") return ["School student", a.year, a.field && a.field !== "Not chosen yet" ? a.field : "", a.course].filter(Boolean).join(", ");
+  if (a.type === "professional") return ["Working professional", a.specialization, a.field ? `in ${a.field}` : "", a.year ? `${a.year} experience` : "", a.course ? `qualification ${a.course}` : ""].filter(Boolean).join(", ");
+  if (a.type === "other") return ["Learner", a.year, a.course ? `qualification ${a.course}` : "", a.specialization ? `wants to learn ${a.specialization}` : ""].filter(Boolean).join(", ");
+  return [a.course, a.specialization || a.field, a.year].filter(Boolean).join(", ");
+}
+
 /* ---------- Step 2 ---------- */
 export const PRIMARY_GOALS = [
   { value: "skills", label: "Build my skills", sub: "Learn practical skills and gain real knowledge", icon: "target" },
@@ -107,6 +178,28 @@ export const OPPORTUNITIES = ["Internships", "Jobs", "Freelancing", "Research Op
 export const WEEKLY_HOURS = ["< 2 hours", "2 – 5 hours", "5 – 10 hours", "10+ hours"];
 export const FORMATS = ["Video Courses", "Interactive Projects", "Reading Materials", "Live Sessions", "Community Learning", "Short Guides"];
 
+/** Goal titles and opportunity lists that suit the student type. Values stay the same. */
+export function primaryGoalsFor(type: StudentType | "") {
+  const sub: Record<string, Partial<Record<StudentType, { label: string; sub: string }>>> = {
+    career: {
+      school: { label: "Choose my stream & college", sub: "Entrance exams, streams and careers" },
+      professional: { label: "Grow in my career", sub: "Promotion, job switch or a new role" },
+      other: { label: "Get a job", sub: "Skills and guidance to start working" },
+    },
+    academics: {
+      school: { label: "Score better in exams", sub: "Board exams, tests and school subjects" },
+      professional: { label: "Get a certification", sub: "Courses and exams for my field" },
+    },
+  };
+  return PRIMARY_GOALS.map((p) => ({ ...p, ...(type ? sub[p.value]?.[type] : undefined) }));
+}
+export function opportunitiesFor(type: StudentType | "") {
+  if (type === "school") return ["Board exam prep", "Entrance exams (JEE / NEET / CUET)", "Olympiads", "Scholarships", "Competitions & Hackathons", "Mentorship"];
+  if (type === "professional") return ["Promotion", "Job switch", "Freelancing", "Certifications", "Startup Opportunities", "Mentorship"];
+  if (type === "other") return ["Jobs", "Internships", "Freelancing", "Government exams", "Certifications", "Mentorship"];
+  return OPPORTUNITIES;
+}
+
 /* ---------- Step 3 ---------- */
 export const SKILL_LEVELS: { value: SkillLevel; label: string; sub: string; icon: string }[] = [
   { value: "beginner", label: "Beginner", sub: "I’m just getting started", icon: "sprout" },
@@ -131,6 +224,16 @@ export const EXPERIENCE = [
   { value: "personal", label: "Personal projects", icon: "folder" },
   { value: "other", label: "Other", icon: "dots" },
 ];
+export function experienceFor(type: StudentType | "") {
+  const none = EXPERIENCE[0];
+  const other = EXPERIENCE[EXPERIENCE.length - 1];
+  if (type === "school")
+    return [none, { value: "school", label: "School projects", icon: "cap" }, { value: "olympiad", label: "Olympiads or competitions", icon: "trophy" }, { value: "clubs", label: "Clubs and activities", icon: "users" }, { value: "personal", label: "Personal projects", icon: "folder" }, other];
+  if (type === "professional")
+    return [{ value: "job", label: "Full-time job", icon: "briefcase" }, { value: "parttime", label: "Part-time work", icon: "clock" }, { value: "freelance", label: "Freelancing", icon: "laptop" }, { value: "lead", label: "Led a team or project", icon: "users" }, { value: "personal", label: "Personal projects", icon: "folder" }, other];
+  return EXPERIENCE;
+}
+
 export const TOOLS: { value: string; color: string }[] = [
   { value: "None yet", color: "" },
   { value: "Figma", color: "#a259ff" },
@@ -185,6 +288,11 @@ const ALL_QUESTIONS: Question[] = [
 /** The quick assessment: 10 questions. The six skill/experience ones decide the level. */
 const PICK = ["q1", "q4", "q8", "q13", "q14", "q15", "q16", "q17", "q18", "q22"];
 export const QUESTIONS: Question[] = PICK.map((id) => ALL_QUESTIONS.find((q) => q.id === id)!);
+/** School students get study questions in place of the job and resume ones. */
+export function questionsFor(type: StudentType | ""): Question[] {
+  const ids = type === "school" ? PICK.map((id) => (id === "q16" ? "q19" : id === "q17" ? "q21" : id)) : PICK;
+  return ids.map((id) => ALL_QUESTIONS.find((q) => q.id === id)!);
+}
 export const ASSESSMENT_SECONDS = 5 * 60;
 
 /* ---------- Level from the assessment ----------
@@ -201,7 +309,9 @@ const SELF: Record<string, number> = { beginner: 0, intermediate: 1.5, advanced:
 export function computeLevel(data: SetupData): { level: Level; score: number } {
   let total = 0;
   let max = 0;
+  const asked = new Set(questionsFor(data.academic.type).map((q) => q.id));
   for (const [q, map] of Object.entries(SCORE)) {
+    if (!asked.has(q)) continue;
     max += 3;
     total += map[data.assessment[q] ?? ""] ?? 0;
   }

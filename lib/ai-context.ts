@@ -6,7 +6,7 @@ import { goalProgress } from "./goal-progress";
 import { isDue } from "./notes";
 import { testAnalytics } from "./tests";
 import { allCourses, courseStats, emptyLearning } from "./learn";
-import { INTERESTS, LEVEL_INFO } from "./setup";
+import { INTERESTS, LEVEL_INFO, studentLine } from "./setup";
 import type { AppState } from "./store";
 import { TODAY, addDays } from "./utils";
 
@@ -16,8 +16,13 @@ export function buildContext(state: AppState): string {
   const g = state.setup?.goals;
   lines.push(`Today: ${TODAY}`);
   lines.push(`Name: ${state.profile.name || "unknown"}`);
-  const edu = [a?.course || state.profile.degree, a?.specialization || a?.field, a?.year, a?.college || state.profile.college].filter(Boolean).join(", ");
-  if (edu) lines.push(`Studies: ${edu}`);
+  if (a?.type && a.type !== "college") {
+    const who = studentLine(a);
+    if (who) lines.push(`About: ${who}${a.college ? ` (${a.college})` : ""}`);
+  } else {
+    const edu = [a?.course || state.profile.degree, a?.specialization || a?.field, a?.year, a?.college || state.profile.college].filter(Boolean).join(", ");
+    if (edu) lines.push(`Studies: ${edu}`);
+  }
   if (state.setup?.level) lines.push(`Assessed level: ${LEVEL_INFO[state.setup.level].label}`);
   if (g?.primary) lines.push(`Main goal: ${g.primary}`);
   if (g?.interests?.length) lines.push(`Interests: ${g.interests.map((i) => INTERESTS.find((x) => x.value === i)?.label ?? i).join(", ")}`);
@@ -64,6 +69,7 @@ export function buildContext(state: AppState): string {
     }
     const entries = state.entries ?? [];
     if (entries.length) lines.push(`Projects & experience: ${entries.slice(0, 6).map((e) => e.title).join("; ")}`);
+    if (state.resume?.skills) lines.push(`Skills on resume: ${state.resume.skills.slice(0, 300)}`);
   }
   return lines.join("\n");
 }

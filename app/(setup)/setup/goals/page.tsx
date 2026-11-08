@@ -5,7 +5,7 @@ import { useState } from "react";
 import { BackButton, CheckPill, ErrorText, FieldLabel, IconCheckChip, NextButton, SelectTile } from "@/components/setup/fields";
 import { ProgressCard, SetupShell, StepHeading } from "@/components/setup/shell";
 import { toggle, useSetup, useStepGuard } from "@/components/setup/use-setup";
-import { FORMATS, INTERESTS, OPPORTUNITIES, PRIMARY_GOALS, WEEKLY_HOURS } from "@/lib/setup";
+import { FORMATS, INTERESTS, WEEKLY_HOURS, opportunitiesFor, primaryGoalsFor } from "@/lib/setup";
 
 export default function GoalsPage() {
   const router = useRouter();
@@ -52,7 +52,7 @@ export default function GoalsPage() {
           What is your primary goal?
         </FieldLabel>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" role="radiogroup">
-          {PRIMARY_GOALS.map((p) => (
+          {primaryGoalsFor(setup.academic.type).map((p) => (
             <SelectTile key={p.value} selected={g.primary === p.value} onClick={() => setGoals({ primary: p.value })} icon={p.icon} title={p.label} sub={p.sub} />
           ))}
         </div>
@@ -77,7 +77,7 @@ export default function GoalsPage() {
             What type of opportunities interest you?
           </FieldLabel>
           <div className="flex flex-wrap gap-2.5">
-            {OPPORTUNITIES.map((o) => (
+            {opportunitiesFor(setup.academic.type).map((o) => (
               <CheckPill key={o} selected={g.opportunities.includes(o)} onClick={() => setGoals({ opportunities: toggle(g.opportunities, o) })}>
                 {o}
               </CheckPill>

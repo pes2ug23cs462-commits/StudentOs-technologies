@@ -17,7 +17,10 @@ import { chatTitle, loadChat, newChatId, saveChat, sortChats, touchChat, useChat
 import { PinDialog } from "@/components/chat/chat-dialogs";
 import { nextSession } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
-import { NOW, cn, greeting } from "@/lib/utils";
+import { NOW, TODAY, cn, greeting, uid } from "@/lib/utils";
+import { ActionCard } from "@/components/chat/action-card";
+import { applyAction, markApplied, parseActions } from "@/lib/assistant-actions";
+import { starterResume } from "@/lib/resume-starter";
 
 type Msg = { id: number; role: "user" | "assistant"; text: string; time: string; failed?: boolean; files?: Attachment[]; error?: boolean };
 
@@ -159,6 +162,28 @@ export default function AssistantPage() {
     }
   }
 
+  // A change suggested by the assistant, applied only when the student presses the button.
+  function apply(msgId: number, index: number, action: Parameters<typeof applyAction>[0]): string | null {
+    const res = applyAction(action, {
+      today: TODAY,
+      resume: state.resume ?? starterResume(state),
+      entries: state.entries ?? [],
+      addSession: actions.addSession,
+      setPrefs: actions.setPrefs,
+      patch: actions.patch,
+      go: (href) => router.push(href),
+      id: uid,
+    });
+    if (!res.ok) return res.error;
+    actions.toast(res.message);
+    if (action.type !== "open_page") {
+      const list = messages.map((x) => (x.id === msgId ? { ...x, text: markApplied(x.text, index) } : x));
+      setMessages(list);
+      persist(list);
+    }
+    return null;
+  }
+
   const next = nextSession(state.sessions) ?? null;
   const empty = messages.length === 0 && !thinking && !loadingChat;
   const chats = sortChats(state.chats);
@@ -283,7 +308,17 @@ export default function AssistantPage() {
                   </UserBubble>
                 ) : (
                   <AssistantMessage key={m.id} time={m.time}>
-                    <Markdown text={m.text} />
+                    {(() => {
+                      const parsed = parseActions(m.text);
+                      return (
+                        <>
+                          <Markdown text={parsed.text} />
+                          {parsed.actions.map((p) => (
+                            <ActionCard key={p.index} action={p.action} applied={p.applied} onApply={() => apply(m.id, p.index, p.action)} />
+                          ))}
+                        </>
+                      );
+                    })()}
                     {/move|reschedule/i.test(m.text) && next && (
                       <div className="mt-3">
                         <Button size="sm" icon={<CalendarIcon size={13} />} onClick={() => setRescheduling(true)}>
