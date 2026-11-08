@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { cn } from "@/lib/utils";
 import { CheckIcon, PlayIcon } from "@/components/ui/icons";
 import { LogoMark, Wordmark } from "@/components/ui/primitives";
+import { Typewriter } from "@/components/ui/typewriter";
+import { usePathname } from "next/navigation";
 
 /* Left illustration panel on the auth screens.
    - Cards rise in one after another, then float.
@@ -95,8 +97,14 @@ function ChatBubbleText() {
   );
 }
 
+const QUOTES = {
+  login: { text: "Welcome back! Your plan is waiting.", author: "StudentOS" },
+  signup: { text: "Create your account. A new chapter awaits.", author: "StudentOS" },
+};
+
 export function HeroPanel() {
   const ref = useRef<HTMLElement>(null);
+  const quote = usePathname().startsWith("/signup") ? QUOTES.signup : QUOTES.login;
 
   // Parallax: write the pointer position (-1…1) into CSS variables; layers read them.
   useEffect(() => {
@@ -273,29 +281,16 @@ export function HeroPanel() {
           </span>
         </Card>
 
-        <Card pos="right-[17%] bottom-[15%]" tilt={[-8, 0]} d={2.1} float={0} pop className="px-3 py-1.5 text-[11px] text-white/75">
-          <span className="flex items-center gap-1.5">
-            <CheckIcon size={11} className="text-violet-400" /> 1 week of buffer
-          </span>
-        </Card>
       </div>
 
-      {/* ---------- Headline ---------- */}
-      <div className="absolute bottom-12 left-12 z-10" style={layer(6)}>
-        <h1 className="text-[52px] leading-[1.02] font-bold tracking-[-0.03em] text-white">
-          <span className="hero-in inline-block" style={delay(0.9)}>Learn.</span>{" "}
-          <span
-            className="hero-plan inline-block bg-[linear-gradient(90deg,#a5b4fc,#c4b5fd,#67e8f9,#a5b4fc)] bg-[length:200%_auto] bg-clip-text text-transparent opacity-0 [animation:hero-rise_0.9s_cubic-bezier(0.2,0.8,0.2,1)_1.05s_forwards,hero-shimmer_6s_linear_2s_infinite]"
-          >
-            Plan.
-          </span>
-          <br />
-          <span className="hero-in inline-block" style={delay(1.2)}>Build.</span>{" "}
-          <span className="hero-in inline-block" style={delay(1.35)}>Grow.</span>
-        </h1>
-        <p className="hero-in mt-3 text-[14px] text-white/65" style={delay(1.6)}>
-          Your AI study planner, built around college — not against it.
-        </p>
+      {/* ---------- Quote (types itself out; different on log in and sign up) ---------- */}
+      <div className="absolute inset-x-0 bottom-10 z-10 px-12 text-center" style={layer(6)}>
+        <blockquote className="hero-in mx-auto max-w-[560px] space-y-2" style={delay(0.9)}>
+          <p className="min-h-[1.4em] text-[22px] leading-snug font-semibold text-white">
+            “<Typewriter key={quote.text} text={quote.text} speed={55} />”
+          </p>
+          <cite className="block text-[13px] font-light text-white/55 not-italic">— {quote.author}</cite>
+        </blockquote>
       </div>
     </section>
   );
