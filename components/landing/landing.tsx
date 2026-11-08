@@ -17,7 +17,6 @@ import { ReviewsStrip } from "@/components/site/reviews";
 import { Eyebrow, Glass, TiltCard, Typing, delay as d, reducedMotion, usePointerVars, useScrollProgress } from "@/components/site/motion";
 import { SiteShell, usePrimaryCta } from "@/components/site/site-shell";
 import { TextRevealFaqs, type FaqItem } from "@/components/landing/text-reveal-faqs";
-import { HeroOS } from "@/components/landing/hero-os";
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -564,7 +563,7 @@ export function Landing() {
 
   return (
     <SiteShell>
-      <HeroOS />
+      <Hero />
 
       {/* degree marquee */}
       <section className="border-y border-white/[0.06] bg-white/[0.015] py-6">
