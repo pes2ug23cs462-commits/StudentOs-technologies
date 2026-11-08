@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { MenuIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, ChevronDownIcon, MenuIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark, Wordmark } from "@/components/ui/primitives";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useStore } from "@/lib/store";
@@ -15,11 +15,18 @@ import { useReveal } from "./motion";
 export const CONTACT_EMAIL = "studentoshr@gmail.com";
 
 const NAV = [
+  { href: "/", label: "Home" },
   { href: "/#features", label: "Features" },
+  { href: "/#free", label: "Pricing" },
+];
+const RESOURCES = [
   { href: "/#how", label: "How it works" },
-  { href: "/#free", label: "Free plan" },
   { href: "/reviews", label: "Reviews" },
   { href: "/#faq", label: "FAQ" },
+  { href: "/verify", label: "Verify a certificate" },
+  { href: "/about", label: "About us" },
+  { href: "/careers", label: "Careers" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function usePrimaryCta() {
@@ -42,37 +49,61 @@ export function SiteNav() {
 
   return (
     <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-300", scrolled || open ? "border-b border-white/[0.07] bg-ink/75 backdrop-blur-xl" : "border-b border-transparent")}>
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-5">
-        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <LogoMark size={28} />
-          <Wordmark className="text-[17px]" />
+      <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between gap-4 px-5">
+        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+          <LogoMark size={34} />
+          <span className="leading-none">
+            <Wordmark className="block text-[21px] font-extrabold tracking-[-0.02em]" />
+            <span className="mt-1 hidden items-center gap-1.5 text-[8.5px] font-semibold tracking-[0.32em] text-white/60 min-[420px]:flex">
+              <span className="h-px w-3 bg-current" />
+              TECHNOLOGIES
+              <span className="h-px w-3 bg-current" />
+            </span>
+          </span>
         </Link>
-        <nav className="hidden items-center gap-7 text-[13px] text-white/65 lg:flex" aria-label="Main">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={cn("relative transition hover:text-white", path === n.href && "text-white")}>
-              {n.label}
-              {path === n.href && <span className="absolute -bottom-1.5 left-0 h-[2px] w-full rounded-full bg-accent" />}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-9 text-[15px] font-medium text-white/80 lg:flex" aria-label="Main">
+          {NAV.map((n) => {
+            const on = n.href === "/" ? path === "/" : path === n.href;
+            return (
+              <Link key={n.href} href={n.href} className={cn("relative transition hover:text-white", on && "text-white")}>
+                {n.label}
+                {on && <span className="absolute -bottom-2 left-1/2 h-[3px] w-7 -translate-x-1/2 rounded-full bg-accent" />}
+              </Link>
+            );
+          })}
+          <div className="group relative">
+            <button type="button" className="flex items-center gap-1 transition hover:text-white" aria-haspopup="true">
+              Resources <ChevronDownIcon size={14} className="transition group-hover:rotate-180 group-focus-within:rotate-180" />
+            </button>
+            <div className="invisible absolute top-full left-1/2 z-10 w-56 -translate-x-1/2 pt-3 opacity-0 transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <div className="rounded-xl border border-white/10 bg-raised p-1.5 shadow-2xl">
+                {RESOURCES.map((r) => (
+                  <Link key={r.href} href={r.href} className="block rounded-lg px-3 py-2 text-[13.5px] text-white/80 hover:bg-white/[0.06] hover:text-white">
+                    {r.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </nav>
         <div className="flex items-center gap-3">
-          <ThemeToggle className="hidden sm:flex" />
+          <ThemeToggle className="hidden xl:flex" />
           {!cta.signedIn && (
-            <Link href="/login" className="hidden text-[13px] font-medium text-white/80 hover:text-white sm:block">
+            <Link href="/login" className="hidden h-11 items-center rounded-full border-2 border-white/25 px-6 text-[15px] font-semibold text-white transition hover:border-accent sm:inline-flex">
               Log in
             </Link>
           )}
-          <Link href={cta.href} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[13px] font-semibold text-black shadow-[0_0_24px_rgba(34,211,238,0.35)] transition hover:-translate-y-px hover:bg-accent-hover">
-            {cta.label}
+          <Link href={cta.href} className="group inline-flex h-10 items-center gap-2 rounded-full bg-[linear-gradient(90deg,#7c3aed,#8b5cf6)] px-4 text-[13.5px] font-semibold whitespace-nowrap text-[#ffffff] shadow-[0_10px_30px_rgba(124,58,237,0.4)] transition hover:-translate-y-px sm:h-11 sm:px-6 sm:text-[15px]">
+            {cta.label} <ArrowRightIcon size={15} className="hidden transition group-hover:translate-x-0.5 sm:block" />
           </Link>
-          <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((o) => !o)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/80 lg:hidden">
+          <button type="button" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((o) => !o)} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 lg:hidden">
             {open ? <XIcon size={16} /> : <MenuIcon size={16} />}
           </button>
         </div>
       </div>
       {open && (
         <nav className="animate-fade-in border-t border-white/[0.07] px-5 pt-2 pb-4 lg:hidden" aria-label="Main">
-          {NAV.map((n) => (
+          {[...NAV, ...RESOURCES].map((n) => (
             <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className="block border-b border-white/[0.05] py-3 text-[14px] text-white/80">
               {n.label}
             </Link>
