@@ -41,7 +41,7 @@ import type { Entry, Library, ResumeData, TimelineEvent } from "./free";
 import type { Learning } from "./learn";
 import type { MaterialMeta } from "./materials";
 import type { ChatLock, ChatMeta } from "./chats";
-import { TODAY, uid, weekStart } from "./utils";
+import { TODAY, addDays, uid, weekStart } from "./utils";
 
 /* ------------------------------------------------------------------
    App state. Everything lives in the browser for now (mock data +
@@ -137,7 +137,7 @@ type Action =
   | { type: "theme"; theme: AppState["theme"] }
   | { type: "onboarding/answers"; patch: Partial<OnboardingAnswers> }
   | { type: "onboarding/step"; step: OnboardingStep }
-  | { type: "plan/suggest" }
+  | { type: "plan/suggest"; plan?: { sessions: StudySession[]; milestones: Milestone[] } }
   | { type: "plan/accept" }
   | { type: "plan/status"; status: PlanStatus }
   | { type: "session/update"; id: string; patch: Partial<StudySession> }
@@ -178,14 +178,18 @@ function reducer(state: AppState, action: Action): AppState {
     case "onboarding/step":
       return { ...state, onboarding: { ...state.onboarding, step: action.step } };
     case "plan/suggest": {
-      // Mock planner: builds a CS50P-style plan from the onboarding answers, starting this week.
+      // The plan comes from the AI planner (lib/planner.ts); the demo plan is only a last resort.
       const a = state.onboarding.answers;
       const start = weekStart(TODAY);
       const [courseName, platform = ""] = (a.course || "Your course").split(" — ");
       const goalId = state.goals.find((g) => g.hasPlan)?.id ?? uid("g");
-      const sessions = buildDemoSessions(goalId, start)
-        .filter((s) => !isPast(s) && s.status !== "suggested")
-        .map((s) => ({ ...s, status: s.status === "buffer" ? ("buffer" as const) : ("planned" as const), studiedMinutes: undefined, tasks: s.tasks.map((t) => ({ ...t, done: false })), notes: "" }));
+      const sessions = action.plan
+        ? action.plan.sessions.map((s) => ({ ...s, goalId, id: uid("s") }))
+        : buildDemoSessions(goalId, start)
+            .filter((s) => !isPast(s) && s.status !== "suggested")
+            .map((s) => ({ ...s, status: s.status === "buffer" ? ("buffer" as const) : ("planned" as const), studiedMinutes: undefined, tasks: s.tasks.map((t) => ({ ...t, done: false })), notes: "" }));
+      const weeks = action.plan ? Math.max(1, ...sessions.map((s) => s.week)) : undefined;
+      const planStart = action.plan && sessions.length ? addDays(weekStart(sessions[0].date), -(sessions[0].week - 1) * 7) : start;
       const last = sessions[sessions.length - 1]?.date ?? a.target;
       const goal: Goal = {
         ...demoGoals[0],
@@ -199,6 +203,7 @@ function reducer(state: AppState, action: Action): AppState {
         planEnds: last,
         currentWeek: 1,
         progressPct: 0,
+        ...(weeks ? { totalWeeks: weeks, sessionsPerWeek: Math.round(sessions.length / weeks), hoursPerWeek: `~${((sessions.length / weeks) * a.sessionLength / 60).toFixed(1).replace(".0", "")} h` } : {}),
       };
       return {
         ...state,
@@ -218,10 +223,10 @@ function reducer(state: AppState, action: Action): AppState {
         commitments: a.commitments.length ? a.commitments : state.commitments,
         goals: [goal, ...state.goals.filter((g) => g.id !== goal.id)],
         courses: [{ id: uid("co"), name: courseName.trim(), meta: platform || "Self-paced", goalId }, ...state.courses.filter((c) => c.goalId !== goalId)],
-        milestones: shiftedMilestones(start),
+        milestones: action.plan ? action.plan.milestones : shiftedMilestones(start),
         sessions,
         planStatus: "suggested",
-        planStart: start,
+        planStart,
         onboarding: { ...state.onboarding, step: 5, done: true },
       };
     }
@@ -306,7 +311,7 @@ function makeActions(dispatch: React.Dispatch<Action>) {
     setTheme: (theme: AppState["theme"]) => dispatch({ type: "theme", theme }),
     setAnswers: (patch: Partial<OnboardingAnswers>) => dispatch({ type: "onboarding/answers", patch }),
     setStep: (step: OnboardingStep) => dispatch({ type: "onboarding/step", step }),
-    suggestPlan: () => dispatch({ type: "plan/suggest" }),
+    suggestPlan: (plan?: { sessions: StudySession[]; milestones: Milestone[] }) => dispatch({ type: "plan/suggest", plan }),
     acceptPlan: () => dispatch({ type: "plan/accept" }),
     setPlanStatus: (status: PlanStatus) => dispatch({ type: "plan/status", status }),
     updateSession: (id: string, patch: Partial<StudySession>) => dispatch({ type: "session/update", id, patch }),

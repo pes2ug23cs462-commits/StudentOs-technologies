@@ -6,7 +6,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Drawer } from "@/components/ui/drawer";
 import { AlertCircleIcon, CheckCircleIcon } from "@/components/ui/icons";
 import { Chip, ChipGroup, FieldError, Input, Label, Notice, fieldClass } from "@/components/ui/primitives";
-import { COURSES, courseForSession } from "@/lib/learn";
+import { courseForSession, linkableCourses } from "@/lib/learn";
 import { findClash, sessionsOn } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
@@ -39,7 +39,7 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
   const ok = !clash && !late;
   const titleError = touched && !title.trim() ? "Give the session a name." : "";
 
-  const autoCourse = courseForSession({ title, goalId: goalId === "none" ? "" : goalId }, goals);
+  const autoCourse = courseForSession({ title, goalId: goalId === "none" ? "" : goalId }, goals, state.learning);
   const goalOptions = [
     ...goals.map((g) => ({ value: g.id, label: g.type === "exam" ? `${g.course.split(" ")[0] === "Database" ? "DBMS" : g.course} exam` : `${g.course} · Week ${g.currentWeek ?? 1}` })),
     { value: "none", label: "No goal" },
@@ -146,7 +146,7 @@ function Form({ onClose, defaultDate }: { onClose: () => void; defaultDate?: str
             <ChipGroup
               options={[
                 { value: "auto", label: autoCourse ? `${autoCourse.title} (suggested)` : "Nothing" },
-                ...COURSES.filter((c) => c.id !== autoCourse?.id).map((c) => ({ value: c.id, label: c.title })),
+                ...linkableCourses(state.learning).filter((c) => c.id !== autoCourse?.id).map((c) => ({ value: c.id, label: c.title })),
                 ...(autoCourse ? [{ value: "none", label: "Nothing" }] : []),
               ]}
               value={courseId}

@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, CheckCircleIcon, FileIcon, LockIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/primitives";
 import { publishCert } from "@/lib/certs";
-import { QUIZ_SIZE, certLabel, courseById, courseDuration, moduleKey } from "@/lib/learn";
+import { QUIZ_SIZE, certLabel, courseDuration, findCourse, moduleKey } from "@/lib/learn";
 import { LEVEL_INFO } from "@/lib/setup";
 import { hms } from "@/lib/youtube";
 
 /** The certificate screen. `from` decides where “back” goes: the course, or Settings → Certifications. */
 export function CertificateScreen({ courseId, from }: { courseId: string; from: "course" | "settings" }) {
-  const course = courseById(courseId);
   const { state, learning, setCourse, actions } = useLearning();
+  const course = findCourse(courseId, learning);
   const cp = course ? learning.courses[course.id] : undefined;
   const publishing = useRef(false);
   const [publishError, setPublishError] = useState(false);
@@ -30,7 +30,7 @@ export function CertificateScreen({ courseId, from }: { courseId: string; from: 
           // real length of the videos the student watched, when known
           duration: course.modules.every((m) => learning.modules[moduleKey(course.id, m.id)]?.d)
             ? hms(course.modules.reduce((s, m) => s + (learning.modules[moduleKey(course.id, m.id)]?.d ?? 0), 0))
-            : courseDuration(course),
+            : courseDuration(course, learning),
           level: LEVEL_INFO[course.level].label,
           modules: course.modules.length,
           score: cp.best ? `${cp.best}/${QUIZ_SIZE}` : undefined,

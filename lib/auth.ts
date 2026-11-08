@@ -4,7 +4,7 @@
    so they never deal with Firebase errors directly.
 ------------------------------------------------------------------ */
 
-import { setChatsUnlocked } from "./chats";
+import { recentlySignedIn, setChatsUnlocked } from "./chats";
 import { FirebaseError } from "firebase/app";
 import {
   GithubAuthProvider,
@@ -22,7 +22,7 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 export type AuthErrorCode =
@@ -158,10 +158,28 @@ export async function logOut() {
 }
 
 /** Deletes the user’s data and their login. */
+/** Deletes the account and everything stored for it: the profile and app data,
+ *  saved chats, study materials, shared chat links and public certificate records. */
 export async function deleteAccount(): Promise<{ ok: true } | { ok: false; code: AuthErrorCode }> {
   const user = auth.currentUser;
   if (!user) return { ok: true };
+  // Firebase only deletes a sign-in that is recent, so check first, before any data is removed.
+  if (!recentlySignedIn(5)) return { ok: false, code: "recent-login" };
   try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const data = (snap.exists() ? snap.data() : {}) as {
+      chats?: { id: string; shareId?: string }[];
+      materials?: { id: string }[];
+      learning?: { courses?: Record<string, { certId?: string }> };
+    };
+    const refs = [
+      ...(data.chats ?? []).map((c) => doc(db, "users", user.uid, "chats", c.id)),
+      ...(data.chats ?? []).filter((c) => c.shareId).map((c) => doc(db, "shared", c.shareId!)),
+      ...(data.materials ?? []).map((m) => doc(db, "users", user.uid, "materials", m.id)),
+      ...Object.values(data.learning?.courses ?? {}).filter((c) => c.certId).map((c) => doc(db, "certificates", c.certId!)),
+      doc(db, "reviews", user.uid),
+    ];
+    await Promise.allSettled(refs.map((r) => deleteDoc(r)));
     await deleteDoc(doc(db, "users", user.uid));
     await deleteUser(user);
     return { ok: true };

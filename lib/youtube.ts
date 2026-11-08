@@ -10,6 +10,23 @@ export interface YtVideo {
   likes: number;
   /** length in seconds */
   seconds: number;
+  /** chapters from the description (“0:00 Intro”), when the creator added them */
+  chapters?: Chapter[];
+}
+
+export type Chapter = { t: number; title: string };
+
+/** Reads “0:00 Intro / 12:30 Loops” style timestamps from a video description. */
+export function parseChapters(description: string, seconds: number): Chapter[] {
+  const out: Chapter[] = [];
+  for (const line of description.split(/\r?\n/)) {
+    const m = line.match(/^\s*[-•*(\[]?\s*((?:\d{1,2}:)?\d{1,2}:\d{2})\s*[)\]]?\s*[-–—:|]?\s*(.+?)\s*$/);
+    if (!m) continue;
+    const t = m[1].split(":").reduce((a, b) => a * 60 + Number(b), 0);
+    const title = m[2].replace(/^[-–—:|\s]+/, "").slice(0, 80);
+    if (title && (!seconds || t < seconds) && (!out.length || t > out[out.length - 1].t)) out.push({ t, title });
+  }
+  return out.length >= 3 && out[0].t === 0 ? out.slice(0, 120) : [];
 }
 
 /** Topics students can explore by interest (for areas without a full course yet too). */
@@ -24,6 +41,8 @@ export const TOPICS: { area: string; label: string; q: string }[] = [
   { area: "business", label: "Digital marketing", q: "digital marketing full course" },
   { area: "commerce", label: "Accounting", q: "accounting full course for beginners" },
   { area: "commerce", label: "Stock market & finance", q: "stock market full course for beginners" },
+  { area: "commerce", label: "Tally & GST", q: "tally prime with gst full course" },
+  { area: "commerce", label: "Income tax", q: "income tax full course india" },
   { area: "entrepreneurship", label: "Startups", q: "how to start a startup lecture" },
   { area: "exams", label: "Aptitude", q: "quantitative aptitude full course" },
   { area: "health", label: "Biology", q: "biology full course" },

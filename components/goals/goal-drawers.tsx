@@ -1,7 +1,8 @@
 "use client";
 
+import { goalProgress } from "@/lib/goal-progress";
 import { useRouter } from "next/navigation";
-import { COURSES, matchCourse } from "@/lib/learn";
+import { linkableCourses, matchCourse } from "@/lib/learn";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -33,6 +34,7 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
   if (!open) return null;
 
   const errors = { course: !course.trim() ? "Name the course or subject." : "", target: !target ? "Pick a target date." : "" };
+  const suggested = matchCourse(course, state.learning);
   const others = state.goals.map((g) => (g.type === "exam" ? "the DBMS exam" : `your ${g.course} plan`)).join(" and ");
 
   const save = async () => {
@@ -54,7 +56,8 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
         examDate: kind === "exam" ? target : undefined,
         revisionHours: kind === "exam" ? Number(hours) || 6 : undefined,
         hoursPerWeek: `${hours} h`,
-        courseId: linked === "auto" ? matchCourse(course)?.id ?? "none" : linked,
+        // “auto” keeps matching the student’s own courses, even ones suggested later
+        courseId: linked === "auto" ? undefined : linked,
       },
       { id: uid("co"), name: course.trim(), meta: kind === "course" ? "Online · self-paced" : kind === "exam" ? "College course" : "Personal project", goalId: id },
     );
@@ -101,9 +104,9 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
           <Label>Learn it with a StudentOS video course</Label>
           <ChipGroup
             options={[
-              { value: "auto", label: matchCourse(course) ? `${matchCourse(course)!.title} (suggested)` : "None" },
-              ...COURSES.filter((c) => c.id !== matchCourse(course)?.id).map((c) => ({ value: c.id, label: c.title })),
-              ...(matchCourse(course) ? [{ value: "none", label: "None" }] : []),
+              { value: "auto", label: suggested ? `${suggested.title} (suggested)` : "Pick automatically" },
+              ...linkableCourses(state.learning).filter((c) => c.id !== suggested?.id).map((c) => ({ value: c.id, label: c.title })),
+              { value: "none", label: "None" },
             ]}
             value={linked}
             onChange={setLinked}
@@ -283,9 +286,9 @@ export function ReviewGoalDrawer({ goal, onClose, onUpdateDate }: { goal: Goal |
         <div>
           <div className="mb-1.5 flex justify-between text-[12.5px]">
             <span className="font-medium text-white">Course progress</span>
-            <span className="text-cyan-300">{goal.progressPct ?? 0}%</span>
+            <span className="text-cyan-300">{goalProgress(goal, state).pct}%</span>
           </div>
-          <ProgressBar value={goal.progressPct ?? 0} />
+          <ProgressBar value={goalProgress(goal, state).pct} />
         </div>
         <div>
           <p className="mb-2 text-[13px] font-semibold text-white">Milestones</p>

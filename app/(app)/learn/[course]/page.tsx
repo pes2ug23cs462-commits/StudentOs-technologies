@@ -8,14 +8,16 @@ import { ArrowLeftIcon, EyeIcon, ThumbUpIcon, CheckCircleIcon, CheckIcon, Chevro
 import { Card, EmptyState, Pill } from "@/components/ui/primitives";
 import { YouTubePlayer, watchUrl } from "@/components/videos/player";
 import { downloadPdf, downloadWord } from "@/lib/export-notes";
-import { QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, WATCHED_SHARE, clock, courseById, lessonsFor, moduleKey } from "@/lib/learn";
+import { QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, WATCHED_SHARE, clock, findCourse, isVideoCourse, moduleKey, moduleLessons } from "@/lib/learn";
+import { useStore } from "@/lib/store";
 import { LEVEL_INFO } from "@/lib/setup";
 import { compact, hms } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
 export default function CoursePage() {
   const { course: courseId } = useParams<{ course: string }>();
-  const player = useCoursePlayer(courseById(courseId));
+  const { state } = useStore();
+  const player = useCoursePlayer(findCourse(courseId, state.learning));
 
   if (!player) {
     return (
@@ -38,13 +40,23 @@ export default function CoursePage() {
       </Link>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <h1 className="text-[24px] font-semibold tracking-tight text-white">{course.title}</h1>
-        <Pill tone="green">{LEVEL_INFO[course.level].label}</Pill>
+        {isVideoCourse(course) ? <Pill tone="cyan">Popular video</Pill> : <Pill tone="green">{LEVEL_INFO[course.level].label}</Pill>}
       </div>
+      {isVideoCourse(course) && learning.videos?.[course.id.slice(3)]?.gone && (
+        <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/[0.08] p-3 text-[12.5px] text-amber-300">
+          This video was removed from YouTube or made private, so it may not play. Your notes are still here. You can remove it from Learning → My courses.
+        </p>
+      )}
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
-          {(top.loading && !mp.yt) || !video ? (
+          {top.loading && !mp.yt ? (
             <div className="aspect-video w-full animate-pulse rounded-xl border border-white/10 bg-white/[0.04]" />
+          ) : !video ? (
+            <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-6 text-center">
+              <p className="text-[14px] font-semibold text-white">Video couldn’t load</p>
+              <p className="max-w-[420px] text-[12.5px] text-white/55">This module picks the most viewed YouTube video for “{mod.topic}”. Check your internet and refresh. If it keeps happening, the YouTube key may be missing or its daily limit used up.</p>
+            </div>
           ) : (
             <YouTubePlayer
               key={`${key}|${video.key}|${lessonIdx}`}
@@ -169,7 +181,7 @@ export default function CoursePage() {
               {course.modules.map((m, i) => {
                 const p = learning.modules[moduleKey(course.id, m.id)];
                 const on = m.id === mod.id;
-                const count = on ? lessons.length : p?.secs ? lessonsFor(p.secs).length : 0;
+                const count = on ? lessons.length : m.to != null || p?.secs ? moduleLessons(m, p?.secs ?? 0).length : 0;
                 return (
                   <li key={m.id}>
                     <button
@@ -241,7 +253,7 @@ export default function CoursePage() {
                       <button
                         type="button"
                         disabled={on}
-                        onClick={() => setModule(key, { yt: `v:${v.id}`, ytTitle: v.title, ytChannel: v.channel, secs: v.seconds, t: 0, d: 0, lessonsDone: [], lesson: 0, done: false, watched: {} })}
+                        onClick={() => setModule(key, { yt: `v:${v.id}`, ytTitle: v.title, ytChannel: v.channel, secs: v.seconds, ytAt: Date.now(), t: 0, d: 0, lessonsDone: [], lesson: 0, done: false, watched: {} })}
                         className={cn("flex w-full gap-2.5 rounded-lg border p-2 text-left transition", on ? "border-accent/50 bg-accent/[0.08]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.05]")}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -262,6 +274,14 @@ export default function CoursePage() {
             </Card>
           )}
 
+          {isVideoCourse(course) ? (
+            <Card className="p-4">
+              <p className="text-[13.5px] font-semibold text-white">Popular video</p>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-white/60">
+                Split into {course.modules.length} module{course.modules.length > 1 ? "s" : ""} of short lessons and saved in My courses. Single videos don’t have a quiz or certificate. Take a StudentOS course for that.
+              </p>
+            </Card>
+          ) : (
           <Card className={cn("p-4", stats.ready && "border-accent/40")}>
             <p className="flex items-center gap-2 text-[13.5px] font-semibold text-white">
               {stats.ready ? <TrophyIcon size={15} className="text-accent" /> : <LockIcon size={14} className="text-white/50" />}
@@ -287,6 +307,7 @@ export default function CoursePage() {
               </p>
             )}
           </Card>
+          )}
         </aside>
       </div>
     </div>

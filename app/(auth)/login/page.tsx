@@ -105,6 +105,9 @@ export default function LogInPage() {
         New to StudentOS?{" "}
         <Link href="/signup" className="font-semibold text-accent hover:underline">Create account</Link>
       </p>
+      <p className="mt-3 text-center text-[11.5px] text-white/40">
+        <Link href="/privacy" className="hover:text-white">Privacy Policy</Link> · <Link href="/terms" className="hover:text-white">Terms</Link>
+      </p>
     </AuthShell>
   );
 }

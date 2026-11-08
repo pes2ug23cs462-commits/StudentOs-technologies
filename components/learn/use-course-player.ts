@@ -7,10 +7,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLearning } from "@/components/learn/use-learning";
 import { useTopVideos } from "@/components/learn/use-top-videos";
-import { WATCHED_SHARE, courseStats, lessonsFor, moduleKey, parseLength, type Course } from "@/lib/learn";
+import { useYtRefresh } from "@/components/learn/use-yt-refresh";
+import { WATCHED_SHARE, courseStats, moduleKey, moduleLessons, parseLength, type Course } from "@/lib/learn";
 
 export function useCoursePlayer(course: Course | undefined) {
   const { learning, setModule, setCourse, actions, blankModule, getModule } = useLearning();
+  useYtRefresh();
   const firstOpen = course ? (course.modules.find((m) => !learning.modules[moduleKey(course.id, m.id)]?.done) ?? course.modules[0]).id : "";
   const [active, setActive] = useState(firstOpen);
   const [notes, setNotes] = useState("");
@@ -27,12 +29,12 @@ export function useCoursePlayer(course: Course | undefined) {
     ? { key: mp.yt, title: mp.ytTitle ?? "", channel: mp.ytChannel ?? "", secs: mp.secs || mp.d || 0 }
     : best
       ? { key: `v:${best.id}`, title: best.title, channel: best.channel, secs: best.seconds }
-      : activeModule
-        ? { key: activeModule.yt, title: "", channel: activeModule.channel, secs: parseLength(activeModule.length) }
+      : activeModule?.yt
+        ? { key: activeModule.yt, title: activeModule.to != null ? course?.title ?? "" : "", channel: activeModule.channel, secs: activeModule.to ?? parseLength(activeModule.length) }
         : null;
 
   // Long videos are split into short lessons (about 25 minutes each).
-  const lessons = useMemo(() => lessonsFor(video?.secs ?? 0), [video?.secs]);
+  const lessons = useMemo(() => moduleLessons(activeModule ?? {}, video?.secs ?? 0), [activeModule, video?.secs]);
   const done = mp.lessonsDone ?? [];
   const firstUndone = lessons.findIndex((_, i) => !done.includes(i));
   const lessonIdx = Math.min(lessonOverride ?? mp.lesson ?? (firstUndone < 0 ? 0 : firstUndone), lessons.length - 1);
@@ -41,8 +43,8 @@ export function useCoursePlayer(course: Course | undefined) {
   const start = mp.t > lesson.start && (lesson.end === 0 || mp.t < lesson.end - 10) && !done.includes(lessonIdx) ? mp.t : lesson.start;
 
   useEffect(() => {
-    if (course && !learning.courses[course.id]) setCourse(course.id, {});
-    // only on first visit
+    // remember when it was last opened, so My courses can show recently watched first
+    if (course) setCourse(course.id, { lastAt: Date.now(), hidden: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course?.id]);
   useEffect(() => {
@@ -57,7 +59,7 @@ export function useCoursePlayer(course: Course | undefined) {
   const stats = courseStats(course, learning);
   const cp = stats.progress;
   // keep the same video and lesson split once the student has started
-  const lockVideo = { yt: mp.yt ?? video?.key, ytTitle: mp.ytTitle ?? video?.title, ytChannel: mp.ytChannel ?? video?.channel, secs: mp.secs || video?.secs || 0 };
+  const lockVideo = { yt: mp.yt ?? video?.key, ytTitle: mp.ytTitle ?? video?.title, ytChannel: mp.ytChannel ?? video?.channel, secs: mp.secs || video?.secs || 0, ytAt: mp.ytAt ?? Date.now() };
 
   const goLesson = (i: number) => {
     setLessonOverride(i);

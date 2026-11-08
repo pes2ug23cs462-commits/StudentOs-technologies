@@ -23,6 +23,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AssistantError, OfflineError, askAssistant, generatePlan } from "@/lib/assistant";
 import { buildContext } from "@/lib/ai-context";
 import { hoursLabel, shortGoal, timesLabel } from "@/lib/labels";
+import { answersFromSetup, planShape, profileKnown } from "@/lib/planner";
 import { useStore } from "@/lib/store";
 import type { OnboardingStep } from "@/lib/types";
 import { cn, fmt } from "@/lib/utils";
@@ -43,12 +44,22 @@ export default function OnboardingPage() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [thinking, setThinking] = useState(false);
   const [build, setBuild] = useState<"idle" | "building" | "failed">("idle");
-  const [attempt, setAttempt] = useState(0);
   const [full, setFull] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const msgId = useRef(0);
 
   const planExists = state.planStatus !== "none" && build === "idle";
+
+  // Reuse what the student already told us in the profile setup, so we don't ask twice.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !state.setup) return;
+    prefilled.current = true;
+    const patch = answersFromSetup(state.setup, answers, state.profile.name);
+    if (Object.keys(patch).length) actions.setAnswers(patch);
+  }, [state.setup, answers, state.profile.name, actions]);
+  const known = profileKnown(answers);
+  const shape = planShape(answers);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -69,12 +80,10 @@ export default function OnboardingPage() {
 
   const runBuild = async () => {
     if (missingFields(answers).length) return;
-    const n = attempt + 1;
-    setAttempt(n);
     setBuild("building");
-    const res = await generatePlan(answers, n);
-    if (!res.ok) return setBuild("failed");
-    actions.suggestPlan();
+    const res = await generatePlan(answers);
+    if (!res.ok || !res.sessions.length) return setBuild("failed");
+    actions.suggestPlan({ sessions: res.sessions, milestones: res.milestones });
     router.push("/plan/review");
   };
 
@@ -187,7 +196,7 @@ export default function OnboardingPage() {
               </>
             ) : (
               <>
-                Building your plan now — I’ll fit 9 weeks of {answers.course.split(" — ")[0] || "your course"} around{" "}
+                Building your plan now — I’ll fit {shape.weeks} weeks of {answers.course.split(" — ")[0] || "your course"} around{" "}
                 {answers.commitments.length ? answers.commitments.map((c) => (c.name === "College" ? "college" : `the ${c.name.toLowerCase()}`)).join(", ") : "your week"}
                 {answers.restDay !== "none" ? ` and your ${answers.restDay === "sunday" ? "Sunday" : "Saturday"} rest` : ""}.
                 <BuildProgress answers={answers} />
@@ -205,13 +214,19 @@ export default function OnboardingPage() {
       <div className="mb-8 text-center">
         <LogoMark size={34} className="mx-auto" />
         <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-white">Welcome to StudentOS, {first}</h1>
-        <p className="mt-2 text-[13.5px] text-white/55">I’ll ask a few short questions, then build a study plan around your week.</p>
+        <p className="mt-2 text-[13.5px] text-white/55">{known ? "I already have your profile from setup — just a few questions about your goal and week." : "I’ll ask a few short questions, then build a study plan around your week."}</p>
       </div>
       <AssistantMessage time={STEP_TIMES[0]}>
-        Hi {first} — I’m your StudentOS assistant. To build a plan that actually fits, I need to know a little about your college, what you want to learn, and when you’re free. It takes about 3 minutes, and you can change any answer later.
+        {known ? (
+          <>
+            Hi {first} — I’m your StudentOS assistant. I already know you’re in {answers.year} {answers.degree ? `(${answers.degree})` : ""} at {answers.college}, so I won’t ask that again. I just need your goal, a target date and when you’re free. About 2 minutes.
+          </>
+        ) : (
+          <>Hi {first} — I’m your StudentOS assistant. To build a plan that actually fits, I need to know a little about your college, what you want to learn, and when you’re free. It takes about 3 minutes, and you can change any answer later.</>
+        )}
         <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
           {[
-            { Icon: PlanIcon, title: "Set up my study plan", sub: "Start the 5 quick steps", onClick: () => goTo(1) },
+            { Icon: PlanIcon, title: "Set up my study plan", sub: known ? "3 quick steps left" : "Start the 5 quick steps", onClick: () => goTo(known ? 2 : 1) },
             { Icon: ChatIcon, title: "What will you ask me?", sub: "See the questions first", onClick: () => setShowQuestions(true) },
             { Icon: HomeIcon, title: "Look around first", sub: "Open the dashboard; resume any time", onClick: minimise },
           ].map(({ Icon, title, sub, onClick }) => (

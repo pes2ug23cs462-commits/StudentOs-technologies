@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/drawer";
 import { BellIcon, ChatIcon, LockIcon, SlidersIcon, TrophyIcon, UserIcon } from "@/components/ui/icons";
 import { CertificatesPanel } from "@/components/learn/certificates-panel";
+import { SystemCheck } from "@/components/settings/system-check";
 import { Avatar, Card, ChipGroup, Input, Label, SwitchRow } from "@/components/ui/primitives";
 import { profileLine } from "@/components/shell/sidebar";
 import { HOURS_OPTIONS, REST_OPTIONS, SESSION_OPTIONS, TIME_OPTIONS } from "@/lib/labels";
@@ -23,6 +24,8 @@ const TABS = [
   { key: "notifications", label: "Notifications", Icon: BellIcon },
   { key: "assistant", label: "Assistant", Icon: ChatIcon },
   { key: "account", label: "Account & privacy", Icon: LockIcon },
+  // Not in the menu: open /settings/system to test the API keys.
+  { key: "system", label: "System check", Icon: SlidersIcon, hidden: true },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -47,7 +50,7 @@ export default function SettingsPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[170px_1fr]">
         <nav className="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Settings sections">
-          {TABS.map(({ key, label, Icon }) => (
+          {TABS.filter((t) => !("hidden" in t) || active === t.key).map(({ key, label, Icon }) => (
             <Link
               key={key}
               href={`/settings/${key}`}
@@ -70,6 +73,7 @@ export default function SettingsPage() {
           {active === "notifications" && <NotificationsTab />}
           {active === "assistant" && <AssistantTab />}
           {active === "account" && <AccountTab />}
+          {active === "system" && <SystemCheck />}
         </div>
       </div>
     </div>
@@ -381,12 +385,15 @@ function AccountTab() {
           <div className="flex items-center justify-between gap-4 border-t border-white/[0.07] pt-3">
             <div>
               <p className="text-[13px] font-medium text-rose-300">Delete account</p>
-              <p className="text-[11.5px] text-white/50">Removes your plan, sessions and notes permanently</p>
+              <p className="text-[11.5px] text-white/50">Removes your plan, notes, chats, materials and certificates permanently</p>
             </div>
             <Button size="sm" variant="danger" onClick={() => (setError(null), setConfirm("delete"))}>
               Delete account
             </Button>
           </div>
+          <p className="border-t border-white/[0.07] pt-3 text-[11.5px] text-white/50">
+            How we use your data: <Link href="/privacy" className="text-accent hover:underline">Privacy Policy</Link> · <Link href="/terms" className="text-accent hover:underline">Terms and Conditions</Link>
+          </p>
         </div>
       </Panel>
       <Dialog

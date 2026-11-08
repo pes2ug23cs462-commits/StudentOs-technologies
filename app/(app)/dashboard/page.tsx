@@ -1,5 +1,6 @@
 "use client";
 
+import { goalProgress } from "@/lib/goal-progress";
 import { startSession } from "@/lib/start-session";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -177,7 +178,7 @@ function FullDashboard({ first }: { first: string }) {
               <h2 className="mt-auto pt-8 text-[22px] font-semibold tracking-tight text-white">{next.title}</h2>
               <p className="mt-2 max-w-[560px] text-[12.5px] leading-relaxed text-white/55">Objective: {next.objective}</p>
               <div className="mt-4 flex gap-2">
-                <Button variant="primary" size="sm" icon={<PlayIcon size={10} />} onClick={() => startSession(next, state.goals, actions, router.push)}>
+                <Button variant="primary" size="sm" icon={<PlayIcon size={10} />} onClick={() => startSession(next, state.goals, actions, router.push, state.learning)}>
                   Start session
                 </Button>
                 <Button size="sm" icon={<CalendarIcon size={13} />} onClick={() => setRescheduling(next)}>
@@ -207,12 +208,12 @@ function FullDashboard({ first }: { first: string }) {
               {goal.planEnds && <span className="ml-3">Plan ends · {fmt.medium(goal.planEnds)}</span>}
             </p>
             <div className="mt-5 mb-1.5 flex justify-between text-[11.5px]">
-              <span className="text-white/55">Course progress</span>
+              <span className="text-white/55">Course progress · {goalProgress(goal, state).pct}%</span>
               <span className="font-medium text-white">
                 Week {planWeek(state.planStart)} of {totalWeeks}
               </span>
             </div>
-            <ProgressBar value={goal.progressPct ?? 10} />
+            <ProgressBar value={goalProgress(goal, state).pct} />
             <Pill tone="green" dot className="mt-3">
               {stats.missed ? `${stats.missed} missed this week — reschedule to stay on track` : "On track"}
             </Pill>

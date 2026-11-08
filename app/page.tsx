@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { Landing } from "@/components/landing/landing";
 
-/* No marketing page yet — send visitors to sign up. */
+/* Public landing page. */
 export default function Home() {
-  redirect("/signup");
+  return <Landing />;
 }

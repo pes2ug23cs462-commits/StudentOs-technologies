@@ -2,7 +2,8 @@
    assistant message so answers fit their week, goals and level.
    Respects the assistant settings (use schedule / use progress). */
 
-import { COURSES, courseStats, emptyLearning } from "./learn";
+import { goalProgress } from "./goal-progress";
+import { allCourses, courseStats, emptyLearning } from "./learn";
 import { INTERESTS, LEVEL_INFO } from "./setup";
 import type { AppState } from "./store";
 import { TODAY, addDays } from "./utils";
@@ -25,7 +26,7 @@ export function buildContext(state: AppState): string {
   if (state.goals.length) {
     lines.push("Goals:");
     for (const goal of state.goals.slice(0, 6))
-      lines.push(`- ${goal.title} (${goal.type}, target ${goal.target}${goal.progressPct != null ? `, ${goal.progressPct}% done` : ""})`);
+      lines.push(`- ${goal.title} (${goal.type}, target ${goal.target}${`, ${goalProgress(goal, state).pct}% done`})`);
   }
 
   if (state.assistant.useSchedule) {
@@ -47,7 +48,7 @@ export function buildContext(state: AppState): string {
 
   if (state.assistant.useProgress) {
     const l = state.learning ?? emptyLearning();
-    const started = COURSES.filter((c) => l.courses[c.id]);
+    const started = allCourses(l).filter((c) => l.courses[c.id]);
     if (started.length) {
       lines.push("StudentOS video courses:");
       for (const c of started) {

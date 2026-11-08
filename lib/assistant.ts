@@ -1,12 +1,15 @@
 /* ------------------------------------------------------------------
    Assistant client. Sends the chat to /api/assistant (server), which
-   calls the AI provider. The planner (generatePlan) is still a mock.
+   calls the AI provider. generatePlan asks /api/plan.
 ------------------------------------------------------------------ */
 
 import { auth } from "./firebase";
 import type { Attachment } from "./attachments";
-import type { OnboardingAnswers } from "./types";
-import { wait } from "./utils";
+import type { Milestone, OnboardingAnswers, StudySession } from "./types";
+import { fallbackCourses, profileForCourses, sanitizeCourses, sanitizeQuiz } from "./catalog";
+import { moduleKey, type Course, type Learning, type QuizQuestion } from "./learn";
+import type { SetupData } from "./setup";
+import { type PlanOutline, fallbackOutline, planShape, sanitizeOutline, scheduleOutline } from "./planner";
 
 export class OfflineError extends Error {
   constructor() {
@@ -55,19 +58,40 @@ export async function askAssistant(message: string, opts: { history?: ChatTurn[]
   throw new AssistantError(MESSAGES[j.error ?? "failed"] ?? MESSAGES.failed);
 }
 
-export type PlanResult = { ok: true } | { ok: false; reason: "timeout" };
+export type PlanResult =
+  | { ok: true; sessions: StudySession[]; milestones: Milestone[]; fromAi: boolean }
+  | { ok: false; reason: "offline" | "signed-out" };
 
-/** Mock planner. Like the design’s failure state, it “times out” when every
- *  preferred time window is selected on the first try; a retry succeeds. */
-export async function generatePlan(answers: OnboardingAnswers, attempt: number): Promise<PlanResult> {
-  await wait(3800);
-  if (attempt === 1 && answers.times.length >= 4) return { ok: false, reason: "timeout" };
-  return { ok: true };
+/** Real planner: the AI writes the plan, then it is fitted into the student's week.
+ *  If the AI is busy or has no key, a simple plan is built locally instead. */
+export async function generatePlan(answers: OnboardingAnswers): Promise<PlanResult> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return { ok: false, reason: "offline" };
+  const { weeks, perWeek } = planShape(answers);
+  let outline: PlanOutline | null = null;
+  try {
+    const j = await postAi<PlanOutline>("/api/plan", {
+      goal: answers.goal,
+      course: answers.course,
+      progress: answers.progress,
+      degree: answers.degree,
+      year: answers.year,
+      target: answers.target,
+      weeks,
+      perWeek,
+      minutes: answers.sessionLength,
+    });
+    outline = sanitizeOutline(j, weeks, perWeek);
+  } catch (e) {
+    if (e instanceof AssistantError && e.message === MESSAGES["signed-out"]) return { ok: false, reason: "signed-out" };
+  }
+  const fromAi = !!outline;
+  const plan = scheduleOutline(outline ?? fallbackOutline(answers, weeks, perWeek), answers, "");
+  return { ok: true, ...plan, fromAi };
 }
 
 /* ---------- other AI calls (study materials) ---------- */
 
-async function postAi<T>(path: string, body: unknown): Promise<T> {
+export async function postAi<T>(path: string, body: unknown): Promise<T> {
   if (typeof navigator !== "undefined" && !navigator.onLine) throw new AssistantError("You seem to be offline.");
   const token = await auth.currentUser?.getIdToken().catch(() => null);
   if (!token) throw new AssistantError(MESSAGES["signed-out"]);
@@ -94,4 +118,31 @@ export type RevisionQuestion = { q: string; options: string[]; answer: number; w
 export async function makeRevisionQuiz(text: string, title: string, count = 5): Promise<RevisionQuestion[]> {
   const j = await postAi<{ questions?: RevisionQuestion[] }>("/api/quiz", { text, title, count });
   return j.questions ?? [];
+}
+
+/* ---------- personalised courses ---------- */
+
+/** Courses made for this student from their profile; falls back to ones built from their interests. */
+export async function suggestCourses(setup: SetupData | undefined): Promise<{ courses: Course[]; fromAi: boolean }> {
+  const profile = profileForCourses(setup);
+  if (profile) {
+    try {
+      const j = await postAi<{ courses?: unknown }>("/api/courses", { profile, level: setup?.level ?? "beginner" });
+      const courses = sanitizeCourses(j, (setup?.level as Course["level"]) ?? "beginner");
+      if (courses.length >= 3) return { courses, fromAi: true };
+    } catch {
+      /* use the fallback below */
+    }
+  }
+  return { courses: fallbackCourses(setup), fromAi: false };
+}
+
+/** Final-quiz questions for a personalised course, written from its modules and the videos watched. */
+export async function writeCourseQuiz(course: Course, l: Learning): Promise<QuizQuestion[]> {
+  const j = await postAi<{ questions?: unknown }>("/api/course-quiz", {
+    title: course.title,
+    level: course.level,
+    modules: course.modules.map((m) => ({ title: m.title, about: m.about, video: l.modules[moduleKey(course.id, m.id)]?.ytTitle ?? "" })),
+  });
+  return sanitizeQuiz(j.questions ?? []);
 }

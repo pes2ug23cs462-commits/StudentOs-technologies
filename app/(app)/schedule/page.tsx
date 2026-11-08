@@ -211,7 +211,7 @@ function SessionDetail({ session, onReschedule }: { session: StudySession; onRes
             Accept suggestion
           </Button>
         ) : session.status !== "completed" ? (
-          <Button variant="primary" className="w-full" icon={<PlayIcon size={10} />} onClick={() => startSession(session, state.goals, actions, router.push)}>
+          <Button variant="primary" className="w-full" icon={<PlayIcon size={10} />} onClick={() => startSession(session, state.goals, actions, router.push, state.learning)}>
             Start session
           </Button>
         ) : (

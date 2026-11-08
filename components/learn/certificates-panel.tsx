@@ -5,14 +5,14 @@ import { verifyUrl } from "@/components/learn/certificate-view";
 import { useLearning } from "@/components/learn/use-learning";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, FileIcon, TrophyIcon } from "@/components/ui/icons";
-import { COURSES, FREE_CERT_LIMIT, certLabel, courseDuration, moduleKey } from "@/lib/learn";
+import { FREE_CERT_LIMIT, allCourses, certLabel, courseDuration, moduleKey } from "@/lib/learn";
 import { LEVEL_INFO } from "@/lib/setup";
 import { hms } from "@/lib/youtube";
 
 /** The student’s StudentOS certificates, for the profile. */
 export function CertificatesPanel({ compactView = false }: { compactView?: boolean }) {
   const { state, learning, actions } = useLearning();
-  const earned = COURSES.filter((c) => learning.courses[c.id]?.certId).map((c) => {
+  const earned = allCourses(learning).filter((c) => learning.courses[c.id]?.certId).map((c) => {
     const cp = learning.courses[c.id];
     const secs = c.modules.map((m) => learning.modules[moduleKey(c.id, m.id)]?.d ?? 0);
     return {
@@ -21,13 +21,13 @@ export function CertificatesPanel({ compactView = false }: { compactView?: boole
         id: cp.certId!,
         name: state.profile.name || "StudentOS learner",
         course: c.title,
-        duration: secs.every(Boolean) ? hms(secs.reduce((a, b) => a + b, 0)) : courseDuration(c),
+        duration: secs.every(Boolean) ? hms(secs.reduce((a, b) => a + b, 0)) : courseDuration(c, learning),
         level: LEVEL_INFO[c.level].label,
         date: new Date(cp.passedAt ?? Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
       },
     };
   });
-  const passedNoCert = COURSES.filter((c) => learning.courses[c.id]?.passedAt && !learning.courses[c.id]?.certId);
+  const passedNoCert = allCourses(learning).filter((c) => learning.courses[c.id]?.passedAt && !learning.courses[c.id]?.certId);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">

@@ -19,6 +19,9 @@ export interface Module {
   /** e.g. “4 h 27 min” */
   length: string;
   about: string;
+  /** part of a longer video (seconds): used for popular videos split into modules */
+  from?: number;
+  to?: number;
 }
 
 export interface QuizQuestion {
@@ -38,8 +41,10 @@ export interface Course {
   skills: string[];
   level: CourseLevel;
   modules: Module[];
-  /** question pool; each attempt draws QUIZ_SIZE of them */
+  /** question pool; each attempt draws QUIZ_SIZE of them (empty for personalised courses: written when the quiz opens) */
   quiz: QuizQuestion[];
+  /** why it was suggested to this student */
+  why?: string;
 }
 
 /** Questions per attempt, seconds for the whole quiz, and correct answers needed. */
@@ -204,6 +209,13 @@ export function parseLength(s: string) {
   return (h ? +h[1] * 3600 : 0) + (m ? +m[1] * 60 : 0);
 }
 
+/** Lessons of one module. A module can be a part of a longer video (from–to). */
+export function moduleLessons(m: Pick<Module, "from" | "to">, secs: number): Lesson[] {
+  if (m.to == null) return lessonsFor(secs);
+  const from = m.from ?? 0;
+  return lessonsFor(m.to - from).map((l) => ({ start: l.start + from, end: l.end ? l.end + from : m.to! }));
+}
+
 /** Splits a video into equal lessons of about LESSON_SECONDS. */
 export function lessonsFor(seconds: number): Lesson[] {
   if (!seconds) return [{ start: 0, end: 0 }];
@@ -231,25 +243,21 @@ export function thumb(key: string) {
   return video ? `https://i.ytimg.com/vi/${video}/hqdefault.jpg` : "";
 }
 
-/** Ranks courses by the student’s interests, familiar skills and level. */
-export function recommendCourses(setup: SetupData | undefined) {
-  const interests = setup?.goals.interests ?? [];
-  const skills = setup?.skills.familiar ?? [];
-  const order: CourseLevel[] = ["beginner", "intermediate", "advanced"];
-  const li = order.indexOf(setup?.level ?? "beginner");
-  return COURSES.map((c) => ({
-    c,
-    score:
-      c.areas.filter((a) => interests.includes(a)).length * 3 +
-      c.skills.filter((s) => skills.includes(s)).length * 2 -
-      Math.abs(order.indexOf(c.level) - li) * 2,
-  }))
-    .sort((a, b) => b.score - a.score)
-    .map((x) => x.c);
+/** Interest areas implied by the student's degree/field (e.g. B.Com → commerce). */
+export function areasFromAcademics(setup: SetupData | undefined) {
+  const a = setup?.academic;
+  const text = `${a?.course ?? ""} ${a?.field ?? ""} ${a?.specialization ?? ""}`.toLowerCase();
+  const out: string[] = [];
+  if (/b\.?com|m\.?com|commerce|account|finance|ca\b|cma/.test(text)) out.push("commerce", "business");
+  if (/bba|mba|management|business/.test(text)) out.push("business", "entrepreneurship");
+  if (/b\.?tech|b\.?e\.|bca|mca|m\.?tech|computer|engineering|technology|\bit\b/.test(text)) out.push("tech");
+  if (/b\.?sc|m\.?sc|science|statistic|math/.test(text)) out.push("data");
+  if (/design/.test(text)) out.push("design");
+  return out;
 }
 
 /** Shuffled draw of QUIZ_SIZE questions with shuffled options. */
-export function drawQuiz(course: Course): QuizQuestion[] {
+export function drawQuiz(pool: QuizQuestion[]): QuizQuestion[] {
   const shuffle = <T,>(a: T[]) => {
     const b = [...a];
     for (let i = b.length - 1; i > 0; i--) {
@@ -258,7 +266,7 @@ export function drawQuiz(course: Course): QuizQuestion[] {
     }
     return b;
   };
-  return shuffle(course.quiz)
+  return shuffle(pool)
     .slice(0, QUIZ_SIZE)
     .map((q) => {
       const order = shuffle(q.options.map((_, i) => i));
@@ -287,6 +295,8 @@ export interface ModuleProgress {
   watched?: Record<string, number>;
   ytTitle?: string;
   ytChannel?: string;
+  /** when the video’s details were last fetched from YouTube (ms); refreshed after 30 days */
+  ytAt?: number;
 }
 
 export interface CourseProgress {
@@ -298,18 +308,138 @@ export interface CourseProgress {
   certId?: string;
   /** true once the certificate is saved to the public verification list */
   published?: boolean;
+  /** last time the course was opened (ms), for “recently watched” */
+  lastAt?: number;
+  /** pinned to the top of My courses */
+  pinned?: boolean;
+  /** removed from My courses by the student (comes back if they open it again) */
+  hidden?: boolean;
+  /** quiz questions written for a personalised course (made once, from its modules) */
+  quizPool?: QuizQuestion[];
 }
 
 export interface Learning {
   modules: Record<string, ModuleProgress>;
   courses: Record<string, CourseProgress>;
+  /** popular videos the student opened; each becomes a small course in My courses */
+  videos?: Record<string, VideoMeta>;
+  /** courses made for this student from their profile and assessment (AI, or built from their interests) */
+  catalog?: Course[];
+  /** profile the catalog was made for; a change makes new suggestions */
+  catalogFor?: string;
 }
+
+export interface VideoMeta {
+  title: string;
+  channel: string;
+  secs: number;
+  chapters?: { t: number; title: string }[];
+  /** search it came from, for “more like this” */
+  q?: string;
+  addedAt: number;
+  /** when the details were last fetched from YouTube (ms); refreshed after 30 days */
+  refreshedAt?: number;
+  /** the video was deleted or made private on YouTube */
+  gone?: boolean;
+}
+
+/** YouTube’s Developer Policies: stored API data must be refreshed or deleted within 30 days. */
+export const YT_REFRESH_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const emptyLearning = (): Learning => ({ modules: {}, courses: {} });
 
 export function courseStats(course: Course, l: Learning) {
   const done = course.modules.filter((m) => l.modules[moduleKey(course.id, m.id)]?.done).length;
   return { done, total: course.modules.length, ready: done === course.modules.length, progress: l.courses[course.id] };
+}
+
+/** How much of a course is finished, 0–100. Counts lessons inside a module, so it moves while watching. */
+export function coursePercent(course: Course, l: Learning) {
+  if (!course.modules.length) return 0;
+  const parts = course.modules.map((m) => {
+    const p = l.modules[moduleKey(course.id, m.id)];
+    if (!p) return 0;
+    if (p.done) return 1;
+    const lessons = moduleLessons(m, p.secs ?? parseLength(m.length)).length;
+    return Math.min(0.99, (p.lessonsDone?.length ?? 0) / lessons);
+  });
+  return Math.round((parts.reduce((a, b) => a + b, 0) / parts.length) * 100);
+}
+
+/* ---------- popular videos as small courses ---------- */
+
+export const VIDEO_MODULE_SECONDS = 45 * 60;
+export const videoCourseId = (videoId: string) => `yt-${videoId}`;
+
+/** A popular video split into modules (by its chapters when it has them) and lessons. */
+export function videoCourse(videoId: string, v: VideoMeta): Course {
+  if (!v.secs) {
+    // length not known yet: one module, split into lessons once the player knows the length
+    return { id: videoCourseId(videoId), title: v.title || "Video", blurb: v.channel, areas: [], skills: [], level: "beginner", quiz: [], modules: [{ id: "m1", title: v.title || "Video", yt: `v:${videoId}`, topic: "", channel: v.channel, length: "", about: "" }] };
+  }
+  const secs = v.secs;
+  const n = Math.max(1, Math.min(12, Math.round(secs / VIDEO_MODULE_SECONDS)));
+  const chapters = v.chapters ?? [];
+  // module boundaries: evenly spaced, moved to the nearest chapter start when there are chapters
+  const cuts = [0];
+  for (let i = 1; i < n; i++) {
+    const ideal = (i * secs) / n;
+    const near = chapters.length ? chapters.reduce((a, c) => (Math.abs(c.t - ideal) < Math.abs(a.t - ideal) ? c : a)).t : Math.round(ideal);
+    if (near > cuts[cuts.length - 1] + 300 && near < secs - 300) cuts.push(near);
+  }
+  cuts.push(secs);
+  const modules: Module[] = cuts.slice(0, -1).map((from, i) => {
+    const to = cuts[i + 1];
+    const inside = chapters.filter((c) => c.t >= from && c.t < to);
+    const title = inside.length ? inside[0].title + (inside.length > 1 ? ` + ${inside.length - 1} more` : "") : cuts.length > 2 ? `Part ${i + 1}` : v.title;
+    return {
+      id: `m${i + 1}`,
+      title,
+      yt: `v:${videoId}`,
+      topic: "",
+      channel: v.channel,
+      length: `${Math.round((to - from) / 60)} min`,
+      about: inside.length > 1 ? `Covers: ${inside.map((c) => c.title).slice(0, 8).join(" · ")}${inside.length > 8 ? " …" : ""}` : `${clock(from)} – ${clock(to)} of the video.`,
+      from,
+      to,
+    };
+  });
+  return { id: videoCourseId(videoId), title: v.title, blurb: `${v.channel} · popular video split into short lessons`, areas: [], skills: [], level: "beginner", modules, quiz: [] };
+}
+
+export const isVideoCourse = (c: Course) => c.id.startsWith("yt-");
+
+/** Any course this student can open: personalised, built-in, or a popular video they added. */
+export function findCourse(id: string, l: Learning | undefined) {
+  const own = l?.catalog?.find((c) => c.id === id);
+  if (own) return own;
+  const c = courseById(id);
+  if (c) return c;
+  const vid = id.startsWith("yt-") ? id.slice(3) : "";
+  const meta = vid ? l?.videos?.[vid] : undefined;
+  return meta ? videoCourse(vid, meta) : undefined;
+}
+
+/** Courses that can be linked to goals and sessions: the personalised ones, plus built-in ones already started. */
+export function linkableCourses(l: Learning | undefined): Course[] {
+  const started = COURSES.filter((c) => l?.courses[c.id] || Object.keys(l?.modules ?? {}).some((k) => k.startsWith(`${c.id}/`)));
+  return [...(l?.catalog ?? []), ...started];
+}
+
+/** Every course with progress or a certificate (for certificates, resume and the assistant). */
+export function allCourses(l: Learning | undefined): Course[] {
+  const videos = Object.entries(l?.videos ?? {}).map(([id, v]) => videoCourse(id, v));
+  return [...linkableCourses(l), ...videos];
+}
+
+/** Quiz questions for a course: its own pool, or the one written for a personalised course. */
+export const quizPool = (c: Course, l: Learning | undefined) => (c.quiz.length ? c.quiz : (l?.courses[c.id]?.quizPool ?? []));
+
+/** The course a goal is learned with: chosen on the goal, or the best match among the student's courses. */
+export function courseForGoal(g: { courseId?: string; course: string; title: string }, l: Learning | undefined) {
+  if (g.courseId === "none") return undefined;
+  if (g.courseId) return findCourse(g.courseId, l);
+  return matchCourse(`${g.title} ${g.course}`, l);
 }
 
 export const certCount = (l: Learning) => Object.values(l.courses).filter((c) => c.certId).length;
@@ -324,7 +454,16 @@ export function newCertId() {
 export const certLabel = (id: string) => `STOS/CER/${id}`;
 
 /** Adds up module lengths, e.g. “13 h 9 min”; “+ lectures” when a module is a playlist. */
-export function courseDuration(course: Course) {
+export function courseDuration(course: Course, l?: Learning) {
+  // real length of the videos when we know them
+  const secs = course.modules.map((m) => {
+    const p = l?.modules[moduleKey(course.id, m.id)];
+    return m.to != null ? m.to - (m.from ?? 0) : (p?.secs ?? p?.d ?? 0);
+  });
+  if (secs.every(Boolean)) {
+    const total = Math.round(secs.reduce((a, b) => a + b, 0) / 60);
+    return total >= 60 ? `${Math.floor(total / 60)} h${total % 60 ? ` ${total % 60} min` : ""}` : `${total} min`;
+  }
   let mins = 0;
   let playlist = false;
   for (const m of course.modules) {
@@ -339,27 +478,29 @@ export function courseDuration(course: Course) {
 
 /* ---------- linking study sessions to courses ---------- */
 
-const MATCHERS: [RegExp, string][] = [
-  [/\b(dsa|data structures?|algorithms?)\b/i, "dsa-python"],
-  [/\b(machine learning|ml|scikit|deep learning|\bai\b)\b/i, "machine-learning"],
-  [/\b(data analy\w*|sql|pandas|excel|analytics)\b/i, "data-analysis"],
-  [/\b(full[- ]?stack|javascript|\bjs\b|node|react|mongodb|backend)\b/i, "full-stack-web"],
-  [/\b(html|css|web ?dev\w*|website|frontend|landing page)\b/i, "web-basics"],
-  [/\b(python|cs50p?)\b/i, "python-foundations"],
-];
+const STOP = new Set(["the", "and", "for", "with", "from", "into", "your", "my", "learn", "learning", "course", "full", "basics", "beginners", "beginner", "introduction", "intro", "week", "session", "practice", "revision", "finish", "complete", "of", "to", "in", "on", "a", "an", "how", "what"]);
+const words = (t: string) => t.toLowerCase().replace(/[^a-z0-9+#.\s]/g, " ").split(/\s+/).filter((w) => w.length > 1 && !STOP.has(w));
 
-/** Best-guess StudentOS course for free text like “CS50 Python · Week 2”. */
-export function matchCourse(text: string): Course | undefined {
-  for (const [re, id] of MATCHERS) if (re.test(text)) return courseById(id);
-  return undefined;
+/** Best matching course among the student's courses for free text like “Tally · Week 2”. */
+export function matchCourse(text: string, l: Learning | undefined): Course | undefined {
+  const want = new Set(words(text));
+  if (!want.size) return undefined;
+  let best: { c: Course; score: number } | undefined;
+  for (const c of linkableCourses(l)) {
+    const title = words(c.title);
+    const rest = words(c.modules.map((m) => `${m.title} ${m.topic}`).join(" "));
+    const score = title.filter((w) => want.has(w)).length * 2 + new Set(rest.filter((w) => want.has(w))).size;
+    if (score >= 2 && (!best || score > best.score)) best = { c, score };
+  }
+  return best?.c;
 }
 
 /** The course a session should open: chosen on the session, then on its goal, then guessed from the names. */
-export function courseForSession(s: { courseId?: string; title: string; goalId: string }, goals: { id: string; courseId?: string; course: string; title: string }[]) {
+export function courseForSession(s: { courseId?: string; title: string; goalId: string }, goals: { id: string; courseId?: string; course: string; title: string }[], l: Learning | undefined) {
   if (s.courseId === "none") return undefined;
-  if (s.courseId) return courseById(s.courseId);
+  if (s.courseId) return findCourse(s.courseId, l);
   const g = goals.find((x) => x.id === s.goalId);
   if (g?.courseId === "none") return undefined;
-  if (g?.courseId) return courseById(g.courseId);
-  return matchCourse(`${s.title} ${g?.course ?? ""} ${g?.title ?? ""}`);
+  if (g?.courseId) return findCourse(g.courseId, l);
+  return matchCourse(`${s.title} ${g?.course ?? ""} ${g?.title ?? ""}`, l);
 }

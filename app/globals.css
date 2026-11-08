@@ -437,3 +437,113 @@ html.light .setup-left {
 @media (prefers-reduced-motion: reduce) {
   .logo3d-spin, .logo3d-float, .logo3d-shadow, .logo3d-glow, .logo3d-shine, .logo3d-ring, .logo3d-ring-rev { animation: none; }
 }
+
+/* ------------------------------------------------------------------
+   Landing page (components/landing/landing.tsx)
+------------------------------------------------------------------ */
+/* scroll reveal: elements rise in when they reach the screen */
+.reveal {
+  opacity: 0;
+  translate: 0 34px;
+  filter: blur(6px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), translate 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.8s ease;
+  transition-delay: var(--d, 0s);
+}
+.reveal[data-shown] { opacity: 1; translate: 0 0; filter: blur(0); }
+
+@keyframes land-marquee { to { translate: -50% 0; } }
+@keyframes land-grid { to { background-position: 0 64px; } }
+@keyframes land-spin { to { rotate: 360deg; } }
+@keyframes land-beam {
+  0% { translate: -100% 0; opacity: 0; }
+  20%, 80% { opacity: 1; }
+  100% { translate: 100% 0; opacity: 0; }
+}
+@keyframes land-type { from { width: 0; } }
+@keyframes land-float-3d {
+  0%, 100% { transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg); }
+  50% { transform: translate3d(0, -14px, 30px) rotateX(4deg) rotateY(-4deg); }
+}
+
+.land-shine {
+  background: linear-gradient(100deg, #a78bfa 10%, #22d3ee 35%, #c4b5fd 55%, #a78bfa 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hero-shimmer 5s linear infinite;
+}
+html.light .land-shine { background-image: linear-gradient(100deg, #7c3aed 10%, #0891b2 35%, #16a34a 55%, #7c3aed 80%); }
+
+/* moving perspective floor behind the hero */
+.land-floor {
+  background-image: linear-gradient(rgb(139 92 246 / 0.22) 1px, transparent 1px), linear-gradient(90deg, rgb(139 92 246 / 0.22) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(500px) rotateX(62deg);
+  transform-origin: center top;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 75%);
+  animation: land-grid 3s linear infinite;
+}
+html.light .land-floor { background-image: linear-gradient(rgb(124 58 237 / 0.14) 1px, transparent 1px), linear-gradient(90deg, rgb(124 58 237 / 0.14) 1px, transparent 1px); }
+
+/* rotating gradient border (CTA, free plan) */
+.land-ring { position: relative; isolation: isolate; overflow: hidden; }
+.land-ring::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  z-index: -2;
+  background: conic-gradient(from 0deg, transparent 0 55%, #22d3ee 70%, #a78bfa 85%, transparent 100%);
+  animation: land-spin 6s linear infinite;
+}
+.land-ring::after { content: ""; position: absolute; inset: 1.5px; z-index: -1; border-radius: inherit; background: var(--land-ring-bg, #0d0b16); }
+html.light .land-ring::after { background: #ffffff; }
+
+/* glass that adapts to the theme */
+.land-glass {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(14px);
+}
+html.light .land-glass { border-color: rgb(15 23 42 / 0.08); background: rgb(255 255 255 / 0.82); box-shadow: 0 20px 50px rgb(76 29 149 / 0.14); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; translate: none; filter: none; transition: none; }
+  [data-landing] *, [data-landing] { animation: none !important; }
+}
+
+/* 3D ring of cards that turns around the logo */
+@keyframes land-carousel { from { transform: rotateX(-14deg) rotateY(0deg); } to { transform: rotateX(-14deg) rotateY(-360deg); } }
+/* light sweeping across a card */
+@keyframes land-sweep { 0% { translate: -130% 0; } 60%, 100% { translate: 130% 0; } }
+/* drawing a line chart */
+@keyframes land-draw { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+@keyframes land-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes land-up { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+.land-screen-in { animation: land-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0s); }
+
+/* turning 3D cube (Careers page) */
+@keyframes land-cube { from { transform: rotateX(-22deg) rotateY(0deg); } to { transform: rotateX(-22deg) rotateY(360deg); } }
+
+/* glossy 3D icon tiles (components/site/fancy-icon.tsx) */
+/* flat stacking: the tilted tile must never cut through the glyph in 3D */
+.fancy-icon { transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); transform-style: flat; isolation: isolate; }
+.fancy-icon > svg { position: relative; z-index: 1; }
+.fancy-icon-tile {
+  border-radius: 28%;
+  background:
+    radial-gradient(120% 70% at 30% 0%, rgb(255 255 255 / 0.55), transparent 55%),
+    linear-gradient(150deg, var(--fi1), var(--fi2));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    inset 0 -8px 14px rgb(0 0 0 / 0.22),
+    0 14px 26px -10px var(--fi2),
+    0 4px 10px -4px rgb(0 0 0 / 0.5);
+  z-index: 0;
+}
+.group:hover .fancy-icon, .fancy-icon:hover { transform: translateY(-4px) rotate(-7deg) scale(1.06); }
+.land-ok { color: #a7f3d0; }
+.land-bad { color: #fecdd3; }
+html.light .land-ok { color: #047857; }
+html.light .land-bad { color: #be123c; }

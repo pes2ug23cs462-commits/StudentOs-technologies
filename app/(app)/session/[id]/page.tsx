@@ -1,5 +1,6 @@
 "use client";
 
+import { goalProgress } from "@/lib/goal-progress";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,7 +20,7 @@ export default function SessionPage() {
   const router = useRouter();
   const { state, actions } = useStore();
   const session = state.sessions.find((s) => s.id === id);
-  const linkedCourse = session ? courseForSession(session, state.goals) : undefined;
+  const linkedCourse = session ? courseForSession(session, state.goals, state.learning) : undefined;
 
   const [phase, setPhase] = useState<Phase>(session?.status === "completed" ? "done" : "ready");
   const [notes, setNotes] = useState(session?.notes ?? "");
@@ -180,10 +181,10 @@ export default function SessionPage() {
           <div className="mb-1.5 flex justify-between text-[10.5px]">
             <span className="text-white/50">{goal?.course ?? "Course"} progress</span>
             <span className="font-medium text-white">
-              Week {goal?.currentWeek ?? 1} of {goal?.totalWeeks ?? 10} · {goal?.progressPct ?? 10}%
+              Week {goal?.currentWeek ?? 1} of {goal?.totalWeeks ?? 10} · {goal ? goalProgress(goal, state).pct : 0}%
             </span>
           </div>
-          <ProgressBar value={goal?.progressPct ?? 10} />
+          <ProgressBar value={goal ? goalProgress(goal, state).pct : 0} />
         </div>
         <p className="mt-6 text-[13px] font-medium text-white">How did that feel?</p>
         <Segmented

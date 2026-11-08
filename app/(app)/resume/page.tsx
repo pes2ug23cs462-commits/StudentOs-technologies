@@ -8,7 +8,7 @@ import { ChevronDownIcon, FileIcon, PlusIcon } from "@/components/ui/icons";
 import { Card, Checkbox, Input, Label, Textarea } from "@/components/ui/primitives";
 import { ENTRY_KINDS, monthLabel, type Entry, type ResumeData } from "@/lib/free";
 import { AREAS } from "@/lib/setup";
-import { COURSES, certLabel } from "@/lib/learn";
+import { allCourses, certLabel } from "@/lib/learn";
 
 type Cert = { title: string; issuer: string; id: string; date: string };
 import { useStore, type AppState } from "@/lib/store";
@@ -62,7 +62,7 @@ export default function ResumePage() {
   const entries = state.entries ?? [];
   const set = (patch: Partial<ResumeData>) => actions.patch({ resume: { ...r, ...patch } });
   // StudentOS certificates go on the resume automatically
-  const certs: Cert[] = COURSES.filter((c) => state.learning?.courses[c.id]?.certId).map((c) => {
+  const certs: Cert[] = allCourses(state.learning).filter((c) => state.learning?.courses[c.id]?.certId).map((c) => {
     const cp = state.learning!.courses[c.id];
     return { title: c.title, issuer: "StudentOS Technologies", id: certLabel(cp.certId!), date: monthLabel((cp.passedAt ?? "").slice(0, 7)) };
   });

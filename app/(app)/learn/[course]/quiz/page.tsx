@@ -8,15 +8,16 @@ import { useLearning } from "@/components/learn/use-learning";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, CheckCircleIcon, ClockIcon, TrophyIcon, XCircleIcon } from "@/components/ui/icons";
 import { Card, EmptyState } from "@/components/ui/primitives";
-import { FREE_CERT_LIMIT, QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, certCount, courseById, courseStats, drawQuiz, newCertId, type QuizQuestion } from "@/lib/learn";
+import { FREE_CERT_LIMIT, QUIZ_PASS, QUIZ_SECONDS, QUIZ_SIZE, certCount, courseStats, drawQuiz, findCourse, newCertId, quizPool, type QuizQuestion } from "@/lib/learn";
+import { writeCourseQuiz } from "@/lib/assistant";
 import { cn } from "@/lib/utils";
 
 type Phase = "intro" | "running" | "result";
 
 export default function QuizPage() {
   const { course: courseId } = useParams<{ course: string }>();
-  const course = courseById(courseId);
   const { learning, setCourse } = useLearning();
+  const course = findCourse(courseId, learning);
   const [phase, setPhase] = useState<Phase>("intro");
   const [qs, setQs] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -84,6 +85,26 @@ export default function QuizPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [phase, i, qs, choose]);
 
+  // Personalised courses get their quiz written once, from the modules and the videos watched.
+  const pool = course ? quizPool(course, learning) : [];
+  const ready = course ? courseStats(course, learning).ready : false;
+  const [writing, setWriting] = useState<"idle" | "busy" | "failed">("idle");
+  const writeQuiz = useCallback(async () => {
+    if (!course) return;
+    setWriting("busy");
+    try {
+      const qs2 = await writeCourseQuiz(course, learning);
+      if (qs2.length < QUIZ_SIZE) throw new Error("short");
+      setCourse(course.id, { quizPool: qs2 });
+      setWriting("idle");
+    } catch {
+      setWriting("failed");
+    }
+  }, [course, learning, setCourse]);
+  useEffect(() => {
+    if (course && ready && pool.length < QUIZ_SIZE && writing === "idle") void writeQuiz();
+  }, [course?.id, ready, pool.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!course) {
     return (
       <div className="px-6 py-7 lg:px-8">
@@ -97,7 +118,7 @@ export default function QuizPage() {
   const stats = courseStats(course, learning);
   const start = () => {
     finished.current = false;
-    const drawn = drawQuiz(course);
+    const drawn = drawQuiz(quizPool(course, learning));
     setQs(drawn);
     setAnswers(drawn.map(() => null));
     setI(0);
@@ -141,9 +162,20 @@ export default function QuizPage() {
               {QUIZ_PASS === QUIZ_SIZE ? "every answer" : `${QUIZ_PASS} answers`} right to unlock your certificate. You can retry with new questions.
             </p>
             <p className="mt-3 text-[11.5px] text-white/45">Tip: press 1–4 to answer.</p>
-            <Button variant="primary" size="lg" className="mt-5" onClick={start}>
-              Start the quiz
-            </Button>
+            {pool.length >= QUIZ_SIZE ? (
+              <Button variant="primary" size="lg" className="mt-5" onClick={start}>
+                Start the quiz
+              </Button>
+            ) : writing === "failed" ? (
+              <div className="mt-5">
+                <p className="text-[12.5px] text-rose-300">Couldn’t prepare the questions. Check your internet and try again.</p>
+                <Button size="sm" className="mt-3" onClick={() => void writeQuiz()}>
+                  Try again
+                </Button>
+              </div>
+            ) : (
+              <p className="mt-5 text-[12.5px] text-white/55">Preparing questions from what you watched…</p>
+            )}
           </Card>
         )}
 

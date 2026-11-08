@@ -1,5 +1,6 @@
 "use client";
 
+import { PlanVideos } from "@/components/learn/plan-videos";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -101,6 +102,8 @@ export default function StudyPlanPage() {
           </p>
         </Card>
       </div>
+
+      <PlanVideos goal={goal} />
 
       {state.milestones.length > 0 && (
       <Card className="mt-4 p-5">

@@ -6,6 +6,7 @@ import { AddGoalDrawer, EditGoalDrawer, ReviewGoalDrawer, TargetDateDrawer } fro
 import { Button } from "@/components/ui/button";
 import { BookIcon, CalendarIcon, ChatIcon, ChevronRightIcon, ClockIcon, GradCapIcon, PencilIcon, PlusIcon, TargetIcon } from "@/components/ui/icons";
 import { Card, EmptyState, Pill, ProgressBar } from "@/components/ui/primitives";
+import { goalProgress } from "@/lib/goal-progress";
 import { useStore } from "@/lib/store";
 import type { Goal } from "@/lib/types";
 import { fmt } from "@/lib/utils";
@@ -19,6 +20,31 @@ export function GoalsSection() {
   const [reviewing, setReviewing] = useState<Goal | null>(null);
   const [dating, setDating] = useState<Goal | null>(null);
   const milestone = state.milestones[0];
+  const progressOf = (g: Goal) => goalProgress(g, state);
+
+  const progressBlock = (g: Goal) => {
+    const p = progressOf(g);
+    return (
+      <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="min-w-0 truncate text-[12px] text-white/70">{p.course ? `Video course · ${p.course.title}` : "Study sessions"}</span>
+          <span className="text-[18px] font-semibold text-white tabular-nums">{p.pct}%</span>
+        </div>
+        <ProgressBar value={p.pct} className="mt-2" />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-white/50">
+          <span>
+            {p.label}
+            {p.course && p.total > 0 && ` · ${p.doneSessions} of ${p.total} sessions`}
+          </span>
+          {p.course && (
+            <button type="button" onClick={() => router.push(`/learn/${p.course!.id}`)} className="font-medium text-cyan-300 hover:underline">
+              {p.pct === 0 ? "Start course" : p.pct === 100 ? "View course" : "Continue course"} →
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -68,7 +94,7 @@ export function GoalsSection() {
                     </span>
                   )}
                 </div>
-                <ProgressBar value={g.progressPct ?? 0} />
+                {progressBlock(g)}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="sm" icon={<TargetIcon size={13} />} onClick={() => setReviewing(g)}>
                     Review goal
@@ -90,6 +116,7 @@ export function GoalsSection() {
                     <CalendarIcon size={13} className="text-white/45" /> {g.type === "exam" ? "Exam on" : "Target"} {fmt.short(g.examDate ?? g.target)} {(g.examDate ?? g.target).slice(0, 4)}
                   </li>
                 </ul>
+                {progressBlock(g)}
                 <p className="mt-3 text-[12px] text-white/55">Ask StudentOS to fit {g.type === "exam" ? "revision for this exam" : "this goal"} around your {state.goals.find((x) => x.hasPlan)?.course ?? "other"} sessions.</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="sm" variant="primary" icon={<ChatIcon size={13} />} onClick={() => router.push("/assistant")}>
