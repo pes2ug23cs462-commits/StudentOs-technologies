@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (status !== "ready") return <div className="min-h-screen bg-ink" />;
 
-  const hideMiniChat = pathname.startsWith("/assistant") || pathname.startsWith("/onboarding") || pathname.startsWith("/plan/review");
+  const hideMiniChat = pathname.startsWith("/assistant") || pathname.startsWith("/onboarding") || pathname.startsWith("/plan/review") || pathname === "/code" || pathname.startsWith("/code/");
 
   return (
     <div className="min-h-screen bg-ink">

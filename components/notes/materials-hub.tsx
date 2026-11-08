@@ -388,7 +388,7 @@ export function MaterialsHub() {
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {notes.map((n) => (
-                  <button key={n.id} type="button" onClick={() => open({ kind: "note", id: n.id })} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition hover:-translate-y-0.5 hover:border-violet-400/50">
+                  <button key={n.id} type="button" onClick={() => open({ kind: "note", id: n.id })} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition lift-3d hover:border-violet-400/50">
                     <div className="flex items-start justify-between gap-3">
                       <p className="line-clamp-2 text-[15px] font-semibold text-white">{n.title}</p>
                       <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold", dueIn(n) <= 0 ? "bg-amber-300/15 text-amber-300" : "bg-white/[0.06] text-white/55")}>{dueLabel(n)}</span>
@@ -656,7 +656,7 @@ function Revise({ title, cards, rated, onExit, onDone }: { title: string; cards:
                     ["easy", "Easy", "Longer gap"],
                   ] as const
                 ).map(([v, l, d]) => (
-                  <button key={v} type="button" onClick={() => onDone?.(v)} className={cn("rounded-xl border p-4 transition hover:-translate-y-0.5", v === suggest ? "border-violet-400 bg-violet-500/[0.14]" : "border-white/10 bg-white/[0.03] hover:border-white/25")}>
+                  <button key={v} type="button" onClick={() => onDone?.(v)} className={cn("rounded-xl border p-4 transition lift-3d", v === suggest ? "border-violet-400 bg-violet-500/[0.14]" : "border-white/10 bg-white/[0.03] hover:border-white/25")}>
                     <span className="block text-[14px] font-semibold text-white">{l}</span>
                     <span className="block text-[11.5px] text-white/50">{d}</span>
                     {v === suggest && <span className="mt-1 block text-[10.5px] font-semibold text-violet-300">Suggested</span>}

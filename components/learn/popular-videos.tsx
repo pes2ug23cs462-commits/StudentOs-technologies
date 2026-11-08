@@ -9,7 +9,7 @@ import { useTopVideos } from "./use-top-videos";
 
 export function VideoTile({ v, href }: { v: YtVideo; href: string }) {
   return (
-    <Link href={href} className="group block overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] transition hover:border-accent/40">
+    <Link href={href} className="lift-3d depth group block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] hover:border-accent/40">
       <span className="relative block aspect-video bg-white/[0.05]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`} alt="" loading="lazy" onError={(e) => (e.currentTarget.style.visibility = "hidden")} className="h-full w-full object-cover" />

@@ -73,6 +73,8 @@ export default function ResumePage() {
   return (
     <div className="px-6 py-7 lg:px-8">
       <PageHeader
+        icon="resume"
+        tone="emerald"
         title="Resume Creator"
         sub="Fill in the form or let AI write it for your target role — your resume updates on the right."
         actions={

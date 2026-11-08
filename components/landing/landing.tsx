@@ -519,6 +519,19 @@ export function Landing() {
   const cta = usePrimaryCta();
   const [still, setStill] = useState(false);
   useEffect(() => setStill(reducedMotion()), []);
+  // coming from another page with /#features etc.: scroll to that section once the page has drawn
+  useEffect(() => {
+    const go = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (!id) return;
+      const jump = () => document.getElementById(id)?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
+      setTimeout(jump, 60);
+      setTimeout(jump, 400);
+    };
+    go();
+    window.addEventListener("hashchange", go);
+    return () => window.removeEventListener("hashchange", go);
+  }, []);
 
   return (
     <SiteShell>

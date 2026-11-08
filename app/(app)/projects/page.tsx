@@ -45,6 +45,8 @@ export default function ProjectsPage() {
   return (
     <div className="px-6 py-7 lg:px-8">
       <PageHeader
+        icon="laptop"
+        tone="amber"
         title="Projects & Experience"
         sub="Everything you’ve built and done, in one place. It feeds straight into your resume."
         actions={

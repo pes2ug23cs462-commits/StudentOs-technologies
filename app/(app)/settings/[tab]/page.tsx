@@ -1,5 +1,6 @@
 "use client";
 
+import { FancyIcon } from "@/components/site/fancy-icon";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
@@ -45,7 +46,8 @@ export default function SettingsPage() {
 
   return (
     <div className="px-6 py-7 lg:px-8">
-      <h1 className="text-[28px] font-semibold tracking-tight text-white">Settings</h1>
+      <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+<FancyIcon name="shield" tone="sky" size={44} />Settings</h1>
       <p className="mt-1 text-[13px] text-white/55">Your profile, study preferences and how the assistant behaves.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[170px_1fr]">

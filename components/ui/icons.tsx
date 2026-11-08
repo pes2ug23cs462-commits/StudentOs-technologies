@@ -131,6 +131,9 @@ export const VideoIcon = make(<><rect x="3" y="6" width="13" height="12" rx="2" 
 export const MegaphoneIcon = make(<path d="M3 10v4h4l7 4V6L7 10zM17 9a4 4 0 0 1 0 6M7 14l1.5 5" />, "MegaphoneIcon");
 export const SparkleIcon = make(<path d="M12 3c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7z" fill="currentColor" stroke="none" />, "SparkleIcon");
 export const CodeIcon = make(<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />, "CodeIcon");
+export const BookmarkIcon = make(<path d="M6 4h12v16l-6-4-6 4z" />, "BookmarkIcon");
+export const FlameIcon = make(<path d="M12 3c1 3 4 4.5 4 9a4 4 0 0 1-8 0c0-2 1-3 1-3s.5 2 2 2c0-3-1-5 1-8z" />, "FlameIcon");
+export const FilterIcon = make(<path d="M4 5h16l-6 8v5l-4 2v-7z" />, "FilterIcon");
 export const RocketIcon = make(<path d="M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-4-4zM9 11l-4 1-2 3 4 1M13 15l-1 4-3 2-1-4M15.5 8.5h.01" />, "RocketIcon");
 export const XSmallIcon = make(<path d="M17 7 7 17M7 7l10 10" />, "XSmallIcon");
 export const HeartIcon = make(<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />, "HeartIcon");

@@ -70,6 +70,8 @@ function Learn() {
   return (
     <div className="px-6 py-7 lg:px-8">
       <PageHeader
+        icon="video"
+        tone="cyan"
         title="Learning"
         sub="Free video courses inside StudentOS, in short lessons, picked from your interests and skills."
         actions={<FreeBadge />}
@@ -168,7 +170,7 @@ function Learn() {
             const pct = coursePercent(c, learning);
             const active = begun(c.id);
             return (
-              <Card key={c.id} className="flex flex-col overflow-hidden">
+              <Card key={c.id} className="lift-3d flex flex-col overflow-hidden">
                 <Link href={`/learn/${c.id}`} className="group relative block aspect-video bg-white/[0.04]">
                   {img && (
                     // eslint-disable-next-line @next/next/no-img-element

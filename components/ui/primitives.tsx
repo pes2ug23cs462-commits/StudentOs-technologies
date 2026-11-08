@@ -27,7 +27,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/[0.08] backdrop-blur-sm",
+        "depth rounded-2xl border border-white/[0.08] backdrop-blur-sm",
         glow ? "card-glow" : "bg-white/[0.025]",
         className,
       )}
@@ -417,7 +417,7 @@ export function Avatar({ name, size = 28, className, src }: { name: string; size
 export function EmptyState({ icon, title, children, className }: { icon: ReactNode; title: string; children?: ReactNode; className?: string }) {
   return (
     <div className={cn("flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-8 text-center", className)}>
-      <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300">{icon}</span>
+      <span className="tile-3d mb-3 flex h-11 w-11 items-center justify-center rounded-xl">{icon}</span>
       <p className="text-[15px] font-semibold text-white">{title}</p>
       {children && <p className="mt-1.5 text-[12.5px] text-white/50">{children}</p>}
     </div>

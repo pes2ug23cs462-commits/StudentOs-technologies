@@ -1,5 +1,6 @@
 "use client";
 
+import { FancyIcon } from "@/components/site/fancy-icon";
 import { goalProgress } from "@/lib/goal-progress";
 import { startSession } from "@/lib/start-session";
 import Link from "next/link";
@@ -46,7 +47,8 @@ function EmptyDashboard({ first }: { first: string }) {
   const done = Math.max(0, step - 1);
   return (
     <div className="px-6 py-7 lg:px-8">
-      <h1 className="text-[28px] font-semibold tracking-tight text-white">
+      <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+<FancyIcon name="rocket" tone="violet" size={44} />
         {greeting(NOW)}, {first}
       </h1>
       <p className="mt-1 text-[13px] text-white/55">Your dashboard fills in once your first plan is ready.</p>
@@ -83,7 +85,7 @@ function EmptyDashboard({ first }: { first: string }) {
 /* ---------- Normal dashboard ---------- */
 function QuickAction({ href, icon, title, sub }: { href: string; icon: ReactNode; title: string; sub: string }) {
   return (
-    <Link href={href} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.035] px-3.5 py-3 backdrop-blur transition hover:border-white/15 hover:bg-white/[0.06]">
+    <Link href={href} className="lift-3d depth flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.035] px-3.5 py-3 backdrop-blur hover:border-white/15 hover:bg-white/[0.06]">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">{icon}</span>
       <span className="min-w-0">
         <span className="block truncate text-[13px] font-medium text-white">{title}</span>
@@ -121,7 +123,8 @@ function FullDashboard({ first }: { first: string }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-white">
+          <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+<FancyIcon name="rocket" tone="violet" size={44} />
             {greeting(NOW)}, {first}
           </h1>
           <p className="mt-1 text-[13px] text-white/55">

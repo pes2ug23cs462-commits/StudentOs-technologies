@@ -243,3 +243,4 @@ Before delivering any UI code, verify:
 - **Motion:** 150–300 ms transitions, everything turned off under `prefers-reduced-motion`.
 - **Focus:** a 2px violet outline on every focusable element.
 - **Icons:** SVG line icons from `components/ui/icons.tsx` (no emoji as icons).
+- **3D depth (Spatial UI / Glass, from the style search):** every card has layered depth shadows (`.depth`), clickable cards lift and tilt slightly on hover (`.lift-3d`), icons sit in glossy 3D tiles (`FancyIcon`, `.tile-3d`), primary buttons have a raised edge and the active sidebar item is a raised pill (`.nav-3d`). Only transform/opacity animate; hover effects only on clickable items; no WebGL in the app (high performance and accessibility cost); all of it switches off with reduced motion.

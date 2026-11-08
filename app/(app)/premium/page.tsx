@@ -18,6 +18,7 @@ const ICONS: { icon: FancyIconName; tone: FancyTone }[] = [
   { icon: "certificate", tone: "amber" },
   { icon: "quiz", tone: "pink" },
   { icon: "resume", tone: "emerald" },
+  { icon: "rocket", tone: "amber" },
   { icon: "bulb", tone: "cyan" },
 ];
 
@@ -30,7 +31,9 @@ export default function PremiumPage() {
 
   return (
     <div className="px-6 py-7 lg:px-8">
-      <PageHeader title="StudentOS Premium" sub="More practice, more proof. Everything in Free, plus tools to get job-ready." actions={premium ? <PremiumBadge /> : undefined} />
+      <PageHeader icon="diamond"
+        tone="violet"
+        title="StudentOS Premium" sub="More practice, more proof. Everything in Free, plus tools to get job-ready." actions={premium ? <PremiumBadge /> : undefined} />
 
       {premium && (
         <Card glow className="mt-5 flex flex-wrap items-center gap-4 p-5">

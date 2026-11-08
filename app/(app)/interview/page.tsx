@@ -546,7 +546,7 @@ export default function InterviewPage() {
                       onClick={() => setKind(t.kind)}
                       aria-pressed={on}
                       className={cn(
-                        "relative flex flex-col items-start justify-start rounded-2xl border p-4 text-left transition sm:p-5 hover:-translate-y-0.5",
+                        "relative flex flex-col items-start justify-start rounded-2xl border p-4 text-left transition sm:p-5 lift-3d",
                         on ? "border-violet-400 bg-violet-500/[0.12] shadow-[0_0_0_1px_rgba(167,139,250,0.4),0_10px_30px_-10px_rgba(139,92,246,0.6)]" : "border-white/10 bg-white/[0.03] hover:border-white/25",
                       )}
                     >
@@ -631,7 +631,7 @@ export default function InterviewPage() {
                 { icon: TrophyIcon, label: "Best score", value: stats ? `${stats.best}%` : "—" },
               ].map((r) => (
                 <li key={r.label} className="flex items-center gap-3 py-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/15 text-violet-300"><r.icon size={16} /></span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl tile-3d"><r.icon size={16} /></span>
                   <span className="flex-1 text-[13.5px] text-white/80">{r.label}</span>
                   <span className={cn("text-[15px] font-bold text-white tabular-nums", r.tone)}>{r.value}</span>
                 </li>
@@ -648,7 +648,7 @@ export default function InterviewPage() {
                 {history.map((h) => (
                   <li key={h.id}>
                     <button type="button" onClick={() => openRecord(h)} className="group flex w-full items-center gap-3 py-3 text-left">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-200 transition group-hover:bg-violet-500 group-hover:text-[#ffffff]"><PlayIcon size={15} /></span>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl tile-3d transition "><PlayIcon size={15} /></span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13.5px] font-medium text-white">{h.role} – {LEVEL_LABEL[h.level]}</span>
                         <span className="block text-[12px] text-white/50">

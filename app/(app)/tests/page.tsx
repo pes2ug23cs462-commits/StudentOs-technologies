@@ -518,7 +518,7 @@ function Tests() {
   const row = (h: TestRecord) => (
     <li key={h.id}>
       <button type="button" onClick={() => openResult(h)} className="group flex w-full items-center gap-3 py-3 text-left">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-300"><FileIcon size={17} /></span>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tile-3d"><FileIcon size={17} /></span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-semibold text-white">{h.subject} – {LEVEL_LABEL[h.level]}</span>
           <span className="block truncate text-[12px] text-white/50">{h.total} Questions · {Math.round(h.limit / 60)} Minutes{h.topics ? ` · ${h.topics}` : ""}</span>
@@ -566,7 +566,7 @@ function Tests() {
               { Icon: ClockIcon, value: practiceTime(history.reduce((s, h) => s + h.used, 0)), label: "Total practice time" },
             ].map((c) => (
               <Card key={c.label} className="flex items-center gap-4 p-5">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-300"><c.Icon size={24} /></span>
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl tile-3d"><c.Icon size={24} /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[26px] leading-none font-bold text-white tabular-nums">{c.value}</p>
                   <p className="mt-1.5 text-[13px] text-white/60">{c.label}</p>
@@ -596,9 +596,9 @@ function Tests() {
                       key={c.subject}
                       type="button"
                       onClick={() => openSetup(c.subject)}
-                      className={cn("group flex items-center gap-3 rounded-2xl border p-3.5 text-left transition hover:-translate-y-0.5", k === 0 ? "border-violet-400/70 bg-violet-500/[0.14]" : "border-white/10 bg-white/[0.03] hover:border-violet-400/50")}
+                      className={cn("group flex items-center gap-3 rounded-2xl border p-3.5 text-left transition lift-3d", k === 0 ? "border-violet-400/70 bg-violet-500/[0.14]" : "border-white/10 bg-white/[0.03] hover:border-violet-400/50")}
                     >
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500/15 text-violet-300"><c.Icon size={20} /></span>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tile-3d"><c.Icon size={20} /></span>
                       <span className="min-w-0 flex-1">
                         <span className="line-clamp-2 block text-[14px] leading-snug font-semibold text-white">{c.label}</span>
                         <span className="block text-[12px] text-white/50">{n ? `${n} test${n > 1 ? "s" : ""} taken` : "Start practising"}</span>
@@ -793,7 +793,7 @@ function Tests() {
                   { icon: ClockIcon, label: "Avg. time / question", value: stats ? `${stats.secsPerQ}s` : "—" },
                 ].map((r) => (
                   <li key={r.label} className="flex items-center gap-3 py-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/15 text-violet-300"><r.icon size={16} /></span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl tile-3d"><r.icon size={16} /></span>
                     <span className="flex-1 text-[13.5px] text-white/80">{r.label}</span>
                     <span className="text-[15px] font-bold text-white tabular-nums">{r.value}</span>
                   </li>

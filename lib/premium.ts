@@ -11,6 +11,7 @@ export const PREMIUM_FEATURES: { title: string; text: string; ready: boolean; hr
   { title: "Unlimited certificates", text: "A certificate for every course you pass (Free includes 2).", ready: true, href: "/settings/certificates" },
   { title: "Mock tests and analytics", text: "Timed AI mock tests for your subjects and exams, with weak topics and progress reports.", ready: true, href: "/tests" },
   { title: "AI resume builder", text: "AI writes your summary and project points for a job description, with an ATS score and missing keywords.", ready: true, href: "/resume" },
+  { title: "Placement opportunities", text: "Internships and jobs matched to your profile and skills, with an application tracker. Coming soon.", ready: false, href: "/placement" },
   { title: "AI notes and revision", text: "Short notes and flashcards from any topic or file, with a revision plan.", ready: true, href: "/learn?tab=materials&m=notes" },
 ];
 

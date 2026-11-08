@@ -13,6 +13,14 @@ export function LegalPage({ title, intro, sections, other }: { title: string; in
       <SiteNav />
       <div className="px-5 pt-24">
       <main className="mx-auto mt-10 max-w-[860px] pb-16">
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Link href="/" className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-[13px] text-white/75 transition hover:text-white">
+            ← Back to home
+          </Link>
+          <Link href="/#features" className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-[13px] text-white/75 transition hover:text-white">
+            See features
+          </Link>
+        </div>
         <p className="text-[12px] font-medium tracking-wide text-accent uppercase">Last updated {LEGAL_UPDATED}</p>
         <h1 className="mt-2 text-[32px] font-semibold tracking-tight text-white">{title}</h1>
         <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-white/70">{intro}</div>
@@ -47,6 +55,12 @@ export function LegalPage({ title, intro, sections, other }: { title: string; in
           ))}
         </div>
 
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+          <p className="text-[13.5px] text-white/70">Questions? Email <a href={`mailto:${CONTACT_EMAIL}`} className="text-accent hover:underline">{CONTACT_EMAIL}</a></p>
+          <Link href="/#features" className="inline-flex h-10 items-center rounded-xl bg-accent px-4 text-[13px] font-semibold text-black">
+            Back to StudentOS features →
+          </Link>
+        </div>
       </main>
       </div>
       <SiteFooter />

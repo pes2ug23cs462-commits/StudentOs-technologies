@@ -1,5 +1,6 @@
 "use client";
 
+import { FancyIcon } from "@/components/site/fancy-icon";
 import { PlanVideos } from "@/components/learn/plan-videos";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,7 +43,8 @@ export default function StudyPlanPage() {
   if (!goal || state.planStatus === "none") {
     return (
       <div className="px-6 py-7 lg:px-8">
-        <h1 className="text-[28px] font-semibold tracking-tight text-white">Study Plan</h1>
+        <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+<FancyIcon name="plan" tone="indigo" size={44} />Study Plan</h1>
         <EmptyState icon={<TargetIcon size={15} />} title="No plan yet" className="mt-6 py-14">
           <span className="block">Finish setting up with the assistant and your plan will show here.</span>
           <Link href="/onboarding" className="mt-3 inline-block font-medium text-accent hover:underline">
@@ -61,7 +63,8 @@ export default function StudyPlanPage() {
     <div className="px-6 py-7 lg:px-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-white">Study Plan</h1>
+          <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+<FancyIcon name="plan" tone="indigo" size={44} />Study Plan</h1>
           <p className="mt-1 text-[13px] text-white/55">
             {state.planStatus === "accepted" ? `Accepted ${fmt.dayMonth(state.planAcceptedOn ?? TODAY)} · you can change it any time` : "Suggested · not saved yet"}
           </p>

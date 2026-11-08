@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { TargetIcon,
+import { BriefcaseIcon, TargetIcon,
   CalendarIcon,
   FileIcon,
   FolderIcon,
@@ -36,7 +36,8 @@ const NAV = [
   { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals"] },
   { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
   { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
-  { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/premium"] },
+  { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/code", "/premium"] },
+  { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"] },
 ];
 
 export function profileLine(p: Profile) {
@@ -53,7 +54,7 @@ function NavItem({ href, label, Icon, active, onNavigate }: { href: string; labe
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex h-9 items-center gap-3 rounded-xl px-3 text-[13px] transition duration-200",
-        active ? "bg-plum font-semibold text-white" : "text-white/70 hover:bg-white/[0.05] hover:text-white",
+        active ? "nav-3d font-semibold text-white" : "text-white/70 hover:bg-white/[0.05] hover:text-white",
       )}
     >
       {active && <span className="absolute top-1.5 bottom-1.5 -left-[13px] w-[3px] rounded-r bg-accent" />}
@@ -62,6 +63,7 @@ function NavItem({ href, label, Icon, active, onNavigate }: { href: string; labe
       </span>
       {label}
       {PRO.has(href) && <span className="ml-auto rounded-full bg-violet-500/20 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-violet-200">PRO</span>}
+      {href === "/placement" && <span className="ml-auto rounded-full bg-amber-300/15 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-amber-300">SOON</span>}
     </Link>
   );
 }

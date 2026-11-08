@@ -43,6 +43,7 @@ import type { MaterialMeta } from "./materials";
 import type { ChatLock, ChatMeta } from "./chats";
 import type { InterviewRecord } from "./interview";
 import type { NoteSet } from "./notes";
+import type { CodingState } from "./coding/types";
 import type { TestRecord } from "./tests";
 import { TODAY, addDays, uid, weekStart } from "./utils";
 
@@ -89,6 +90,10 @@ export interface AppState {
   tests?: TestRecord[];
   /** Premium: AI notes and flashcards (newest first) */
   notes?: NoteSet[];
+  /** Coding practice: solved problems, attempts and drafts */
+  coding?: CodingState;
+  /** asked to be told when Placement opportunities opens (ms) */
+  placementNotify?: number;
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";
