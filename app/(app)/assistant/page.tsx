@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AssistantMessage, Composer, Disclaimer, Thinking, UserBubble, clockTime } from "@/components/chat/parts";
+import { AssistantMessage, Composer, Disclaimer, UserBubble, clockTime } from "@/components/chat/parts";
+import { ThinkingOrb } from "@/components/chat/thinking-orb";
 import { RescheduleDrawer } from "@/components/reschedule/reschedule-drawer";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, ChevronDownIcon, LockIcon, PlanIcon, PlusIcon, RefreshIcon, TargetIcon, TrashIcon } from "@/components/ui/icons";
@@ -33,6 +34,12 @@ export default function AssistantPage() {
   const conv = params.get("c");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [thinking, setThinking] = useState(false);
+  // the orb turns green and folds away for a moment before the answer appears
+  const [orbDone, setOrbDone] = useState(false);
+  // newest answer: its paragraphs blur in once
+  const [fresh, setFresh] = useState<number | null>(null);
+  // send animation: the message box squeezes and a ball flies up to the orb
+  const [launch, setLaunch] = useState(0);
   const [loadingChat, setLoadingChat] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
@@ -137,6 +144,7 @@ export default function AssistantPage() {
   }, [params]);
 
   async function send(text: string, files: Attachment[] = [], retryId?: number) {
+    setLaunch((n) => n + 1);
     const id = retryId ?? ++idRef.current;
     const base: Msg[] = retryId ? messages.map((x) => (x.id === id ? { ...x, failed: false } : x)) : [...messages, { id, role: "user", text, time: clockTime(), files }];
     setMessages(base);
@@ -147,7 +155,13 @@ export default function AssistantPage() {
         .filter((m) => !m.failed && !m.error && m.id !== id)
         .map((m) => ({ role: m.role, content: m.text + (m.files?.length ? `\n[Attached earlier: ${m.files.map((f) => f.name).join(", ")}]` : "") }));
       const reply = await askAssistant(text, { history, context: buildContext(state), tone: state.assistant.tone, files });
-      const next: Msg[] = [...base, { id: ++idRef.current, role: "assistant", text: reply, time: clockTime() }];
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setOrbDone(true);
+        await new Promise((r) => setTimeout(r, 750));
+      }
+      const newId = ++idRef.current;
+      const next: Msg[] = [...base, { id: newId, role: "assistant", text: reply, time: clockTime() }];
+      setFresh(newId);
       setMessages(next);
       persist(next);
     } catch (e) {
@@ -159,6 +173,7 @@ export default function AssistantPage() {
       }
     } finally {
       setThinking(false);
+      setOrbDone(false);
     }
   }
 
@@ -312,7 +327,9 @@ export default function AssistantPage() {
                       const parsed = parseActions(m.text);
                       return (
                         <>
-                          <Markdown text={parsed.text} />
+                          <div className={m.id === fresh ? "answer-reveal" : undefined}>
+                            <Markdown text={parsed.text} />
+                          </div>
                           {parsed.actions.map((p) => (
                             <ActionCard key={p.index} action={p.action} applied={p.applied} onApply={() => apply(m.id, p.index, p.action)} />
                           ))}
@@ -329,13 +346,16 @@ export default function AssistantPage() {
                   </AssistantMessage>
                 ),
               )}
-              {thinking && <Thinking />}
+              {thinking && <ThinkingOrb done={orbDone} />}
               {loadingChat && <p className="text-center text-[12.5px] text-white/50">Opening conversation…</p>}
               <div ref={bottom} />
             </div>
           </div>
-          <div className="mx-auto w-full max-w-[680px] px-6 pb-4">
-            <Composer onSend={(t, f) => send(t, f)} allowFiles disabled={thinking} />
+          <div className="relative mx-auto w-full max-w-[680px] px-6 pb-4">
+            {launch > 0 && <span key={`ball-${launch}`} aria-hidden className="orb-launch pointer-events-none absolute top-6 left-1/2 z-10 h-10 w-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ede9fe,#a78bfa_45%,#6d28d9)] shadow-[0_0_30px_rgba(139,92,246,0.7)]" />}
+            <div key={`box-${launch}`} className={launch > 0 ? "composer-launch" : undefined}>
+              <Composer onSend={(t, f) => send(t, f)} allowFiles disabled={thinking} />
+            </div>
             <Disclaimer />
           </div>
         </>
