@@ -16,6 +16,7 @@ import { ReviewsStrip } from "@/components/site/reviews";
 import { Eyebrow, Glass, TiltCard, Typing, delay as d, reducedMotion, usePointerVars, useScrollProgress } from "@/components/site/motion";
 import { SiteShell, usePrimaryCta } from "@/components/site/site-shell";
 import { StudentBloom } from "@/components/landing/student-bloom";
+import { Journey } from "@/components/landing/journey";
 import { TextRevealFaqs, type FaqItem } from "@/components/landing/text-reveal-faqs";
 import {
   ArrowRightIcon,
@@ -539,6 +540,7 @@ export function Landing() {
   return (
     <SiteShell>
       <Hero />
+      <Journey cta={cta} />
 
       {/* degree marquee */}
       <section className="border-y border-white/[0.06] bg-white/[0.015] py-6">
