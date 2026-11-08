@@ -25,6 +25,28 @@ import {
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db, firebaseConfigured } from "./firebase";
 
+/* Staying signed in: by default a login lasts only until the browser is closed, so the
+   next visit shows "Log in" again. Ticking "Remember me" keeps it across visits. The
+   choice is kept in localStorage; this also moves anyone signed in from an older
+   version (which always remembered) to the new rule. */
+const REMEMBER_KEY = "studentos:remember";
+function remembered() {
+  try {
+    return localStorage.getItem(REMEMBER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setRemember(on: boolean) {
+  try {
+    if (on) localStorage.setItem(REMEMBER_KEY, "1");
+    else localStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    /* private mode */
+  }
+}
+if (typeof window !== "undefined" && firebaseConfigured && !remembered()) setPersistence(auth, browserSessionPersistence).catch(() => {});
+
 export type AuthErrorCode =
   | "email-in-use"
   | "invalid-credentials"
@@ -115,6 +137,8 @@ export async function signUp(input: { name: string; email: string; password: str
     } catch {
       /* private mode */
     }
+    setRemember(false);
+    await setPersistence(auth, browserSessionPersistence);
     const cred = await createUserWithEmailAndPassword(auth, input.email, input.password);
     await updateProfile(cred.user, { displayName: input.name });
     sendEmailVerification(cred.user).catch(console.error);
@@ -126,6 +150,7 @@ export async function signUp(input: { name: string; email: string; password: str
 
 export async function logIn(input: { email: string; password: string; remember: boolean }): Promise<AuthResult> {
   try {
+    setRemember(input.remember);
     await setPersistence(auth, input.remember ? browserLocalPersistence : browserSessionPersistence);
     const cred = await signInWithEmailAndPassword(auth, input.email, input.password);
     return { ok: true, name: cred.user.displayName ?? "", email: cred.user.email ?? input.email };
@@ -134,10 +159,12 @@ export async function logIn(input: { email: string; password: string; remember: 
   }
 }
 
-export async function signInWithProvider(provider: SocialProvider): Promise<AuthResult> {
+export async function signInWithProvider(provider: SocialProvider, remember = false): Promise<AuthResult> {
   if (!firebaseConfigured) return { ok: false, code: "config" };
   if (provider === "linkedin") return { ok: false, code: "not-enabled" };
   try {
+    setRemember(remember);
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
     const p = provider === "github" ? new GithubAuthProvider() : new GoogleAuthProvider();
     if (p instanceof GithubAuthProvider) p.addScope("user:email");
     const cred = await signInWithPopup(auth, p);
@@ -166,6 +193,7 @@ export async function sendPasswordReset(email: string): Promise<{ ok: true } | {
 
 export async function logOut() {
   setChatsUnlocked(false);
+  setRemember(false);
   await signOut(auth);
 }
 

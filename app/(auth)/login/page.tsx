@@ -13,7 +13,7 @@ export default function LogInPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverError, setServerError] = useState<AuthErrorCode | null>(null);
   const [loading, setLoading] = useState(false);
@@ -99,7 +99,7 @@ export default function LogInPage() {
       </form>
 
       <OrDivider>or</OrDivider>
-      <SocialButtons layout="stack" disabled={loading} onError={setServerError} />
+      <SocialButtons layout="stack" disabled={loading} onError={setServerError} remember={remember} />
 
       <p className="mt-5 text-center text-[13px] text-white/60">
         New to StudentOS?{" "}
