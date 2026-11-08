@@ -126,7 +126,7 @@ function Schedule() {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_300px]">
         {view === "week" ? (
-          <WeekCalendar weekStart={ws} sessions={state.sessions} commitments={state.commitments} startHour={7} endHour={22} hourHeight={30} showStatus selectedId={selectedId} onSelect={(s) => setSelectedId(s.id)} />
+          <WeekCalendar weekStart={ws} sessions={state.sessions} commitments={state.commitments} startHour={7} endHour={22} hourHeight={46} showStatus selectedId={selectedId} onSelect={(s) => setSelectedId(s.id)} />
         ) : (
           <DayList date={anchor} onSelect={(s) => setSelectedId(s.id)} selectedId={selectedId} />
         )}

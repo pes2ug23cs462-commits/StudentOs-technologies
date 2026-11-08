@@ -215,7 +215,7 @@ function Hero() {
 function PlanScreen() {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const blocks = [
-    { day: 0, top: 58, h: 22, c: "bg-cyan-400/80", t: "Accounting" },
+    { day: 0, top: 58, h: 22, c: "bg-cyan-400/80", t: "Accounting", s: "Accts" },
     { day: 1, top: 30, h: 18, c: "bg-white/15", t: "College" },
     { day: 1, top: 62, h: 18, c: "bg-violet-500/80", t: "GST" },
     { day: 3, top: 60, h: 22, c: "bg-cyan-400/80", t: "Tally" },
@@ -228,7 +228,7 @@ function PlanScreen() {
         <p className="text-[14px] font-semibold text-white">Your week</p>
         <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10.5px] font-medium text-emerald-300">Fits around college</span>
       </div>
-      <div className="mt-4 grid flex-1 grid-cols-6 gap-2">
+      <div className="mt-4 grid flex-1 grid-cols-6 gap-1 sm:gap-2">
         {days.map((day, i) => (
           <div key={day} className="flex flex-col">
             <p className="text-center text-[10.5px] text-white/45">{day}</p>
@@ -236,8 +236,14 @@ function PlanScreen() {
               {blocks
                 .filter((b) => b.day === i)
                 .map((b, k) => (
-                  <div key={k} className={cn("land-screen-in absolute inset-x-1 rounded-md px-1.5 py-1 text-[9.5px] font-medium text-white", b.c)} style={{ top: `${b.top}%`, height: `${b.h}%`, ...d(0.15 + (i + k) * 0.08) }}>
-                    {b.t}
+                  <div
+                    key={k}
+                    title={b.t}
+                    className={cn("land-screen-in absolute right-0.5 left-0.5 overflow-hidden rounded-md px-1 py-1 text-[8px] leading-tight font-semibold text-white min-[420px]:text-[9.5px] sm:right-1 sm:left-1 sm:px-1.5", b.c)}
+                    style={{ top: `${b.top}%`, height: `${b.h}%`, ...d(0.15 + (i + k) * 0.08) }}
+                  >
+                    <span className={cn("sm:inline", "s" in b && b.s ? "hidden" : "")}>{b.t}</span>
+                    {"s" in b && b.s && <span className="sm:hidden">{b.s}</span>}
                   </div>
                 ))}
             </div>

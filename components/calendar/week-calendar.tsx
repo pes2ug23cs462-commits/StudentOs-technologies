@@ -124,8 +124,8 @@ export function WeekCalendar({
                     className="absolute inset-x-1 overflow-hidden rounded-md border border-white/[0.09] bg-white/[0.07] px-1.5 py-1"
                     style={{ top: top + 1, height: height - 2 }}
                   >
-                    <p className="truncate text-[10.5px] font-medium text-white/70">{c.name}</p>
-                    <p className="truncate text-[9.5px] text-white/45">{fmt.rangeCompact(c.start, c.end)}</p>
+                    <p className="truncate text-[10.5px] leading-tight font-medium text-white/75">{c.name}</p>
+                    {height - 2 >= 30 && <p className="mt-0.5 truncate text-[10px] leading-tight text-white/60">{fmt.rangeCompact(c.start, c.end)}</p>}
                   </div>
                 );
               })}
@@ -155,7 +155,7 @@ export function WeekCalendar({
                     onClick={() => onSelect?.(s)}
                     title={`${s.title} · ${fmt.range(s.start, s.minutes)}`}
                     className={cn(
-                      "absolute inset-x-1 z-10 overflow-hidden rounded-md px-1.5 py-1 text-left transition",
+                      "absolute inset-x-1 z-10 overflow-hidden rounded-md px-1.5 py-[3px] text-left transition",
                       dashed
                         ? "border border-dashed border-white/25 bg-ink/80"
                         : done
@@ -170,14 +170,28 @@ export function WeekCalendar({
                     )}
                     style={{ top: top + 1, height: height - 2 }}
                   >
-                    <p className="flex items-center gap-1 truncate text-[10.5px] font-semibold text-white">
-                      {done && <CheckCircleIcon size={10} className="shrink-0 text-emerald-300" />}
-                      {missed && <XCircleIcon size={10} className="shrink-0 text-rose-300" />}
-                      <span className="truncate">{s.status === "suggested" ? `Suggested: ${s.short}` : s.short}</span>
-                    </p>
-                    <p className="truncate text-[9.5px] text-white/55">
-                      {s.status === "suggested" ? "Needs your OK" : fmt.rangeCompact(s.start, fromMinutes(toMinutes(s.start) + s.minutes))}
-                    </p>
+                    {(() => {
+                      const label = s.status === "suggested" ? `Suggested: ${s.short}` : s.short;
+                      const time = s.status === "suggested" ? "Needs your OK" : fmt.rangeCompact(s.start, fromMinutes(toMinutes(s.start) + s.minutes));
+                      // short blocks: one line, time first so it is always readable
+                      return height - 2 < 30 ? (
+                        <p className="flex h-full items-center gap-1.5 text-[10.5px] leading-none">
+                          {done && <CheckCircleIcon size={10} className="shrink-0 text-emerald-300" />}
+                          {missed && <XCircleIcon size={10} className="shrink-0 text-rose-300" />}
+                          <span className="shrink-0 font-semibold text-accent-hover">{time}</span>
+                          <span className="truncate font-medium text-white">{label}</span>
+                        </p>
+                      ) : (
+                        <>
+                          <p className="flex items-center gap-1 text-[10.5px] leading-tight font-semibold text-white">
+                            {done && <CheckCircleIcon size={10} className="shrink-0 text-emerald-300" />}
+                            {missed && <XCircleIcon size={10} className="shrink-0 text-rose-300" />}
+                            <span className="truncate">{label}</span>
+                          </p>
+                          <p className="mt-0.5 truncate text-[10px] leading-tight font-medium text-white/80">{time}</p>
+                        </>
+                      );
+                    })()}
                   </button>
                 );
               })}
