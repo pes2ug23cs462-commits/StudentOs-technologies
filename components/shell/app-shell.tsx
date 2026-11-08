@@ -30,6 +30,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const hideMiniChat = pathname.startsWith("/assistant") || pathname.startsWith("/onboarding") || pathname.startsWith("/plan/review") || pathname === "/code" || pathname.startsWith("/code/");
 
+  // A coding problem opens full screen, like LeetCode: no sidebar, its own top bar.
+  if (pathname.startsWith("/code/")) {
+    return (
+      <div className="min-h-screen bg-ink">
+        {children}
+        <Toaster />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-ink">
       {/* Desktop sidebar */}

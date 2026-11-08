@@ -1,14 +1,9 @@
 "use client";
 
-/* Practice Problems: opens the workspace on this student's first unsolved problem. */
+/* Practice Problems: the problem list. Each problem opens full screen at /code/[id]. */
 
-import { Workspace } from "@/components/coding/workspace";
-import { useMyProblems } from "@/lib/coding/personal";
-import { useCoding } from "@/lib/coding/use-coding";
+import { ProblemList } from "@/components/coding/problem-list";
 
 export default function CodePage() {
-  const { coding } = useCoding();
-  const mine = useMyProblems();
-  const first = (mine.find((p) => !coding.solved[p.id]) ?? mine[0]).id;
-  return <Workspace key={first} id={first} />;
+  return <ProblemList />;
 }

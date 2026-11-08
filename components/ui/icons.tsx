@@ -141,3 +141,4 @@ export const HeartIcon = make(<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 
 export const SendIcon = make(<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z" />, "SendIcon");
 export const StopIcon = make(<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none" />, "StopIcon");
 export const VolumeIcon = make(<><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></>, "VolumeIcon");
+export const ShuffleIcon = make(<><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="m15 15 6 6" /><path d="M4 4l5 5" /></>, "ShuffleIcon");
