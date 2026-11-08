@@ -5,12 +5,14 @@
    grow, begin); between them the logo turns, shrinks and flies, and the type morphs
    from one layout into the next. On the cover, the first and last "S" of StudentOS
    slide out to flank the logo; everything else rises, blurs or clips in on its own
-   stagger. Idea and timing from the 21st.dev "Lycoris Specimen"; no WebGL, no extra
-   packages: the logo is stacked image layers turned with CSS 3D.
+   stagger. Idea and timing from the 21st.dev "Lycoris Specimen". The logo is a real
+   lit solid in raw WebGL (logo-gl.ts); without WebGL it falls back to stacked image
+   layers turned with CSS 3D. Drag the logo to spin it. No extra packages.
    Colours and type follow design-system/studentos/MASTER.md (Inter, violet accent). */
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createLogoGL, loadImage, lookAt, multiply, perspective, rotX, rotY } from "@/components/landing/logo-gl";
 
 type Fx = "rise" | "clip" | "line" | "fade" | "draw";
 
@@ -96,6 +98,8 @@ const CSS =
   ".sx-nav button:hover .sx-lab,.sx-nav button:focus-visible .sx-lab{opacity:1;transform:none}" +
   ".sx-nav button[aria-current=step] .sx-tick{width:34px;opacity:1;background:var(--color-accent)}" +
   ".sx-nav button[aria-current=step]{color:var(--color-accent)}" +
+  ".sx-edit{outline:none;cursor:text;border-bottom:1px dashed transparent;transition:border-color .3s}" +
+  ".sx-edit:hover,.sx-edit:focus{border-bottom-color:var(--color-accent)}" +
   "@container sx (orientation: portrait){.sx-bloom{left:7cqw!important;top:auto!important;bottom:12cqh;font-size:17cqw!important}.sx-degs{font-size:3.6cqw!important}" +
   ".sx-fin{flex-direction:column!important;gap:5cqh!important;top:40cqh!important}" +
   ".sx-spec{grid-template-columns:1fr 1fr!important;top:30cqh!important}.sx-spec-mid{display:none!important}}" +
@@ -118,6 +122,7 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const logoRef = useRef<HTMLDivElement | null>(null);
   const glowRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wordRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
   const [inspect, setInspect] = useState<{ w: string; d: string } | null>(null);
@@ -137,18 +142,27 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
     const logo = logoRef.current;
     const glow = glowRef.current;
     const word = wordRef.current;
-    if (!root || !stage || !logo || !glow || !word) return;
+    const canvas = canvasRef.current;
+    if (!root || !stage || !logo || !glow || !word || !canvas) return;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // ---- measuring ----
     let W = 1;
     let H = 1;
+    let dpr = 1;
     const chars = Array.from(word.querySelectorAll<HTMLElement>("[data-ch]"));
     let nat: { x: number; y: number; w: number }[] = [];
     const measure = () => {
       const sr = stage.getBoundingClientRect();
       W = Math.max(1, sr.width);
       H = Math.max(1, sr.height);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = Math.round(W * dpr);
+      const ch = Math.round(H * dpr);
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
+      }
       const saved = chars.map((c) => c.style.transform);
       chars.forEach((c) => (c.style.transform = "none"));
       nat = chars.map((c) => {
@@ -171,14 +185,48 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
       last: -1,
     }));
 
-    // ---- pointer tilt ----
+    // ---- the WebGL logo (DOM layers until it is ready, or for good if it never is) ----
+    let gl: ReturnType<typeof createLogoGL> = null;
+    let born = 0;
+    let dead = false;
+    loadImage("/studentos-mark.png")
+      .then((img) => {
+        if (dead) return;
+        gl = createLogoGL(canvas, img);
+        if (gl) {
+          born = performance.now();
+          logo.style.display = "none";
+        }
+      })
+      .catch(() => {});
+
+    // ---- pointer tilt and drag-to-spin ----
     const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+    let spin = 0;
+    let spinVel = 0;
+    let drag: { id: number; x: number } | null = null;
     const onMove = (e: PointerEvent) => {
       const r = stage.getBoundingClientRect();
       pointer.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
       pointer.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+      if (drag && drag.id === e.pointerId) {
+        spinVel += (e.clientX - drag.x) * 0.0022;
+        drag.x = e.clientX;
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if ((e.target as HTMLElement).closest("a,button,[contenteditable],.sx-g,.sx-deg")) return;
+      drag = { id: e.pointerId, x: e.clientX };
+      stage.style.cursor = "grabbing";
+    };
+    const onUp = () => {
+      drag = null;
+      stage.style.cursor = "";
     };
     stage.addEventListener("pointermove", onMove);
+    stage.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
 
     // ---- loop ----
     let raf = 0;
@@ -219,9 +267,34 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
       const cy = (0.5 - k.oy / 2) * H;
       const bob = still ? 0 : Math.sin(time * 1.1) * minDim * 0.008;
       const idle = still ? 0 : Math.sin(time * 0.5) * 10;
-      logo.style.transform =
+      // a drag spins it; when let go it settles back to the nearest front view
+      spin += spinVel;
+      spinVel *= Math.exp(-dt * 3);
+      if (!drag) {
+        const near = Math.round(spin / (Math.PI * 2)) * Math.PI * 2;
+        spin += (near - spin) * (1 - Math.exp(-dt * 1.2));
+      }
+      let drawn = false;
+      if (gl) {
+        const grow = still ? 1 : easeInOut(clamp01((now - born) / 1600));
+        const fov = (30 * Math.PI) / 180;
+        const dist = (1.0 * H) / (Math.max(0.05, k.d * (0.75 + 0.25 * grow)) * minDim * Math.tan(fov / 2));
+        const eye: [number, number, number] = [0, 0, dist];
+        const vp = multiply(perspective(fov, W / H, Math.max(0.05, dist - 4), dist + 4), lookAt(eye, [0, 0, 0]));
+        const model = multiply(
+          rotX(((k.rx - py * 10) * Math.PI) / 180),
+          rotY(((k.ry + idle + px * 18) * Math.PI) / 180 + spin),
+        );
+        const dy = (bob / H) * 2;
+        drawn = gl.draw({ vp, model, ox: k.ox, oy: k.oy - dy, eye, depth: 0.085 * grow, alpha: grow });
+        if (!drawn) {
+          gl = null;
+          logo.style.display = "";
+        }
+      }
+      if (!drawn) logo.style.transform =
         `translate3d(${(cx - LOGO / 2).toFixed(1)}px,${(cy - LOGO / 2 + bob).toFixed(1)}px,0) scale(${(size / LOGO).toFixed(4)}) ` +
-        `rotateX(${(k.rx - py * 10).toFixed(2)}deg) rotateY(${(k.ry + idle + px * 18).toFixed(2)}deg)`;
+        `rotateX(${(k.rx - py * 10).toFixed(2)}deg) rotateY(${(k.ry + idle + px * 18 + (spin * 180) / Math.PI).toFixed(2)}deg)`;
       const gr = size * 1.2;
       glow.style.transform = `translate(${(cx - gr).toFixed(1)}px,${(cy - gr).toFixed(1)}px)`;
       glow.style.width = glow.style.height = `${(gr * 2).toFixed(1)}px`;
@@ -302,6 +375,10 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
     start();
 
     return () => {
+      dead = true;
+      gl?.dispose();
+      stage.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
       stop();
       io.disconnect();
       ro.disconnect();
@@ -365,7 +442,8 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
           style={{ background: "radial-gradient(closest-side, rgba(124,58,237,0.42), rgba(34,211,238,0.10) 50%, transparent 100%)", willChange: "transform" }}
         />
 
-        {/* the logo, solid: stacked layers turned in 3D */}
+        {/* the logo: a lit WebGL solid, with stacked image layers as the fallback */}
+        <canvas ref={canvasRef} aria-hidden className="pointer-events-none absolute inset-0 block" style={{ width: "100%", height: "100%" }} />
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ perspective: 1100 }}>
           <div ref={logoRef} className="absolute top-0 left-0" style={{ width: LOGO, height: LOGO, transformStyle: "preserve-3d", willChange: "transform", transformOrigin: "50% 50%" }}>
             {Array.from({ length: LAYERS }, (_, i) => (
@@ -454,6 +532,7 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
           </div>
           <div {...sc(1, "rise", 0.7)} className="absolute" style={{ ...hidden, left: "5cqw", bottom: "5cqh", ...small }}>
             <span style={{ color: accent }}>01</span> — Plan
+            <div className="sx-hide-sm" style={{ marginTop: 8, opacity: 0.6, letterSpacing: "0.18em", fontSize: 9 }}>Drag the logo to spin it</div>
           </div>
         </div>
 
@@ -521,6 +600,7 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
               <div
                 key={i}
                 {...sc(4, "clip", i * 0.14)}
+                className="pointer-events-auto"
                 style={{
                   ...hidden,
                   fontSize: l.s ? "0.38em" : undefined,
@@ -533,11 +613,13 @@ export function Journey({ cta }: { cta: { href: string; label: string } }) {
                   color: l.a ? accent : undefined,
                 }}
               >
-                {l.t}
+                <span className="sx-edit" contentEditable spellCheck={false} suppressContentEditableWarning>
+                  {l.t}
+                </span>
               </div>
             ))}
             <div {...sc(4, "rise", 0.7)} style={{ ...hidden, ...small, fontSize: 9.5, marginTop: "3cqh" }}>
-              <span style={{ color: accent }}>04</span> — Progress you can see, every week
+              <span style={{ color: accent }}>04</span> — Click the words, type your own
             </div>
           </div>
         </div>

@@ -15,7 +15,6 @@ import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site
 import { ReviewsStrip } from "@/components/site/reviews";
 import { Eyebrow, Glass, TiltCard, Typing, delay as d, reducedMotion, usePointerVars, useScrollProgress } from "@/components/site/motion";
 import { SiteShell, usePrimaryCta } from "@/components/site/site-shell";
-import { StudentBloom } from "@/components/landing/student-bloom";
 import { Journey } from "@/components/landing/journey";
 import { TextRevealFaqs, type FaqItem } from "@/components/landing/text-reveal-faqs";
 import {
@@ -559,8 +558,6 @@ export function Landing() {
       <Story />
       <Bento />
       <ReviewsStrip />
-
-      <StudentBloom cta={cta} />
 
       {/* how it works */}
       <section id="how" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.015]">
