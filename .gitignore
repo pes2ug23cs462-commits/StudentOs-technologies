@@ -7,6 +7,7 @@ backend/.env
 *.key
 secrets/
 credentials.json
+.env*.local
 
 # Python virtual environments
 .venv/
@@ -65,9 +66,18 @@ build/
 dist/
 *.egg-info/
 
-# Node.js, if a frontend is inside this repository
+# Frontend / Node.js / Next.js
 node_modules/
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
 
 # Local uploads and generated artifacts
 uploads/
 generated/
+
+# Firebase service account key (never commit)
+service-account*.json
+*-firebase-adminsdk-*.json
