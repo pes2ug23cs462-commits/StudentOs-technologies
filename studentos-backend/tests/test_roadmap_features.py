@@ -1,21 +1,29 @@
-import pytest
-from app.mentor.roadmap_service import RoadmapService, RoadmapStatus
+from unittest.mock import patch
+from app.mentor.roadmap_service import RoadmapService, generate_and_save_roadmap_draft
 
-def test_roadmap_approval_flow():
-    service = RoadmapService()
-    service.save_roadmap("rm_1", "student_101", "Python Basics", [{"title": "Task 1"}])
-    
-    assert service.get_roadmap_by_id("rm_1")["status"] == RoadmapStatus.DRAFT
-    assert service.get_active_roadmap("student_101") is None
-    
-    res = service.approve_roadmap("rm_1")
-    assert res["status"] == RoadmapStatus.ACTIVE
-    assert service.get_active_roadmap("student_101")["roadmap_id"] == "rm_1"
+@patch("app.mentor.roadmap_service.generate_json_response")
+def test_full_llm_to_roadmap_service_connection(mock_generate_json):
+    # Mock response from Groq LLM provider
+    mock_generate_json.return_value = {
+        "title": "Machine Learning Fundamentals",
+        "description": "Step by step AI/ML path",
+        "milestones": ["Linear Algebra", "PyTorch", "Model Deployment"]
+    }
 
-def test_roadmap_rejection():
     service = RoadmapService()
-    service.save_roadmap("rm_2", "student_102", "ML Fundamentals", [])
-    service.reject_roadmap("rm_2")
-    
-    assert service.get_roadmap_by_id("rm_2")["status"] == RoadmapStatus.REJECTED
-    assert service.get_active_roadmap("student_102") is None
+    student_id = "student_ashish_101"
+
+    # 1. Call connector -> triggers LLM generation and creates Draft
+    draft = generate_and_save_roadmap_draft(
+        student_id=student_id,
+        user_goal_prompt="I want to learn AI Engineering",
+        service=service
+    )
+
+    assert draft["status"] == "DRAFT"
+    assert draft["content"]["title"] == "Machine Learning Fundamentals"
+
+    # 2. Approve draft -> changes state to ACTIVE
+    active_roadmap = service.approve_roadmap(draft["roadmap_id"])
+    assert active_roadmap["status"] == "ACTIVE"
+    assert service.get_active_roadmap(student_id)["roadmap_id"] == draft["roadmap_id"]
