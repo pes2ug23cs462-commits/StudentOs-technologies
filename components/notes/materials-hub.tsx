@@ -102,8 +102,8 @@ export function MaterialsHub() {
     window.scrollTo({ top: 0 });
   };
   /** Opens the animated lesson, making it the first time. */
-  const explain = async (n: NoteSet) => {
-    if (n.explainer?.length) return open({ kind: "explain", id: n.id, scenes: n.explainer });
+  const explain = async (n: NoteSet, remake = false) => {
+    if (n.explainer?.length && !remake) return open({ kind: "explain", id: n.id, scenes: n.explainer });
     setExplaining(n.id);
     try {
       const r = await explainNotes(n, profile);
@@ -203,8 +203,13 @@ export function MaterialsHub() {
             <ArrowLeftIcon size={14} /> Back to notes
           </button>
           <h2 className="mt-3 text-[22px] font-bold tracking-tight text-white">{current.title} · explained</h2>
-          <p className="mt-1 mb-4 text-[12.5px] text-white/50">An animated lesson made from your notes, read aloud. Space to play or pause, arrow keys to move between scenes.</p>
-          <NoteExplainer key={current.id} title={current.title} scenes={view.scenes} onClose={() => setView({ kind: "note", id: current.id })} />
+          <div className="mt-1 mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[12.5px] text-white/50">An animated lesson with real examples, read aloud. Space to play or pause, arrow keys to move between scenes.</p>
+            <Button size="xs" icon={<RefreshIcon size={12} />} loading={explaining === current.id} onClick={() => void explain(current, true)}>
+              Make a new version
+            </Button>
+          </div>
+          <NoteExplainer key={`${current.id}-${JSON.stringify(view.scenes).length}`} title={current.title} scenes={view.scenes} onClose={() => setView({ kind: "note", id: current.id })} />
         </div>
       </div>
     );

@@ -9,7 +9,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, PauseIcon, PlayIcon, RepeatIcon, VolumeIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
 import { auth } from "@/lib/firebase";
-import { VOICES, type Scene, type VoiceId } from "@/lib/explainer";
+import { SIM_TYPES, VOICES, type Scene, type SimType, type VoiceId } from "@/lib/explainer";
+import { SimVisual } from "./sim-visuals";
 import { bestVoice, voicesReady } from "@/lib/tts";
 import { cn } from "@/lib/utils";
 
@@ -243,6 +244,8 @@ export function NoteExplainer({ title, scenes, onClose }: { title: string; scene
   // how much of the visual is shown: grows with each spoken line
   const progressive = !ended && (playing || line > 0 || prog > 0);
   const share = progressive ? Math.min(1, Math.max(1, line + (prog > 0.35 ? 1 : 0)) / s.lines.length) : 1;
+  // simulations move to their next frame as soon as the line that explains it starts
+  const simShare = progressive ? (line + 1) / s.lines.length : 1;
   const captionWords = s.lines[line].split(" ");
   const lit = Math.round(captionWords.length * prog);
   const overall = (before + line + prog) / total;
@@ -265,7 +268,7 @@ export function NoteExplainer({ title, scenes, onClose }: { title: string; scene
           </h3>
 
           <div key={`v${scene}`} className="flex flex-1 items-center justify-center py-4">
-            <Visual scene={s} share={share} />
+            <Visual scene={s} share={share} simShare={simShare} />
           </div>
 
           {/* narrator + captions */}
@@ -380,9 +383,10 @@ function Narrator({ speaking }: { speaking: boolean }) {
 
 /* ---------------- visuals ---------------- */
 
-function Visual({ scene, share }: { scene: Scene; share: number }) {
+function Visual({ scene, share, simShare }: { scene: Scene; share: number; simShare: number }) {
   const v = scene.visual;
   const shown = (n: number) => Math.max(1, Math.ceil(n * share));
+  if ((SIM_TYPES as string[]).includes(v.type) && v.sim) return <SimVisual type={v.type as SimType} sim={v.sim} share={simShare} />;
   switch (v.type) {
     case "title":
       return (

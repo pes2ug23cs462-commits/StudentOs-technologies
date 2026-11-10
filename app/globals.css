@@ -921,3 +921,16 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
   .pl-dot { opacity: 0; }
   .pl-landing { max-height: none; }
 }
+
+/* Explain with AI: simulations */
+@keyframes sim-push { from { opacity: 0; transform: translateY(-18px) scale(0.9); } }
+@keyframes sim-pop { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes sim-grow { from { transform: scaleX(0); } }
+@keyframes sim-flow { to { stroke-dashoffset: -6.4; } }
+@keyframes sim-ring { 0% { opacity: 0.9; r: 5.5; } 100% { opacity: 0; r: 9; } }
+.sim-push { animation: sim-push 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.sim-pop { animation: sim-pop 1.6s ease-in 0.4s forwards; }
+.sim-grow { transform-origin: left; animation: sim-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.sim-flow { animation: sim-flow 0.8s linear infinite; }
+.sim-ring { animation: sim-ring 1.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .sim-push, .sim-pop, .sim-grow, .sim-flow, .sim-ring { animation: none; } }
