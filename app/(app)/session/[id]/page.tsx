@@ -4,9 +4,9 @@ import { goalProgress } from "@/lib/goal-progress";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { courseForSession } from "@/lib/learn";
+import { SessionResources } from "@/components/session/session-resources";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, ClockIcon, PlayIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, ClockIcon } from "@/components/ui/icons";
 import { Card, Checkbox, Pill, ProgressBar, Segmented, Textarea } from "@/components/ui/primitives";
 import { countable, sessionNumber, sessionsInRange } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
@@ -20,7 +20,6 @@ export default function SessionPage() {
   const router = useRouter();
   const { state, actions } = useStore();
   const session = state.sessions.find((s) => s.id === id);
-  const linkedCourse = session ? courseForSession(session, state.goals, state.learning) : undefined;
 
   const [phase, setPhase] = useState<Phase>(session?.status === "completed" ? "done" : "ready");
   const [notes, setNotes] = useState(session?.notes ?? "");
@@ -60,25 +59,15 @@ export default function SessionPage() {
   }[phase];
 
   const startCard = (
-    <Card className="flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 text-accent">
-        <PlayIcon size={18} />
-      </span>
-      <p className="mt-4 text-[17px] font-semibold text-white">{session.minutes}-minute session</p>
-      <p className="mt-1 max-w-sm text-[12.5px] text-white/55">
-        {linkedCourse ? `Study ${linkedCourse.title} in Learning, then come back and mark this session done.` : "Work through the tasks, then mark this session done."}
-      </p>
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
-        {linkedCourse && (
-          <Button variant="primary" icon={<PlayIcon size={11} />} onClick={() => router.push(`/learn/${linkedCourse.id}`)}>
-            Open {linkedCourse.title}
-          </Button>
-        )}
-        <Button variant={linkedCourse ? "secondary" : "primary"} icon={<CheckIcon size={13} />} onClick={finish}>
+    <div className="min-w-0 space-y-4">
+      <SessionResources session={session} goal={goal} />
+      <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
+        <p className="text-[12.5px] text-white/60">Studied for {session.minutes} minutes? Mark it done to keep your plan on track.</p>
+        <Button variant="primary" icon={<CheckIcon size={13} />} onClick={finish}>
           Mark session done
         </Button>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 
   return (
