@@ -76,8 +76,8 @@ export default function PlacementPage() {
             </div>
           </div>
           {/* preview: shapes only, no real or sample companies */}
-          <div aria-hidden className="relative hidden lg:block" style={{ perspective: 1000 }}>
-            <div className="iv-float space-y-3" style={{ transform: "rotateY(-12deg) rotateX(6deg)" }}>
+          <div aria-hidden className="relative hidden lg:block">
+            <div className="iv-float space-y-3" >
               {[0, 1, 2].map((k) => (
                 <div key={k} className="flex items-center gap-3 rounded-2xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] p-4 backdrop-blur" style={{ marginLeft: k * 18 }}>
                   <span className="h-10 w-10 rounded-xl bg-[rgba(255,255,255,0.18)]" />

@@ -706,3 +706,189 @@ html.light .tok-c { color: #94a3b8; }
 @media (prefers-reduced-motion: reduce) {
   .explain-in, .explain-pop, .explain-arrow, .explain-orbit, .explain-ring, .explain-bar, .explain-pulse { animation: none; }
 }
+
+/* ===================================================================
+   Product UI for the signed-in app (not the landing or login pages).
+   AppShell adds .app-ui to <html>, so everything below only applies
+   inside the app. Brand comes from the logo: cyan → blue → violet.
+   Calm, flat surfaces with hairline borders, one blue accent, the
+   gradient only on brand moments (logo, Ask button, active marker).
+=================================================================== */
+html.app-ui {
+  --brand-grad: linear-gradient(135deg, #22d3ee 0%, #6d5bff 50%, #a855f7 100%);
+  --cyan: #22d3ee;
+}
+/* Dark (from the brand reference): near-black chrome, a deep purple glow at
+   the top, violet for “you are here”, cyan for small highlights. */
+html.app-ui:not(.light) {
+  --color-ink: #09090b;
+  --color-panel: #0f0f11;
+  --color-raised: #17171a;
+  --color-field: #131316;
+  --color-accent: #a78bfa;        /* violet, 7.6:1 with black text */
+  --color-accent-hover: #c4b5fd;
+  --color-plum: #2a1250;          /* active nav */
+  --color-plum-strong: #351766;
+  --color-violet-glow: #4c1d95;
+}
+html.light.app-ui {
+  --color-ink: #f7f6fb;
+  --color-panel: #ffffff;
+  --color-accent: #7c3aed;        /* 5.7:1 with white text */
+  --color-accent-hover: #6d28d9;
+  --color-plum: #f1ecff;
+  --color-plum-strong: #ebe3ff;
+  --cyan: #0891b2;
+}
+html.app-ui .app-glow {
+  background:
+    radial-gradient(60% 34% at 50% -8%, rgb(109 40 217 / 0.32), transparent 72%),
+    radial-gradient(30% 26% at 100% 100%, rgb(20 184 166 / 0.07), transparent 70%),
+    var(--color-ink);
+  background-attachment: fixed;
+}
+html.light.app-ui .app-glow {
+  background: radial-gradient(60% 30% at 50% -8%, rgb(124 58 237 / 0.10), transparent 72%), radial-gradient(30% 24% at 100% 100%, rgb(8 145 178 / 0.05), transparent 70%), var(--color-ink);
+  background-attachment: fixed;
+}
+html.app-ui ::selection { background: rgb(167 139 250 / 0.32); }
+
+/* flat cards: no gloss, no glow */
+html.app-ui .depth { background-image: none !important; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
+html.app-ui .card-glow { background: rgb(255 255 255 / 0.025); }
+html.light.app-ui .depth { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03); }
+html.light.app-ui :where(.card-glow, .bg-white\/\[0\.025\], .bg-white\/\[0\.03\], .bg-white\/\[0\.035\]) { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04); }
+html.light.app-ui :where(.border-white\/\[0\.06\], .border-white\/\[0\.07\], .border-white\/\[0\.08\]) { border-color: #e7e8ef; }
+html.app-ui .lift-3d { transform: none; transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 150ms ease, background-color 150ms ease, box-shadow 200ms ease; }
+html.app-ui .lift-3d:hover { transform: translateY(-2px); border-color: rgb(167 139 250 / 0.45); box-shadow: 0 4px 16px -8px rgb(0 0 0 / 0.5); }
+html.light.app-ui .lift-3d:hover { border-color: rgb(124 58 237 / 0.35); box-shadow: 0 4px 14px -8px rgb(16 24 40 / 0.18); }
+html.app-ui .lift-3d:active { transform: scale(0.995); }
+
+/* buttons: crisp, no coloured glow */
+html.app-ui .bg-accent.font-semibold { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(0 0 0 / 0.25); }
+
+/* icon tiles → small flat brand tiles */
+html.app-ui .tile-3d { background: rgb(34 211 238 / 0.08); color: var(--cyan); box-shadow: inset 0 0 0 1px rgb(34 211 238 / 0.18); }
+html.light.app-ui .tile-3d { background: #ecfeff; box-shadow: inset 0 0 0 1px #cffafe; }
+html.app-ui .fancy-icon-tile { background: var(--brand-grad) !important; box-shadow: none !important; border-radius: 10px !important; transform: none !important; }
+html.app-ui .fancy-icon svg { filter: none !important; }
+/* page titles don't need a big icon next to them */
+html.app-ui main h1 > .fancy-icon,
+html.app-ui main .page-head .fancy-icon { display: none; }
+html.app-ui .nav-3d { background: none; box-shadow: none; }
+/* thin brand-gradient outline (Ask StudentOS) */
+html.app-ui .brand-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--brand-grad);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.55;
+  pointer-events: none;
+}
+html.app-ui .brand-ring:hover::before { opacity: 0.9; }
+
+
+/* ---------- Motion (app only; all of it off with reduced motion) ---------- */
+@keyframes ui-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ui-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-aurora {
+  0%, 100% { transform: translate3d(-12%, 0, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(12%, 4%, 0) scale(1.15); opacity: 0.85; }
+}
+@keyframes ui-shine { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(220%) skewX(-18deg); } }
+@keyframes ui-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+@keyframes ui-bar { from { transform: scaleX(0); } }
+@keyframes ui-ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.2); opacity: 0; } }
+
+/* each page rises in when you open it; cards follow one after another */
+html.app-ui .page-enter { animation: ui-fade 0.35s ease-out backwards; }
+html.app-ui .page-enter :is(.depth, .lift-3d) { animation: ui-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+html.app-ui .page-enter :is(.grid, .space-y-3, .space-y-4) > :is(.depth, .lift-3d):nth-child(2) { animation-delay: 50ms; }
+html.app-ui .page-enter :is(.grid, .space-y-3, .space-y-4) > :is(.depth, .lift-3d):nth-child(3) { animation-delay: 100ms; }
+html.app-ui .page-enter :is(.grid, .space-y-3, .space-y-4) > :is(.depth, .lift-3d):nth-child(4) { animation-delay: 150ms; }
+html.app-ui .page-enter :is(.grid, .space-y-3, .space-y-4) > :is(.depth, .lift-3d):nth-child(5) { animation-delay: 200ms; }
+html.app-ui .page-enter :is(.grid, .space-y-3, .space-y-4) > :is(.depth, .lift-3d):nth-child(n + 6) { animation-delay: 250ms; }
+
+/* the purple glow at the top drifts slowly, like the brand reference */
+html.app-ui .app-glow, html.light.app-ui .app-glow { background-size: 140% 100%, 100% 100%, auto; animation: ui-glow 18s ease-in-out infinite; }
+@keyframes ui-glow { 0%, 100% { background-position: 20% 0, 0 0, 0 0; } 50% { background-position: 80% 0, 0 0, 0 0; } }
+
+/* primary buttons: a light sweep on hover, a small press */
+html.app-ui .bg-accent { position: relative; overflow: hidden; }
+html.app-ui :is(a, button).bg-accent::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent); transform: translateX(-120%) skewX(-18deg);
+}
+html.app-ui :is(a, button).bg-accent:hover::after { animation: ui-shine 0.7s ease-out; }
+html.app-ui button:not(:disabled):active { transform: scale(0.97); }
+html.app-ui button { transition-property: color, background-color, border-color, box-shadow, transform, opacity; }
+
+/* loading placeholders shimmer instead of blinking */
+html.app-ui .animate-pulse {
+  animation: ui-shimmer 1.6s linear infinite;
+  background-image: linear-gradient(90deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.08) 50%, rgb(255 255 255 / 0.03) 100%) !important;
+  background-size: 200% 100%;
+}
+html.light.app-ui .animate-pulse { background-image: linear-gradient(90deg, #f1f0f7 0%, #e7e5f2 50%, #f1f0f7 100%) !important; }
+
+/* progress bars grow in */
+html.app-ui .ui-bar { transform-origin: left; animation: ui-bar 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+
+/* “live” dot */
+html.app-ui .ui-live { position: relative; display: inline-flex; height: 7px; width: 7px; border-radius: 9999px; background: var(--cyan); }
+html.app-ui .ui-live::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--cyan); animation: ui-ping 1.6s ease-out infinite; }
+
+/* active nav item: violet fill like the brand reference */
+html.app-ui .nav-active { background: var(--color-plum); color: #fff; }
+html.light.app-ui .nav-active { color: #4c1d95; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.app-ui .page-enter, html.app-ui .page-enter :is(.depth, .lift-3d), html.app-ui .app-glow,
+  html.app-ui .animate-pulse, html.app-ui .ui-bar, html.app-ui .ui-live::after, html.app-ui :is(a, button).bg-accent:hover::after { animation: none !important; }
+  html.app-ui .lift-3d:hover, html.app-ui button:active { transform: none; }
+}
+
+/* BrandOrb (flat logo motion) */
+@keyframes brand-orb-spin { to { transform: rotate(360deg); } }
+@keyframes brand-orb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.brand-orb-ring { animation: brand-orb-spin 28s linear infinite; }
+.brand-orb-ring-rev { animation: brand-orb-spin 14s linear infinite reverse; }
+.brand-orb-float { animation: brand-orb-float 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .brand-orb-ring, .brand-orb-ring-rev, .brand-orb-float { animation: none; } }
+
+/* Hero card: a light that travels round the border */
+@property --ui-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes ui-sweep { to { --ui-angle: 360deg; } }
+html.app-ui .ui-sweep::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from var(--ui-angle), transparent 0deg, rgb(167 139 250 / 0.9) 40deg, rgb(34 211 238 / 0.8) 80deg, transparent 130deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: ui-sweep 6s linear infinite;
+}
+/* soft orbit drawing in the corner of the hero card */
+html.app-ui .ui-orbit-art {
+  position: absolute; right: -70px; top: -70px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none;
+  border: 1px dashed rgb(167 139 250 / 0.22);
+  box-shadow: inset 0 0 0 36px transparent, 0 0 0 36px rgb(167 139 250 / 0.03);
+  animation: brand-orb-spin 40s linear infinite;
+}
+html.app-ui .ui-orbit-art::before {
+  content: ""; position: absolute; left: 50%; top: -4px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 12px var(--cyan);
+}
+html.app-ui .ui-orbit-art::after {
+  content: ""; position: absolute; inset: 46px; border-radius: 50%; border: 1px solid rgb(34 211 238 / 0.14);
+}
+/* countdown digits */
+@keyframes ui-digit { from { opacity: 0; transform: translateY(-4px); } }
+html.app-ui .ui-digit { display: inline-block; animation: ui-digit 0.35s ease-out; }
+/* every progress bar inside a page grows in */
+html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: left; animation: ui-bar 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s backwards; }
+@media (prefers-reduced-motion: reduce) {
+  html.app-ui .ui-sweep::before, html.app-ui .ui-orbit-art, html.app-ui .ui-digit, html.app-ui .page-enter .rounded-full > [style*="width"] { animation: none; }
+}

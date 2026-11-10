@@ -3,42 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BriefcaseIcon, TargetIcon,
-  CalendarIcon,
-  FileIcon,
-  FolderIcon,
-  VideoIcon,
-  ChatIcon,
-  ChevronDownIcon,
-  HomeIcon,
-  LogOutIcon,
-  PlanIcon,
-  SparkleIcon,
-  SettingsIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { ChevronDownIcon, LogOutIcon, SearchIcon, SettingsIcon, SparkleIcon, UserIcon } from "@/components/ui/icons";
 import { Avatar, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { ChatListItem } from "@/components/chat/chat-list-item";
 import { sortChats } from "@/lib/chats";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logOut } from "@/lib/auth";
+import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const PRO = new Set(["/tests"]);
-
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", Icon: HomeIcon, match: ["/dashboard"] },
-  { href: "/assistant", label: "AI Assistant", Icon: ChatIcon, match: ["/assistant", "/onboarding"] },
-  { href: "/study-plan", label: "Study Plan", Icon: PlanIcon, match: ["/study-plan", "/plan", "/session"] },
-  { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule", "/timeline"] },
-  { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals"] },
-  { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
-  { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
-  { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/code", "/premium"] },
-  { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"] },
-];
+import { NAV_GROUPS, isActive as activeFor } from "./nav";
+import { openCommandMenu } from "./command-menu";
 
 export function profileLine(p: Profile) {
   const degree = p.degree.replace(/,?\s*Computer Science(?: and Engineering)?/i, " CSE").trim();
@@ -46,24 +22,24 @@ export function profileLine(p: Profile) {
   return [degree, year ? `Year ${year}` : p.year].filter(Boolean).join(" · ");
 }
 
-function NavItem({ href, label, Icon, active, onNavigate }: { href: string; label: string; Icon: (p: { size?: number }) => React.ReactElement; active: boolean; onNavigate?: () => void }) {
+function NavItem({ href, label, Icon, active, badge, onNavigate }: { href: string; label: string; Icon: (p: { size?: number }) => React.ReactElement; active: boolean; badge?: "PRO" | "SOON"; onNavigate?: () => void }) {
   return (
     <Link
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-9 items-center gap-3 rounded-xl px-3 text-[13px] transition duration-200",
-        active ? "nav-3d font-semibold text-white" : "text-white/70 hover:bg-white/[0.05] hover:text-white",
+        "group relative flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors duration-150",
+        active ? "nav-active font-medium" : "text-white/65 hover:bg-white/[0.04] hover:text-white",
       )}
     >
-      {active && <span className="absolute top-1.5 bottom-1.5 -left-[13px] w-[3px] rounded-r bg-accent" />}
-      <span className={active ? "text-accent" : "text-white/60"}>
-        <Icon size={16} />
+      {active && <span className="absolute top-1.5 bottom-1.5 -left-3 w-[3px] rounded-r-full" style={{ background: "var(--brand-grad)" }} />}
+      <span className={active ? "text-[var(--cyan)]" : "text-white/45 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-white/75"}>
+        <Icon size={15} />
       </span>
-      {label}
-      {PRO.has(href) && <span className="ml-auto rounded-full bg-violet-500/20 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-violet-200">PRO</span>}
-      {href === "/placement" && <span className="ml-auto rounded-full bg-amber-300/15 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-amber-300">SOON</span>}
+      <span className="truncate">{label}</span>
+      {badge === "PRO" && <span className="ml-auto rounded px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-accent ring-1 ring-accent/30">PRO</span>}
+      {badge === "SOON" && <span className="ml-auto rounded px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-white/45 ring-1 ring-white/15">SOON</span>}
     </Link>
   );
 }
@@ -127,35 +103,61 @@ function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const isActive = (match: string[]) => match.some((m) => pathname === m || pathname.startsWith(m + "/"));
+  const { premium } = usePremium();
+  const isActive = (match: string[]) => activeFor(pathname, match);
 
   return (
-    <aside className="flex h-full w-[228px] flex-col overflow-y-auto border-r border-white/[0.06] bg-panel px-[13px] pt-5 pb-3">
-      <Link href="/dashboard" onClick={onNavigate} className="mb-5 flex items-center gap-2 px-1.5">
-        <LogoMark size={26} />
-        <Wordmark className="text-[16px]" />
-      </Link>
+    <aside className="flex h-full w-[228px] flex-col overflow-y-auto border-r border-white/[0.06] bg-panel px-3 pt-4 pb-3">
+      <div className="mb-4 flex items-center justify-between px-1.5">
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2">
+          <LogoMark size={24} />
+          <Wordmark className="text-[15px]" />
+        </Link>
+        <Link href="/settings/account" onClick={onNavigate} className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/55 ring-1 ring-white/12 hover:text-white">
+          {premium ? "PREMIUM" : "FREE"}
+        </Link>
+      </div>
 
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate?.();
+          openCommandMenu();
+        }}
+        className="mb-2 flex h-8 w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 text-[12.5px] text-white/50 hover:border-white/15 hover:text-white/75"
+      >
+        <SearchIcon size={13} />
+        Search or ask…
+        <kbd className="ml-auto rounded border border-white/12 px-1 font-sans text-[10px] text-white/45">⌘K</kbd>
+      </button>
       <Link
         href="/assistant"
         onClick={onNavigate}
-        className="mb-5 flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 text-[13px] font-semibold text-[#ffffff] shadow-[0_8px_22px_-8px_rgba(124,58,237,0.7)] transition duration-200 hover:brightness-110"
+        className="brand-ring relative mb-4 flex h-8 items-center gap-2 rounded-lg px-2.5 text-[12.5px] font-semibold text-white hover:bg-white/[0.04]"
       >
-        <SparkleIcon size={14} /> Ask StudentOS
+        <span className="flex h-5 w-5 items-center justify-center rounded-md text-[#ffffff]" style={{ background: "var(--brand-grad)" }}>
+          <SparkleIcon size={11} />
+        </span>
+        Ask StudentOS
       </Link>
 
-      <nav className="flex flex-col gap-0.5" aria-label="Main">
-        {NAV.map((n) => (
-          <NavItem key={n.href} href={n.href} label={n.label} Icon={n.Icon} active={isActive(n.match)} onNavigate={onNavigate} />
+      <nav className="flex flex-col gap-4" aria-label="Main">
+        {NAV_GROUPS.map((g, i) => (
+          <div key={i} className="flex flex-col gap-px">
+            {g.title && <p className="mb-1 px-2.5 text-[10.5px] font-medium tracking-wide text-white/40">{g.title}</p>}
+            {g.items.map((n) => (
+              <NavItem key={n.href} href={n.href} label={n.label} Icon={n.Icon} badge={n.badge} active={isActive(n.match)} onNavigate={onNavigate} />
+            ))}
+          </div>
         ))}
       </nav>
 
       <RecentChats onNavigate={onNavigate} />
 
-      <div className="mt-auto flex flex-col gap-1.5">
-        <ThemeToggle stretch className="mb-1" />
+      <div className="mt-auto flex flex-col gap-1 pt-4">
         <NavItem href="/settings/profile" label="Settings" Icon={SettingsIcon} active={isActive(["/settings", "/certificates"])} onNavigate={onNavigate} />
-        <div className="mt-1.5 border-t border-white/[0.07] pt-2.5">
+        <ThemeToggle stretch className="mt-1 mb-1" />
+        <div className="mt-1 border-t border-white/[0.06] pt-2.5">
           <UserMenu onNavigate={onNavigate} />
         </div>
       </div>
@@ -176,7 +178,7 @@ function RecentChats({ onNavigate }: { onNavigate?: () => void }) {
   const chats = sortChats(state.chats).slice(0, 6);
   return (
     <>
-      <p className="mt-5 mb-1.5 px-3 text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">Recent conversations</p>
+      <p className="mt-5 mb-1 px-2.5 text-[10.5px] font-medium tracking-wide text-white/40">Recent chats</p>
       <div className="flex flex-col">
         {!state.planAcceptedOn && (
           <Link href="/onboarding" onClick={onNavigate} className="truncate rounded-md px-3 py-1.5 text-[12px] text-white/65 hover:bg-white/[0.04] hover:text-white">

@@ -46,7 +46,7 @@ export default function SettingsPage() {
 
   return (
     <div className="px-6 py-7 lg:px-8">
-      <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+      <h1 className="flex items-center gap-3 text-[24px] font-semibold tracking-[-0.02em] text-white">
 <FancyIcon name="shield" tone="sky" size={44} />Settings</h1>
       <p className="mt-1 text-[13px] text-white/55">Your profile, study preferences and how the assistant behaves.</p>
 

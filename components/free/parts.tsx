@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, sub, actions, icon, tone = "violet" }: { title: string; sub: string; actions?: ReactNode; icon?: FancyIconName; tone?: FancyTone }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="page-head flex flex-wrap items-start justify-between gap-3">
       <div className="flex items-center gap-4">
         {icon && <FancyIcon name={icon} tone={tone} size={52} />}
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-white">{title}</h1>
-          <p className="mt-1 text-[13.5px] text-white/60">{sub}</p>
+          <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-white">{title}</h1>
+          <p className="mt-1 text-[13.5px] text-white/55">{sub}</p>
         </div>
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

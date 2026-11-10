@@ -27,13 +27,13 @@ export function PracticeHeader({ active, action, onTab }: { active: PracticeTab;
   // the Coding tab is for engineering students and anyone who wants to code
   const tabs = TABS.filter((t) => t.key !== "coding" || active === "coding" || wantsCoding(state));
   return (
-    <div>
+    <div className="page-head">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <FancyIcon name="target" tone="pink" size={56} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-[24px] font-bold tracking-tight text-white sm:text-[30px]">Practice Arena</h1>
+              <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-white">Practice Arena</h1>
               {active === "coding" ? <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">Coding is free</span> : <PremiumBadge />}
             </div>
             <p className="mt-0.5 text-[13.5px] text-white/60">Practise subject-wise tests and real interviews, track your scores, and know exactly where to improve.</p>

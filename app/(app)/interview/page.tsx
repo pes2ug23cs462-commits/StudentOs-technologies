@@ -87,9 +87,9 @@ function ReadinessRing({ value }: { value: number }) {
 /** Hero illustration: a laptop on a desk in a video call with the AI interviewer (an illustrated avatar, not a photo). */
 function InterviewScene() {
   return (
-    <div className="relative mx-auto w-full max-w-[420px] select-none" aria-hidden style={{ perspective: 1000 }}>
+    <div className="relative mx-auto w-full max-w-[420px] select-none" aria-hidden>
       <div className="iv-float">
-      <div style={{ transform: "rotateY(-12deg) rotateX(4deg)" }}>
+      <div >
         {/* screen */}
         <div className="rounded-t-2xl border border-[rgba(255,255,255,0.15)] bg-[#0d0a18] p-2 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]">
           <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[radial-gradient(90%_90%_at_50%_30%,#3b2a6b,#1a1233_60%,#0e0a1c)]">

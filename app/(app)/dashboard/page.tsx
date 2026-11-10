@@ -22,6 +22,7 @@ import {
   XCircleIcon,
 } from "@/components/ui/icons";
 import { Card, Checkbox, EmptyState, Pill, ProgressBar } from "@/components/ui/primitives";
+import { Countdown } from "@/components/ui/countdown";
 import { countable, nextSession, planWeek, sessionsInRange, weekStats, whenLabel } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
@@ -47,7 +48,7 @@ function EmptyDashboard({ first }: { first: string }) {
   const done = Math.max(0, step - 1);
   return (
     <div className="px-6 py-7 lg:px-8">
-      <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+      <h1 className="flex items-center gap-3 text-[24px] font-semibold tracking-[-0.02em] text-white">
 <FancyIcon name="rocket" tone="violet" size={44} />
         {greeting(NOW)}, {first}
       </h1>
@@ -123,7 +124,7 @@ function FullDashboard({ first }: { first: string }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-3 text-[28px] font-bold tracking-tight text-white">
+          <h1 className="flex items-center gap-3 text-[24px] font-semibold tracking-[-0.02em] text-white">
 <FancyIcon name="rocket" tone="violet" size={44} />
             {greeting(NOW)}, {first}
           </h1>
@@ -161,7 +162,8 @@ function FullDashboard({ first }: { first: string }) {
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_1fr]">
         {/* Next session */}
-        <Card glow className="flex min-h-[220px] flex-col border-violet-400/25 p-5">
+        <Card glow className="ui-sweep relative flex min-h-[220px] flex-col overflow-hidden border-violet-400/25 p-5">
+          <span aria-hidden className="ui-orbit-art" />
           {next ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
@@ -178,7 +180,8 @@ function FullDashboard({ first }: { first: string }) {
                   {fmt.range(next.start, next.minutes)} · {next.minutes} min
                 </span>
               </div>
-              <h2 className="mt-auto pt-8 text-[22px] font-semibold tracking-tight text-white">{next.title}</h2>
+              <Countdown to={new Date(`${next.date}T${next.start}:00`)} className="mt-auto pt-6 text-[12.5px]" />
+              <h2 className="mt-1.5 text-[22px] font-semibold tracking-tight text-white">{next.title}</h2>
               <p className="mt-2 max-w-[560px] text-[12.5px] leading-relaxed text-white/55">Objective: {next.objective}</p>
               <div className="mt-4 flex gap-2">
                 <Button variant="primary" size="sm" icon={<PlayIcon size={10} />} onClick={() => startSession(next, state.goals, actions, router.push, state.learning)}>

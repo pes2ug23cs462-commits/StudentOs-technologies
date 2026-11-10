@@ -12,7 +12,7 @@ import { buildContext } from "@/lib/ai-context";
 import { MAX_TEXT_CHARS, type Attachment } from "@/lib/attachments";
 import { loadMaterialText } from "@/lib/materials";
 import { Markdown } from "@/components/chat/markdown";
-import { Logo3D } from "@/components/chat/logo-3d";
+import { BrandOrb } from "@/components/ui/brand-orb";
 import { ChatListItem } from "@/components/chat/chat-list-item";
 import { chatTitle, loadChat, newChatId, saveChat, sortChats, touchChat, useChatsUnlocked, type StoredMessage } from "@/lib/chats";
 import { PinDialog } from "@/components/chat/chat-dialogs";
@@ -271,7 +271,7 @@ export default function AssistantPage() {
         </div>
       ) : empty ? (
         <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-6">
-          <Logo3D size={104} />
+          <BrandOrb size={84} />
           <h1 className="mt-4 text-center text-[34px] leading-tight font-medium tracking-tight text-white">
             {greeting(NOW)}, {first}.
             <br />
