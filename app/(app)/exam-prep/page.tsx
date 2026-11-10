@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { ArrowRightIcon, ChatIcon, CheckIcon, FlameIcon, MaximizeIcon, PauseIcon, PlayIcon, RefreshIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
+import { VideoGrid } from "@/components/videos/video-grid";
 import { AssistantError, postAi } from "@/lib/assistant";
 import {
   CHAPTERS,
@@ -64,7 +65,7 @@ export default function ExamPrepPage() {
 
   return (
     <div className="px-6 py-7 lg:px-8">
-      <PageHeader title="Exam Prep" sub="Every chapter of your exam: short notes, exam-style practice, and help in simple words. Free." />
+      <PageHeader title="Exam Prep" sub="Every chapter of your exam: one-shot videos, short notes, tests and help in simple words. Free." />
 
       {/* exam */}
       <div role="radiogroup" aria-label="Your exam" className="mt-5 flex flex-wrap gap-2">
@@ -173,15 +174,16 @@ export default function ExamPrepPage() {
 
 function ChapterDrawer({ chapterId, exam, onClose }: { chapterId: string; exam: ExamId; onClose: () => void }) {
   const [subject, chapter] = chapterId.split(/\/(.+)/) as [Subject, string];
-  const [tab, setTab] = useState<"notes" | "practice" | "explain">("notes");
+  const [tab, setTab] = useState<"videos" | "notes" | "practice" | "explain">("videos");
   const examLabel = EXAMS.find((e) => e.id === exam)!.label;
   return (
     <Drawer open onClose={onClose} eyebrow={`${examLabel} · ${subject}`} title={chapter} width="w-[600px]">
       <div role="tablist" className="-mt-1 mb-5 flex gap-1 rounded-xl border border-white/[0.08] p-1">
         {(
           [
+            ["videos", "Videos"],
             ["notes", "Short notes"],
-            ["practice", "Practice"],
+            ["practice", "Test"],
             ["explain", "Explain simply"],
           ] as const
         ).map(([k, l]) => (
@@ -190,10 +192,49 @@ function ChapterDrawer({ chapterId, exam, onClose }: { chapterId: string; exam: 
           </button>
         ))}
       </div>
+      {tab === "videos" && <Videos subject={subject} chapter={chapter} exam={exam} onNext={() => setTab("notes")} />}
       {tab === "notes" && <Notes subject={subject} chapter={chapter} exam={exam} onPractice={() => setTab("practice")} />}
       {tab === "practice" && <Practice subject={subject} chapter={chapter} exam={exam} />}
       {tab === "explain" && <Explain subject={subject} chapter={chapter} examLabel={examLabel} />}
     </Drawer>
+  );
+}
+
+/* NEET and KCET: one-shot videos. II PUC and CBSE: one shot or full lectures. */
+function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter: string; exam: ExamId; onNext: () => void }) {
+  const entrance = exam === "neet" || exam === "kcet";
+  const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
+  const board = exam === "puc" ? "2nd puc" : "class 12 cbse";
+  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : kind === "oneshot" ? `${chapter} one shot ${board} ${subject}` : `${chapter} class 12 ${subject} full chapter lecture ${exam === "puc" ? "2nd puc" : "ncert"}`;
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[12.5px] text-white/55">{entrance ? `One-shot videos made for ${exam === "neet" ? "NEET" : "KCET"}: the whole chapter in one go.` : kind === "oneshot" ? "The whole chapter in one video, for quick revision." : "Detailed lectures that teach the chapter from the start."}</p>
+        {!entrance && (
+          <div role="radiogroup" aria-label="Video type" className="inline-flex rounded-lg border border-white/10 p-0.5">
+            {(
+              [
+                ["oneshot", "One shot"],
+                ["long", "Full lectures"],
+              ] as const
+            ).map(([k, l]) => (
+              <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={cn("h-7 rounded-md px-2.5 text-[12px] font-medium", kind === k ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="mt-4">
+        <VideoGrid key={q} q={q} min={kind === "long" && !entrance ? 30 : 20} empty="No videos found for this chapter." />
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.07] pt-4">
+        <p className="text-[12.5px] text-white/55">Watched it? Revise with short notes, then take the test.</p>
+        <Button size="sm" onClick={onNext} icon={<ArrowRightIcon size={12} />}>
+          Short notes
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -263,7 +304,7 @@ function Notes({ subject, chapter, exam, onPractice }: { subject: Subject; chapt
       )}
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <Button variant="primary" icon={<TargetIcon size={14} />} onClick={onPractice}>
-          Practise this chapter
+          Take the test
         </Button>
         <button type="button" onClick={() => void load()} disabled={busy} className="inline-flex items-center gap-1.5 text-[12.5px] text-white/50 hover:text-white disabled:opacity-50">
           <RefreshIcon size={12} className={cn(busy && "animate-spin")} /> Rewrite notes
