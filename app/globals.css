@@ -934,3 +934,11 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 .sim-flow { animation: sim-flow 0.8s linear infinite; }
 .sim-ring { animation: sim-ring 1.4s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .sim-push, .sim-pop, .sim-grow, .sim-flow, .sim-ring { animation: none; } }
+
+/* Mock interview setup */
+@keyframes iv-draw { from { stroke-dashoffset: 1; } }
+@keyframes iv-dot-in { from { transform: scale(0); } }
+.iv-spark { stroke-dasharray: 1; stroke-dashoffset: 0; animation: iv-draw 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s backwards; }
+.iv-spark-dot { animation: ui-fade 0.3s ease-out 1.3s backwards; }
+.iv-dot { animation: iv-dot-in 0.2s cubic-bezier(0.2, 0.7, 0.2, 1.4); }
+@media (prefers-reduced-motion: reduce) { .iv-spark, .iv-spark-dot, .iv-dot { animation: none; } }

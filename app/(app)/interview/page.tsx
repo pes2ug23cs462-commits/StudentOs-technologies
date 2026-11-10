@@ -64,75 +64,27 @@ function ago(at: number) {
   return new Date(at).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
-function ReadinessRing({ value }: { value: number }) {
-  const r = 15.5;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="relative h-[104px] w-[104px] shrink-0">
-      <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
-        <defs>
-          <linearGradient id="iv-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#a78bfa" />
-            <stop offset="1" stopColor="#e879f9" />
-          </linearGradient>
-        </defs>
-        <circle cx="18" cy="18" r={r} fill="none" className="stroke-white/10" strokeWidth="3.2" />
-        <circle cx="18" cy="18" r={r} fill="none" stroke="url(#iv-ring)" strokeWidth="3.2" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(0.2,0.8,0.2,1)" }} />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[22px] font-bold text-white">{value}%</span>
-    </div>
-  );
-}
+/* One example question per type, typed out on the setup screen. */
+const EXAMPLE: Record<string, string> = {
+  technical: "Walk me through how you would find a duplicate in a list of a million numbers.",
+  hr: "Tell me about a time a team project went wrong. What did you do?",
+  role: "What would you check first if this month’s numbers don’t match last month’s?",
+  custom: "Questions come only from the topics you type below.",
+};
 
-/** Hero illustration: a laptop on a desk in a video call with the AI interviewer (an illustrated avatar, not a photo). */
-function InterviewScene() {
+/* Last scores as a small line, oldest → newest. */
+function Spark({ values }: { values: number[] }) {
+  if (values.length < 2) return null;
+  const w = 220;
+  const h = 44;
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 4 - (v / 100) * (h - 8)] as const);
+  const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const last = pts[pts.length - 1];
   return (
-    <div className="relative mx-auto w-full max-w-[420px] select-none" aria-hidden>
-      <div className="iv-float">
-      <div >
-        {/* screen */}
-        <div className="rounded-t-2xl border border-[rgba(255,255,255,0.15)] bg-[#0d0a18] p-2 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]">
-          <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[radial-gradient(90%_90%_at_50%_30%,#3b2a6b,#1a1233_60%,#0e0a1c)]">
-            <span className="absolute top-2.5 left-2.5 rounded-md bg-[rgba(0,0,0,0.5)] px-2 py-0.5 text-[10.5px] font-medium text-[rgba(255,255,255,0.90)]">Interviewer (AI)</span>
-            <span className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-md bg-rose-500/90 px-1.5 py-0.5 text-[9.5px] font-bold text-[#ffffff]"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#ffffff]" /> LIVE</span>
-            {/* avatar */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pb-9">
-              <span className="relative flex items-center justify-center">
-                <span className="absolute h-20 w-20 animate-ping rounded-full bg-violet-400/15" />
-                <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 shadow-[0_0_40px_rgba(168,85,247,0.6)] sm:h-20 sm:w-20">
-                  <BotIcon size={34} className="text-[#ffffff]" strokeWidth={1.6} />
-                </span>
-              </span>
-              <span className="mt-2.5 flex h-4 items-end gap-[3px]">
-                {[0, 1, 2, 3, 4, 5, 6].map((k) => (
-                  <span key={k} className="iv-wave w-[3px] rounded-full bg-violet-300/80" style={{ animationDelay: `${k * 0.12}s` }} />
-                ))}
-              </span>
-              <span className="mt-2 max-w-[80%] rounded-lg bg-[rgba(255,255,255,0.1)] px-2.5 py-1 text-center text-[10.5px] text-[rgba(255,255,255,0.85)] backdrop-blur">“Tell me about a project you’re proud of.”</span>
-            </div>
-            {/* you tile */}
-            <span className="absolute right-2.5 bottom-2.5 flex h-[20%] w-[18%] items-center justify-center rounded-lg border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.06)]"><UserIcon size={18} className="text-[rgba(255,255,255,0.60)]" /></span>
-            {/* controls */}
-            <div className="absolute inset-x-0 bottom-2.5 flex justify-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.15)] text-[#ffffff]"><MicIcon size={13} /></span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.15)] text-[#ffffff]"><VideoIcon size={13} /></span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-[#ffffff]"><XIcon size={13} /></span>
-            </div>
-          </div>
-        </div>
-        {/* base */}
-        <div className="mx-[-6%] h-3 rounded-b-xl bg-gradient-to-b from-[#3a3350] to-[#1c1828]" />
-        <div className="mx-auto h-1.5 w-[30%] rounded-b-md bg-[#141020]" />
-      </div>
-      </div>
-      {/* mug */}
-      <div className="absolute -bottom-1 -left-3 hidden sm:block">
-        <div className="relative h-14 w-11 rounded-b-xl rounded-t-sm bg-gradient-to-b from-[#2b2440] to-[#17121f] shadow-lg ring-1 ring-white/10">
-          <img src="/studentos-mark.png" alt="" className="absolute inset-0 m-auto h-6 w-6 object-contain" />
-          <span className="absolute top-3 -right-3 h-6 w-4 rounded-r-full border-[3px] border-l-0 border-[#2b2440]" />
-        </div>
-      </div>
-    </div>
+    <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-11 w-full overflow-visible" aria-hidden>
+      <path d={d} fill="none" stroke="var(--color-accent)" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" pathLength={1} className="iv-spark" />
+      <circle cx={last[0]} cy={last[1]} r="3" fill="var(--color-accent)" className="iv-spark-dot" />
+    </svg>
   );
 }
 
@@ -467,195 +419,204 @@ export default function InterviewPage() {
     setCount(h.questions.length);
     setPhase("result");
   };
+  const recentScores = history.slice(0, 8).map((h) => h.feedback.overall).reverse();
+  const typeOn = (k: InterviewKind) => kind === k || (k === "role" && kind === "mixed");
   return (
     <div className="px-6 py-7 lg:px-8">
-      <PracticeHeader active="interview" action={<Button icon={<PlayIcon size={14} />} onClick={() => setHow((v) => !v)}>How it works</Button>} />
+      <PracticeHeader active="interview" />
 
-      {how && (
-        <Card className="land-screen-in mt-5 grid gap-4 p-5 sm:grid-cols-4">
-          {[
-            ["1", "Pick a type", "Technical, behavioral, job role or your own topics."],
-            ["2", "Set role & level", "Questions are written for your role and difficulty."],
-            ["3", "Answer", "Type or speak each answer. Questions are read aloud."],
-            ["4", "Get feedback", "A score, what to improve and a model answer for each."],
-          ].map(([n, h, d]) => (
-            <div key={n} className="flex gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[13px] font-bold text-accent">{n}</span>
-              <div>
-                <p className="text-[13.5px] font-semibold text-white">{h}</p>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-white/55">{d}</p>
-              </div>
-            </div>
-          ))}
-        </Card>
-      )}
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_340px]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="min-w-0">
-          {/* hero */}
-          <div className="relative overflow-hidden rounded-3xl border border-violet-400/25 bg-[radial-gradient(120%_140%_at_85%_20%,#6d3fd6,#3b1d7a_42%,#160e2e_78%)] p-6 sm:p-8">
-            <div className="pointer-events-none absolute -top-24 right-10 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
-            <div className="relative grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/20 px-3 py-1 text-[12px] font-medium text-violet-100">
-                  <SparkleIcon size={13} /> AI-Powered Mock Interviews
-                </span>
-                <h2 className="mt-4 text-[28px] leading-[1.12] font-bold tracking-tight text-[#ffffff] sm:text-[34px] lg:text-[30px] 2xl:text-[38px]">
-                  Practice. Get Feedback.
-                  <br />
-                  Improve. <span className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">Get Hired.</span>
-                </h2>
-                <ul className="mt-5 space-y-2.5">
-                  {["Realistic, role-based interview experience", "AI feedback on every answer", "Improve communication, technical & problem-solving skills"].map((x) => (
-                    <li key={x} className="flex items-center gap-3 text-[14px] text-[rgba(255,255,255,0.85)]">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.1)] text-[#ffffff]"><CheckIcon size={13} /></span>
-                      {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <InterviewScene />
-            </div>
-          </div>
-
           {phase === "preparing" ? (
-            <Card glow className="mt-6 flex flex-col items-center py-16 text-center">
-              <FancyIcon name="bot" tone="violet" size={70} float />
-              <p className="mt-5 text-[18px] font-semibold text-white">Preparing your interview…</p>
-              <p className="mt-1 text-[13px] text-white/55">Writing {count} {LEVEL_LABEL[level].toLowerCase()} questions for {role}.</p>
+            <Card className="p-6">
+              <p className="flex items-center gap-2 text-[15px] font-semibold text-white">
+                <span className="ui-live" aria-hidden /> Writing your questions
+              </p>
+              <p className="mt-1 text-[13px] text-white/55">
+                {count} {LEVEL_LABEL[level].toLowerCase()} questions for {role}. This takes a few seconds.
+              </p>
+              <div className="mt-6 space-y-3" aria-hidden>
+                {Array.from({ length: Math.min(count, 5) }, (_, k) => (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className="w-6 text-[12px] text-white/35 tabular-nums">{k + 1}.</span>
+                    <span className="h-3 flex-1 animate-pulse rounded-full bg-white/[0.06]" style={{ maxWidth: `${90 - k * 9}%`, animationDelay: `${k * 120}ms` }} />
+                  </div>
+                ))}
+              </div>
             </Card>
           ) : (
-            <>
-              {/* type */}
-              <div className="mt-8 flex items-center justify-between gap-3">
-                <h2 className="text-[20px] font-bold text-white sm:text-[22px]">Choose an Interview Type</h2>
-                {history.length > 0 && (
-                  <a href="#iv-recent" className="flex items-center gap-1 text-[13px] font-medium text-accent hover:underline">
-                    View history <ArrowRightIcon size={13} />
-                  </a>
-                )}
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {TYPES.map((t) => {
-                  const on = kind === t.kind || (t.kind === "role" && kind === "mixed");
-                  const Icon = t.icon;
-                  return (
-                    <button
-                      key={t.kind}
-                      type="button"
-                      onClick={() => setKind(t.kind)}
-                      aria-pressed={on}
-                      className={cn(
-                        "relative flex flex-col items-start justify-start rounded-2xl border p-4 text-left transition sm:p-5 lift-3d",
-                        on ? "border-violet-400 bg-violet-500/[0.12] shadow-[0_0_0_1px_rgba(167,139,250,0.4),0_10px_30px_-10px_rgba(139,92,246,0.6)]" : "border-white/10 bg-white/[0.03] hover:border-white/25",
-                      )}
-                    >
-                      {on && <span className="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-[#ffffff]"><CheckIcon size={13} /></span>}
-                      <Icon size={30} className="text-violet-300" strokeWidth={1.6} />
-                      <p className="mt-4 text-[15.5px] font-semibold text-white">{t.title}</p>
-                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-white/55">{t.text}</p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {kind === "custom" && (
-                <div className="mt-5">
-                  <Label htmlFor="iv-topics">Topics you want to be asked about</Label>
-                  <input id="iv-topics" value={topics} onChange={(e) => setTopics(e.target.value)} placeholder="e.g. GST basics, Excel, Tally, my final-year project" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-[14px] text-white outline-none focus:border-accent" />
-                </div>
-              )}
-
-              {/* role, difficulty, start */}
-              <div className="mt-6 grid items-end gap-5 lg:grid-cols-[1fr_auto_auto]">
-                <div className="min-w-0">
-                  <Label htmlFor="iv-role">Select role</Label>
-                  <input id="iv-role" list="iv-roles" value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Accounts executive, AI/ML intern" className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-[14px] text-white outline-none focus:border-accent" />
-                  <datalist id="iv-roles">{roles.map((r) => <option key={r} value={r} />)}</datalist>
-                </div>
+            <Card className="overflow-hidden">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-6 py-5">
                 <div>
-                  <Label>Interview difficulty</Label>
-                  <div className="flex h-12 items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
-                    {(["beginner", "intermediate", "advanced"] as const).map((l) => (
-                      <button key={l} type="button" onClick={() => setLevel(l)} aria-pressed={LEVEL_LABEL[level] === LEVEL_LABEL[l]} className={cn("h-full rounded-lg px-3.5 text-[13px] font-medium transition sm:px-4", LEVEL_LABEL[level] === LEVEL_LABEL[l] ? "bg-violet-500 text-[#ffffff] shadow-[0_6px_20px_-6px_rgba(139,92,246,0.8)]" : "text-white/65 hover:text-white")}>
-                        {LEVEL_LABEL[l]}
-                      </button>
-                    ))}
-                  </div>
+                  <h2 className="text-[17px] font-semibold text-white">New mock interview</h2>
+                  <p className="mt-0.5 text-[13px] text-white/55">Questions are written for your role and level. Answer by typing or speaking; you get a score and a model answer for each.</p>
                 </div>
-                <button type="button" onClick={() => void start()} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(168,85,247,0.7)] transition hover:brightness-110">
-                  <PlayIcon size={15} /> Start Mock Interview <ArrowRightIcon size={14} />
+                <button type="button" onClick={() => setHow((v) => !v)} aria-expanded={how} className="text-[12.5px] font-medium text-accent hover:underline">
+                  {how ? "Hide steps" : "How it works"}
                 </button>
               </div>
-              {roles.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {roles.map((r) => (
-                    <button key={r} type="button" onClick={() => setRole(r)} className={cn("rounded-full border px-2.5 py-1 text-[12px] transition", role === r ? "border-accent bg-accent/10 text-white" : "border-white/10 text-white/55 hover:border-white/25")}>
-                      {r}
-                    </button>
+
+              {how && (
+                <ol className="grid gap-4 border-b border-white/[0.07] bg-white/[0.015] px-6 py-4 sm:grid-cols-4">
+                  {[
+                    ["Pick a type", "Technical, behavioral, job role or your own topics."],
+                    ["Set role and level", "Questions match the role and difficulty."],
+                    ["Answer", "Type or speak. Questions can be read aloud."],
+                    ["Get feedback", "A score, what to improve, a model answer."],
+                  ].map(([h, d], n) => (
+                    <li key={h} className="text-[12.5px]">
+                      <span className="font-semibold text-white">{n + 1}. {h}</span>
+                      <span className="mt-0.5 block leading-relaxed text-white/55">{d}</span>
+                    </li>
                   ))}
-                </div>
+                </ol>
               )}
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-[12.5px] text-white/55">
-                <span>Questions:</span>
-                {[5, 8, 10].map((n) => (
-                  <button key={n} type="button" onClick={() => setCount(n)} className={cn("h-8 w-10 rounded-lg border text-[12.5px] transition", count === n ? "border-accent bg-accent/10 text-white" : "border-white/10 hover:border-white/25")}>{n}</button>
-                ))}
-                <span className="text-white/40">· about {count * 2} minutes · type or speak each answer</span>
+
+              <div className="space-y-6 px-6 py-6">
+                {/* type */}
+                <fieldset>
+                  <legend className="mb-2.5 text-[12.5px] font-semibold text-white/80">Interview type</legend>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {TYPES.map((t) => {
+                      const on = typeOn(t.kind);
+                      const Icon = t.icon;
+                      return (
+                        <button
+                          key={t.kind}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => setKind(t.kind)}
+                          className={cn("group flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors", on ? "border-accent/60 bg-[var(--color-plum)]" : "border-white/[0.08] hover:border-white/20 hover:bg-white/[0.02]")}
+                        >
+                          <Icon size={17} className={cn("mt-0.5 shrink-0", on ? "text-[var(--cyan)]" : "text-white/45")} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13.5px] font-medium text-white">{t.title.replace(" Interview", "")}</span>
+                            <span className="mt-0.5 block text-[12px] leading-snug text-white/50">{t.text}</span>
+                          </span>
+                          <span className={cn("mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border", on ? "border-accent" : "border-white/25")}>
+                            {on && <span className="iv-dot h-2 w-2 rounded-full bg-accent" />}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p key={kind} className="explain-in mt-3 flex items-start gap-2 text-[12.5px] text-white/50">
+                    <span className="shrink-0 font-medium text-white/40">Example:</span>
+                    <span className="text-white/70 italic">{EXAMPLE[kind === "mixed" ? "role" : kind]}</span>
+                  </p>
+                </fieldset>
+
+                {kind === "custom" && (
+                  <div>
+                    <Label htmlFor="iv-topics">Topics you want to be asked about</Label>
+                    <input id="iv-topics" value={topics} onChange={(e) => setTopics(e.target.value)} placeholder="e.g. GST basics, Excel, Tally, my final-year project" className="h-10 w-full rounded-lg border border-white/10 bg-field px-3.5 text-[13.5px] text-white outline-none focus:border-accent" />
+                  </div>
+                )}
+
+                {/* role */}
+                <div>
+                  <Label htmlFor="iv-role">Role</Label>
+                  <input id="iv-role" list="iv-roles" value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Accounts executive, AI/ML intern" className="h-10 w-full rounded-lg border border-white/10 bg-field px-3.5 text-[13.5px] text-white outline-none focus:border-accent" />
+                  <datalist id="iv-roles">{roles.map((r) => <option key={r} value={r} />)}</datalist>
+                  {roles.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="py-1 text-[11.5px] text-white/40">Suggested:</span>
+                      {roles.map((r) => (
+                        <button key={r} type="button" onClick={() => setRole(r)} className={cn("rounded-md border px-2 py-0.5 text-[12px] transition-colors", role === r ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 text-white/55 hover:border-white/25 hover:text-white")}>
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* level + count */}
+                <div className="flex flex-wrap gap-6">
+                  <div>
+                    <p className="mb-1.5 text-[12.5px] font-semibold text-white/80">Difficulty</p>
+                    <div role="radiogroup" aria-label="Difficulty" className="inline-flex rounded-lg border border-white/10 p-0.5">
+                      {(["beginner", "intermediate", "advanced"] as const).map((l) => (
+                        <button key={l} type="button" role="radio" aria-checked={level === l} onClick={() => setLevel(l)} className={cn("h-8 rounded-md px-3 text-[12.5px] font-medium transition-colors", level === l ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+                          {LEVEL_LABEL[l]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-[12.5px] font-semibold text-white/80">Questions</p>
+                    <div role="radiogroup" aria-label="Number of questions" className="inline-flex rounded-lg border border-white/10 p-0.5">
+                      {[5, 8, 10].map((n) => (
+                        <button key={n} type="button" role="radio" aria-checked={count === n} onClick={() => setCount(n)} className={cn("h-8 w-11 rounded-md text-[12.5px] font-medium tabular-nums transition-colors", count === n ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {error && <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
               </div>
-              {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
-            </>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] bg-white/[0.015] px-6 py-4">
+                <p className="text-[12.5px] text-white/50">
+                  About {count * 2} minutes · {KIND_LABEL[kind]} · {LEVEL_LABEL[level]}
+                </p>
+                <Button variant="primary" icon={<MicIcon size={14} />} onClick={() => void start()} disabled={!role.trim() || (kind === "custom" && !topics.trim())}>
+                  Start interview
+                </Button>
+              </div>
+            </Card>
           )}
         </div>
 
         {/* right column */}
         <div className="space-y-5">
           <Card className="p-5">
-            <p className="text-[17px] font-bold text-white">Your Interview Readiness</p>
-            <div className="mt-4 flex items-center gap-5">
-              <ReadinessRing value={stats?.readiness ?? 0} />
-              <div>
-                <p className="text-[17px] font-semibold text-white">{!stats ? "Let’s begin!" : stats.readiness >= 80 ? "Job-ready!" : stats.readiness >= 60 ? "Good progress!" : "Keep going!"}</p>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-white/55">{!stats ? "Take your first mock interview to see where you stand." : stats.readiness >= 80 ? "Your recent scores are strong. Try a harder level." : "Keep practicing to reach job-ready level."}</p>
-              </div>
+            <div className="flex items-baseline justify-between">
+              <p className="text-[14px] font-semibold text-white">Your progress</p>
+              {stats && <span className="text-[11.5px] text-white/45">last {Math.min(history.length, 8)} interviews</span>}
             </div>
-          </Card>
-
-          <Card className="p-5">
-            <p className="text-[17px] font-bold text-white">Your Stats</p>
-            <ul className="mt-3 divide-y divide-white/[0.07]">
-              {[
-                { icon: MicIcon, label: "Interviews taken", value: stats ? String(stats.taken) : "0" },
-                { icon: BarChartIcon, label: "Avg. score", value: stats ? `${stats.avg}%` : "—" },
-                { icon: RepeatIcon, label: "Improvement", value: stats?.improvement == null ? "—" : `${stats.improvement > 0 ? "+" : ""}${stats.improvement}%`, tone: stats?.improvement == null ? "" : stats.improvement >= 0 ? "text-emerald-400" : "text-rose-400" },
-                { icon: TrophyIcon, label: "Best score", value: stats ? `${stats.best}%` : "—" },
-              ].map((r) => (
-                <li key={r.label} className="flex items-center gap-3 py-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl tile-3d"><r.icon size={16} /></span>
-                  <span className="flex-1 text-[13.5px] text-white/80">{r.label}</span>
-                  <span className={cn("text-[15px] font-bold text-white tabular-nums", r.tone)}>{r.value}</span>
-                </li>
-              ))}
-            </ul>
+            {!stats ? (
+              <p className="mt-3 text-[12.5px] leading-relaxed text-white/50">Take your first interview to see your scores here.</p>
+            ) : (
+              <>
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+                  {[
+                    { label: "Interviews", value: String(stats.taken) },
+                    { label: "Average", value: `${stats.avg}%` },
+                    { label: "Best", value: `${stats.best}%` },
+                    { label: "Change", value: stats.improvement == null ? "—" : `${stats.improvement > 0 ? "+" : ""}${stats.improvement}%`, tone: stats.improvement == null ? "" : stats.improvement >= 0 ? "text-emerald-400" : "text-rose-400" },
+                  ].map((r) => (
+                    <div key={r.label}>
+                      <dt className="text-[11.5px] text-white/45">{r.label}</dt>
+                      <dd className={cn("mt-0.5 text-[20px] font-semibold tracking-tight text-white tabular-nums", r.tone)}>{r.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <Spark values={recentScores} />
+              </>
+            )}
           </Card>
 
           <Card id="iv-recent" className="scroll-mt-24 p-5">
-            <p className="text-[17px] font-bold text-white">Recent Interviews</p>
+            <p className="text-[14px] font-semibold text-white">Recent interviews</p>
             {history.length === 0 ? (
               <p className="mt-3 text-[12.5px] text-white/50">Your interviews and scores will show here.</p>
             ) : (
-              <ul className="mt-2 max-h-[340px] divide-y divide-white/[0.07] overflow-y-auto">
+              <ul className="mt-2 max-h-[360px] divide-y divide-white/[0.06] overflow-y-auto">
                 {history.map((h) => (
                   <li key={h.id}>
-                    <button type="button" onClick={() => openRecord(h)} className="group flex w-full items-center gap-3 py-3 text-left">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl tile-3d transition "><PlayIcon size={15} /></span>
+                    <button type="button" onClick={() => openRecord(h)} className="group flex w-full items-center gap-3 py-2.5 text-left">
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13.5px] font-medium text-white">{h.role} – {LEVEL_LABEL[h.level]}</span>
-                        <span className="block text-[12px] text-white/50">
-                          Score: <b className={h.feedback.overall >= 75 ? "text-emerald-400" : h.feedback.overall >= 50 ? "text-amber-300" : "text-rose-400"}>{h.feedback.overall}%</b> · {KIND_LABEL[h.kind]} · {ago(h.at)}
+                        <span className="block truncate text-[13px] font-medium text-white group-hover:text-accent">{h.role}</span>
+                        <span className="block text-[11.5px] text-white/45">
+                          {KIND_LABEL[h.kind]} · {LEVEL_LABEL[h.level]} · {ago(h.at)}
                         </span>
                       </span>
-                      <ChevronRightIcon size={15} className="text-white/35" />
+                      <span className={cn("rounded-md px-1.5 py-0.5 text-[12px] font-semibold tabular-nums", h.feedback.overall >= 75 ? "bg-emerald-400/10 text-emerald-400" : h.feedback.overall >= 50 ? "bg-amber-400/10 text-amber-300" : "bg-rose-500/10 text-rose-400")}>
+                        {h.feedback.overall}%
+                      </span>
+                      <ChevronRightIcon size={14} className="text-white/30 transition-transform group-hover:translate-x-0.5" />
                     </button>
                   </li>
                 ))}
