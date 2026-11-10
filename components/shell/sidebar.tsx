@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDownIcon, LogOutIcon, SearchIcon, SettingsIcon, SparkleIcon, UserIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, LogOutIcon, SettingsIcon, SparkleIcon, UserIcon } from "@/components/ui/icons";
 import { Avatar, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { ChatListItem } from "@/components/chat/chat-list-item";
 import { sortChats } from "@/lib/chats";
@@ -14,7 +14,6 @@ import { useStore } from "@/lib/store";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, isActive as activeFor } from "./nav";
-import { openCommandMenu } from "./command-menu";
 
 export function profileLine(p: Profile) {
   const degree = p.degree.replace(/,?\s*Computer Science(?: and Engineering)?/i, " CSE").trim();
@@ -118,18 +117,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          onNavigate?.();
-          openCommandMenu();
-        }}
-        className="mb-2 flex h-8 w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 text-[12.5px] text-white/50 hover:border-white/15 hover:text-white/75"
-      >
-        <SearchIcon size={13} />
-        Search or ask…
-        <kbd className="ml-auto rounded border border-white/12 px-1 font-sans text-[10px] text-white/45">⌘K</kbd>
-      </button>
       <Link
         href="/assistant"
         onClick={onNavigate}
