@@ -43,6 +43,7 @@ import type { MaterialMeta } from "./materials";
 import type { ChatLock, ChatMeta } from "./chats";
 import type { InterviewRecord } from "./interview";
 import type { NoteSet } from "./notes";
+import type { ProjectIdea } from "./project-shared";
 import type { CodingState } from "./coding/types";
 import type { TestRecord } from "./tests";
 import { TODAY, addDays, uid, weekStart } from "./utils";
@@ -92,6 +93,8 @@ export interface AppState {
   notes?: NoteSet[];
   /** Coding practice: solved problems, attempts and drafts */
   coding?: CodingState;
+  /** project ideas suggested for this student (AI), and the profile they were made for */
+  projectIdeas?: { key: string; ideas: ProjectIdea[] };
   /** asked to be told when Placement opportunities opens (ms) */
   placementNotify?: number;
   toasts: Toast[];

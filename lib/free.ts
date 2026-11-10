@@ -86,6 +86,16 @@ export interface Entry {
   description: string;
   skills: string[];
   link: string;
+  /** GitHub repository of the project (opens on GitHub) */
+  github?: string;
+  /** step-by-step build plan made with AI */
+  plan?: ProjectPlan;
+}
+
+export interface ProjectPlan {
+  stack: string[];
+  steps: { title: string; detail: string; done?: boolean }[];
+  at: number;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

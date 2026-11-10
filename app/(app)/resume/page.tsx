@@ -323,8 +323,8 @@ function EntryBlock({ e, size, accent, muted, tight }: { e: Entry; size: number;
           ))}
         </ul>
       )}
-      {(e.skills.length > 0 || e.link) && (
-        <p style={{ fontSize: size - 1.5, color: muted, marginTop: tight ? 1 : 3 }}>{[e.skills.join(", "), e.link].filter(Boolean).join("  ·  ")}</p>
+      {(e.skills.length > 0 || e.link || e.github) && (
+        <p style={{ fontSize: size - 1.5, color: muted, marginTop: tight ? 1 : 3 }}>{[e.skills.join(", "), e.github?.replace(/^https?:\/\//, ""), e.link].filter(Boolean).join("  ·  ")}</p>
       )}
     </div>
   );
@@ -725,12 +725,10 @@ function ProfessionalSheet({ r, entries, certs, photo }: { r: ResumeData; entrie
                         ))}
                     </ul>
                   )}
-                  {(e.skills.length > 0 || e.link) && (
+                  {(e.skills.length > 0 || e.link || e.github) && (
                     <p className="mt-1 text-[10.5px]" style={{ color: MUTED }}>
                       {e.skills.length > 0 && <span className="font-medium">Tech: </span>}
-                      {e.skills.join(", ")}
-                      {e.skills.length > 0 && e.link ? "  ·  " : ""}
-                      {e.link}
+                      {[e.skills.join(", "), e.github?.replace(/^https?:\/\//, ""), e.link].filter(Boolean).join("  ·  ")}
                     </p>
                   )}
                 </div>
