@@ -8,6 +8,7 @@ import {
   FileIcon,
   FolderIcon,
   HomeIcon,
+  OpenBookIcon,
   PlanIcon,
   TargetIcon,
   VideoIcon,
@@ -20,7 +21,7 @@ export interface NavLink {
   label: string;
   Icon: IconT;
   match: string[];
-  badge?: "PRO" | "SOON";
+  badge?: "PRO" | "SOON" | "NEW";
 }
 
 export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
@@ -37,6 +38,7 @@ export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
       { href: "/study-plan", label: "Study Plan", Icon: PlanIcon, match: ["/study-plan", "/plan", "/session"] },
       { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule", "/timeline"] },
       { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals", "/notes"] },
+      { href: "/exam-prep", label: "Exam Prep", Icon: OpenBookIcon, match: ["/exam-prep"], badge: "NEW" },
       { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/code", "/premium"], badge: "PRO" },
     ],
   },

@@ -21,7 +21,7 @@ export function profileLine(p: Profile) {
   return [degree, year ? `Year ${year}` : p.year].filter(Boolean).join(" · ");
 }
 
-function NavItem({ href, label, Icon, active, badge, onNavigate }: { href: string; label: string; Icon: (p: { size?: number }) => React.ReactElement; active: boolean; badge?: "PRO" | "SOON"; onNavigate?: () => void }) {
+function NavItem({ href, label, Icon, active, badge, onNavigate }: { href: string; label: string; Icon: (p: { size?: number }) => React.ReactElement; active: boolean; badge?: "PRO" | "SOON" | "NEW"; onNavigate?: () => void }) {
   return (
     <Link
       href={href}
@@ -38,6 +38,7 @@ function NavItem({ href, label, Icon, active, badge, onNavigate }: { href: strin
       </span>
       <span className="truncate">{label}</span>
       {badge === "PRO" && <span className="ml-auto rounded px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-accent ring-1 ring-accent/30">PRO</span>}
+      {badge === "NEW" && <span className="ml-auto rounded bg-[var(--cyan)]/15 px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-[var(--cyan)]">NEW</span>}
       {badge === "SOON" && <span className="ml-auto rounded px-1.5 py-px text-[9.5px] font-semibold tracking-wide text-white/45 ring-1 ring-white/15">SOON</span>}
     </Link>
   );

@@ -946,3 +946,11 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 /* Project build plan steps */
 .pl-step { animation: ui-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
 @media (prefers-reduced-motion: reduce) { .pl-step { animation: none; } }
+
+/* Exam Prep */
+.ep-row { animation: ui-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.ep-in { animation: ui-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.ep-focus:fullscreen { background: var(--color-ink); justify-content: center; padding: 48px; }
+.ep-focus:fullscreen > div:nth-child(2) { width: 300px; height: 300px; }
+.ep-focus:fullscreen span.text-\[26px\] { font-size: 64px; }
+@media (prefers-reduced-motion: reduce) { .ep-row, .ep-in { animation: none; } }
