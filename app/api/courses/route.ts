@@ -36,6 +36,7 @@ export async function POST(req: Request) {
 Profile:
 ${profile}
 
+SCHOOL STUDENTS: if the student is in school (Class 8–12 / PU), after their goals the courses must be their own class subjects (e.g. Class 12 PCB → Physics, Chemistry, Biology for Class 12, with modules like "class 12 physics electrostatics one shot"); never programming or tech unless they picked tech as an interest.
 GOALS COME FIRST. If the profile lists GOALS, the first courses must be exactly one course per goal, titled with the goal's subject (e.g. goal "Operating Systems" → course "Operating Systems"), and every module topic must name that subject (e.g. "operating system process scheduling", never a general programming video). Use the goal's topics as modules when given.
 Then fill up to 5 courses in total (up to 6 if there are many goals) that fit their degree/field, interests and current level (${level}): their own subject or career path first, then the interests they picked, at most 1 general skill (e.g. communication, Excel) if it helps a goal. Never add random or loosely related courses. Never suggest programming unless the profile shows tech/computer interest.
 Each course has 2–4 modules in a sensible order. Each module has a YouTube search "topic" that finds ONE long, popular, English or Hinglish full-course/lecture video for it (e.g. "tally prime with gst full course", "organic chemistry class 12 one shot"). Indian exam or syllabus names are fine where relevant.

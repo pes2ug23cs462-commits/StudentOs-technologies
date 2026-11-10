@@ -8,7 +8,7 @@ import type { Course, CourseLevel, Module, QuizQuestion } from "./learn";
 import { areasFromAcademics } from "./learn";
 import { AREAS, INTERESTS, PRIMARY_GOALS, studentLine, type SetupData } from "./setup";
 import type { Goal } from "./types";
-import { TOPICS } from "./youtube";
+import { TOPICS, schoolTopics } from "./youtube";
 
 type GoalLike = Pick<Goal, "title" | "course" | "topics" | "progressPct" | "type">;
 
@@ -103,7 +103,8 @@ export function profileKey(setup: SetupData | undefined, goals?: GoalLike[]) {
   if (!setup) return "";
   const a = setup.academic;
   const g = activeGoals(goals).map((x) => goalSubject(x).toLowerCase()).sort().join("+");
-  return [a.course, a.field, a.specialization, a.year, setup.goals.primary, [...setup.goals.interests].sort().join("+"), [...setup.skills.familiar].sort().join("+"), setup.level ?? "", g].join("|");
+  // "s1": school suggestions changed (class subjects first), so school students get fresh ones once
+  return [a.course, a.field, a.specialization, a.year, setup.goals.primary, [...setup.goals.interests].sort().join("+"), [...setup.skills.familiar].sort().join("+"), setup.level ?? "", g, a.type === "school" ? "s1" : ""].join("|");
 }
 
 const LEVELS: CourseLevel[] = ["beginner", "intermediate", "advanced"];
@@ -141,9 +142,25 @@ export function fallbackCourses(setup: SetupData | undefined, goals?: GoalLike[]
 }
 
 function interestCourses(setup: SetupData | undefined, level: CourseLevel): Course[] {
-  const areas = [...new Set([...(setup?.goals.interests ?? []), ...areasFromAcademics(setup)])].filter((a) => a !== "other");
-  const picked = (areas.length ? areas : ["tech"]).slice(0, 4);
-  return picked
+  // school students: one course per class subject first
+  const school = schoolTopics(setup?.academic).map(
+    (t): Course => ({
+      id: `ai-${slug(t.q.replace(/ full course$/, ""))}`,
+      title: t.q.replace(/ full course$/, "").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/Puc/, "PUC"),
+      blurb: `The whole ${t.label} syllabus of your class, then a quick revision.`,
+      areas: ["school"],
+      skills: [],
+      level,
+      modules: [
+        { id: "m1", title: `${t.label} full course`, yt: "", topic: t.q, channel: "", length: "", about: `The most viewed full course for ${t.label}.` },
+        { id: "m2", title: `${t.label} one shot revision`, yt: "", topic: t.q.replace(/full course$/, "one shot revision"), channel: "", length: "", about: `Revise all of ${t.label} in one go.` },
+      ],
+      quiz: [],
+    }),
+  );
+  const areas = [...new Set([...(setup?.goals.interests ?? []), ...(school.length ? [] : areasFromAcademics(setup))])].filter((a) => a !== "other");
+  const picked = (areas.length ? areas : school.length ? [] : ["tech"]).slice(0, 4);
+  return [...school, ...picked
     .map((area): Course | null => {
       const topics = TOPICS.filter((t) => t.area === area);
       if (!topics.length) return null;
@@ -159,7 +176,7 @@ function interestCourses(setup: SetupData | undefined, level: CourseLevel): Cour
         quiz: [],
       };
     })
-    .filter((c): c is Course => !!c);
+    .filter((c): c is Course => !!c)].slice(0, 6);
 }
 
 /** Keeps only valid multiple-choice questions. */

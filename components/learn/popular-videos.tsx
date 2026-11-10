@@ -6,7 +6,8 @@ import { FilterPills } from "@/components/free/parts";
 import { EyeIcon, ThumbUpIcon } from "@/components/ui/icons";
 import { activeGoals, goalSubject } from "@/lib/catalog";
 import type { Goal } from "@/lib/types";
-import { compact, hms, topicsFor, type YtVideo } from "@/lib/youtube";
+import { compact, hms, schoolTopics, topicsFor, type YtVideo } from "@/lib/youtube";
+import type { SetupData } from "@/lib/setup";
 import { useTopVideos } from "./use-top-videos";
 
 export function VideoTile({ v, href }: { v: YtVideo; href: string }) {
@@ -30,10 +31,14 @@ export function VideoTile({ v, href }: { v: YtVideo; href: string }) {
 }
 
 /** “Popular for your goals and interests”: most viewed videos for each goal first, then each interest topic. */
-export function PopularVideos({ interests, goals = [] }: { interests: string[]; goals?: Goal[] }) {
+export function PopularVideos({ interests, goals = [], academic }: { interests: string[]; goals?: Goal[]; academic?: SetupData["academic"] }) {
   const fromGoals = activeGoals(goals).map((g) => ({ label: goalSubject(g), q: `${goalSubject(g)} full course`.toLowerCase().slice(0, 100) }));
-  const seen = new Set(fromGoals.map((t) => t.q));
-  const topics = [...fromGoals, ...(interests.length || !fromGoals.length ? topicsFor(interests) : []).filter((t) => !seen.has(t.q))];
+  // school students: their class subjects come right after their goals
+  const fromClass = schoolTopics(academic);
+  const school = academic?.type === "school";
+  const seen = new Set([...fromGoals, ...fromClass].map((t) => t.q));
+  const topics = [...fromGoals, ...fromClass, ...(interests.length || (!fromGoals.length && !fromClass.length) ? topicsFor(interests, school && fromClass.length > 0) : []).filter((t) => !seen.has(t.q))];
+  if (!topics.length) topics.push(...topicsFor([]));
   const [pick, setQ] = useState<string>();
   // follows the first goal until the student picks a topic (goals can load after the page)
   const q = pick && topics.some((t) => t.q === pick) ? pick : topics[0].q;
@@ -54,7 +59,7 @@ export function PopularVideos({ interests, goals = [] }: { interests: string[]; 
 
   return (
     <section className="mt-6">
-      <h2 className="text-[17px] font-semibold text-white">{fromGoals.length ? "Popular for your goals" : "Popular for your interests"}</h2>
+      <h2 className="text-[17px] font-semibold text-white">{fromGoals.length ? "Popular for your goals" : fromClass.length ? "Popular for your class" : "Popular for your interests"}</h2>
       <p className="mt-0.5 text-[12.5px] text-white/55">The most viewed and liked full-length videos on YouTube, playing right here.</p>
       <div className="mt-3">
         <FilterPills value={q} onChange={setQ} options={topics.map((t) => ({ value: t.q, label: t.label }))} />

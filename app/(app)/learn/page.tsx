@@ -95,7 +95,7 @@ function Learn() {
         ))}
       </div>
 
-      {section === "videos" && <PopularVideos interests={state.setup?.goals.interests ?? []} goals={state.goals} />}
+      {section === "videos" && <PopularVideos interests={state.setup?.goals.interests ?? []} goals={state.goals} academic={state.setup?.academic} />}
       {section === "materials" && (
         <div className="mt-6">
           <MaterialsHub />

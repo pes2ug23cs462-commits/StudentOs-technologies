@@ -51,9 +51,31 @@ export const TOPICS: { area: string; label: string; q: string }[] = [
   { area: "projects", label: "Build projects", q: "build projects full course" },
 ];
 
-export function topicsFor(interests: string[]) {
+/** Topics for the interests picked. With no matching interest, tech is the fallback,
+    except for school students (`school`), who get their class subjects instead. */
+export function topicsFor(interests: string[], school = false) {
   const picked = TOPICS.filter((t) => interests.includes(t.area));
-  return picked.length ? picked : TOPICS.filter((t) => t.area === "tech");
+  return picked.length || school ? picked : TOPICS.filter((t) => t.area === "tech");
+}
+
+const STREAM_SUBJECTS: [RegExp, string[]][] = [
+  [/PCMB/i, ["Physics", "Chemistry", "Maths", "Biology"]],
+  [/PCM/i, ["Physics", "Chemistry", "Maths"]],
+  [/PCB/i, ["Physics", "Chemistry", "Biology"]],
+  [/commerce/i, ["Accountancy", "Business Studies", "Economics"]],
+  [/arts|humanities/i, ["History", "Political Science", "Economics"]],
+];
+
+/** A school student's class subjects as video topics, e.g. “Class 12 Physics full course”. */
+export function schoolTopics(academic: { type?: string; year?: string; field?: string; course?: string } | undefined) {
+  if (academic?.type !== "school") return [];
+  const n = academic.year?.match(/\d+/)?.[0];
+  if (!n) return [];
+  const cls = `class ${n}`;
+  const puc = /karnataka|puc|state/i.test(academic.course ?? "") && (n === "11" || n === "12") ? (n === "12" ? "2nd puc" : "1st puc") : "";
+  const subjects =
+    n === "11" || n === "12" ? (STREAM_SUBJECTS.find(([re]) => re.test(academic.field ?? ""))?.[1] ?? ["Physics", "Chemistry", "Maths", "Biology"]) : ["Maths", "Science", "Social Science", "English"];
+  return subjects.map((sub) => ({ area: "school", label: `${sub}`, q: `${puc || cls} ${sub} full course`.toLowerCase() }));
 }
 
 export const compact = (n: number) => new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
