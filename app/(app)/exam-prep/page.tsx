@@ -2,15 +2,15 @@
 
 /* Exam Prep: for II PUC, CBSE 12, NEET and KCET students. Pick the exam and
    subject, see every chapter with how strong you are in it, read short notes,
-   practise exam-style questions, get anything explained simply (English,
-   Hinglish or Kannada), and study in focused sessions. Free. */
+   practise exam-style questions and get anything explained simply (English,
+   Hinglish or Kannada). Free. */
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/free/parts";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
-import { ArrowRightIcon, ChatIcon, CheckIcon, FlameIcon, MaximizeIcon, PauseIcon, PlayIcon, RefreshIcon, TargetIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, ChatIcon, CheckIcon, PlayIcon, RefreshIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { VideoGrid } from "@/components/videos/video-grid";
 import { AssistantError, postAi } from "@/lib/assistant";
@@ -19,7 +19,6 @@ import {
   EXAMS,
   STATUS_LABEL,
   chapterKey,
-  focusStreak,
   sanitizeNotes,
   sanitizeQuestions,
   statusOf,
@@ -39,7 +38,6 @@ const TONE: Record<Status, string> = {
   ok: "text-amber-300 bg-amber-400/10 ring-amber-400/25",
   strong: "text-emerald-300 bg-emerald-400/10 ring-emerald-400/25",
 };
-const today = () => new Date().toISOString().slice(0, 10);
 
 export default function ExamPrepPage() {
   const { state, actions } = useStore();
@@ -131,8 +129,6 @@ export default function ExamPrepPage() {
         </div>
 
         <div className="space-y-5">
-          <FocusTimer focus={prep.focus} onDone={(min) => patch({ focus: { ...(prep.focus ?? {}), [today()]: (prep.focus?.[today()] ?? 0) + min } })} />
-
           <Card className="p-5">
             <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
               <TargetIcon size={15} className="text-rose-300" /> Weak chapters first
@@ -529,100 +525,3 @@ function ErrorBox({ text, onRetry }: { text: string; onRetry: () => void }) {
     </div>
   );
 }
-
-/* ---------------- focus timer ---------------- */
-
-function FocusTimer({ focus, onDone }: { focus?: Record<string, number>; onDone: (minutes: number) => void }) {
-  const [mins, setMins] = useState(25);
-  const [left, setLeft] = useState(25 * 60);
-  const [running, setRunning] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-  const streak = focusStreak(focus);
-  const todayMin = focus?.[today()] ?? 0;
-
-  useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => setLeft((s) => s - 1), 1000);
-    return () => clearInterval(t);
-  }, [running]);
-  useEffect(() => {
-    if (left > 0 || !running) return;
-    setRunning(false);
-    onDone(mins);
-    setLeft(mins * 60);
-    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
-  }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const total = mins * 60;
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const mm = String(Math.floor(left / 60)).padStart(2, "0");
-  const ss = String(left % 60).padStart(2, "0");
-  const full = () => {
-    const el = box.current;
-    if (el && !document.fullscreenElement) void el.requestFullscreen?.().catch(() => {});
-  };
-
-  return (
-    <Card className="p-5">
-      <div ref={box} className="ep-focus flex flex-col">
-        <div className="flex items-center justify-between">
-          <p className="text-[14px] font-semibold text-white">Focus session</p>
-          <span className="flex items-center gap-1 text-[12px] text-amber-300 tabular-nums" title="Days in a row with a finished session">
-            <FlameIcon size={13} /> {streak} day{streak === 1 ? "" : "s"}
-          </span>
-        </div>
-        <div className="relative mx-auto mt-4 h-[132px] w-[132px]">
-          <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden>
-            <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="6" />
-            <circle cx="60" cy="60" r={r} fill="none" stroke="var(--color-accent)" strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - left / total)} style={{ transition: "stroke-dashoffset 1s linear" }} />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[26px] font-semibold tracking-tight text-white tabular-nums" aria-live="off">
-              {mm}:{ss}
-            </span>
-            <span className="text-[11px] text-white/45">{running ? "stay on this" : "ready"}</span>
-          </div>
-        </div>
-        {!running && left === total && (
-          <div role="radiogroup" aria-label="Length" className="mx-auto mt-3 inline-flex rounded-lg border border-white/10 p-0.5">
-            {[25, 45, 60].map((m) => (
-              <button
-                key={m}
-                type="button"
-                role="radio"
-                aria-checked={mins === m}
-                onClick={() => {
-                  setMins(m);
-                  setLeft(m * 60);
-                }}
-                className={cn("h-7 rounded-md px-2.5 text-[12px] font-medium tabular-nums", mins === m ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}
-              >
-                {m} min
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="mt-3 flex justify-center gap-2">
-          <Button size="sm" variant="primary" icon={running ? <PauseIcon size={12} /> : <PlayIcon size={11} />} onClick={() => setRunning((v) => !v)}>
-            {running ? "Pause" : left < total ? "Resume" : "Start"}
-          </Button>
-          {running && (
-            <Button size="sm" icon={<MaximizeIcon size={12} />} onClick={full}>
-              Full screen
-            </Button>
-          )}
-          {!running && left < total && (
-            <Button size="sm" variant="ghost" onClick={() => setLeft(total)}>
-              Reset
-            </Button>
-          )}
-        </div>
-        <p className="mt-3 text-center text-[11.5px] text-white/45">
-          {todayMin ? `${todayMin} min focused today. ` : ""}Put your phone face down and keep this screen open.
-        </p>
-      </div>
-    </Card>
-  );
-}
-
