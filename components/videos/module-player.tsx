@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { YouTubePlayer } from "@/components/videos/player";
-import { CheckIcon, MaximizeIcon, XIcon } from "@/components/ui/icons";
+import { CheckIcon, DownloadIcon, MaximizeIcon, XIcon } from "@/components/ui/icons";
 import type { YtVideo } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +92,19 @@ export function ModulePlayer({
     else void box.current?.requestFullscreen?.().catch(() => {});
   };
 
+  /** saves the notes as a text file: video title, channel, date, then the notes */
+  const download = () => {
+    const body = [`My notes: ${video.title}`, `${video.channel} · https://www.youtube.com/watch?v=${video.id}`, `Saved from StudentOS on ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, "", text.trim()].join("\n");
+    const url = URL.createObjectURL(new Blob([body], { type: "text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${video.title.replace(/[^\w\s-]+/g, "").trim().slice(0, 60) || "notes"} - notes.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const finish = (k: number) => {
     if (!done.includes(k)) onDone(k);
   };
@@ -168,9 +181,14 @@ export function ModulePlayer({
             </ol>
           </div>
           <div className="flex flex-col">
-            <label htmlFor={`mp-notes-${video.id}`} className="text-[12px] font-semibold text-white/70">
-              My notes
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor={`mp-notes-${video.id}`} className="text-[12px] font-semibold text-white/70">
+                My notes
+              </label>
+              <button type="button" onClick={download} disabled={!text.trim()} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium text-accent hover:bg-white/[0.05] disabled:text-white/30">
+                <DownloadIcon size={12} /> Download
+              </button>
+            </div>
             <textarea
               id={`mp-notes-${video.id}`}
               value={text}
