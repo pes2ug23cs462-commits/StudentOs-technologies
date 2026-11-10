@@ -892,3 +892,32 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 @media (prefers-reduced-motion: reduce) {
   html.app-ui .ui-sweep::before, html.app-ui .ui-orbit-art, html.app-ui .ui-digit, html.app-ui .page-enter .rounded-full > [style*="width"] { animation: none; }
 }
+
+/* Placement page motion */
+.pl-wire { fill: none; stroke: rgb(167 139 250 / 0.22); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; animation: pl-dash 2.4s linear infinite; }
+@keyframes pl-dash { to { stroke-dashoffset: -14; } }
+.pl-dot { fill: #a78bfa; offset-distance: 0%; opacity: 0; animation: pl-travel 2.2s cubic-bezier(0.45, 0, 0.2, 1) infinite; filter: drop-shadow(0 0 4px rgb(167 139 250 / 0.9)); }
+.pl-dot-out { fill: #22d3ee; filter: drop-shadow(0 0 4px rgb(34 211 238 / 0.9)); animation-duration: 3.6s; }
+@keyframes pl-travel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 55% { offset-distance: 100%; opacity: 1; } 60%, 100% { offset-distance: 100%; opacity: 0; } }
+.pl-chip { animation: ui-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.pl-pulse { animation: pl-pulse 2.2s ease-out infinite; box-shadow: 0 0 0 0 rgb(167 139 250 / 0.45); }
+@keyframes pl-pulse { 0% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0.45); } 100% { box-shadow: 0 0 0 18px rgb(167 139 250 / 0); } }
+.pl-slot { animation: pl-slot 3.6s ease-in-out infinite; }
+.pl-slot .pl-slot-tag { animation: pl-tag 3.6s ease-in-out infinite; animation-delay: inherit; }
+@keyframes pl-slot { 0%, 20%, 75%, 100% { border-color: rgb(255 255 255 / 0.08); background: rgb(255 255 255 / 0.02); } 35%, 60% { border-color: rgb(34 211 238 / 0.45); background: rgb(34 211 238 / 0.05); } }
+@keyframes pl-tag { 0%, 20%, 75%, 100% { opacity: 0.25; } 35%, 60% { opacity: 1; } }
+.pl-feature { animation: ui-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.pl-mover { animation: pl-mover 7s ease-in-out infinite; }
+@keyframes pl-mover {
+  0%, 30% { transform: none; opacity: 1; box-shadow: none; }
+  38% { transform: translateY(-3px); border-color: rgb(167 139 250 / 0.5); box-shadow: 0 10px 24px -12px rgb(124 58 237 / 0.8); }
+  48%, 86% { transform: none; opacity: 0.3; }
+  96%, 100% { opacity: 1; }
+}
+.pl-landing { animation: pl-landing 7s ease-in-out infinite; }
+@keyframes pl-landing { 0%, 40% { max-height: 0; opacity: 0; transform: translateY(-6px); } 52%, 86% { max-height: 90px; opacity: 1; transform: none; } 96%, 100% { max-height: 0; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .pl-wire, .pl-dot, .pl-chip, .pl-pulse, .pl-slot, .pl-slot .pl-slot-tag, .pl-feature, .pl-mover, .pl-landing { animation: none; }
+  .pl-dot { opacity: 0; }
+  .pl-landing { max-height: none; }
+}
