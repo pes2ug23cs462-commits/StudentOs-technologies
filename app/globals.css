@@ -682,3 +682,27 @@ html.light .tok-c { color: #94a3b8; }
 @media (prefers-reduced-motion: reduce) {
   .orb-label, .orb-shimmer, .orb-dot, .orb-launch, .composer-launch, .answer-reveal > div > * { animation: none; }
 }
+
+/* AI Notes → Explain with AI (animated lesson) */
+@keyframes explain-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes explain-pop { 0% { opacity: 0; transform: translateY(12px) scale(0.94); } 70% { opacity: 1; transform: translateY(-2px) scale(1.02); } 100% { opacity: 1; transform: none; } }
+@keyframes explain-arrow { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes explain-orbit { to { transform: rotate(360deg); } }
+@keyframes explain-ring { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes explain-bar { 0%, 100% { height: 3px; } 50% { height: 11px; } }
+@keyframes explain-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.explain-in { animation: explain-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.explain-pop { animation: explain-pop 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.explain-arrow { animation: explain-arrow 0.4s ease-out 0.15s both; }
+.explain-orbit { animation: explain-orbit 6s linear infinite; }
+.explain-ring { animation: explain-ring 1.3s ease-out infinite; }
+.explain-bar { animation: explain-bar 0.7s ease-in-out infinite; }
+.explain-pulse { animation: explain-pulse 1.8s ease-in-out infinite; }
+.explain-grid {
+  background-image: linear-gradient(rgba(167, 139, 250, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(167, 139, 250, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .explain-in, .explain-pop, .explain-arrow, .explain-orbit, .explain-ring, .explain-bar, .explain-pulse { animation: none; }
+}

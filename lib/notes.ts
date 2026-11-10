@@ -2,7 +2,8 @@
    pasted text, an uploaded file or a study material, and a spaced-revision
    schedule (1 → 3 → 7 → 14 → 30 → 60 days). */
 
-import { postAi } from "./assistant";
+import { AssistantError, postAi } from "./assistant";
+import { sanitizeScenes, scenesFromNotes, type Scene } from "./explainer";
 
 export type NoteSource = "topic" | "text" | "file" | "material";
 export type Flashcard = { q: string; a: string };
@@ -20,6 +21,8 @@ export interface NoteSet {
   cards: Flashcard[];
   /** spaced revision */
   rev: { step: number; due: number; last?: number; count: number };
+  /** “Explain with AI” lesson, made once and kept */
+  explainer?: Scene[];
 }
 
 export const MAX_NOTES = 25;
@@ -57,6 +60,18 @@ export function afterRevision(n: NoteSet, rating: "hard" | "good" | "easy", now 
 export const firstRevision = (now = Date.now()): NoteSet["rev"] => ({ step: 0, due: startOfDay(now) + DAY, count: 0 });
 
 export type NotesReply = Pick<NoteSet, "title" | "summary" | "sections" | "terms" | "cards">;
+
+/** Animated lesson script for a set of notes (AI); falls back to one built from the notes. */
+export async function explainNotes(n: NoteSet, profile: string): Promise<{ scenes: Scene[]; fromAi: boolean }> {
+  try {
+    const j = await postAi<{ scenes?: unknown }>("/api/notes-explain", { title: n.title, summary: n.summary, sections: n.sections, terms: n.terms, profile });
+    const scenes = sanitizeScenes(j);
+    if (scenes.length >= 3) return { scenes, fromAi: true };
+  } catch (e) {
+    if (e instanceof AssistantError && /premium|session/i.test(e.message)) throw e;
+  }
+  return { scenes: scenesFromNotes(n), fromAi: false };
+}
 
 export async function makeNotes(o: { topic?: string; text?: string; title?: string; level: string; profile: string }) {
   return postAi<NotesReply>("/api/notes", o);

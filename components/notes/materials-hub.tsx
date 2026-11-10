@@ -8,6 +8,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MaterialsSection } from "@/components/learn/materials-section";
+import { NoteExplainer } from "@/components/notes/note-explainer";
 import { PremiumBadge, PremiumGate } from "@/components/premium/premium-gate";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ import { Card, Label } from "@/components/ui/primitives";
 import { AssistantError, readImageText } from "@/lib/assistant";
 import { ACCEPT, readAttachment } from "@/lib/attachments";
 import { loadMaterialText } from "@/lib/materials";
-import { MAX_NOTES, NOTE_INPUT_CHARS, STEPS, afterRevision, dueIn, dueLabel, firstRevision, isDue, makeNotes, notesText, type Flashcard, type NoteSet, type NoteSource } from "@/lib/notes";
+import type { Scene } from "@/lib/explainer";
+import { MAX_NOTES, NOTE_INPUT_CHARS, STEPS, afterRevision, dueIn, dueLabel, explainNotes, firstRevision, isDue, makeNotes, notesText, type Flashcard, type NoteSet, type NoteSource } from "@/lib/notes";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
 import { cn, uid } from "@/lib/utils";
@@ -36,7 +38,7 @@ const SOURCES: { key: NoteSource; label: string; icon: typeof BookIcon; hint: st
   { key: "material", label: "My files", icon: FolderIcon, hint: "Files saved in My Files" },
 ];
 
-type View = null | { kind: "note"; id: string } | { kind: "revise"; id: string } | { kind: "practice"; title: string; cards: Flashcard[] };
+type View = null | { kind: "note"; id: string } | { kind: "explain"; id: string; scenes: Scene[] } | { kind: "revise"; id: string } | { kind: "practice"; title: string; cards: Flashcard[] };
 
 const shuffle = <T,>(a: T[]) => {
   const b = [...a];
@@ -80,6 +82,7 @@ export function MaterialsHub() {
   const [materialId, setMaterialId] = useState("");
   const [level, setLevel] = useState("intermediate");
   const [error, setError] = useState("");
+  const [explaining, setExplaining] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
   // ?topic=… (from a course module) opens AI Notes with the topic filled in
@@ -97,6 +100,21 @@ export function MaterialsHub() {
   const open = (v: View) => {
     setView(v);
     window.scrollTo({ top: 0 });
+  };
+  /** Opens the animated lesson, making it the first time. */
+  const explain = async (n: NoteSet) => {
+    if (n.explainer?.length) return open({ kind: "explain", id: n.id, scenes: n.explainer });
+    setExplaining(n.id);
+    try {
+      const r = await explainNotes(n, profile);
+      if (r.fromAi) update(n.id, { explainer: r.scenes });
+      else actions.toast("Made a simple lesson from your notes. Try again later for the full AI one.");
+      open({ kind: "explain", id: n.id, scenes: r.scenes });
+    } catch (e) {
+      actions.toast(e instanceof AssistantError ? e.message : "Couldn’t make the lesson. Try again.");
+    } finally {
+      setExplaining("");
+    }
   };
 
   const pickFile = async (f: File | undefined) => {
@@ -175,7 +193,22 @@ export function MaterialsHub() {
     </div>
   );
 
-  const current = view && (view.kind === "note" || view.kind === "revise") ? notes.find((n) => n.id === view.id) : undefined;
+  const current = view && view.kind !== "practice" ? notes.find((n) => n.id === view.id) : undefined;
+  if (view?.kind === "explain" && current) {
+    return (
+      <div className="mt-6">
+        {tabs}
+        <div className="mt-6 max-w-[1040px]">
+          <button type="button" onClick={() => setView({ kind: "note", id: current.id })} className="flex items-center gap-1.5 text-[13px] text-white/55 hover:text-white">
+            <ArrowLeftIcon size={14} /> Back to notes
+          </button>
+          <h2 className="mt-3 text-[22px] font-bold tracking-tight text-white">{current.title} · explained</h2>
+          <p className="mt-1 mb-4 text-[12.5px] text-white/50">An animated lesson made from your notes, read aloud. Space to play or pause, arrow keys to move between scenes.</p>
+          <NoteExplainer key={current.id} title={current.title} scenes={view.scenes} onClose={() => setView({ kind: "note", id: current.id })} />
+        </div>
+      </div>
+    );
+  }
 
   /* ---------- full-screen views (one note set, revision) ---------- */
   if (view?.kind === "practice") return <div className="mt-6">{tabs}<Revise title={view.title} cards={view.cards} onExit={() => setView(null)} /></div>;
@@ -209,13 +242,28 @@ export function MaterialsHub() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="primary" icon={<RefreshIcon size={14} />} onClick={() => open({ kind: "revise", id: n.id })}>Revise now</Button>
+              <Button variant="primary" icon={<PlayIcon size={12} />} loading={explaining === n.id} onClick={() => void explain(n)}>Explain with AI</Button>
+              <Button icon={<RefreshIcon size={14} />} onClick={() => open({ kind: "revise", id: n.id })}>Revise now</Button>
               <Button icon={<FileIcon size={14} />} onClick={() => navigator.clipboard?.writeText(notesText(n)).then(() => actions.toast("Notes copied"), () => actions.toast("Couldn’t copy"))}>Copy</Button>
               <Button variant="ghost" icon={<TrashIcon size={14} />} onClick={() => { save(notes.filter((x) => x.id !== n.id)); setView(null); actions.toast("Notes deleted"); }}>Delete</Button>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => void explain(n)}
+            disabled={explaining === n.id}
+            className="group mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-violet-400/30 bg-[linear-gradient(110deg,rgba(124,58,237,0.22),rgba(124,58,237,0.05)_60%)] p-4 text-left hover:border-violet-400/60 disabled:opacity-70"
+          >
+            <span className="explain-pulse flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent text-black">
+              <PlayIcon size={15} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[15px] font-semibold text-white">{explaining === n.id ? "Making your lesson…" : "Watch these notes explained"}</span>
+              <span className="block text-[12.5px] text-white/60">An animated lesson with a natural voice: every idea shown step by step while it’s explained.</span>
+            </span>
+          </button>
           {n.summary && (
-            <Card glow className="mt-6 p-5">
+            <Card glow className="mt-5 p-5">
               <p className="text-[11.5px] font-semibold tracking-wide text-violet-300 uppercase">Summary</p>
               <p className="mt-1.5 text-[14.5px] leading-relaxed text-white/85">{n.summary}</p>
             </Card>
