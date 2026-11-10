@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { FilterPills } from "@/components/free/parts";
 import { EyeIcon, ThumbUpIcon } from "@/components/ui/icons";
+import { activeGoals, goalSubject } from "@/lib/catalog";
+import type { Goal } from "@/lib/types";
 import { compact, hms, topicsFor, type YtVideo } from "@/lib/youtube";
 import { useTopVideos } from "./use-top-videos";
 
@@ -27,10 +29,14 @@ export function VideoTile({ v, href }: { v: YtVideo; href: string }) {
   );
 }
 
-/** “Popular for your interests”: most viewed videos per interest topic, played inside StudentOS. */
-export function PopularVideos({ interests }: { interests: string[] }) {
-  const topics = topicsFor(interests);
-  const [q, setQ] = useState(topics[0].q);
+/** “Popular for your goals and interests”: most viewed videos for each goal first, then each interest topic. */
+export function PopularVideos({ interests, goals = [] }: { interests: string[]; goals?: Goal[] }) {
+  const fromGoals = activeGoals(goals).map((g) => ({ label: goalSubject(g), q: `${goalSubject(g)} full course`.toLowerCase().slice(0, 100) }));
+  const seen = new Set(fromGoals.map((t) => t.q));
+  const topics = [...fromGoals, ...(interests.length || !fromGoals.length ? topicsFor(interests) : []).filter((t) => !seen.has(t.q))];
+  const [pick, setQ] = useState<string>();
+  // follows the first goal until the student picks a topic (goals can load after the page)
+  const q = pick && topics.some((t) => t.q === pick) ? pick : topics[0].q;
   const { loading, videos, available } = useTopVideos(q);
 
   if (!available) {
@@ -48,7 +54,7 @@ export function PopularVideos({ interests }: { interests: string[] }) {
 
   return (
     <section className="mt-6">
-      <h2 className="text-[17px] font-semibold text-white">Popular for your interests</h2>
+      <h2 className="text-[17px] font-semibold text-white">{fromGoals.length ? "Popular for your goals" : "Popular for your interests"}</h2>
       <p className="mt-0.5 text-[12.5px] text-white/55">The most viewed and liked full-length videos on YouTube, playing right here.</p>
       <div className="mt-3">
         <FilterPills value={q} onChange={setQ} options={topics.map((t) => ({ value: t.q, label: t.label }))} />

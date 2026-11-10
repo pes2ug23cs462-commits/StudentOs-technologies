@@ -7,17 +7,79 @@
 import type { Course, CourseLevel, Module, QuizQuestion } from "./learn";
 import { areasFromAcademics } from "./learn";
 import { AREAS, INTERESTS, PRIMARY_GOALS, studentLine, type SetupData } from "./setup";
+import type { Goal } from "./types";
 import { TOPICS } from "./youtube";
+
+type GoalLike = Pick<Goal, "title" | "course" | "topics" | "progressPct" | "type">;
+
+/** What a goal is about, e.g. "Operating Systems" (platform names and "Your course" removed). */
+export function goalSubject(g: Pick<Goal, "title" | "course">) {
+  const raw = g.course && g.course !== "Your course" ? g.course : g.title;
+  return raw.replace(/\s*[·—-]\s*(harvard|on edx|edx|coursera|udemy|nptel|youtube).*$/i, "").replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+/** Goals still being worked on, most recent first (at most 4). */
+export function activeGoals(goals: GoalLike[] | undefined) {
+  return (goals ?? []).filter((g) => (g.progressPct ?? 0) < 100 && goalSubject(g).length > 1).slice(-4).reverse();
+}
+
+const stem = (w: string) => w.replace(/(ies|es|s)$/, "");
+const sigWords = (t: string) =>
+  t.toLowerCase().replace(/[^a-z0-9+#\s]/g, " ").split(/\s+/).filter((w) => w.length > 1 && !["the", "and", "for", "of", "to", "in", "with", "course", "full", "basics", "learn", "complete", "exam", "prep", "my"].includes(w)).map(stem);
+
+/** True when a course is about this goal's subject (all its key words appear in the course). */
+export function coversGoal(c: Course, g: Pick<Goal, "title" | "course">) {
+  const want = sigWords(goalSubject(g));
+  if (!want.length) return true;
+  const have = new Set(sigWords(`${c.title} ${c.modules.map((m) => `${m.title} ${m.topic}`).join(" ")}`));
+  return want.every((w) => have.has(w));
+}
+
+/** A course built straight from a goal: its chosen topics, or the full course plus a revision. */
+export function goalCourse(g: GoalLike, level: CourseLevel): Course {
+  const subject = goalSubject(g);
+  const topics = (g.topics ?? []).filter((t) => t.selected).map((t) => clean(t.label, 50)).filter(Boolean).slice(0, 4);
+  const modules: Module[] =
+    topics.length >= 2
+      ? topics.map((t, i) => ({ id: `m${i + 1}`, title: t, yt: "", topic: `${subject} ${t}`.slice(0, 90), channel: "", length: "", about: `${t} in ${subject}.` }))
+      : [
+          { id: "m1", title: `${subject} full course`, yt: "", topic: `${subject} full course`.slice(0, 90), channel: "", length: "", about: `The most viewed complete course on ${subject}.` },
+          { id: "m2", title: `${subject} revision`, yt: "", topic: `${subject} one shot revision`.slice(0, 90), channel: "", length: "", about: `Revise the important topics of ${subject} in one go.` },
+        ];
+  return { id: `ai-${slug(subject)}`, title: subject, blurb: `Videos for your goal: ${subject}.`, why: "You set this as a goal.", areas: [], skills: [], level, modules, quiz: [] };
+}
+
+/** Puts a course for every goal first, adding one wherever the suggestions missed a goal. */
+export function withGoalCourses(courses: Course[], goals: GoalLike[] | undefined, level: CourseLevel): Course[] {
+  const first: Course[] = [];
+  let rest = [...courses];
+  for (const g of activeGoals(goals)) {
+    const hit = rest.find((c) => coversGoal(c, g));
+    if (hit) {
+      first.push(hit);
+      rest = rest.filter((c) => c !== hit);
+    } else {
+      const made = goalCourse(g, level);
+      if (!first.some((c) => c.id === made.id)) first.push({ ...made, id: rest.some((c) => c.id === made.id) ? `${made.id}-goal` : made.id });
+    }
+  }
+  return [...first, ...rest].slice(0, 8);
+}
 
 const label = (list: { value: string; label: string }[], v: string) => list.find((x) => x.value === v)?.label ?? v;
 
 /** Plain-text profile sent to the AI (no name, email or college). */
-export function profileForCourses(setup: SetupData | undefined) {
+export function profileForCourses(setup: SetupData | undefined, goals?: GoalLike[]) {
   if (!setup) return null;
+  const goalLines = activeGoals(goals).map((x) => {
+    const t = (x.topics ?? []).filter((y) => y.selected).map((y) => y.label).slice(0, 6);
+    return `- ${goalSubject(x)}${t.length ? ` (topics: ${t.join(", ")})` : ""}`;
+  });
   const a = setup.academic;
   const g = setup.goals;
   const k = setup.skills;
   const lines = [
+    goalLines.length ? `GOALS they set (most important):\n${goalLines.join("\n")}` : "",
     `Student type: ${a.type || "college"}`,
     a.type && a.type !== "college" ? `About: ${studentLine(a)}` : "",
     [a.course, a.field, a.specialization].filter(Boolean).length ? `Studying: ${[a.course, a.field, a.specialization].filter(Boolean).join(", ")}` : "",
@@ -37,10 +99,11 @@ export function profileForCourses(setup: SetupData | undefined) {
 }
 
 /** Changes when the parts of the profile that decide the courses change. */
-export function profileKey(setup: SetupData | undefined) {
+export function profileKey(setup: SetupData | undefined, goals?: GoalLike[]) {
   if (!setup) return "";
   const a = setup.academic;
-  return [a.course, a.field, a.specialization, a.year, setup.goals.primary, [...setup.goals.interests].sort().join("+"), [...setup.skills.familiar].sort().join("+"), setup.level ?? ""].join("|");
+  const g = activeGoals(goals).map((x) => goalSubject(x).toLowerCase()).sort().join("+");
+  return [a.course, a.field, a.specialization, a.year, setup.goals.primary, [...setup.goals.interests].sort().join("+"), [...setup.skills.familiar].sort().join("+"), setup.level ?? "", g].join("|");
 }
 
 const LEVELS: CourseLevel[] = ["beginner", "intermediate", "advanced"];
@@ -72,8 +135,12 @@ export function sanitizeCourses(raw: unknown, level: CourseLevel = "beginner"): 
 }
 
 /** Courses built from the student's interests and degree when the AI isn't available. */
-export function fallbackCourses(setup: SetupData | undefined): Course[] {
+export function fallbackCourses(setup: SetupData | undefined, goals?: GoalLike[]): Course[] {
   const level = toLevel(setup?.level, "beginner");
+  return withGoalCourses(interestCourses(setup, level), goals, level);
+}
+
+function interestCourses(setup: SetupData | undefined, level: CourseLevel): Course[] {
   const areas = [...new Set([...(setup?.goals.interests ?? []), ...areasFromAcademics(setup)])].filter((a) => a !== "other");
   const picked = (areas.length ? areas : ["tech"]).slice(0, 4);
   return picked

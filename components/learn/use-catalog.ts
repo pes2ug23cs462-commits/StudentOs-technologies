@@ -12,14 +12,14 @@ let inflight: Promise<unknown> | null = null;
 
 export function useCatalog() {
   const { state, learning, setCatalog } = useLearning();
-  const key = profileKey(state.setup);
+  const key = profileKey(state.setup, state.goals);
   const [busy, setBusy] = useState(false);
   const stale = !learning.catalog?.length || (!!key && learning.catalogFor !== key);
 
   const build = async () => {
     if (inflight) return;
     setBusy(true);
-    inflight = suggestCourses(state.setup)
+    inflight = suggestCourses(state.setup, state.goals)
       .then(({ courses }) => {
         // keep courses the student already started, even if they aren't suggested any more
         const started = (learning.catalog ?? []).filter((c) => learning.courses[c.id] && !courses.some((n) => n.id === c.id));

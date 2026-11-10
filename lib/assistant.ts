@@ -5,8 +5,8 @@
 
 import { auth } from "./firebase";
 import type { Attachment } from "./attachments";
-import type { Milestone, OnboardingAnswers, StudySession } from "./types";
-import { fallbackCourses, profileForCourses, sanitizeCourses, sanitizeQuiz } from "./catalog";
+import type { Goal, Milestone, OnboardingAnswers, StudySession } from "./types";
+import { fallbackCourses, profileForCourses, sanitizeCourses, sanitizeQuiz, withGoalCourses } from "./catalog";
 import { moduleKey, type Course, type Learning, type QuizQuestion } from "./learn";
 import type { SetupData } from "./setup";
 import { type PlanOutline, fallbackOutline, planShape, sanitizeOutline, scheduleOutline } from "./planner";
@@ -124,18 +124,18 @@ export async function makeRevisionQuiz(text: string, title: string, count = 5): 
 /* ---------- personalised courses ---------- */
 
 /** Courses made for this student from their profile; falls back to ones built from their interests. */
-export async function suggestCourses(setup: SetupData | undefined): Promise<{ courses: Course[]; fromAi: boolean }> {
-  const profile = profileForCourses(setup);
+export async function suggestCourses(setup: SetupData | undefined, goals?: Goal[]): Promise<{ courses: Course[]; fromAi: boolean }> {
+  const profile = profileForCourses(setup, goals);
   if (profile) {
     try {
       const j = await postAi<{ courses?: unknown }>("/api/courses", { profile, level: setup?.level ?? "beginner" });
       const courses = sanitizeCourses(j, (setup?.level as Course["level"]) ?? "beginner");
-      if (courses.length >= 3) return { courses, fromAi: true };
+      if (courses.length >= 3) return { courses: withGoalCourses(courses, goals, (setup?.level as Course["level"]) ?? "beginner"), fromAi: true };
     } catch {
       /* use the fallback below */
     }
   }
-  return { courses: fallbackCourses(setup), fromAi: false };
+  return { courses: fallbackCourses(setup, goals), fromAi: false };
 }
 
 /** Final-quiz questions for a personalised course, written from its modules and the videos watched. */
