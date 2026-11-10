@@ -10,8 +10,8 @@ import { useTopVideos } from "@/components/learn/use-top-videos";
 import { compact, hms } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
-export function VideoGrid({ q, min = 20, count = 4, empty }: { q: string; min?: number; count?: number; empty?: string }) {
-  const { loading, videos, available } = useTopVideos(q.toLowerCase().slice(0, 100), min);
+export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay }: { q: string; min?: number; kind?: "any" | "oneshot" | "lecture"; count?: number; empty?: string; onPlay?: (id: string) => void }) {
+  const { loading, videos, available } = useTopVideos(q.toLowerCase().slice(0, 100), min, kind);
   const [playing, setPlaying] = useState<string | null>(null);
   const current = videos.find((v) => v.id === playing);
   return (
@@ -33,7 +33,7 @@ export function VideoGrid({ q, min = 20, count = 4, empty }: { q: string; min?: 
         {loading
           ? Array.from({ length: count }, (_, i) => <div key={i} className="aspect-[16/11] animate-pulse rounded-xl bg-white/[0.05]" />)
           : videos.slice(0, count).map((v) => (
-              <button key={v.id} type="button" onClick={() => setPlaying(v.id)} className={cn("group overflow-hidden rounded-xl border text-left transition-colors", playing === v.id ? "border-accent/60" : "border-white/[0.08] hover:border-white/20")}>
+              <button key={v.id} type="button" onClick={() => { setPlaying(v.id); onPlay?.(v.id); }} className={cn("group overflow-hidden rounded-xl border text-left transition-colors", playing === v.id ? "border-accent/60" : "border-white/[0.08] hover:border-white/20")}>
                 <span className="relative block aspect-video bg-white/[0.05]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`} alt="" loading="lazy" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />

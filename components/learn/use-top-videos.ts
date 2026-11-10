@@ -7,8 +7,8 @@ type State = { loading: boolean; videos: YtVideo[]; available: boolean };
 const memo = new Map<string, { videos: YtVideo[]; available: boolean }>();
 
 /** Most viewed videos for a topic, from /api/videos (cached in memory and for the browser session). */
-export function useTopVideos(q: string | undefined, min = 20): State {
-  const key = q ? `${q}|${min}` : "";
+export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "oneshot" | "lecture" = "any"): State {
+  const key = q ? `${q}|${min}|${kind}` : "";
   const [state, setState] = useState<State>(() => {
     const hit = key ? memo.get(key) : undefined;
     return hit ? { loading: false, ...hit } : { loading: !!key, videos: [], available: true };
@@ -30,7 +30,7 @@ export function useTopVideos(q: string | undefined, min = 20): State {
     }
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
-    fetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}`)
+    fetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}${kind !== "any" ? `&kind=${kind}` : ""}`)
       .then((r) => (r.headers.get("content-type")?.includes("json") ? r.json() : { videos: [], reason: "no-api" }))
       .then((j: { videos?: YtVideo[]; reason?: string }) => {
         const v = { videos: j.videos ?? [], available: !j.reason };

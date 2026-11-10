@@ -13,6 +13,8 @@ import { Drawer } from "@/components/ui/drawer";
 import { ArrowRightIcon, ChatIcon, CheckIcon, PlayIcon, RefreshIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { VideoGrid } from "@/components/videos/video-grid";
+import { ExamProgress } from "@/components/exam/exam-progress";
+import { FileIcon, VideoIcon } from "@/components/ui/icons";
 import { AssistantError, postAi } from "@/lib/assistant";
 import {
   CHAPTERS,
@@ -20,6 +22,7 @@ import {
   STATUS_LABEL,
   chapterKey,
   sanitizeNotes,
+  levelOf,
   sanitizeQuestions,
   showExamPrep,
   statusOf,
@@ -47,21 +50,25 @@ export default function ExamPrepPage() {
   const exam = EXAMS.find((e) => e.id === prep.exam) ?? EXAMS[0];
   const [subject, setSubject] = useState<Subject>(exam.subjects[0]);
   const [open, setOpen] = useState<string | null>(null);
+  const [openTab, setOpenTab] = useState<Tab>("videos");
+  // links from the dashboard: /exam-prep?open=Physics/Atoms&tab=practice
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const o = p.get("open");
+    if (!o) return;
+    const [s] = o.split("/");
+    if ((Object.keys(CHAPTERS) as string[]).includes(s)) setSubject(s as Subject);
+    const t = p.get("tab");
+    setOpenTab(t === "notes" || t === "practice" || t === "explain" ? t : "videos");
+    setOpen(o);
+    window.history.replaceState(null, "", "/exam-prep");
+  }, []);
   const subj = exam.subjects.includes(subject) ? subject : exam.subjects[0];
   const scores = prep.scores ?? {};
   const patch = (p: Partial<ExamPrepState>) => actions.patch({ examPrep: { ...(state.examPrep ?? {}), ...p } });
 
   const chapters = CHAPTERS[subj];
   const practised = chapters.filter((c) => scores[chapterKey(subj, c)]).length;
-  const weak = useMemo(
-    () =>
-      exam.subjects
-        .flatMap((s) => CHAPTERS[s].map((c) => ({ s, c, sc: scores[chapterKey(s, c)] })))
-        .filter((x) => statusOf(x.sc) === "weak")
-        .sort((a, b) => a.sc!.last - b.sc!.last)
-        .slice(0, 5),
-    [exam, scores],
-  );
 
   if (!showExamPrep(state.setup)) {
     return (
@@ -127,9 +134,23 @@ export default function ExamPrepPage() {
                       {sc && (
                         <span className="mt-1 flex items-center gap-2">
                           <span className="h-1 w-24 overflow-hidden rounded-full bg-white/[0.07]">
-                            <span className={cn("block h-full rounded-full", st === "weak" ? "bg-rose-400" : st === "ok" ? "bg-amber-400" : "bg-emerald-400")} style={{ width: `${sc.last}%` }} />
+                            <span className={cn("block h-full rounded-full", st === "weak" ? "bg-rose-400" : st === "ok" ? "bg-amber-400" : "bg-emerald-400")} style={{ width: `${levelOf(sc)}%` }} />
                           </span>
-                          <span className="text-[11px] text-white/45 tabular-nums">last {sc.last}% · best {sc.best}%</span>
+                          <span className="text-[11px] text-white/45 tabular-nums">
+                            level {levelOf(sc)}% · best {sc.best}% · {sc.attempts} test{sc.attempts > 1 ? "s" : ""}
+                          </span>
+                        </span>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-white/40">
+                      {prep.seen?.[chapterKey(subj, c)]?.video && (
+                        <span title="Watched a video">
+                          <VideoIcon size={13} />
+                        </span>
+                      )}
+                      {prep.seen?.[chapterKey(subj, c)]?.notes && (
+                        <span title="Read the notes">
+                          <FileIcon size={13} />
                         </span>
                       )}
                     </span>
@@ -143,48 +164,22 @@ export default function ExamPrepPage() {
         </div>
 
         <div className="space-y-5">
-          <Card className="p-5">
-            <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
-              <TargetIcon size={15} className="text-rose-300" /> Weak chapters first
-            </p>
-            {weak.length === 0 ? (
-              <p className="mt-2 text-[12.5px] leading-relaxed text-white/50">Practise a few chapters. The ones you score under 60% in show up here, so you know what to revise first.</p>
-            ) : (
-              <ul className="mt-3 space-y-1.5">
-                {weak.map((w) => (
-                  <li key={chapterKey(w.s, w.c)}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSubject(w.s);
-                        setOpen(chapterKey(w.s, w.c));
-                      }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-white/[0.04]"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] text-white">{w.c}</span>
-                        <span className="text-[11px] text-white/45">{w.s}</span>
-                      </span>
-                      <span className="text-[12px] font-semibold text-rose-300 tabular-nums">{w.sc!.last}%</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <ExamProgress st={prep} />
         </div>
       </div>
 
-      {open && <ChapterDrawer key={open} chapterId={open} exam={exam.id} onClose={() => setOpen(null)} />}
+      {open && <ChapterDrawer key={open} chapterId={open} exam={exam.id} initialTab={openTab} onClose={() => { setOpen(null); setOpenTab("videos"); }} />}
     </div>
   );
 }
 
 /* ---------------- chapter: notes, practice, explain ---------------- */
 
-function ChapterDrawer({ chapterId, exam, onClose }: { chapterId: string; exam: ExamId; onClose: () => void }) {
+type Tab = "videos" | "notes" | "practice" | "explain";
+
+function ChapterDrawer({ chapterId, exam, initialTab = "videos", onClose }: { chapterId: string; exam: ExamId; initialTab?: Tab; onClose: () => void }) {
   const [subject, chapter] = chapterId.split(/\/(.+)/) as [Subject, string];
-  const [tab, setTab] = useState<"videos" | "notes" | "practice" | "explain">("videos");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const examLabel = EXAMS.find((e) => e.id === exam)!.label;
   return (
     <Drawer open onClose={onClose} eyebrow={`${examLabel} · ${subject}`} title={chapter} width="w-[600px]">
@@ -211,11 +206,23 @@ function ChapterDrawer({ chapterId, exam, onClose }: { chapterId: string; exam: 
 }
 
 /* NEET and KCET: one-shot videos. II PUC and CBSE: one shot or full lectures. */
+/** remembers that the student opened a chapter's video or notes */
+function useMarkSeen(subject: Subject, chapter: string) {
+  const { state, actions } = useStore();
+  return (what: "video" | "notes") => {
+    const key = chapterKey(subject, chapter);
+    if (state.examPrep?.seen?.[key]?.[what]) return;
+    actions.patch({ examPrep: { ...(state.examPrep ?? {}), seen: { ...(state.examPrep?.seen ?? {}), [key]: { ...(state.examPrep?.seen?.[key] ?? {}), [what]: Date.now() } } } });
+  };
+}
+
 function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter: string; exam: ExamId; onNext: () => void }) {
+  const markSeen = useMarkSeen(subject, chapter);
   const entrance = exam === "neet" || exam === "kcet";
   const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
   const board = exam === "puc" ? "2nd puc" : "class 12 cbse";
-  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : kind === "oneshot" ? `${chapter} one shot ${board} ${subject}` : `${chapter} class 12 ${subject} full chapter lecture ${exam === "puc" ? "2nd puc" : "ncert"}`;
+  const oneShot = entrance || kind === "oneshot";
+  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class 12 ${subject} lecture 1 detailed explanation`;
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -236,7 +243,7 @@ function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter:
         )}
       </div>
       <div className="mt-4">
-        <VideoGrid key={q} q={q} min={kind === "long" && !entrance ? 30 : 20} empty="No videos found for this chapter." />
+        <VideoGrid key={q} q={q} min={20} kind={oneShot ? "oneshot" : "lecture"} empty="No videos found for this chapter." onPlay={() => markSeen("video")} />
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.07] pt-4">
         <p className="text-[12.5px] text-white/55">Watched it? Revise with short notes, then take the test.</p>
@@ -252,6 +259,7 @@ function Notes({ subject, chapter, exam, onPractice }: { subject: Subject; chapt
   const { state, actions } = useStore();
   const key = chapterKey(subject, chapter);
   const saved = state.examPrep?.notes?.[key];
+  const markSeen = useMarkSeen(subject, chapter);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const load = async () => {
@@ -270,6 +278,9 @@ function Notes({ subject, chapter, exam, onPractice }: { subject: Subject; chapt
   useEffect(() => {
     if (!saved) void load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (saved) markSeen("notes");
+  }, [!!saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (busy && !saved) return <Loading text="Writing short notes for this chapter…" />;
   if (!saved) return <ErrorBox text={err || "Couldn’t make notes."} onRetry={load} />;
@@ -356,7 +367,7 @@ function Practice({ subject, chapter, exam }: { subject: Subject; chapter: strin
     const right = qs!.filter((q, k) => answers[k] === q.answer).length;
     const pct = Math.round((right / qs!.length) * 100);
     const prev = state.examPrep?.scores?.[key];
-    actions.patch({ examPrep: { ...(state.examPrep ?? {}), scores: { ...(state.examPrep?.scores ?? {}), [key]: { best: Math.max(pct, prev?.best ?? 0), last: pct, attempts: (prev?.attempts ?? 0) + 1, at: Date.now() } } } });
+    actions.patch({ examPrep: { ...(state.examPrep ?? {}), scores: { ...(state.examPrep?.scores ?? {}), [key]: { best: Math.max(pct, prev?.best ?? 0), last: pct, attempts: (prev?.attempts ?? 0) + 1, at: Date.now(), recent: [...(prev?.recent ?? (prev ? [prev.last] : [])), pct].slice(-3) } } } });
     setDone(true);
   };
 

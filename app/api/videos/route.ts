@@ -16,7 +16,10 @@ export async function GET(req: Request) {
   const minMinutes = Math.min(Math.max(Number(url.searchParams.get("min") ?? 20) || 0, 0), 600);
   if (!q || q.length > 100) return NextResponse.json({ error: "bad query", videos: [] }, { status: 400 });
   try {
-    return NextResponse.json({ videos: await searchVideos(q, minMinutes) });
+    const k = url.searchParams.get("kind");
+    const kind = k === "oneshot" || k === "lecture" ? k : "any";
+    // "any" keeps the old two-argument call so cached searches are reused
+    return NextResponse.json({ videos: await (kind === "any" ? searchVideos(q, minMinutes) : searchVideos(q, minMinutes, kind)) });
   } catch (e) {
     if (e instanceof YtError) return NextResponse.json({ videos: [], reason: e.reason }, { status: e.status });
     return NextResponse.json({ videos: [], reason: "network" }, { status: 502 });

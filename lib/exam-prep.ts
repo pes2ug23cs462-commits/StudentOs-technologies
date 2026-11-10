@@ -99,6 +99,8 @@ export interface ChapterScore {
   last: number;
   attempts: number;
   at: number;
+  /** the last few test scores, newest last (status uses their average) */
+  recent?: number[];
 }
 export interface ExamPrepState {
   exam?: ExamId;
@@ -106,14 +108,66 @@ export interface ExamPrepState {
   notes?: Record<string, ChapterNotes>;
   /** days with at least one finished focus session (YYYY-MM-DD) and minutes per day */
   focus?: Record<string, number>;
+  /** what the student has opened per chapter (ms) */
+  seen?: Record<string, { video?: number; notes?: number }>;
 }
 
 export type Status = "new" | "weak" | "ok" | "strong";
+/** A chapter's level: the average of its last (up to 3) test scores, so one lucky or bad test doesn't swing it. */
+export function levelOf(s: ChapterScore | undefined) {
+  if (!s) return null;
+  const r = s.recent?.length ? s.recent : [s.last];
+  return Math.round(r.reduce((a, b) => a + b, 0) / r.length);
+}
 export function statusOf(s: ChapterScore | undefined): Status {
-  if (!s) return "new";
-  if (s.last < 60) return "weak";
-  if (s.last < 80) return "ok";
+  const v = levelOf(s);
+  if (v == null) return "new";
+  if (v < 60) return "weak";
+  if (v < 80) return "ok";
   return "strong";
+}
+
+/** How ready a subject is: average level over all its chapters (untested = 0). */
+export function readiness(subject: Subject, scores: Record<string, ChapterScore> | undefined) {
+  const list = CHAPTERS[subject];
+  const levels = list.map((c) => levelOf(scores?.[chapterKey(subject, c)]));
+  const tested = levels.filter((v) => v != null).length;
+  return {
+    pct: Math.round(levels.reduce<number>((a, v) => a + (v ?? 0), 0) / list.length),
+    tested,
+    total: list.length,
+    weak: levels.filter((v) => v != null && v < 60).length,
+    strong: levels.filter((v) => v != null && v >= 80).length,
+  };
+}
+
+export interface NextUp {
+  subject: Subject;
+  chapter: string;
+  why: string;
+  tab: "videos" | "notes" | "practice";
+}
+/** Up to `n` things to do next: weakest chapters to revise, chapters studied but not tested, then the next new chapter of each subject. */
+export function nextUp(exam: ExamId, st: ExamPrepState, n = 3): NextUp[] {
+  const subjects = EXAMS.find((e) => e.id === exam)?.subjects ?? [];
+  const out: NextUp[] = [];
+  const key = (s: Subject, c: string) => chapterKey(s, c);
+  const weak = subjects
+    .flatMap((s) => CHAPTERS[s].map((c) => ({ s, c, v: levelOf(st.scores?.[key(s, c)]) })))
+    .filter((x) => x.v != null && x.v < 60)
+    .sort((a, b) => a.v! - b.v!);
+  for (const w of weak) out.push({ subject: w.s, chapter: w.c, why: `Weak (${w.v}%): watch the one-shot again, then retake the test`, tab: "videos" });
+  for (const s of subjects)
+    for (const c of CHAPTERS[s]) {
+      const seen = st.seen?.[key(s, c)];
+      if (seen && !st.scores?.[key(s, c)]) out.push({ subject: s, chapter: c, why: "You studied this. Take the test to check", tab: "practice" });
+    }
+  for (const s of subjects) {
+    const c = CHAPTERS[s].find((x) => !st.scores?.[key(s, x)] && !st.seen?.[key(s, x)]);
+    if (c) out.push({ subject: s, chapter: c, why: "Next new chapter in " + s, tab: "videos" });
+  }
+  const seenKeys = new Set<string>();
+  return out.filter((x) => (seenKeys.has(key(x.subject, x.chapter)) ? false : (seenKeys.add(key(x.subject, x.chapter)), true))).slice(0, n);
 }
 export const STATUS_LABEL: Record<Status, string> = { new: "Not started", weak: "Weak", ok: "Getting there", strong: "Strong" };
 

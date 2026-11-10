@@ -60,13 +60,18 @@ async function details(ids: string[]): Promise<YtVideo[]> {
   return (j.items ?? []).filter(playable).map(toVideo);
 }
 
-/** Most viewed, embeddable videos for a topic (100 quota units, so it is cached). */
-async function search(q: string, minMinutes: number): Promise<YtVideo[]> {
+export type VideoKind = "any" | "oneshot" | "lecture";
+const ONE_SHOT = /one[\s-]*shot|1[\s-]*shot|oneshot|in one video|complete chapter in/i;
+
+/** Most viewed, embeddable videos for a topic (100 quota units, so it is cached).
+    kind "oneshot": only videos whose title says one shot; "lecture": chapter
+    lectures ranked by relevance, one-shot videos left out. */
+async function search(q: string, minMinutes: number, kind: VideoKind = "any"): Promise<YtVideo[]> {
   const sj = await get<{ items?: { id?: { videoId?: string } }[] }>("search", {
     part: "snippet",
     q,
     type: "video",
-    order: "viewCount",
+    order: kind === "lecture" ? "relevance" : "viewCount",
     videoEmbeddable: "true",
     videoSyndicated: "true",
     videoDuration: minMinutes >= 20 ? "long" : "any",
@@ -75,7 +80,15 @@ async function search(q: string, minMinutes: number): Promise<YtVideo[]> {
     maxResults: "20",
   });
   const ids = (sj.items ?? []).map((i) => i.id?.videoId).filter(Boolean) as string[];
-  const videos = (await details(ids)).filter((v) => v.seconds >= minMinutes * 60);
+  let videos = (await details(ids)).filter((v) => v.seconds >= minMinutes * 60);
+  if (kind === "oneshot") {
+    const shots = videos.filter((v) => ONE_SHOT.test(v.title));
+    if (shots.length >= 2) videos = shots;
+  } else if (kind === "lecture") {
+    const lectures = videos.filter((v) => !ONE_SHOT.test(v.title));
+    if (lectures.length >= 2) videos = lectures;
+    return videos.slice(0, 8); // keep YouTube's relevance order for lectures
+  }
   return rank(videos).slice(0, 8);
 }
 

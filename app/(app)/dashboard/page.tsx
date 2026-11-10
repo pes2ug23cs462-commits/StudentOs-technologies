@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/icons";
 import { Card, Checkbox, EmptyState, Pill, ProgressBar } from "@/components/ui/primitives";
 import { Countdown } from "@/components/ui/countdown";
+import { ExamProgress } from "@/components/exam/exam-progress";
+import { showExamPrep } from "@/lib/exam-prep";
 import { countable, nextSession, planWeek, sessionsInRange, weekStats, whenLabel } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
@@ -70,6 +72,12 @@ function EmptyDashboard({ first }: { first: string }) {
           Resume setup
         </ButtonLink>
       </Card>
+
+      {showExamPrep(state.setup) && (
+        <div className="mt-4 max-w-[560px]">
+          <ExamProgress st={state.examPrep ?? {}} compact />
+        </div>
+      )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <EmptyState icon={<CalendarIcon size={15} />} title="No sessions planned yet">
@@ -159,6 +167,12 @@ function FullDashboard({ first }: { first: string }) {
         <QuickAction href="/schedule" icon={<CalendarIcon size={14} />} title="Edit Schedule" sub="Move or add sessions" />
         <QuickAction href={next ? `/session/${next.id}` : "/study-plan"} icon={<PlayIcon size={11} />} title="Resume Study Session" sub={next ? `Week ${next.week} · ${next.short}` : "Nothing scheduled"} />
       </div>
+
+      {showExamPrep(state.setup) && (
+        <div className="mt-4">
+          <ExamProgress st={state.examPrep ?? {}} compact />
+        </div>
+      )}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_1fr]">
         {/* Next session */}
