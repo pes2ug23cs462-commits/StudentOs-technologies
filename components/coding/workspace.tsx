@@ -13,7 +13,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import { CodeEditor, type EditKind, type EditorHandle } from "@/components/coding/code-editor";
 import { Button } from "@/components/ui/button";
 import { LogoMark } from "@/components/ui/primitives";
-import { BookmarkIcon, BotIcon, BulbIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CodeIcon, FileIcon, FlameIcon, MenuIcon, PlayIcon, RefreshIcon, SendIcon, ShuffleIcon, SparkleIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, BookmarkIcon, BotIcon, BulbIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CodeIcon, FileIcon, FlameIcon, MenuIcon, PlayIcon, RefreshIcon, SendIcon, ShuffleIcon, SparkleIcon, XIcon } from "@/components/ui/icons";
 import { AssistantError } from "@/lib/assistant";
 import { askCodeHelp, checkCode, snippetLines, trackedShare, type CheckReply, type HelpMode } from "@/lib/coding/ai-usage";
 import { findProblem, useMyProblems } from "@/lib/coding/personal";
@@ -284,6 +284,10 @@ export function Workspace({ id }: { id: string }) {
     <div className="flex min-h-[100dvh] flex-col bg-ink lg:h-[100dvh]">
       {/* top bar */}
       <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-panel px-2 sm:px-3">
+        <Link href="/code" aria-label="Back to Coding problems" title="Back to problems" className="group flex h-8 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-white/70 hover:bg-white/[0.06] hover:text-white">
+          <ArrowLeftIcon size={15} className="transition-transform group-hover:-translate-x-0.5" /> <span className="hidden md:inline">Back</span>
+        </Link>
+        <span aria-hidden className="mx-1 h-5 w-px bg-white/10" />
         <Link href="/dashboard" aria-label="StudentOS dashboard" className="mr-1 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/[0.06]">
           <LogoMark size={22} />
         </Link>
