@@ -5,18 +5,31 @@
 
 import { useState } from "react";
 import { YouTubePlayer } from "@/components/videos/player";
+import { ModulePlayer } from "@/components/videos/module-player";
 import { EyeIcon, PlayIcon, XIcon } from "@/components/ui/icons";
 import { useTopVideos } from "@/components/learn/use-top-videos";
 import { compact, hms } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
-export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay }: { q: string; min?: number; kind?: "any" | "oneshot" | "lecture"; count?: number; empty?: string; onPlay?: (id: string) => void }) {
+export interface VideoProgress {
+  done: (videoId: string) => number[];
+  notes: (videoId: string) => string;
+  onDone: (videoId: string, module: number) => void;
+  onNotes: (videoId: string, text: string) => void;
+}
+
+export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay, modules }: { q: string; min?: number; kind?: "any" | "oneshot" | "lecture"; count?: number; empty?: string; onPlay?: (id: string) => void; /** split videos into modules with notes */ modules?: VideoProgress }) {
   const { loading, videos, available } = useTopVideos(q.toLowerCase().slice(0, 100), min, kind);
   const [playing, setPlaying] = useState<string | null>(null);
   const current = videos.find((v) => v.id === playing);
   return (
     <div>
-      {current && (
+      {current && modules && (
+        <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/[0.015] p-3.5">
+          <ModulePlayer key={current.id} video={current} done={modules.done(current.id)} notes={modules.notes(current.id)} onDone={(k) => modules.onDone(current.id, k)} onNotes={(t) => modules.onNotes(current.id, t)} onClose={() => setPlaying(null)} />
+        </div>
+      )}
+      {current && !modules && (
         <div className="mb-4">
           <div className="relative aspect-video overflow-hidden rounded-xl bg-[#000000]">
             <YouTubePlayer key={current.id} videoKey={`v:${current.id}`} />

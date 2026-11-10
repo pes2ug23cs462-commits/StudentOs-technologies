@@ -108,6 +108,8 @@ export interface ExamPrepState {
   notes?: Record<string, ChapterNotes>;
   /** days with at least one finished focus session (YYYY-MM-DD) and minutes per day */
   focus?: Record<string, number>;
+  /** per video: modules finished and the student's notes */
+  videos?: Record<string, { done: number[]; notes: string }>;
   /** what the student has opened per chapter (ms) */
   seen?: Record<string, { video?: number; notes?: number }>;
 }

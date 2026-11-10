@@ -218,6 +218,10 @@ function useMarkSeen(subject: Subject, chapter: string) {
 
 function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter: string; exam: ExamId; onNext: () => void }) {
   const markSeen = useMarkSeen(subject, chapter);
+  const { state, actions } = useStore();
+  const vids = state.examPrep?.videos ?? {};
+  const saveVid = (id: string, patch: Partial<{ done: number[]; notes: string }>) =>
+    actions.patch({ examPrep: { ...(state.examPrep ?? {}), videos: { ...(state.examPrep?.videos ?? {}), [id]: { done: [], notes: "", ...(state.examPrep?.videos?.[id] ?? {}), ...patch } } } });
   const entrance = exam === "neet" || exam === "kcet";
   const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
   const board = exam === "puc" ? "2nd puc" : "class 12 cbse";
@@ -243,7 +247,20 @@ function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter:
         )}
       </div>
       <div className="mt-4">
-        <VideoGrid key={q} q={q} min={20} kind={oneShot ? "oneshot" : "lecture"} empty="No videos found for this chapter." onPlay={() => markSeen("video")} />
+        <VideoGrid
+          key={q}
+          q={q}
+          min={20}
+          kind={oneShot ? "oneshot" : "lecture"}
+          empty="No videos found for this chapter."
+          onPlay={() => markSeen("video")}
+          modules={{
+            done: (id) => vids[id]?.done ?? [],
+            notes: (id) => vids[id]?.notes ?? "",
+            onDone: (id, k) => saveVid(id, { done: [...new Set([...(vids[id]?.done ?? []), k])] }),
+            onNotes: (id, text) => saveVid(id, { notes: text.slice(0, 20000) }),
+          }}
+        />
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/[0.07] pt-4">
         <p className="text-[12.5px] text-white/55">Watched it? Revise with short notes, then take the test.</p>

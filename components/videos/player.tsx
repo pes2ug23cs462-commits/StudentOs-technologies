@@ -59,7 +59,12 @@ export function YouTubePlayer({
   onProgress,
   onEnded,
   onUntracked,
+  fs = true,
+  autoplay = false,
 }: {
+  /** false: hide YouTube's own full-screen button (the page offers its own) */
+  fs?: boolean;
+  autoplay?: boolean;
   videoKey: string;
   start?: number;
   /** stop here (seconds); 0 = play to the end */
@@ -125,6 +130,8 @@ export function YouTubePlayer({
           playerVars: {
             rel: 0,
             playsinline: 1,
+            ...(fs ? {} : { fs: 0 }),
+            ...(autoplay ? { autoplay: 1 } : {}),
             ...(video ? { start: Math.floor(start), ...(end > 0 ? { end: Math.floor(end) } : {}) } : { listType: "playlist", list }),
           },
           events: {
