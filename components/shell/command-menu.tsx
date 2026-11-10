@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRightIcon, SearchIcon, SparkleIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
+import { showExamPrep } from "@/lib/exam-prep";
+import { useStore } from "@/lib/store";
 import { NAV_ALL, QUICK_LINKS } from "./nav";
 
 const EVENT = "studentos:command-menu";
@@ -15,6 +17,8 @@ type Item = { key: string; label: string; hint: string; go: () => void; ask?: bo
 
 export function CommandMenu() {
   const router = useRouter();
+  const { state } = useStore();
+  const examPrep = showExamPrep(state.setup);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);
@@ -54,14 +58,14 @@ export function CommandMenu() {
       router.push(href);
     };
     const pages: Item[] = [
-      ...NAV_ALL.map((n) => ({ key: n.href, label: n.label, hint: "Page", go: go(n.href) })),
+      ...NAV_ALL.filter((n) => n.href !== "/exam-prep" || examPrep).map((n) => ({ key: n.href, label: n.label, hint: "Page", go: go(n.href) })),
       ...QUICK_LINKS.map((l) => ({ key: l.href, label: l.label, hint: l.hint, go: go(l.href) })),
     ];
     const t = q.trim().toLowerCase();
     const hits = t ? pages.filter((p) => `${p.label} ${p.hint}`.toLowerCase().includes(t)) : pages;
     const ask: Item[] = t ? [{ key: "ask", label: `Ask StudentOS: “${q.trim()}”`, hint: "AI Assistant", ask: true, go: go(`/assistant?ask=${encodeURIComponent(q.trim())}`) }] : [];
     return hits.length ? [...hits, ...ask] : ask;
-  }, [q, router]);
+  }, [q, router, examPrep]);
 
   if (!open) return null;
   const pick = Math.min(sel, Math.max(0, items.length - 1));

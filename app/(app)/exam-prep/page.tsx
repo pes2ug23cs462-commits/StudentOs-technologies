@@ -21,6 +21,7 @@ import {
   chapterKey,
   sanitizeNotes,
   sanitizeQuestions,
+  showExamPrep,
   statusOf,
   type ChapterNotes,
   type ExamId,
@@ -41,6 +42,7 @@ const TONE: Record<Status, string> = {
 
 export default function ExamPrepPage() {
   const { state, actions } = useStore();
+  const router = useRouter();
   const prep: ExamPrepState = state.examPrep ?? {};
   const exam = EXAMS.find((e) => e.id === prep.exam) ?? EXAMS[0];
   const [subject, setSubject] = useState<Subject>(exam.subjects[0]);
@@ -60,6 +62,18 @@ export default function ExamPrepPage() {
         .slice(0, 5),
     [exam, scores],
   );
+
+  if (!showExamPrep(state.setup)) {
+    return (
+      <div className="px-6 py-24 text-center">
+        <p className="text-[15px] font-semibold text-white">Exam Prep is for school and PU students</p>
+        <p className="mt-1 text-[13px] text-white/55">It covers Class 12 board exams, NEET and KCET.</p>
+        <Button className="mt-4" onClick={() => router.push("/learn")}>
+          Go to Learning
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-7 lg:px-8">

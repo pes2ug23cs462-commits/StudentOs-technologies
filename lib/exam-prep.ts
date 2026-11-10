@@ -3,6 +3,11 @@
    chapters first, and a focus timer. Chapters follow the current NCERT
    Class 12 books, which II PUC (Karnataka), CBSE, NEET and KCET use. */
 
+import type { SetupData } from "./setup";
+
+/** Exam Prep is only for school students (Class 11, 12 / PU and below). */
+export const showExamPrep = (setup: SetupData | undefined) => setup?.academic.type === "school";
+
 export type ExamId = "puc" | "cbse" | "neet" | "kcet";
 export type Subject = "Physics" | "Chemistry" | "Biology" | "Maths";
 

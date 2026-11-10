@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logOut } from "@/lib/auth";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
+import { showExamPrep } from "@/lib/exam-prep";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, isActive as activeFor } from "./nav";
@@ -105,6 +106,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { premium } = usePremium();
   const isActive = (match: string[]) => activeFor(pathname, match);
+  const { state } = useStore();
+  const examPrep = showExamPrep(state.setup);
 
   return (
     <aside className="flex h-full w-[228px] flex-col overflow-y-auto border-r border-white/[0.06] bg-panel px-3 pt-4 pb-3">
@@ -133,7 +136,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         {NAV_GROUPS.map((g, i) => (
           <div key={i} className="flex flex-col gap-px">
             {g.title && <p className="mb-1 px-2.5 text-[10.5px] font-medium tracking-wide text-white/40">{g.title}</p>}
-            {g.items.map((n) => (
+            {g.items.filter((n) => n.href !== "/exam-prep" || examPrep).map((n) => (
               <NavItem key={n.href} href={n.href} label={n.label} Icon={n.Icon} badge={n.badge} active={isActive(n.match)} onNavigate={onNavigate} />
             ))}
           </div>
