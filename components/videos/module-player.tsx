@@ -8,8 +8,10 @@
    button is hidden). */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { YouTubePlayer } from "@/components/videos/player";
 import { CheckIcon, DownloadIcon, MaximizeIcon, XIcon } from "@/components/ui/icons";
+import { FloatingNotes } from "./floating-notes";
 import type { YtVideo } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +74,7 @@ export function ModulePlayer({
   const [auto, setAuto] = useState(false);
   const [text, setText] = useState(notes);
   const [full, setFull] = useState(false);
+  const [floating, setFloating] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const m = mods[i];
 
@@ -115,6 +118,13 @@ export function ModulePlayer({
 
   return (
     <div ref={box} className={cn("mp-box", full && "flex h-full flex-col overflow-auto bg-ink p-5")}>
+      {floating &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <FloatingNotes title={video.title} value={text} onChange={setText} onDownload={download} onDock={() => setFloating(false)} placeholder={`Write while you watch… (Module ${i + 1}: ${m.title})`} />,
+          // in full screen only the full-screen element is visible, so the window lives inside it
+          full && box.current ? box.current : document.body,
+        )}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold text-white">{video.title}</p>
@@ -180,25 +190,39 @@ export function ModulePlayer({
               ))}
             </ol>
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between gap-2">
-              <label htmlFor={`mp-notes-${video.id}`} className="text-[12px] font-semibold text-white/70">
-                My notes
-              </label>
-              <button type="button" onClick={download} disabled={!text.trim()} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium text-accent hover:bg-white/[0.05] disabled:text-white/30">
-                <DownloadIcon size={12} /> Download
+          {floating ? (
+            <div className="flex flex-col items-start justify-center rounded-xl border border-dashed border-white/12 p-4 text-[12.5px] text-white/50">
+              Your notes are in a floating window. Drag it anywhere.
+              <button type="button" onClick={() => setFloating(false)} className="mt-2 font-medium text-accent hover:underline">
+                Put it back here
               </button>
             </div>
-            <textarea
-              id={`mp-notes-${video.id}`}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={full ? 12 : 7}
-              placeholder={`Write while you watch… (Module ${i + 1}: ${m.title})`}
-              className="mt-1.5 w-full flex-1 resize-none rounded-xl border border-white/10 bg-field px-3 py-2.5 text-[13px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-accent"
-            />
-            <p className="mt-1 text-[10.5px] text-white/35">Saved automatically on your account.</p>
-          </div>
+          ) : (
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor={`mp-notes-${video.id}`} className="text-[12px] font-semibold text-white/70">
+                  My notes
+                </label>
+                <span className="flex items-center gap-1">
+                  <button type="button" onClick={() => setFloating(true)} title="Open notes in a window you can drag anywhere" className="rounded-md px-2 py-1 text-[12px] font-medium text-white/60 hover:bg-white/[0.05] hover:text-white">
+                    ⧉ Pop out
+                  </button>
+                  <button type="button" onClick={download} disabled={!text.trim()} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium text-accent hover:bg-white/[0.05] disabled:text-white/30">
+                    <DownloadIcon size={12} /> Download
+                  </button>
+                </span>
+              </div>
+              <textarea
+                id={`mp-notes-${video.id}`}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={full ? 12 : 7}
+                placeholder={`Write while you watch… (Module ${i + 1}: ${m.title})`}
+                className="mt-1.5 w-full flex-1 resize-none rounded-xl border border-white/10 bg-field px-3 py-2.5 text-[13px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-accent"
+              />
+              <p className="mt-1 text-[10.5px] text-white/35">Saved automatically on your account.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
