@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
 import { Input, Label } from "@/components/ui/primitives";
-import { BRANCHES, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
+import { BRANCHES, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,8 @@ function ProfileForm({ initial, onSave, onCancel }: { initial?: PlacementProfile
   );
 }
 
-function Steps({ a, d }: { a: Application; d: Drive }) {
+function Steps({ a: a0, d }: { a: Application; d: Drive }) {
+  const a = effective(a0);
   const stages = ["Applied", ...d.rounds, "Selected"];
   const at = a.status === "applied" ? 0 : a.status === "selected" ? stages.length - 1 : a.round + 1;
   return (
@@ -244,7 +245,7 @@ export function CampusDrives() {
                     <p className="text-[15.5px] font-semibold text-white">{d.company} · {d.role}</p>
                     <p className="text-[12.5px] text-white/55">{d.ctc} · applied {new Date(a.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>
                   </div>
-                  <span className={cn("rounded-md px-2.5 py-1 text-[12px] font-medium", a.status === "selected" ? "bg-emerald-400/15 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/50" : "bg-violet-400/15 text-violet-200")}>{stageLabel(a, d)}</span>
+                  <span className={cn("rounded-md px-2.5 py-1 text-[12px] font-medium", a.status === "selected" ? "bg-emerald-400/15 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/50" : effective(a).status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, d)}</span>
                 </div>
                 <Steps a={a} d={d} />
 

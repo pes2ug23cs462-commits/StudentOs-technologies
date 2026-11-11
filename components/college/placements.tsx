@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
-import { BRANCHES, closed, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
+import { BRANCHES, effective, closed, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Tilt } from "./skyline-3d";
@@ -259,8 +259,9 @@ function DriveForm({ initial, onSave, onCancel }: { initial: Drive; onSave: (d: 
 
 type Filter = "all" | "applied" | `r${number}` | "selected" | "rejected";
 
-function DriveDetail({ college, drive, apps, sample, canEdit, back, edit, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; canEdit: boolean; back: () => void; edit: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
+function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edit, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; canEdit: boolean; back: () => void; edit: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
   const { actions } = useStore();
+  const apps = useMemo(() => rawApps.map(effective), [rawApps]);
   const [filter, setFilter] = useState<Filter>("all");
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<null | "link" | "offer">(null);
@@ -297,7 +298,8 @@ function DriveDetail({ college, drive, apps, sample, canEdit, back, edit, setDri
   const sendLink = () => {
     if (!link.title.trim() || !/^https?:\/\//.test(link.url.trim())) return actions.toast("Add a title and a link starting with https://");
     setModal(null);
-    void update((a) => ({ ...a, links: [...a.links, { title: link.title.trim(), url: link.url.trim(), when: link.when.trim(), at: Date.now() }] }), `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`);
+    // sending a test / interview link to a new applicant means they are shortlisted for the first round
+    void update((a) => ({ ...a, ...(a.status === "applied" ? { status: "in-process" as const, round: 0 } : {}), links: [...a.links, { title: link.title.trim(), url: link.url.trim(), when: link.when.trim(), at: Date.now() }] }), `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`);
     setLink({ title: "", url: "", when: "" });
   };
   const addOffer = () => {

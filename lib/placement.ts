@@ -145,8 +145,12 @@ export function newApplication(state: AppState, uid: string, p: PlacementProfile
   };
 }
 
+/** Older applications that got a link while still "applied" count as in the first round. */
+export const effective = (a: Application): Application => (a.status === "applied" && a.links.length ? { ...a, status: "in-process", round: 0 } : a);
+
 /** Where a student is: "Applied", "Online test", "Selected"… */
-export function stageLabel(a: Application, d: Drive) {
+export function stageLabel(a0: Application, d: Drive) {
+  const a = effective(a0);
   if (a.status === "selected") return a.offer ? (a.decision === "accepted" ? "Offer accepted" : a.decision === "declined" ? "Offer declined" : "Offer received") : "Selected";
   if (a.status === "rejected") return `Not selected${a.round > 0 || a.status === "rejected" ? ` · ${d.rounds[a.round] ?? ""}` : ""}`.replace(/ · $/, "");
   if (a.status === "applied") return "Applied";
