@@ -9,26 +9,44 @@ import { cn } from "@/lib/utils";
 export const delay = (s: number) => ({ "--d": `${s}s` }) as CSSProperties;
 export const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Adds data-shown to every .reveal element inside `root` once it scrolls into view. */
+/** Adds data-shown to every .reveal element inside `root` once it scrolls into view,
+ *  including ones that appear later (e.g. reviews loaded from the database). */
 export function useReveal(root: RefObject<HTMLElement | null>) {
   useEffect(() => {
-    const els = root.current?.querySelectorAll<HTMLElement>(".reveal") ?? [];
+    const el = root.current;
+    if (!el) return;
+    const show = (e: Element) => e.setAttribute("data-shown", "");
+    const pending = () => el.querySelectorAll<HTMLElement>(".reveal:not([data-shown])");
     if (reducedMotion() || !("IntersectionObserver" in window)) {
-      els.forEach((e) => e.setAttribute("data-shown", ""));
-      return;
+      pending().forEach(show);
+      const mo = new MutationObserver(() => pending().forEach(show));
+      mo.observe(el, { childList: true, subtree: true });
+      return () => mo.disconnect();
     }
+    const seen = new WeakSet<Element>();
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((en) => {
           if (en.isIntersecting) {
-            en.target.setAttribute("data-shown", "");
+            show(en.target);
             io.unobserve(en.target);
           }
         }),
       { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
     );
-    els.forEach((e) => io.observe(e));
-    return () => io.disconnect();
+    const watch = () =>
+      pending().forEach((e) => {
+        if (seen.has(e)) return;
+        seen.add(e);
+        io.observe(e);
+      });
+    watch();
+    const mo = new MutationObserver(watch);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+    };
   }, [root]);
 }
 
