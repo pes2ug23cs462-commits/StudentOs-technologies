@@ -1,20 +1,25 @@
-/* Exam Prep for school / PU students (1st & 2nd PUC, CBSE 11 & 12, NEET, KCET):
+/* Exam Prep for school / PU students (SSLC, 1st & 2nd PUC, CBSE 10–12, NEET, KCET):
    chapter lists, short notes and exam-style practice per chapter, weak
    chapters first, and a focus timer. Chapters follow the current NCERT
-   Class 11 and 12 books, which PUC (Karnataka), CBSE, NEET and KCET use. */
+   Class 10, 11 and 12 books. */
 
 import type { SetupData } from "./setup";
 
-/** Class 11 students start on 1st PUC / Class 11 chapters, everyone else on Class 12. */
-export const defaultGrade = (setup: SetupData | undefined): Grade => (/\b11\b/.test(setup?.academic.year ?? "") ? 11 : 12);
+/** Class 8–10 start on Class 10, Class 11 on 1st PUC / Class 11, everyone else on Class 12. */
+export function defaultGrade(setup: SetupData | undefined): Grade {
+  const y = setup?.academic.year ?? "";
+  if (/\b(8|9|10)\b/.test(y)) return 10;
+  return /\b11\b/.test(y) ? 11 : 12;
+}
 /** Exam Prep is only for school students (Class 11, 12 / PU and below). */
 export const showExamPrep = (setup: SetupData | undefined) => setup?.academic.type === "school";
 
-export type ExamId = "puc" | "cbse" | "neet" | "kcet";
-export type Grade = 11 | 12;
-export type Subject = "Physics" | "Chemistry" | "Biology" | "Maths";
+export type ExamId = "sslc" | "puc" | "cbse" | "neet" | "kcet";
+export type Grade = 10 | 11 | 12;
+export type Subject = "Physics" | "Chemistry" | "Biology" | "Maths" | "Science" | "Social Science";
 
 export const EXAMS: { id: ExamId; label: string; sub: string; subjects: Subject[] }[] = [
+  { id: "sslc", label: "SSLC", sub: "Karnataka Class 10", subjects: ["Maths", "Science", "Social Science"] },
   { id: "puc", label: "PUC", sub: "Karnataka board", subjects: ["Physics", "Chemistry", "Maths", "Biology"] },
   { id: "cbse", label: "CBSE", sub: "Board exam", subjects: ["Physics", "Chemistry", "Maths", "Biology"] },
   { id: "neet", label: "NEET", sub: "Medical entrance", subjects: ["Physics", "Chemistry", "Biology"] },
@@ -22,7 +27,7 @@ export const EXAMS: { id: ExamId; label: string; sub: string; subjects: Subject[
 ];
 
 /** Class 11 / 1st PUC (current NCERT books). */
-export const CHAPTERS_11: Record<Subject, string[]> = {
+export const CHAPTERS_11: Partial<Record<Subject, string[]>> = {
   Physics: [
     "Units and Measurements",
     "Motion in a Straight Line",
@@ -90,7 +95,7 @@ export const CHAPTERS_11: Record<Subject, string[]> = {
 };
 
 /** Class 12 / 2nd PUC (current NCERT books). */
-export const CHAPTERS: Record<Subject, string[]> = {
+export const CHAPTERS: Partial<Record<Subject, string[]>> = {
   Physics: [
     "Electric Charges and Fields",
     "Electrostatic Potential and Capacitance",
@@ -151,17 +156,84 @@ export const CHAPTERS: Record<Subject, string[]> = {
   ],
 };
 
-export const chaptersFor = (grade: Grade, subject: Subject) => (grade === 11 ? CHAPTERS_11 : CHAPTERS)[subject];
+/** Class 10 (current NCERT books). */
+export const CHAPTERS_10: Partial<Record<Subject, string[]>> = {
+  Maths: [
+    "Real Numbers",
+    "Polynomials",
+    "Pair of Linear Equations in Two Variables",
+    "Quadratic Equations",
+    "Arithmetic Progressions",
+    "Triangles",
+    "Coordinate Geometry",
+    "Introduction to Trigonometry",
+    "Some Applications of Trigonometry",
+    "Circles",
+    "Areas Related to Circles",
+    "Surface Areas and Volumes",
+    "Statistics",
+    "Probability",
+  ],
+  Science: [
+    "Chemical Reactions and Equations",
+    "Acids, Bases and Salts",
+    "Metals and Non-metals",
+    "Carbon and its Compounds",
+    "Life Processes",
+    "Control and Coordination",
+    "How do Organisms Reproduce?",
+    "Heredity",
+    "Light: Reflection and Refraction",
+    "The Human Eye and the Colourful World",
+    "Electricity",
+    "Magnetic Effects of Electric Current",
+    "Our Environment",
+  ],
+  "Social Science": [
+    "History: The Rise of Nationalism in Europe",
+    "History: Nationalism in India",
+    "History: The Making of a Global World",
+    "History: The Age of Industrialisation",
+    "History: Print Culture and the Modern World",
+    "Geography: Resources and Development",
+    "Geography: Forest and Wildlife Resources",
+    "Geography: Water Resources",
+    "Geography: Agriculture",
+    "Geography: Minerals and Energy Resources",
+    "Geography: Manufacturing Industries",
+    "Geography: Lifelines of National Economy",
+    "Political Science: Power Sharing",
+    "Political Science: Federalism",
+    "Political Science: Gender, Religion and Caste",
+    "Political Science: Political Parties",
+    "Political Science: Outcomes of Democracy",
+    "Economics: Development",
+    "Economics: Sectors of the Indian Economy",
+    "Economics: Money and Credit",
+    "Economics: Globalisation and the Indian Economy",
+  ],
+};
 
-/** "Physics/Atoms" for Class 12 (kept as before), "11:Physics/Waves" for Class 11. */
-export const chapterKey = (subject: Subject, chapter: string, grade: Grade = 12) => `${grade === 11 ? "11:" : ""}${subject}/${chapter}`;
+const BY_GRADE: Record<Grade, Partial<Record<Subject, string[]>>> = { 10: CHAPTERS_10, 11: CHAPTERS_11, 12: CHAPTERS };
+export const chaptersFor = (grade: Grade, subject: Subject): string[] => BY_GRADE[grade]?.[subject] ?? [];
+
+const SCHOOL_10: Subject[] = ["Maths", "Science", "Social Science"];
+/** Exams for a class: SSLC / CBSE for Class 10, PUC / CBSE / NEET / KCET for 11 and 12. */
+export const examsFor = (grade: Grade) => EXAMS.filter((e) => (grade === 10 ? e.id === "sslc" || e.id === "cbse" : e.id !== "sslc"));
+export const subjectsFor = (exam: ExamId, grade: Grade): Subject[] => (grade === 10 ? SCHOOL_10 : (EXAMS.find((e) => e.id === exam)?.subjects ?? []));
+/** The exam to show: the saved one if it fits the class, else the first for that class. */
+export const examFor = (saved: ExamId | undefined, grade: Grade) => examsFor(grade).find((e) => e.id === saved) ?? examsFor(grade)[0];
+
+/** "Physics/Atoms" for Class 12 (kept as before), "11:Physics/Waves" for Class 11, "10:Science/Heredity" for Class 10. */
+export const chapterKey = (subject: Subject, chapter: string, grade: Grade = 12) => `${grade === 12 ? "" : `${grade}:`}${subject}/${chapter}`;
 export function parseKey(key: string): { grade: Grade; subject: Subject; chapter: string } {
-  const grade: Grade = key.startsWith("11:") ? 11 : 12;
-  const [subject, chapter] = key.replace(/^11:/, "").split(/\/(.+)/) as [Subject, string];
+  const m = /^(10|11):/.exec(key);
+  const grade = (m ? Number(m[1]) : 12) as Grade;
+  const [subject, chapter] = key.replace(/^(10|11):/, "").split(/\/(.+)/) as [Subject, string];
   return { grade, subject, chapter };
 }
 /** "1st PUC", "Class 12"… for an exam and class. */
-export const gradeLabel = (exam: ExamId, grade: Grade) => (exam === "puc" ? (grade === 11 ? "1st PUC" : "2nd PUC") : `Class ${grade}`);
+export const gradeLabel = (exam: ExamId, grade: Grade) => (exam === "puc" && grade !== 10 ? (grade === 11 ? "1st PUC" : "2nd PUC") : `Class ${grade}`);
 
 export interface ChapterNotes {
   summary: string;
@@ -219,7 +291,7 @@ export function readiness(subject: Subject, scores: Record<string, ChapterScore>
   const levels = list.map((c) => levelOf(scores?.[chapterKey(subject, c, grade)]));
   const tested = levels.filter((v) => v != null).length;
   return {
-    pct: Math.round(levels.reduce<number>((a, v) => a + (v ?? 0), 0) / list.length),
+    pct: list.length ? Math.round(levels.reduce<number>((a, v) => a + (v ?? 0), 0) / list.length) : 0,
     tested,
     total: list.length,
     weak: levels.filter((v) => v != null && v < 60).length,
@@ -236,22 +308,22 @@ export interface NextUp {
 }
 /** Up to `n` things to do next: weakest chapters to revise, chapters studied but not tested, then the next new chapter of each subject. */
 export function nextUp(exam: ExamId, st: ExamPrepState, n = 3, grade: Grade = st.grade ?? 12): NextUp[] {
-  const subjects = EXAMS.find((e) => e.id === exam)?.subjects ?? [];
+  const subjects = subjectsFor(exam, grade);
   const out: NextUp[] = [];
   const key = (s: Subject, c: string) => chapterKey(s, c, grade);
-  const CH = grade === 11 ? CHAPTERS_11 : CHAPTERS;
+  const CH = (s: Subject) => chaptersFor(grade, s);
   const weak = subjects
-    .flatMap((s) => CH[s].map((c) => ({ s, c, v: levelOf(st.scores?.[key(s, c)]) })))
+    .flatMap((s) => CH(s).map((c) => ({ s, c, v: levelOf(st.scores?.[key(s, c)]) })))
     .filter((x) => x.v != null && x.v < 60)
     .sort((a, b) => a.v! - b.v!);
   for (const w of weak) out.push({ subject: w.s, chapter: w.c, why: `Weak (${w.v}%): watch the one-shot again, then retake the test`, tab: "videos" });
   for (const s of subjects)
-    for (const c of CH[s]) {
+    for (const c of CH(s)) {
       const seen = st.seen?.[key(s, c)];
       if (seen && !st.scores?.[key(s, c)]) out.push({ subject: s, chapter: c, why: "You studied this. Take the test to check", tab: "practice" });
     }
   for (const s of subjects) {
-    const c = CH[s].find((x) => !st.scores?.[key(s, x)] && !st.seen?.[key(s, x)]);
+    const c = CH(s).find((x) => !st.scores?.[key(s, x)] && !st.seen?.[key(s, x)]);
     if (c) out.push({ subject: s, chapter: c, why: "Next new chapter in " + s, tab: "videos" });
   }
   const seenKeys = new Set<string>();

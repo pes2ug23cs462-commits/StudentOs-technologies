@@ -2,7 +2,7 @@
    { action: "notes" | "quiz", exam, subject, chapter }
      notes → { summary, points[], formulas[], mistakes[] }
      quiz  → { questions: [{ q, options[4], answer, explain }] }
-   Short revision notes and exam-style practice for one Class 11 or 12 chapter. */
+   Short revision notes and exam-style practice for one Class 10, 11 or 12 chapter. */
 
 import { NextResponse } from "next/server";
 import { EXAMS, chaptersFor, gradeLabel, sanitizeNotes, sanitizeQuestions, type Grade, type Subject } from "@/lib/exam-prep";
@@ -22,6 +22,7 @@ function parse(raw: string): unknown {
 }
 
 const STYLE: Record<string, string> = {
+  sslc: "Karnataka SSLC (Class 10) board exam: 1-mark MCQs and one-word answers, 2/3-mark short answers and 4/5-mark long answers",
   puc: "Karnataka PUC board exam (NCERT syllabus): 1-mark definitions, 2/3-mark short answers and 5-mark derivations or problems",
   cbse: "CBSE board exam (NCERT): MCQs, assertion–reason and case-based questions",
   neet: "NEET (NCERT-based MCQs, conceptual and numerical, NEET difficulty)",
@@ -35,7 +36,8 @@ export async function POST(req: Request) {
   const exam = EXAMS.find((e) => e.id === b.exam);
   const subject = String(b.subject) as Subject;
   const chapter = String(b.chapter ?? "");
-  const grade: Grade = Number(b.grade) === 11 ? 11 : 12;
+  const g = Number(b.grade);
+  const grade: Grade = g === 10 || g === 11 ? g : 12;
   if (!exam || !chaptersFor(grade, subject)?.includes(chapter)) return NextResponse.json({ error: "failed" }, { status: 400 });
   const cls = `Class ${grade}`;
   const quota = takeQuota(uid);

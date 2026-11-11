@@ -23,6 +23,9 @@ import {
   gradeLabel,
   parseKey,
   type Grade,
+  examFor,
+  examsFor,
+  subjectsFor,
   STATUS_LABEL,
   chapterKey,
   sanitizeNotes,
@@ -51,8 +54,10 @@ export default function ExamPrepPage() {
   const { state, actions } = useStore();
   const router = useRouter();
   const prep: ExamPrepState = state.examPrep ?? {};
-  const exam = EXAMS.find((e) => e.id === prep.exam) ?? EXAMS[0];
-  const [subject, setSubject] = useState<Subject>(exam.subjects[0]);
+  const grade: Grade = prep.grade ?? defaultGrade(state.setup);
+  const exam = examFor(prep.exam, grade);
+  const subjects = subjectsFor(exam.id, grade);
+  const [subject, setSubject] = useState<Subject>(subjects[0]);
   const [open, setOpen] = useState<string | null>(null);
   const [openTab, setOpenTab] = useState<Tab>("videos");
   // links from the dashboard: /exam-prep?open=Physics/Atoms&tab=practice
@@ -69,10 +74,9 @@ export default function ExamPrepPage() {
     setOpen(o);
     window.history.replaceState(null, "", "/exam-prep");
   }, []);
-  const subj = exam.subjects.includes(subject) ? subject : exam.subjects[0];
+  const subj = subjects.includes(subject) ? subject : subjects[0];
   const scores = prep.scores ?? {};
   const patch = (p: Partial<ExamPrepState>) => actions.patch({ examPrep: { ...(state.examPrep ?? {}), ...p } });
-  const grade: Grade = prep.grade ?? defaultGrade(state.setup);
 
   const chapters = chaptersFor(grade, subj);
   const key = (c: string) => chapterKey(subj, c, grade);
@@ -82,7 +86,7 @@ export default function ExamPrepPage() {
     return (
       <div className="px-6 py-24 text-center">
         <p className="text-[15px] font-semibold text-white">Exam Prep is for school and PU students</p>
-        <p className="mt-1 text-[13px] text-white/55">It covers Class 11 and 12 (PUC / CBSE), NEET and KCET.</p>
+        <p className="mt-1 text-[13px] text-white/55">It covers Class 10 (SSLC / CBSE), Class 11 and 12 (PUC / CBSE), NEET and KCET.</p>
         <Button className="mt-4" onClick={() => router.push("/learn")}>
           Go to Learning
         </Button>
@@ -96,7 +100,7 @@ export default function ExamPrepPage() {
 
       {/* exam */}
       <div role="radiogroup" aria-label="Your exam" className="mt-5 flex flex-wrap gap-2">
-        {EXAMS.map((e) => (
+        {examsFor(grade).map((e) => (
           <button
             key={e.id}
             type="button"
@@ -113,7 +117,7 @@ export default function ExamPrepPage() {
 
       {/* class */}
       <div role="radiogroup" aria-label="Class" className="mt-4 inline-flex rounded-lg border border-white/10 p-0.5">
-        {([11, 12] as const).map((g) => (
+        {([10, 11, 12] as const).map((g) => (
           <button key={g} type="button" role="radio" aria-checked={grade === g} onClick={() => patch({ grade: g })} className={cn("h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors", grade === g ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
             {gradeLabel(exam.id, g)}
           </button>
@@ -125,7 +129,7 @@ export default function ExamPrepPage() {
           {/* subject tabs */}
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.07]">
             <div role="tablist" aria-label="Subject" className="flex gap-1">
-              {exam.subjects.map((s) => (
+              {subjects.map((s) => (
                 <button key={s} type="button" role="tab" aria-selected={subj === s} onClick={() => setSubject(s)} className={cn("relative px-3 pb-2.5 text-[13.5px] font-medium transition-colors", subj === s ? "text-white" : "text-white/50 hover:text-white")}>
                   {s}
                   {subj === s && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent" />}
@@ -197,7 +201,7 @@ type Tab = "videos" | "notes" | "practice" | "explain";
 function ChapterDrawer({ chapterId, exam, initialTab = "videos", onClose }: { chapterId: string; exam: ExamId; initialTab?: Tab; onClose: () => void }) {
   const { grade, subject, chapter } = parseKey(chapterId);
   const [tab, setTab] = useState<Tab>(initialTab);
-  const examLabel = exam === "puc" ? gradeLabel(exam, grade) : `${EXAMS.find((e) => e.id === exam)!.label} · Class ${grade}`;
+  const examLabel = exam === "puc" && grade !== 10 ? gradeLabel(exam, grade) : `${EXAMS.find((e) => e.id === exam)!.label} · Class ${grade}`;
   return (
     <Drawer open onClose={onClose} eyebrow={`${examLabel} · ${subject}`} title={chapter} width="w-[600px]">
       <div role="tablist" className="-mt-1 mb-5 flex gap-1 rounded-xl border border-white/[0.08] p-1">
@@ -241,7 +245,7 @@ function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; c
     actions.patch({ examPrep: { ...(state.examPrep ?? {}), videos: { ...(state.examPrep?.videos ?? {}), [id]: { done: [], notes: "", ...(state.examPrep?.videos?.[id] ?? {}), ...patch } } } });
   const entrance = exam === "neet" || exam === "kcet";
   const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
-  const board = exam === "puc" ? (grade === 11 ? "1st puc" : "2nd puc") : `class ${grade} cbse`;
+  const board = exam === "sslc" ? "sslc class 10" : exam === "puc" ? (grade === 11 ? "1st puc" : "2nd puc") : `class ${grade} cbse`;
   const oneShot = entrance || kind === "oneshot";
   const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class ${grade} ${subject} lecture 1 detailed explanation`;
   return (
