@@ -119,23 +119,41 @@ function Gate({ children }: { children: ReactNode }) {
 }
 
 function SignedOut() {
+  const roles = [
+    { as: "admin", Icon: BuildingIcon, title: "Principal / college admin", text: "Set up your college, invite students and faculty, and see the whole college.", first: "Create account" },
+    { as: "faculty", Icon: UsersIcon, title: "Faculty / placement officer", text: "Join your college with the two codes your admin shares, then see your classes and drives.", first: "Log in" },
+  ] as const;
   return (
     <Gate>
-      <div className="mx-auto max-w-[460px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7 text-center">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-plum)] text-accent"><BuildingIcon size={26} /></span>
-        <h1 className="mt-5 text-[22px] font-semibold text-white">College dashboard</h1>
-        <p className="mt-2 text-[13.5px] text-white/60">See where your students are weak, who needs help and how ready each class is. Only students who agree to share are shown.</p>
-        <div className="mt-6 flex justify-center gap-2">
-          <Link href="/login?next=/college" className="inline-flex h-10 items-center rounded-xl bg-accent px-5 text-[13.5px] font-semibold text-[#120826]">Log in</Link>
-          <Link href="/signup?next=/college" className="inline-flex h-10 items-center rounded-xl border border-white/15 px-5 text-[13.5px] font-medium text-white">Create account</Link>
-        </div>
+      <div className="text-center">
+        <h1 className="text-[28px] font-semibold tracking-tight text-white">College dashboard</h1>
+        <p className="mx-auto mt-2 max-w-[520px] text-[14px] text-white/60">See where students are weak, who needs help, and run campus placements. Only students who agree to share are shown.</p>
       </div>
+      <div className="mx-auto mt-8 grid max-w-[760px] gap-4 md:grid-cols-2">
+        {roles.map((r) => {
+          const next = encodeURIComponent(`/college?as=${r.as}`);
+          const login = <Link href={`/login?next=${next}`} className={cn("inline-flex h-10 items-center rounded-xl px-5 text-[13.5px] font-semibold", r.first === "Log in" ? "bg-accent text-[#120826]" : "border border-white/15 font-medium text-white")}>Log in</Link>;
+          const signup = <Link href={`/signup?next=${next}`} className={cn("inline-flex h-10 items-center rounded-xl px-5 text-[13.5px] font-semibold", r.first === "Create account" ? "bg-accent text-[#120826]" : "border border-white/15 font-medium text-white")}>Create account</Link>;
+          return (
+            <div key={r.as} className="flex flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6 transition hover:border-accent/40">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-plum)] text-accent"><r.Icon size={22} /></span>
+              <p className="mt-4 text-[17px] font-semibold text-white">{r.title}</p>
+              <p className="mt-1.5 flex-1 text-[13px] leading-relaxed text-white/55">{r.text}</p>
+              <div className="mt-5 flex flex-wrap gap-2">{r.first === "Log in" ? <>{login}{signup}</> : <>{signup}{login}</>}</div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-8 text-center text-[13px] text-white/50">
+        Student? <Link href="/login" className="text-accent hover:underline">Open StudentOS</Link> · New to StudentOS for colleges? <Link href="/institutions" className="text-accent hover:underline">See what’s included</Link>
+      </p>
     </Gate>
   );
 }
 
 function Setup() {
   const { state, actions, uid } = useStore();
+  const faculty = useSearchParams().get("as") === "faculty";
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [type, setType] = useState<CollegeType>("school");
@@ -176,9 +194,9 @@ function Setup() {
 
   return (
     <Gate>
-      <h1 className="text-center text-[26px] font-semibold text-white">Set up your college</h1>
+      <h1 className="text-center text-[26px] font-semibold text-white">{faculty ? "Join your college" : "Set up your college"}</h1>
       <p className="mt-2 text-center text-[13.5px] text-white/55">Signed in as {me.name}{me.email ? ` · ${me.email}` : ""}</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-[1.2fr_1fr]">
+      <div className={cn("mt-8 grid gap-4", faculty ? "md:grid-cols-[1fr_1.2fr] [&>*:first-child]:md:order-2" : "md:grid-cols-[1.2fr_1fr]")}>
         <div className="rounded-2xl border border-accent/30 bg-[#0f0f11] p-6 shadow-[0_0_50px_-20px_rgba(167,139,250,0.6)]">
           <p className="text-[15px] font-semibold text-white">New college</p>
           <p className="mt-1 text-[12.5px] text-white/50">You become the admin. You get a code for students and one for faculty.</p>
