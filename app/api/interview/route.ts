@@ -51,6 +51,7 @@ export async function POST(req: Request) {
   };
   const level = LEVELS[String(b.level)] ?? LEVELS.beginner;
   const topics = s(b.topics, 300);
+  const hindi = b.lang === "hi";
   const kindText = kind === "custom" ? `${KINDS.custom}: ${topics || "general interview topics for this role"}` : KINDS[kind];
 
   try {
@@ -60,8 +61,10 @@ export async function POST(req: Request) {
 Candidate background: ${s(b.profile, 400) || "college student"}.
 Interview type: ${kindText}.
 
-Write exactly ${count} interview questions, in the order you would ask them. Questions must be clear, one at a time, answerable in 1–2 minutes, and right for this role and level (real questions Indian companies and campus placements ask). No multi-part essays.
-Reply with JSON only: [{"q":"question","focus":"what it tests, 2–4 words"}]`;
+Write exactly ${count} interview questions, in the order you would ask them. Questions must be clear, one at a time, answerable in 1–2 minutes, and right for this role and level (real questions Indian companies and campus placements ask). No multi-part essays.${hindi ? `
+Write every question in natural spoken Hindi in Devanagari script, the way an Indian interviewer talks (polite "आप"). Keep common technical words in English letters (e.g. API, database, Excel). Keep each question short, under 200 characters, so it can be read aloud.` : `
+Keep each question under 200 characters so it can be read aloud.`}
+Reply with JSON only: [{"q":"question","focus":"what it tests, 2–4 words in English"}]`;
       for (let i = 0; i < 2; i++) {
         const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 1500, temperature: 0.7 });
         const list = (json<{ q?: unknown; focus?: unknown }[]>(text, "[") ?? []).map((x) => ({ q: s(x.q, 300), focus: s(x.focus, 40) })).filter((x) => x.q.length > 8);
@@ -81,7 +84,8 @@ ${items.map((x, i) => `Q${i + 1}: ${x.q}\nA${i + 1}: ${x.a || "(skipped)"}`).joi
 Score each answer 0–10 fairly (a skipped answer is 0; a correct but very short answer is 4–6; a clear, structured, specific answer with an example is 8–10). Be encouraging but honest and specific.
 Reply with JSON only:
 {"overall": 0-100, "verdict": "2–4 words, e.g. Almost ready", "summary": "2 sentences", "strengths": ["...", "..."], "tips": ["3 most useful things to improve"],
- "items": [{"score": 0-10, "good": "one sentence on what worked", "improve": "one sentence on what to improve", "better": "a strong model answer in 2–4 sentences, in English"}]}
+ "items": [{"score": 0-10, "good": "one sentence on what worked", "improve": "one sentence on what to improve", "better": "a strong model answer in 2–4 sentences, in ${hindi ? "simple Hindi (Devanagari)" : "English"}"}]}${hindi ? `
+Write "verdict", "summary", "strengths", "tips", "good" and "improve" in simple Hindi (Devanagari) too.` : ""}
 "items" must have exactly ${items.length} entries in order.`;
       for (let i = 0; i < 2; i++) {
         const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 3500, temperature: 0.3 });

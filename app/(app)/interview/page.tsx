@@ -15,12 +15,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BarChartIcon, BotIcon, BriefcaseIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, FileIcon, LaptopIcon, MicIcon, PlayIcon, RefreshIcon, RepeatIcon, SparkleIcon, StopIcon, TrophyIcon, UserIcon, UsersIcon, VideoIcon, VolumeIcon, XIcon } from "@/components/ui/icons";
 import { Card, Label } from "@/components/ui/primitives";
 import { AssistantError } from "@/lib/assistant";
-import { KIND_LABEL, LEVEL_LABEL, MAX_SAVED, interviewStats, evaluate, makeQuestions, suggestRoles, type Feedback, type InterviewKind, type InterviewLevel, type InterviewRecord, type Question } from "@/lib/interview";
+import { KIND_LABEL, LANG_LABEL, LEVEL_LABEL, type InterviewLang, MAX_SAVED, interviewStats, evaluate, makeQuestions, suggestRoles, type Feedback, type InterviewKind, type InterviewLevel, type InterviewRecord, type Question } from "@/lib/interview";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
 import { cn, uid } from "@/lib/utils";
 import { stopSpeaking } from "@/lib/tts";
-import { createTalker, type Talker } from "@/lib/talker";
+import { createTalker, hasHindiVoice, type Talker } from "@/lib/talker";
 import { VOICE_LANGS, startRecording, transcribe, type Recorder } from "@/lib/voice";
 import { Interviewer, MicBars } from "@/components/interview/interviewer";
 
@@ -29,7 +29,10 @@ type Phase = "setup" | "preparing" | "live" | "scoring" | "result";
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 const INTERVIEWER = "Asha";
-const LEAD_INS = ["Okay, thank you.", "Got it, thanks.", "Alright.", "Thank you. Next one.", "Okay."];
+const LINES: Record<InterviewLang, { hello: string; lead: string[] }> = {
+  en: { hello: `Hi, I’m ${INTERVIEWER}. Let’s begin.`, lead: ["Okay, thank you.", "Got it, thanks.", "Alright.", "Thank you. Next one.", "Okay."] },
+  hi: { hello: "नमस्ते, मैं आशा हूँ। चलिए शुरू करते हैं।", lead: ["ठीक है, धन्यवाद।", "अच्छा, समझ गई।", "बहुत बढ़िया।", "धन्यवाद। अगला सवाल।", "ठीक है।"] },
+};
 
 function ScoreRing({ value, size = 120 }: { value: number; size?: number }) {
   const r = 15.5;
@@ -118,11 +121,17 @@ export default function InterviewPage() {
   const [handsFree, setHandsFree] = useState(true);
   const [total, setTotal] = useState(0);
   const micRef = useRef<() => void>(() => {});
+  const [ilang, setIlang] = useState<InterviewLang>("en");
+  const [noHindi, setNoHindi] = useState(false);
   useEffect(() => {
-    const t = createTalker("hannah");
+    const t = createTalker({ voice: "hannah", lang: ilang });
     setTalker(t);
     return () => t.dispose();
-  }, []);
+  }, [ilang]);
+  useEffect(() => {
+    if (ilang === "hi") void hasHindiVoice().then((ok) => setNoHindi(!ok));
+    else setNoHindi(false);
+  }, [ilang]);
   const quiet = () => {
     talker?.stop();
     setSpeaking(false);
@@ -130,7 +139,8 @@ export default function InterviewPage() {
   const ask = async (k: number, again = false) => {
     const q = questions[k];
     if (!talker || !q) return;
-    const text = again || k === 0 ? (k === 0 && !again ? `Hi, I’m ${INTERVIEWER}. Let’s begin. ${q.q}` : q.q) : `${LEAD_INS[k % LEAD_INS.length]} ${q.q}`;
+    const L = LINES[ilang];
+    const text = again ? q.q : k === 0 ? `${L.hello} ${q.q}` : `${L.lead[k % L.lead.length]} ${q.q}`;
     if (questions[k + 1]) talker.prefetch(questions[k + 1].q);
     setSpeaking(true);
     const r = await talker.say(text);
@@ -173,7 +183,7 @@ export default function InterviewPage() {
     setError("");
     setPhase("preparing");
     try {
-      const qs = await makeQuestions({ role: role.trim(), kind, level, count, profile, topics: kind === "custom" ? topics.trim() : undefined });
+      const qs = await makeQuestions({ role: role.trim(), kind, level, count, profile, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang });
       if (!qs.length) throw new AssistantError("Couldn’t prepare questions. Try again.");
       setQuestions(qs);
       setAnswers(qs.map(() => ""));
@@ -225,8 +235,8 @@ export default function InterviewPage() {
     quiet();
     setPhase("scoring");
     try {
-      const fb: Feedback = await evaluate({ role: role.trim(), kind, level, topics: kind === "custom" ? topics.trim() : undefined, items: questions.map((q, k) => ({ q: q.q, a: final[k] ?? "" })) });
-      const record: InterviewRecord = { id: uid("iv"), at: Date.now(), role: role.trim(), kind, level, questions, answers: final, feedback: fb, ...(kind === "custom" && topics.trim() ? { topics: topics.trim() } : {}) };
+      const fb: Feedback = await evaluate({ role: role.trim(), kind, level, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang, items: questions.map((q, k) => ({ q: q.q, a: final[k] ?? "" })) });
+      const record: InterviewRecord = { id: uid("iv"), at: Date.now(), role: role.trim(), kind, level, questions, answers: final, feedback: fb, lang: ilang, ...(kind === "custom" && topics.trim() ? { topics: topics.trim() } : {}) };
       actions.patch({ interviews: [record, ...history].slice(0, MAX_SAVED) });
       setResult(record);
       setOpen(0);
@@ -518,6 +528,7 @@ export default function InterviewPage() {
     setRole(h.role);
     setKind(h.kind);
     setLevel(h.level);
+    setIlang(h.lang ?? "en");
     setTopics(h.topics ?? "");
     setCount(h.questions.length);
     setPhase("result");
@@ -656,7 +667,18 @@ export default function InterviewPage() {
                       ))}
                     </div>
                   </div>
+                  <div>
+                    <p className="mb-1.5 text-[12.5px] font-semibold text-white/80">Asha speaks in</p>
+                    <div role="radiogroup" aria-label="Interview language" className="inline-flex rounded-lg border border-white/10 p-0.5">
+                      {(["en", "hi"] as const).map((l) => (
+                        <button key={l} type="button" role="radio" aria-checked={ilang === l} onClick={() => { setIlang(l); setLang(l === "hi" ? "hi-IN" : "en-IN"); }} className={cn("h-8 rounded-md px-3 text-[12.5px] font-medium transition-colors", ilang === l ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+                          {LANG_LABEL[l]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+                {noHindi && <p className="rounded-lg bg-amber-400/10 px-3 py-2 text-[12.5px] text-amber-200">This device has no Hindi voice, so Asha can’t speak Hindi here. Questions will still show in Hindi. Chrome or Edge on a laptop, or Android, usually have one.</p>}
                 {error && <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
               </div>
 

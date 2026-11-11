@@ -8,6 +8,9 @@ import type { SetupData } from "./setup";
 export type InterviewKind = "technical" | "hr" | "role" | "custom" | "mixed";
 export type InterviewLevel = "beginner" | "intermediate" | "advanced" | "fresher" | "experienced";
 export type Question = { q: string; focus: string };
+/** Language the interviewer speaks. */
+export type InterviewLang = "en" | "hi";
+export const LANG_LABEL: Record<InterviewLang, string> = { en: "English", hi: "Hindi" };
 export type ItemFeedback = { score: number; good: string; improve: string; better: string };
 export type Feedback = { overall: number; verdict: string; summary: string; strengths: string[]; tips: string[]; items: ItemFeedback[] };
 
@@ -21,6 +24,7 @@ export interface InterviewRecord {
   answers: string[];
   feedback: Feedback;
   topics?: string;
+  lang?: InterviewLang;
 }
 
 export const KIND_LABEL: Record<InterviewKind, string> = { technical: "Technical", hr: "Behavioral", role: "Job role", custom: "Custom", mixed: "Mixed" };
@@ -62,11 +66,11 @@ export function suggestRoles(setup: SetupData | undefined) {
   return [...new Set([...list, "Campus placement (HR round)"])].slice(0, 6);
 }
 
-export async function makeQuestions(o: { role: string; kind: InterviewKind; level: InterviewLevel; count: number; profile: string; topics?: string }) {
+export async function makeQuestions(o: { role: string; kind: InterviewKind; level: InterviewLevel; count: number; profile: string; topics?: string; lang?: InterviewLang }) {
   const j = await postAi<{ questions?: Question[] }>("/api/interview", { action: "questions", ...o });
   return j.questions ?? [];
 }
 
-export async function evaluate(o: { role: string; kind: InterviewKind; level: InterviewLevel; topics?: string; items: { q: string; a: string }[] }) {
+export async function evaluate(o: { role: string; kind: InterviewKind; level: InterviewLevel; topics?: string; lang?: InterviewLang; items: { q: string; a: string }[] }) {
   return postAi<Feedback>("/api/interview", { action: "evaluate", ...o });
 }
