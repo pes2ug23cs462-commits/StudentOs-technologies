@@ -118,11 +118,14 @@ function Gate({ children }: { children: ReactNode }) {
   );
 }
 
+type RoleCard = { as: "admin" | "faculty"; icon: ReactNode; title: string; text: string; loginFirst: boolean };
+const ROLE_CARDS: RoleCard[] = [
+  { as: "admin", icon: <BuildingIcon size={22} />, title: "Principal / college admin", text: "Set up your college, invite students and faculty, and see the whole college.", loginFirst: false },
+  { as: "faculty", icon: <UsersIcon size={22} />, title: "Faculty / placement officer", text: "Join your college with the two codes your admin shares, then see your classes and drives.", loginFirst: true },
+];
+const btn = (primary: boolean) => cn("inline-flex h-10 items-center rounded-xl px-5 text-[13.5px]", primary ? "bg-accent font-semibold text-[#120826]" : "border border-white/15 font-medium text-white");
+
 function SignedOut() {
-  const roles = [
-    { as: "admin", Icon: BuildingIcon, title: "Principal / college admin", text: "Set up your college, invite students and faculty, and see the whole college.", first: "Create account" },
-    { as: "faculty", Icon: UsersIcon, title: "Faculty / placement officer", text: "Join your college with the two codes your admin shares, then see your classes and drives.", first: "Log in" },
-  ] as const;
   return (
     <Gate>
       <div className="text-center">
@@ -130,16 +133,17 @@ function SignedOut() {
         <p className="mx-auto mt-2 max-w-[520px] text-[14px] text-white/60">See where students are weak, who needs help, and run campus placements. Only students who agree to share are shown.</p>
       </div>
       <div className="mx-auto mt-8 grid max-w-[760px] gap-4 md:grid-cols-2">
-        {roles.map((r) => {
-          const next = encodeURIComponent(`/college?as=${r.as}`);
-          const login = <Link href={`/login?next=${next}`} className={cn("inline-flex h-10 items-center rounded-xl px-5 text-[13.5px] font-semibold", r.first === "Log in" ? "bg-accent text-[#120826]" : "border border-white/15 font-medium text-white")}>Log in</Link>;
-          const signup = <Link href={`/signup?next=${next}`} className={cn("inline-flex h-10 items-center rounded-xl px-5 text-[13.5px] font-semibold", r.first === "Create account" ? "bg-accent text-[#120826]" : "border border-white/15 font-medium text-white")}>Create account</Link>;
+        {ROLE_CARDS.map((r) => {
+          const next = encodeURIComponent("/college?as=" + r.as);
           return (
             <div key={r.as} className="flex flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6 transition hover:border-accent/40">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-plum)] text-accent"><r.Icon size={22} /></span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-plum)] text-accent">{r.icon}</span>
               <p className="mt-4 text-[17px] font-semibold text-white">{r.title}</p>
               <p className="mt-1.5 flex-1 text-[13px] leading-relaxed text-white/55">{r.text}</p>
-              <div className="mt-5 flex flex-wrap gap-2">{r.first === "Log in" ? <>{login}{signup}</> : <>{signup}{login}</>}</div>
+              <div className={cn("mt-5 flex flex-wrap gap-2", r.loginFirst ? "" : "flex-row-reverse justify-end")}>
+                <Link href={"/login?next=" + next} className={btn(r.loginFirst)}>Log in</Link>
+                <Link href={"/signup?next=" + next} className={btn(!r.loginFirst)}>Create account</Link>
+              </div>
             </div>
           );
         })}
@@ -153,7 +157,8 @@ function SignedOut() {
 
 function Setup() {
   const { state, actions, uid } = useStore();
-  const faculty = useSearchParams().get("as") === "faculty";
+  const params = useSearchParams();
+  const faculty = params?.get("as") === "faculty";
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [type, setType] = useState<CollegeType>("school");
