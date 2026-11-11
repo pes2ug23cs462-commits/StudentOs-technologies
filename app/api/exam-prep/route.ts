@@ -40,20 +40,21 @@ export async function POST(req: Request) {
   const grade: Grade = g === 10 || g === 11 ? g : 12;
   if (!exam || !chaptersFor(grade, subject)?.includes(chapter)) return NextResponse.json({ error: "failed" }, { status: 400 });
   const cls = `Class ${grade}`;
+  const lang = subject === "Hindi" ? "Simple Hindi (Devanagari)" : "Simple English";
   const quota = takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const notes = b.action === "notes";
   const prompt = notes
     ? `You are an experienced Indian ${subject} teacher. Write short revision notes for the NCERT ${cls} ${subject} chapter “${chapter}”, for a ${gradeLabel(exam.id, grade)} student preparing for the ${STYLE[exam.id]}.
-Simple English a ${cls} student understands. Only what is in the NCERT chapter; accurate.
+${lang} a ${cls} student understands. Only what is in the NCERT chapter; accurate.
 - "summary": 2 sentences on what the chapter is about.
 - "points": 6–10 must-know points for the exam, one idea each, short.
-- "formulas": the important formulas or equations as plain text (e.g. "F = q1q2 / (4πε0 r²)"); empty if the chapter has none.
+- "formulas": the important formulas, equations, dates or key terms to remember, as plain text (e.g. "F = q1q2 / (4πε0 r²)"); empty if there are none.
 - "mistakes": 2–4 common mistakes students make in this chapter.
 Reply with JSON only: {"summary":"...","points":["..."],"formulas":["..."],"mistakes":["..."]}`
     : `You are setting a practice test for a ${gradeLabel(exam.id, grade)} student on the NCERT ${cls} ${subject} chapter “${chapter}” in the style of the ${STYLE[exam.id]}.
-Write 10 multiple-choice questions that cover the whole chapter, from easy to hard, the kind that come in this exam. Use only NCERT content; every answer must be correct; numericals must have correctly worked values. Do not claim any question is from a real past paper.
+Write 10 multiple-choice questions${subject === "Hindi" ? " in Hindi (Devanagari)" : ""} that cover the whole chapter, from easy to hard, the kind that come in this exam. Use only NCERT content; every answer must be correct; numericals must have correctly worked values. Do not claim any question is from a real past paper.
 Each: "q", 4 "options", "answer" (index 0–3 of the correct option), "explain" (1–2 sentences on why; show the working for numericals).
 Reply with JSON only: {"questions":[{"q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}]}`;
 

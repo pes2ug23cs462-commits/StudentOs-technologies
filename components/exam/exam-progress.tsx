@@ -6,14 +6,14 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
-import { chapterKey, examFor, subjectsFor, gradeLabel, nextUp, readiness, type ExamPrepState, type Grade } from "@/lib/exam-prep";
+import { chapterKey, examFor, subjectsFor, gradeLabel, nextUp, readiness, type ExamPrepState, type Grade, type Stream } from "@/lib/exam-prep";
 import { cn } from "@/lib/utils";
 
 const tone = (p: number) => (p >= 80 ? "bg-emerald-400" : p >= 60 ? "bg-amber-400" : p > 0 ? "bg-rose-400" : "bg-white/20");
 
-export function ExamProgress({ st, grade = st.grade ?? 12, compact = false }: { st: ExamPrepState; grade?: Grade; compact?: boolean }) {
-  const exam = examFor(st.exam, grade);
-  const todo = nextUp(exam.id, st, compact ? 2 : 3, grade);
+export function ExamProgress({ st, grade = st.grade ?? 12, stream = st.stream ?? "science", compact = false }: { st: ExamPrepState; grade?: Grade; stream?: Stream; compact?: boolean }) {
+  const exam = examFor(st.exam, grade, stream);
+  const todo = nextUp(exam.id, st, compact ? 2 : 3, grade, stream);
   return (
     <Card className="p-5">
       <div className="flex items-baseline justify-between gap-2">
@@ -25,7 +25,7 @@ export function ExamProgress({ st, grade = st.grade ?? 12, compact = false }: { 
         )}
       </div>
       <ul className="mt-3.5 space-y-3">
-        {subjectsFor(exam.id, grade).map((s) => {
+        {subjectsFor(exam.id, grade, stream).map((s) => {
           const r = readiness(s, st.scores, grade);
           return (
             <li key={s}>

@@ -23,6 +23,9 @@ import {
   gradeLabel,
   parseKey,
   type Grade,
+  type Stream,
+  STREAMS,
+  defaultStream,
   examFor,
   examsFor,
   subjectsFor,
@@ -55,8 +58,9 @@ export default function ExamPrepPage() {
   const router = useRouter();
   const prep: ExamPrepState = state.examPrep ?? {};
   const grade: Grade = prep.grade ?? defaultGrade(state.setup);
-  const exam = examFor(prep.exam, grade);
-  const subjects = subjectsFor(exam.id, grade);
+  const stream: Stream = prep.stream ?? defaultStream(state.setup);
+  const exam = examFor(prep.exam, grade, stream);
+  const subjects = subjectsFor(exam.id, grade, stream);
   const [subject, setSubject] = useState<Subject>(subjects[0]);
   const [open, setOpen] = useState<string | null>(null);
   const [openTab, setOpenTab] = useState<Tab>("videos");
@@ -86,7 +90,7 @@ export default function ExamPrepPage() {
     return (
       <div className="px-6 py-24 text-center">
         <p className="text-[15px] font-semibold text-white">Exam Prep is for school and PU students</p>
-        <p className="mt-1 text-[13px] text-white/55">It covers Class 10 (SSLC / CBSE), Class 11 and 12 (PUC / CBSE), NEET and KCET.</p>
+        <p className="mt-1 text-[13px] text-white/55">It covers Class 10 (SSLC / CBSE), Class 11 and 12 (PUC / CBSE, all streams), NEET and KCET.</p>
         <Button className="mt-4" onClick={() => router.push("/learn")}>
           Go to Learning
         </Button>
@@ -100,7 +104,7 @@ export default function ExamPrepPage() {
 
       {/* exam */}
       <div role="radiogroup" aria-label="Your exam" className="mt-5 flex flex-wrap gap-2">
-        {examsFor(grade).map((e) => (
+        {examsFor(grade, stream).map((e) => (
           <button
             key={e.id}
             type="button"
@@ -115,13 +119,24 @@ export default function ExamPrepPage() {
         ))}
       </div>
 
-      {/* class */}
-      <div role="radiogroup" aria-label="Class" className="mt-4 inline-flex rounded-lg border border-white/10 p-0.5">
-        {([10, 11, 12] as const).map((g) => (
-          <button key={g} type="button" role="radio" aria-checked={grade === g} onClick={() => patch({ grade: g })} className={cn("h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors", grade === g ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
-            {gradeLabel(exam.id, g)}
-          </button>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* class */}
+        <div role="radiogroup" aria-label="Class" className="inline-flex rounded-lg border border-white/10 p-0.5">
+          {([10, 11, 12] as const).map((g) => (
+            <button key={g} type="button" role="radio" aria-checked={grade === g} onClick={() => patch({ grade: g })} className={cn("h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors", grade === g ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+              {gradeLabel(exam.id, g)}
+            </button>
+          ))}
+        </div>
+        {grade !== 10 && (
+          <div role="radiogroup" aria-label="Stream" className="inline-flex rounded-lg border border-white/10 p-0.5">
+            {STREAMS.map((x) => (
+              <button key={x.id} type="button" role="radio" aria-checked={stream === x.id} onClick={() => patch({ stream: x.id })} className={cn("h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors", stream === x.id ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+                {x.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
@@ -185,7 +200,7 @@ export default function ExamPrepPage() {
         </div>
 
         <div className="space-y-5">
-          <ExamProgress st={prep} grade={grade} />
+          <ExamProgress st={prep} grade={grade} stream={stream} />
         </div>
       </div>
 
@@ -339,7 +354,7 @@ function Notes({ subject, chapter, grade, exam, onPractice }: { subject: Subject
       </section>
       {n.formulas.length > 0 && (
         <section className="ep-in">
-          <h3 className="text-[12px] font-semibold tracking-wide text-[var(--cyan)] uppercase">Formulas</h3>
+          <h3 className="text-[12px] font-semibold tracking-wide text-[var(--cyan)] uppercase">{["Physics", "Chemistry", "Maths", "Science"].includes(subject) ? "Formulas" : "Key facts"}</h3>
           <ul className="mt-2 space-y-1.5">
             {n.formulas.map((f, i) => (
               <li key={i} className="rounded-lg bg-white/[0.04] px-3 py-2 font-mono text-[13px] text-white">
@@ -546,7 +561,7 @@ function Explain({ subject, chapter, examLabel }: { subject: Subject; chapter: s
         <label htmlFor="ep-doubt" className="text-[12.5px] font-semibold text-white/80">
           What don’t you understand?
         </label>
-        <textarea id="ep-doubt" rows={3} value={doubt} onChange={(e) => setDoubt(e.target.value)} placeholder="e.g. Why does a capacitor block DC but allow AC?" className="mt-1.5 w-full resize-none rounded-xl border border-white/10 bg-field px-3.5 py-2.5 text-[13.5px] text-white outline-none placeholder:text-white/35 focus:border-accent" />
+        <textarea id="ep-doubt" rows={3} value={doubt} onChange={(e) => setDoubt(e.target.value)} placeholder="e.g. I don’t understand this part of the chapter…" className="mt-1.5 w-full resize-none rounded-xl border border-white/10 bg-field px-3.5 py-2.5 text-[13.5px] text-white outline-none placeholder:text-white/35 focus:border-accent" />
         <Button variant="primary" className="mt-2" icon={<ChatIcon size={13} />} disabled={!doubt.trim()} onClick={() => ask(doubt)}>
           Explain it
         </Button>

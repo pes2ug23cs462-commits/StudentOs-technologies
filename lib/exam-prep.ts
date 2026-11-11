@@ -11,12 +11,38 @@ export function defaultGrade(setup: SetupData | undefined): Grade {
   if (/\b(8|9|10)\b/.test(y)) return 10;
   return /\b11\b/.test(y) ? 11 : 12;
 }
-/** Exam Prep is only for school students (Class 11, 12 / PU and below). */
+/** Exam Prep is only for school students (Class 10, 11, 12 / PU). */
 export const showExamPrep = (setup: SetupData | undefined) => setup?.academic.type === "school";
 
 export type ExamId = "sslc" | "puc" | "cbse" | "neet" | "kcet";
 export type Grade = 10 | 11 | 12;
-export type Subject = "Physics" | "Chemistry" | "Biology" | "Maths" | "Science" | "Social Science";
+export type Subject =
+  | "Physics"
+  | "Chemistry"
+  | "Biology"
+  | "Maths"
+  | "Science"
+  | "Social Science"
+  | "English"
+  | "Hindi"
+  | "Accountancy"
+  | "Business Studies"
+  | "Economics"
+  | "History"
+  | "Political Science"
+  | "Sociology";
+/** Class 11–12 stream. */
+export type Stream = "science" | "commerce" | "arts";
+export const STREAMS: { id: Stream; label: string }[] = [
+  { id: "science", label: "Science" },
+  { id: "commerce", label: "Commerce" },
+  { id: "arts", label: "Arts" },
+];
+/** Stream from setup ("Commerce", "Arts / Humanities"…); Science otherwise. */
+export function defaultStream(setup: SetupData | undefined): Stream {
+  const f = setup?.academic.field ?? "";
+  return /commerce/i.test(f) ? "commerce" : /arts|humanities/i.test(f) ? "arts" : "science";
+}
 
 export const EXAMS: { id: ExamId; label: string; sub: string; subjects: Subject[] }[] = [
   { id: "sslc", label: "SSLC", sub: "Karnataka Class 10", subjects: ["Maths", "Science", "Social Science"] },
@@ -94,6 +120,89 @@ export const CHAPTERS_11: Partial<Record<Subject, string[]>> = {
   ],
 };
 
+Object.assign(CHAPTERS_11, {
+  Accountancy: [
+    "Introduction to Accounting",
+    "Theory Base of Accounting",
+    "Recording of Transactions I",
+    "Recording of Transactions II",
+    "Bank Reconciliation Statement",
+    "Trial Balance and Rectification of Errors",
+    "Depreciation, Provisions and Reserves",
+    "Financial Statements I",
+    "Financial Statements II",
+  ],
+  "Business Studies": [
+    "Business, Trade and Commerce",
+    "Forms of Business Organisation",
+    "Private, Public and Global Enterprises",
+    "Business Services",
+    "Emerging Modes of Business",
+    "Social Responsibilities of Business and Business Ethics",
+    "Sources of Business Finance",
+    "Small Business and Entrepreneurship",
+    "Internal Trade",
+    "International Business",
+  ],
+  Economics: [
+    "Statistics: Introduction",
+    "Statistics: Collection of Data",
+    "Statistics: Organisation of Data",
+    "Statistics: Presentation of Data",
+    "Statistics: Measures of Central Tendency",
+    "Statistics: Correlation",
+    "Statistics: Index Numbers",
+    "Indian Economy on the Eve of Independence",
+    "Indian Economy 1950–1990",
+    "Liberalisation, Privatisation and Globalisation: An Appraisal",
+    "Human Capital Formation in India",
+    "Rural Development",
+    "Employment: Growth, Informalisation and Other Issues",
+    "Environment and Sustainable Development",
+    "Comparative Development Experiences of India and its Neighbours",
+  ],
+  History: [
+    "Writing and City Life",
+    "An Empire Across Three Continents",
+    "Nomadic Empires",
+    "The Three Orders",
+    "Changing Cultural Traditions",
+    "Displacing Indigenous Peoples",
+    "Paths to Modernisation",
+  ],
+  "Political Science": [
+    "Constitution: Why and How?",
+    "Rights in the Indian Constitution",
+    "Election and Representation",
+    "Executive",
+    "Legislature",
+    "Judiciary",
+    "Federalism",
+    "Local Governments",
+    "Constitution as a Living Document",
+    "The Philosophy of the Constitution",
+    "Political Theory: An Introduction",
+    "Freedom",
+    "Equality",
+    "Social Justice",
+    "Rights",
+    "Citizenship",
+    "Nationalism",
+    "Secularism",
+  ],
+  Sociology: [
+    "Sociology, Society and its Relationship with Other Social Sciences",
+    "Terms, Concepts and their Use in Sociology",
+    "Understanding Social Institutions",
+    "Culture and Socialisation",
+    "Doing Sociology: Research Methods",
+    "Social Structure, Stratification and Social Processes in Society",
+    "Social Change and Social Order in Rural and Urban Society",
+    "Introducing Western Sociologists",
+    "Indian Sociologists",
+  ],
+} satisfies Partial<Record<Subject, string[]>>);
+
 /** Class 12 / 2nd PUC (current NCERT books). */
 export const CHAPTERS: Partial<Record<Subject, string[]>> = {
   Physics: [
@@ -156,6 +265,94 @@ export const CHAPTERS: Partial<Record<Subject, string[]>> = {
   ],
 };
 
+Object.assign(CHAPTERS, {
+  Accountancy: [
+    "Accounting for Partnership: Basic Concepts",
+    "Reconstitution of a Partnership Firm: Admission of a Partner",
+    "Reconstitution of a Partnership Firm: Retirement and Death of a Partner",
+    "Dissolution of Partnership Firm",
+    "Accounting for Share Capital",
+    "Issue and Redemption of Debentures",
+    "Financial Statements of a Company",
+    "Analysis of Financial Statements",
+    "Accounting Ratios",
+    "Cash Flow Statement",
+  ],
+  "Business Studies": [
+    "Nature and Significance of Management",
+    "Principles of Management",
+    "Business Environment",
+    "Planning",
+    "Organising",
+    "Staffing",
+    "Directing",
+    "Controlling",
+    "Financial Management",
+    "Financial Markets",
+    "Marketing",
+    "Consumer Protection",
+  ],
+  Economics: [
+    "Microeconomics: Introduction",
+    "Theory of Consumer Behaviour",
+    "Production and Costs",
+    "The Theory of the Firm under Perfect Competition",
+    "Market Equilibrium",
+    "Macroeconomics: Introduction",
+    "National Income Accounting",
+    "Money and Banking",
+    "Determination of Income and Employment",
+    "Government Budget and the Economy",
+    "Open Economy Macroeconomics",
+  ],
+  History: [
+    "Bricks, Beads and Bones",
+    "Kings, Farmers and Towns",
+    "Kinship, Caste and Class",
+    "Thinkers, Beliefs and Buildings",
+    "Through the Eyes of Travellers",
+    "Bhakti–Sufi Traditions",
+    "An Imperial Capital: Vijayanagara",
+    "Peasants, Zamindars and the State",
+    "Colonialism and the Countryside",
+    "Rebels and the Raj",
+    "Mahatma Gandhi and the Nationalist Movement",
+    "Understanding Partition",
+    "Framing the Constitution",
+  ],
+  "Political Science": [
+    "The End of Bipolarity",
+    "New Centres of Power",
+    "Contemporary South Asia",
+    "International Organisations",
+    "Security in the Contemporary World",
+    "Environment and Natural Resources",
+    "Globalisation",
+    "Challenges of Nation Building",
+    "Era of One-Party Dominance",
+    "Politics of Planned Development",
+    "India’s External Relations",
+    "Challenges to and Restoration of the Congress System",
+    "The Crisis of Democratic Order",
+    "Regional Aspirations",
+    "Recent Developments in Indian Politics",
+  ],
+  Sociology: [
+    "The Demographic Structure of Indian Society",
+    "Social Institutions: Continuity and Change",
+    "The Market as a Social Institution",
+    "Patterns of Social Inequality and Exclusion",
+    "The Challenges of Cultural Diversity",
+    "Structural Change",
+    "Cultural Change",
+    "Change and Development in Rural Society",
+    "Change and Development in Industrial Society",
+    "Globalisation and Social Change",
+    "Mass Media and Communications",
+    "Social Movements",
+  ],
+} satisfies Partial<Record<Subject, string[]>>);
+
 /** Class 10 (current NCERT books). */
 export const CHAPTERS_10: Partial<Record<Subject, string[]>> = {
   Maths: [
@@ -212,17 +409,67 @@ export const CHAPTERS_10: Partial<Record<Subject, string[]>> = {
     "Economics: Money and Credit",
     "Economics: Globalisation and the Indian Economy",
   ],
+  English: [
+    "A Letter to God",
+    "Nelson Mandela: Long Walk to Freedom",
+    "Two Stories about Flying",
+    "From the Diary of Anne Frank",
+    "Glimpses of India",
+    "Mijbil the Otter",
+    "Madam Rides the Bus",
+    "The Sermon at Benares",
+    "The Proposal",
+    "Poems: Dust of Snow and Fire and Ice",
+    "Poems: A Tiger in the Zoo and How to Tell Wild Animals",
+    "Poems: The Ball Poem and Amanda!",
+    "Poems: The Trees and Fog",
+    "Poems: The Tale of Custard the Dragon and For Anne Gregory",
+    "Supplementary: A Triumph of Surgery",
+    "Supplementary: The Thief’s Story",
+    "Supplementary: The Midnight Visitor",
+    "Supplementary: A Question of Trust",
+    "Supplementary: Footprints without Feet",
+    "Supplementary: The Making of a Scientist",
+    "Supplementary: The Necklace",
+    "Supplementary: Bholi",
+    "Supplementary: The Book That Saved the Earth",
+    "Grammar and Writing",
+  ],
+  Hindi: [
+    "पद (सूरदास)",
+    "राम-लक्ष्मण-परशुराम संवाद",
+    "आत्मकथ्य",
+    "उत्साह और अट नहीं रही है",
+    "यह दंतुरित मुसकान और फसल",
+    "संगतकार",
+    "नेताजी का चश्मा",
+    "बालगोबिन भगत",
+    "लखनवी अंदाज़",
+    "एक कहानी यह भी",
+    "नौबतखाने में इबादत",
+    "संस्कृति",
+    "माता का अँचल",
+    "साना-साना हाथ जोड़ि",
+    "मैं क्यों लिखता हूँ?",
+    "व्याकरण और लेखन",
+  ],
 };
 
 const BY_GRADE: Record<Grade, Partial<Record<Subject, string[]>>> = { 10: CHAPTERS_10, 11: CHAPTERS_11, 12: CHAPTERS };
 export const chaptersFor = (grade: Grade, subject: Subject): string[] => BY_GRADE[grade]?.[subject] ?? [];
 
-const SCHOOL_10: Subject[] = ["Maths", "Science", "Social Science"];
-/** Exams for a class: SSLC / CBSE for Class 10, PUC / CBSE / NEET / KCET for 11 and 12. */
-export const examsFor = (grade: Grade) => EXAMS.filter((e) => (grade === 10 ? e.id === "sslc" || e.id === "cbse" : e.id !== "sslc"));
-export const subjectsFor = (exam: ExamId, grade: Grade): Subject[] => (grade === 10 ? SCHOOL_10 : (EXAMS.find((e) => e.id === exam)?.subjects ?? []));
-/** The exam to show: the saved one if it fits the class, else the first for that class. */
-export const examFor = (saved: ExamId | undefined, grade: Grade) => examsFor(grade).find((e) => e.id === saved) ?? examsFor(grade)[0];
+const SCHOOL_10: Subject[] = ["Maths", "Science", "Social Science", "English", "Hindi"];
+const BY_STREAM: Record<Exclude<Stream, "science">, Subject[]> = {
+  commerce: ["Accountancy", "Business Studies", "Economics", "Maths"],
+  arts: ["History", "Political Science", "Economics", "Sociology"],
+};
+/** Exams for a class: SSLC / CBSE for Class 10; PUC / CBSE (+ NEET / KCET for Science) for 11 and 12. */
+export const examsFor = (grade: Grade, stream: Stream = "science") =>
+  EXAMS.filter((e) => (grade === 10 ? e.id === "sslc" || e.id === "cbse" : e.id !== "sslc" && (stream === "science" || e.id === "puc" || e.id === "cbse")));
+export const subjectsFor = (exam: ExamId, grade: Grade, stream: Stream = "science"): Subject[] =>
+  grade === 10 ? SCHOOL_10 : stream !== "science" ? BY_STREAM[stream] : (EXAMS.find((e) => e.id === exam)?.subjects ?? []);
+/** The exam to show: the saved one if it fits the class and stream, else the first that does. */
+export const examFor = (saved: ExamId | undefined, grade: Grade, stream: Stream = "science") => examsFor(grade, stream).find((e) => e.id === saved) ?? examsFor(grade, stream)[0];
 
 /** "Physics/Atoms" for Class 12 (kept as before), "11:Physics/Waves" for Class 11, "10:Science/Heredity" for Class 10. */
 export const chapterKey = (subject: Subject, chapter: string, grade: Grade = 12) => `${grade === 12 ? "" : `${grade}:`}${subject}/${chapter}`;
@@ -262,8 +509,10 @@ export interface ExamPrepState {
   notes?: Record<string, ChapterNotes>;
   /** days with at least one finished focus session (YYYY-MM-DD) and minutes per day */
   focus?: Record<string, number>;
-  /** class shown: 11 (1st PUC) or 12 (2nd PUC) */
+  /** class shown: 10, 11 (1st PUC) or 12 (2nd PUC) */
   grade?: Grade;
+  /** stream shown for Class 11–12 */
+  stream?: Stream;
   /** per video: modules finished and the student's notes */
   videos?: Record<string, { done: number[]; notes: string }>;
   /** what the student has opened per chapter (ms) */
@@ -307,8 +556,8 @@ export interface NextUp {
   tab: "videos" | "notes" | "practice";
 }
 /** Up to `n` things to do next: weakest chapters to revise, chapters studied but not tested, then the next new chapter of each subject. */
-export function nextUp(exam: ExamId, st: ExamPrepState, n = 3, grade: Grade = st.grade ?? 12): NextUp[] {
-  const subjects = subjectsFor(exam, grade);
+export function nextUp(exam: ExamId, st: ExamPrepState, n = 3, grade: Grade = st.grade ?? 12, stream: Stream = st.stream ?? "science"): NextUp[] {
+  const subjects = subjectsFor(exam, grade, stream);
   const out: NextUp[] = [];
   const key = (s: Subject, c: string) => chapterKey(s, c, grade);
   const CH = (s: Subject) => chaptersFor(grade, s);
