@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { Skyline3D } from "@/components/college/skyline-3d";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
+import { TextRevealFaqs } from "@/components/landing/text-reveal-faqs";
 import { Eyebrow, TiltCard, delay as d } from "@/components/site/motion";
 import { CONTACT_EMAIL, SiteShell } from "@/components/site/site-shell";
 import { ArrowRightIcon, CheckIcon, LockIcon, SendIcon } from "@/components/ui/icons";
@@ -50,10 +51,12 @@ const STEPS = [
 ];
 
 const FAQ = [
+  { q: "Which institutions is this for?", a: "PU colleges, schools (Class 10 to 12) and degree colleges, including engineering, commerce, arts and management." },
   { q: "Do students have to pay?", a: "No. Students use StudentOS free. The college pays for the dashboard and placements after the free pilot." },
   { q: "Can the college see students’ chats or notes?", a: "No. Only test scores, activity and placement details are shared, and only by students who agree. They can stop any time." },
   { q: "Do we need to install anything?", a: "No. It works in the browser on any laptop or phone. Faculty log in with a StudentOS account." },
   { q: "What happens after the pilot?", a: "If it helps, you continue on a yearly plan priced by the number of students. If it doesn’t, you stop; nothing to cancel." },
+  { q: "Who can post placement drives?", a: "Only the admin and the placement coordinator. Teachers can see placements but can’t change them, and the database enforces this." },
 ];
 
 function DemoForm() {
@@ -87,7 +90,6 @@ function DemoForm() {
 export function InstitutionsPage() {
   const [kind, setKind] = useState<"school" | "degree">("school");
   const grid = useMemo(() => readinessGrid(sampleMembers(kind), kind), [kind]);
-  const [open, setOpen] = useState<number | null>(0);
 
   return (
     <SiteShell>
@@ -230,16 +232,11 @@ export function InstitutionsPage() {
               Try it free for <span className="land-shine">one month</span>
             </h2>
             <p className="mt-4 max-w-[480px] text-[15px] leading-relaxed text-white/62">We set it up with you, your students join, and you see real numbers within a week. Continue only if it helps; the price depends on your number of students and we share it on the call.</p>
-            <div className="mt-8 space-y-3">
-              {FAQ.map((f, i) => (
-                <div key={f.q} className="rounded-xl border border-white/10 bg-ink/50">
-                  <button type="button" onClick={() => setOpen(open === i ? null : i)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[14px] font-medium text-white">
-                    {f.q} <span className={cn("text-white/40 transition", open === i && "rotate-45")}>+</span>
-                  </button>
-                  {open === i && <p className="px-4 pb-4 text-[13.5px] leading-relaxed text-white/60">{f.a}</p>}
-                </div>
+            <ul className="mt-7 space-y-2.5 text-[14px] text-white/75">
+              {["We set it up with your team in one visit or call", "Students join with a code or QR in a few minutes", "Students choose what they share with the college", "No payment until you decide to continue"].map((x) => (
+                <li key={x} className="flex gap-2.5"><CheckIcon size={15} className="mt-0.5 shrink-0 text-emerald-300" /> {x}</li>
               ))}
-            </div>
+            </ul>
           </div>
           <div className="reveal rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8" style={d(0.1)}>
             <p className="text-[20px] font-semibold text-white">Book a free demo</p>
@@ -247,6 +244,11 @@ export function InstitutionsPage() {
             <DemoForm />
           </div>
         </div>
+      </section>
+
+      {/* FAQ, with the same blur text reveal as the landing page */}
+      <section id="faq" className="reveal mx-auto max-w-[1080px] scroll-mt-20 px-5 py-24">
+        <TextRevealFaqs items={FAQ} sub="Everything colleges ask us before a pilot." />
       </section>
     </SiteShell>
   );

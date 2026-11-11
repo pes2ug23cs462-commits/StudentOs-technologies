@@ -75,7 +75,7 @@ function Row({ item, open, onToggle }: { item: FaqItem; open: boolean; onToggle:
   );
 }
 
-export function TextRevealFaqs({ items, contactHref = "/contact" }: { items: FaqItem[]; contactHref?: string }) {
+export function TextRevealFaqs({ items, contactHref = "/contact", sub = "Everything you need to know about StudentOS." }: { items: FaqItem[]; contactHref?: string; sub?: string }) {
   const [open, setOpen] = useState<number | null>(0);
   const help = (
     <>
@@ -91,7 +91,7 @@ export function TextRevealFaqs({ items, contactHref = "/contact" }: { items: Faq
       <div className="md:col-span-2">
         <span className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-accent uppercase">FAQ</span>
         <h2 className="mt-4 text-[34px] font-semibold tracking-tight text-white sm:text-[40px]">Questions, answered</h2>
-        <p className="mt-3 text-[15px] text-balance text-white/60">Everything you need to know about StudentOS.</p>
+        <p className="mt-3 text-[15px] text-balance text-white/60">{sub}</p>
         <p className="mt-6 hidden text-[14px] text-white/55 md:block">{help}</p>
       </div>
       <div className="depth rounded-2xl border border-white/10 bg-white/[0.02] px-5 md:col-span-3">
