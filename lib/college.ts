@@ -19,7 +19,10 @@ import type { PlacementProfile } from "@/lib/placement";
 import type { AppState } from "@/lib/store";
 
 export type CollegeType = "school" | "degree";
-export type StaffRole = "admin" | "teacher" | "viewer";
+export type StaffRole = "admin" | "placement" | "teacher" | "viewer";
+export const ROLE_LABEL: Record<StaffRole, string> = { admin: "Admin", placement: "Placement coordinator", teacher: "Teacher", viewer: "Viewer" };
+/** Who can post drives and update shortlists and offers. */
+export const canRunPlacements = (r: StaffRole) => r === "admin" || r === "placement";
 
 export interface College {
   id: string;

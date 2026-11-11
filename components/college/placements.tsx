@@ -48,7 +48,7 @@ export function Funnel3D({ steps }: { steps: { label: string; n: number }[] }) {
   );
 }
 
-export function Placements({ college, uid, sample }: { college: College; uid: string | null; sample: boolean }) {
+export function Placements({ college, uid, sample, canEdit }: { college: College; uid: string | null; sample: boolean; canEdit: boolean }) {
   const { actions } = useStore();
   const [drives, setDrives] = useState<Drive[]>([]);
   const [apps, setApps] = useState<Record<string, Application[]>>({});
@@ -110,6 +110,7 @@ export function Placements({ college, uid, sample }: { college: College; uid: st
         drive={drive}
         apps={apps[drive.id] ?? []}
         sample={sample}
+        canEdit={canEdit}
         back={() => setOpen(null)}
         edit={() => setForm(drive)}
         setDrive={(d) => void save(d)}
@@ -137,7 +138,7 @@ export function Placements({ college, uid, sample }: { college: College; uid: st
       </div>
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-semibold text-white">Drives</h2>
-        <Button variant="primary" size="sm" icon={<PlusIcon size={14} />} onClick={() => setForm(blank())}>New drive</Button>
+        {canEdit ? <Button variant="primary" size="sm" icon={<PlusIcon size={14} />} onClick={() => setForm(blank())}>New drive</Button> : <ReadOnly />}
       </div>
       {drives.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -176,12 +177,16 @@ export function Placements({ college, uid, sample }: { college: College; uid: st
       ) : (
         <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center">
           <BriefcaseIcon size={26} className="mx-auto text-white/35" />
-          <p className="mx-auto mt-3 max-w-md text-[13.5px] text-white/60">No drives yet. Add the first company coming to campus; eligible students see it in their Placement page straight away.</p>
-          <Button variant="primary" size="sm" className="mt-4" onClick={() => setForm(blank())}>Add a drive</Button>
+          <p className="mx-auto mt-3 max-w-md text-[13.5px] text-white/60">{canEdit ? "No drives yet. Add the first company coming to campus; eligible students see it in their Placement page straight away." : "No drives yet. Your placement coordinator adds them here."}</p>
+          {canEdit && <Button variant="primary" size="sm" className="mt-4" onClick={() => setForm(blank())}>Add a drive</Button>}
         </div>
       )}
     </div>
   );
+}
+
+function ReadOnly() {
+  return <span className="rounded-lg border border-white/10 px-2.5 py-1 text-[11.5px] text-white/55">View only · the placement coordinator makes changes</span>;
 }
 
 /* ---------------- new / edit drive ---------------- */
@@ -254,7 +259,7 @@ function DriveForm({ initial, onSave, onCancel }: { initial: Drive; onSave: (d: 
 
 type Filter = "all" | "applied" | `r${number}` | "selected" | "rejected";
 
-function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; back: () => void; edit: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
+function DriveDetail({ college, drive, apps, sample, canEdit, back, edit, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; canEdit: boolean; back: () => void; edit: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
   const { actions } = useStore();
   const [filter, setFilter] = useState<Filter>("all");
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -323,10 +328,14 @@ function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setAp
               <p className="text-[13px] text-white/60">{drive.role} · {drive.kind}{drive.location ? ` · ${drive.location}` : ""}</p>
               <p className="mt-2 text-[22px] font-semibold text-white">{drive.ctc}</p>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={edit}>Edit</Button>
-              <Button size="sm" onClick={() => setDrive({ ...drive, open: !drive.open })}>{drive.open ? "Close applications" : "Reopen"}</Button>
-            </div>
+            {canEdit ? (
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={edit}>Edit</Button>
+                <Button size="sm" onClick={() => setDrive({ ...drive, open: !drive.open })}>{drive.open ? "Close applications" : "Reopen"}</Button>
+              </div>
+            ) : (
+              <ReadOnly />
+            )}
           </div>
           <div className="mt-5 flex flex-wrap gap-2 text-[12px]">
             <span className="rounded-lg bg-white/[0.05] px-2.5 py-1 text-white/70">{drive.elig.branches.length ? drive.elig.branches.join(", ") : "All branches"}</span>
@@ -356,7 +365,7 @@ function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setAp
           <Button size="sm" variant="ghost" className="ml-auto" icon={<DownloadIcon size={13} />} onClick={csv} disabled={!apps.length}>Excel</Button>
         </div>
 
-        {picked.size > 0 && (
+        {canEdit && picked.size > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-[var(--color-plum)]/50 px-3 py-2.5">
             <span className="mr-1 text-[12.5px] text-white">{picked.size} picked</span>
             <Button size="sm" variant="primary" onClick={advance}>Move to next round</Button>
@@ -371,7 +380,7 @@ function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setAp
           <table className="mt-4 w-full text-[13px]">
             <thead>
               <tr className="text-left text-[11.5px] text-white/45">
-                <th className="w-8 pb-2"><input type="checkbox" checked={picked.size > 0 && picked.size === list.length} onChange={toggleAll} className="accent-[#a78bfa]" aria-label="Pick all" /></th>
+                <th className={cn("w-8 pb-2", !canEdit && "hidden")}><input type="checkbox" checked={picked.size > 0 && picked.size === list.length} onChange={toggleAll} className="accent-[#a78bfa]" aria-label="Pick all" /></th>
                 <th className="pb-2 font-medium">Student</th>
                 <th className="pb-2 font-medium">Branch</th>
                 <th className="pb-2 font-medium">CGPA</th>
@@ -382,7 +391,7 @@ function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setAp
             <tbody>
               {list.map((a) => [
                 <tr key={a.uid} className="border-t border-white/[0.06] hover:bg-white/[0.02]">
-                  <td className="py-2.5"><input type="checkbox" checked={picked.has(a.uid)} onChange={() => setPicked((p) => { const n = new Set(p); n.has(a.uid) ? n.delete(a.uid) : n.add(a.uid); return n; })} className="accent-[#a78bfa]" aria-label={`Pick ${a.name}`} /></td>
+                  <td className={cn("py-2.5", !canEdit && "hidden")}><input type="checkbox" checked={picked.has(a.uid)} onChange={() => setPicked((p) => { const n = new Set(p); n.has(a.uid) ? n.delete(a.uid) : n.add(a.uid); return n; })} className="accent-[#a78bfa]" aria-label={`Pick ${a.name}`} /></td>
                   <td className="cursor-pointer py-2.5 pr-3 whitespace-nowrap text-white" onClick={() => setOpenRow(openRow === a.uid ? null : a.uid)}>{a.name}</td>
                   <td className="py-2.5 pr-3 text-white/60">{a.branch}</td>
                   <td className="py-2.5 pr-3 text-white/60 tabular-nums">{a.cgpa}</td>
@@ -393,7 +402,7 @@ function DriveDetail({ college, drive, apps, sample, back, edit, setDrive, setAp
                 </tr>,
                 openRow === a.uid && (
                   <tr key={a.uid + "-o"}>
-                    <td />
+                    {canEdit && <td />}
                     <td colSpan={5} className="pb-3">
                       <div className="grid gap-3 rounded-xl bg-white/[0.03] p-3 text-[12.5px] md:grid-cols-3">
                         <div><p className="text-white/45">Headline</p><p className="text-white/80">{a.resume.headline || "—"}</p><p className="mt-2 text-white/45">Projects</p><p className="text-white/80">{a.resume.projects.join(", ") || "—"}</p></div>

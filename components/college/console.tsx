@@ -39,6 +39,8 @@ import {
   weakChaptersOf,
   type College,
   type CollegeType,
+  ROLE_LABEL,
+  canRunPlacements,
   type MemberSummary,
   type Staff,
   type StaffRole,
@@ -331,7 +333,7 @@ export function CollegeConsole() {
       </div>
       <div className="mt-5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
         <p className="truncate text-[13px] font-semibold text-white">{college?.name ?? link.name}</p>
-        <p className="mt-0.5 text-[11.5px] text-white/45">{type === "school" ? "PU / school" : "Degree college"} · {role}</p>
+        <p className="mt-0.5 text-[11.5px] text-white/45">{type === "school" ? "PU / school" : "Degree college"} · {ROLE_LABEL[role] ?? role}</p>
       </div>
       <nav className="mt-4 space-y-0.5">
         {visibleNav.map(({ key, label, Icon, degree }) => (
@@ -383,7 +385,7 @@ export function CollegeConsole() {
                 {tab === "overview" && <Overview college={college} members={members} joinUrl={joinUrl} go={go} />}
                 {tab === "sections" && <Sections members={members} type={type} />}
                 {tab === "chapters" && (type === "school" ? <Chapters members={members} /> : <Placement members={members} />)}
-                {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={sample} />}
+                {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={sample} canEdit={canRunPlacements(role)} />}
                 {tab === "students" && role !== "viewer" && <Students members={members} type={type} />}
                 {tab === "faculty" && <Faculty college={college} staff={staff} role={role} staffCode={staffCode} reload={load} uid={uid} />}
                 {tab === "privacy" && <Privacy members={members} sample={sample} />}
@@ -811,13 +813,14 @@ function Faculty({ college, staff, role, staffCode, reload, uid }: { college: Co
                 <>
                   <select value={s.role} onChange={(e) => void change(s, e.target.value as StaffRole)} className="h-8 rounded-lg border border-white/10 bg-[#121216] px-2 text-[12.5px] text-white/80" aria-label="Role">
                     <option value="admin">Admin</option>
+                    {college.type === "degree" && <option value="placement">Placement coordinator</option>}
                     <option value="teacher">Teacher</option>
                     <option value="viewer">Viewer</option>
                   </select>
                   <button type="button" onClick={() => void remove(s)} className="rounded-lg p-1.5 text-white/40 hover:bg-white/[0.06] hover:text-rose-300" aria-label="Remove"><XIcon size={14} /></button>
                 </>
               ) : (
-                <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[11.5px] text-white/65 capitalize">{s.role}</span>
+                <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[11.5px] text-white/65">{ROLE_LABEL[s.role] ?? s.role}</span>
               )}
             </li>
           ))}
@@ -839,7 +842,7 @@ function Faculty({ college, staff, role, staffCode, reload, uid }: { college: Co
           )}
         </Panel>
         <Panel title="Roles">
-          {([["Admin", "Everything: all students, faculty, settings and reports."], ["Teacher", "All students and chapters; can plan extra classes."], ["Viewer", "Class-level numbers only. No student names."]] as const).map(([r, t]) => (
+          {([["Admin", "Everything: all students, faculty, settings, placements and reports."], ...(college.type === "degree" ? [["Placement coordinator", "Posts drives, shortlists students, sends test links and adds offers."]] : []), ["Teacher", college.type === "degree" ? "All students and chapters; sees placements but can’t change them." : "All students and chapters; can plan extra classes."], ["Viewer", "Class-level numbers only. No student names."]] as [string, string][]).map(([r, t]) => (
             <div key={r} className="flex gap-3 py-1.5">
               <CheckIcon size={14} className="mt-0.5 shrink-0 text-accent" />
               <p className="text-[12.5px] text-white/70"><b className="text-white">{r}</b> · {t}</p>
