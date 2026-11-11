@@ -54,6 +54,9 @@ function cloud(text: string, voice: VoiceId): Promise<string | null> {
   return p;
 }
 
+// typed by inference so it builds on both older and newer TypeScript versions
+const newBuf = (n: number) => new Uint8Array(new ArrayBuffer(n));
+
 export interface Talker {
   say: (text: string) => Promise<SayResult>;
   stop: () => void;
@@ -70,7 +73,7 @@ export function createTalker(voice: VoiceId = "hannah"): Talker {
   let audio: HTMLAudioElement | null = null;
   let ctx: AudioContext | null = null;
   let analyser: AnalyserNode | null = null;
-  let buf: Uint8Array<ArrayBuffer> | null = null;
+  let buf: ReturnType<typeof newBuf> | null = null;
   let mode: "natural" | "browser" = "natural";
   // browser-voice mouth: when the current word started and how long it is
   let browserSpeaking = false;
@@ -88,7 +91,7 @@ export function createTalker(voice: VoiceId = "hannah"): Talker {
       const src = ctx.createMediaElementSource(audio);
       analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
-      buf = new Uint8Array(new ArrayBuffer(analyser.fftSize));
+      buf = newBuf(analyser.fftSize);
       src.connect(analyser);
       analyser.connect(ctx.destination);
     } catch {
