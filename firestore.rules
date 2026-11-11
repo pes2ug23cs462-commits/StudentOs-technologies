@@ -74,6 +74,24 @@ service cloud.firestore {
         allow read: if isStaff(cid);
         allow write: if isCollegeAdmin(cid);
       }
+      // campus placement drives: faculty (not viewers) post them; students who joined the college read them
+      match /drives/{did} {
+        allow read: if isStaff(cid) || (request.auth != null && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(request.auth.uid)));
+        allow write: if isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "teacher"];
+        // applications: a student creates and reads only their own; faculty update rounds, links and offers;
+        // the student can only answer the offer
+        match /apps/{uid} {
+          allow read: if isStaff(cid) || (request.auth != null && request.auth.uid == uid);
+          allow create: if request.auth != null && request.auth.uid == uid
+            && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(uid))
+            && request.resource.data.uid == uid && request.resource.data.status == "applied"
+            && request.resource.data.round == 0 && request.resource.data.links.size() == 0 && !("offer" in request.resource.data);
+          allow update: if (isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "teacher"])
+            || (request.auth != null && request.auth.uid == uid && "offer" in resource.data
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["decision", "decidedAt", "updatedAt"]));
+          allow delete: if isCollegeAdmin(cid);
+        }
+      }
       // a student's shared summary: only they write it; staff read it; they or an admin delete it
       match /members/{uid} {
         allow read: if isStaff(cid);

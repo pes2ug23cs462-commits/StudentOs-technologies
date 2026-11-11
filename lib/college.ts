@@ -15,6 +15,7 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CHAPTERS, CHAPTERS_10, CHAPTERS_11, levelOf, parseKey, type ExamPrepState } from "@/lib/exam-prep";
+import type { PlacementProfile } from "@/lib/placement";
 import type { AppState } from "@/lib/store";
 
 export type CollegeType = "school" | "degree";
@@ -60,6 +61,11 @@ export interface MemberSummary {
   /** test scores outside exam prep (Practice Arena), average % */
   practiceAvg: number;
   practiceTests: number;
+  /** placement details the student filled (degree colleges) */
+  branch?: string;
+  cgpa?: number | null;
+  backlogs?: number | null;
+  batch?: string;
 }
 /** Saved in the student's own data when they join a college. */
 export interface CollegeLink {
@@ -67,6 +73,8 @@ export interface CollegeLink {
   name: string;
   section: string;
   joinedAt: number;
+  type?: CollegeType;
+  placement?: PlacementProfile;
 }
 /** Saved in a faculty member's own data. */
 export interface StaffLink {
@@ -181,11 +189,12 @@ export function buildSummary(state: AppState, link: CollegeLink, uid: string, pr
     practiceAvg: tests.length ? Math.round(tests.slice(0, 10).reduce((n, t) => n + (t.total ? (t.score / t.total) * 100 : 0), 0) / Math.min(10, tests.length)) : 0,
     practiceTests: tests.length,
     ...(prev ? { joinedAt: prev.joinedAt } : {}),
+    ...(link.placement ? { branch: link.placement.branch, cgpa: link.placement.cgpa, backlogs: link.placement.backlogs, batch: link.placement.batch } : {}),
   };
 }
 
 export async function joinCollege(state: AppState, uid: string, college: College, section: string): Promise<CollegeLink> {
-  const link: CollegeLink = { cid: college.id, name: college.name, section: section.trim() || "Not set", joinedAt: Date.now() };
+  const link: CollegeLink = { cid: college.id, name: college.name, section: section.trim() || "Not set", joinedAt: Date.now(), type: college.type };
   await setDoc(doc(db, "colleges", college.id, "members", uid), buildSummary(state, link, uid));
   return link;
 }

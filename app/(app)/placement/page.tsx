@@ -13,6 +13,7 @@ import { PremiumBadge } from "@/components/premium/premium-gate";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowRightIcon, BellIcon, CheckIcon, FileIcon, MicIcon, PlanIcon, TargetIcon } from "@/components/ui/icons";
 import { Card, LogoMark } from "@/components/ui/primitives";
+import { CampusDrives, JoinForDrives } from "@/components/placement/campus-drives";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -60,8 +61,20 @@ export default function PlacementPage() {
     setMsg("You’re on the early-access list. We’ll tell you here in StudentOS when listings open.");
   };
 
+  // students whose college runs placements on StudentOS see their campus drives
+  if (state.college) {
+    return (
+      <div className="px-6 py-7 lg:px-8">
+        <CampusDrives />
+      </div>
+    );
+  }
+
   return (
     <div className="px-6 py-8 lg:px-8">
+      <div className="mb-8">
+        <JoinForDrives />
+      </div>
       {/* ---------- hero ---------- */}
       <section className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
         <div>

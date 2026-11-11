@@ -10,7 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircleIcon, ArrowLeftIcon, BarChartIcon, BookIcon, BuildingIcon, CheckIcon, DownloadIcon, FileIcon, GridIcon, HomeIcon, LayersIcon, LockIcon, LogOutIcon, MenuIcon, SearchIcon, ShieldIcon, SparkleIcon, UsersIcon, XIcon } from "@/components/ui/icons";
+import { AlertCircleIcon, ArrowLeftIcon, BarChartIcon, BookIcon, BriefcaseIcon, BuildingIcon, CheckIcon, DownloadIcon, FileIcon, GridIcon, HomeIcon, LayersIcon, LockIcon, LogOutIcon, MenuIcon, SearchIcon, ShieldIcon, SparkleIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Toaster } from "@/components/ui/toaster";
 import { logOut } from "@/lib/auth";
@@ -46,9 +46,10 @@ import {
 import { qrPath } from "@/lib/qr";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { Placements } from "./placements";
 import { Skyline3D, Tilt } from "./skyline-3d";
 
-type Tab = "overview" | "sections" | "chapters" | "students" | "faculty" | "privacy" | "reports";
+type Tab = "overview" | "sections" | "chapters" | "placements" | "students" | "faculty" | "privacy" | "reports";
 
 /* ---------------- small parts ---------------- */
 
@@ -230,10 +231,11 @@ function Setup() {
 
 /* ---------------- console ---------------- */
 
-const NAV: { key: Tab; label: string; Icon: typeof HomeIcon; school?: string; degree?: string }[] = [
+const NAV: { key: Tab; label: string; Icon: typeof HomeIcon; school?: string; degree?: string; only?: CollegeType }[] = [
   { key: "overview", label: "Overview", Icon: HomeIcon },
   { key: "sections", label: "Classes & sections", Icon: GridIcon },
   { key: "chapters", label: "Weak chapters", Icon: BookIcon, degree: "Placement readiness" },
+  { key: "placements", label: "Placements", Icon: BriefcaseIcon, only: "degree" },
   { key: "students", label: "Students", Icon: UsersIcon },
   { key: "faculty", label: "Faculty", Icon: ShieldIcon },
   { key: "privacy", label: "Consent & privacy", Icon: LockIcon },
@@ -295,7 +297,7 @@ export function CollegeConsole() {
   if (!link) return <Setup />;
 
   const joinUrl = college && typeof window !== "undefined" ? `${window.location.origin}/join?code=${college.code}` : "";
-  const visibleNav = NAV.filter((n) => !(role === "viewer" && n.key === "students"));
+  const visibleNav = NAV.filter((n) => !(role === "viewer" && (n.key === "students" || n.key === "placements")) && (!n.only || n.only === type));
 
   const Side = (
     <aside className="flex h-full w-[236px] flex-col border-r border-white/[0.06] bg-[#0b0b0d] px-3 py-4">
@@ -358,6 +360,7 @@ export function CollegeConsole() {
                 {tab === "overview" && <Overview college={college} members={members} joinUrl={joinUrl} go={go} />}
                 {tab === "sections" && <Sections members={members} type={type} />}
                 {tab === "chapters" && (type === "school" ? <Chapters members={members} /> : <Placement members={members} />)}
+                {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={sample} />}
                 {tab === "students" && role !== "viewer" && <Students members={members} type={type} />}
                 {tab === "faculty" && <Faculty college={college} staff={staff} role={role} staffCode={staffCode} reload={load} uid={uid} />}
                 {tab === "privacy" && <Privacy members={members} sample={sample} />}
@@ -373,7 +376,7 @@ export function CollegeConsole() {
 }
 
 function Header({ college, tab, type, sample, setSample, realCount }: { college: College; tab: Tab; type: CollegeType; sample: boolean; setSample: (v: boolean) => void; realCount: number }) {
-  const title = { overview: college.name, sections: "Classes & sections", chapters: type === "school" ? "Weak chapters" : "Placement readiness", students: "Students", faculty: "Faculty", privacy: "Consent & privacy", reports: "Reports" }[tab];
+  const title = { overview: college.name, sections: "Classes & sections", chapters: type === "school" ? "Weak chapters" : "Placement readiness", placements: "Placements", students: "Students", faculty: "Faculty", privacy: "Consent & privacy", reports: "Reports" }[tab];
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>

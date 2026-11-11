@@ -1,5 +1,6 @@
 "use client";
 
+import { InstitutionsBand } from "@/components/site/institutions-page";
 /* Public landing page (/).
    Motion: a 3D stage in the hero (logo, orbits and a turning ring of feature
    cards that tilts with the pointer), a scroll story where a 3D screen changes
@@ -634,6 +635,9 @@ export function Landing() {
           </div>
         </div>
       </section>
+
+      {/* for institutions */}
+      <InstitutionsBand />
 
       {/* FAQ */}
       <section id="faq" className="reveal mx-auto max-w-[1080px] scroll-mt-20 px-5 pb-24">
