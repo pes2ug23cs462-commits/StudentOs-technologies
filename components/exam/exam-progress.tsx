@@ -6,18 +6,18 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
-import { EXAMS, chapterKey, nextUp, readiness, type ExamPrepState } from "@/lib/exam-prep";
+import { EXAMS, chapterKey, gradeLabel, nextUp, readiness, type ExamPrepState, type Grade } from "@/lib/exam-prep";
 import { cn } from "@/lib/utils";
 
 const tone = (p: number) => (p >= 80 ? "bg-emerald-400" : p >= 60 ? "bg-amber-400" : p > 0 ? "bg-rose-400" : "bg-white/20");
 
-export function ExamProgress({ st, compact = false }: { st: ExamPrepState; compact?: boolean }) {
+export function ExamProgress({ st, grade = st.grade ?? 12, compact = false }: { st: ExamPrepState; grade?: Grade; compact?: boolean }) {
   const exam = EXAMS.find((e) => e.id === st.exam) ?? EXAMS[0];
-  const todo = nextUp(exam.id, st, compact ? 2 : 3);
+  const todo = nextUp(exam.id, st, compact ? 2 : 3, grade);
   return (
     <Card className="p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-[14px] font-semibold text-white">{compact ? `Exam Prep · ${exam.label}` : "How ready you are"}</p>
+        <p className="text-[14px] font-semibold text-white">{compact ? `Exam Prep · ${exam.id === "puc" ? gradeLabel(exam.id, grade) : `${exam.label} · Class ${grade}`}` : `How ready you are · ${gradeLabel(exam.id, grade)}`}</p>
         {compact && (
           <Link href="/exam-prep" className="text-[12px] font-medium text-accent hover:underline">
             Open
@@ -26,7 +26,7 @@ export function ExamProgress({ st, compact = false }: { st: ExamPrepState; compa
       </div>
       <ul className="mt-3.5 space-y-3">
         {exam.subjects.map((s) => {
-          const r = readiness(s, st.scores);
+          const r = readiness(s, st.scores, grade);
           return (
             <li key={s}>
               <div className="flex items-baseline justify-between text-[12.5px]">
@@ -47,8 +47,8 @@ export function ExamProgress({ st, compact = false }: { st: ExamPrepState; compa
           <p className="text-[12px] font-semibold tracking-wide text-[var(--cyan)] uppercase">Do next</p>
           <ul className="mt-2 space-y-1">
             {todo.map((t) => (
-              <li key={chapterKey(t.subject, t.chapter)}>
-                <Link href={`/exam-prep?open=${encodeURIComponent(chapterKey(t.subject, t.chapter))}&tab=${t.tab}`} className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.04]">
+              <li key={chapterKey(t.subject, t.chapter, grade)}>
+                <Link href={`/exam-prep?open=${encodeURIComponent(chapterKey(t.subject, t.chapter, grade))}&tab=${t.tab}`} className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.04]">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-medium text-white">{t.chapter}</span>
                     <span className="block text-[11.5px] text-white/50">

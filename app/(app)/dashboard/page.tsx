@@ -24,7 +24,7 @@ import {
 import { Card, Checkbox, EmptyState, Pill, ProgressBar } from "@/components/ui/primitives";
 import { Countdown } from "@/components/ui/countdown";
 import { ExamProgress } from "@/components/exam/exam-progress";
-import { showExamPrep } from "@/lib/exam-prep";
+import { defaultGrade, showExamPrep } from "@/lib/exam-prep";
 import { countable, nextSession, planWeek, sessionsInRange, weekStats, whenLabel } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { StudySession } from "@/lib/types";
@@ -75,7 +75,7 @@ function EmptyDashboard({ first }: { first: string }) {
 
       {showExamPrep(state.setup) && (
         <div className="mt-4 max-w-[560px]">
-          <ExamProgress st={state.examPrep ?? {}} compact />
+          <ExamProgress st={state.examPrep ?? {}} grade={state.examPrep?.grade ?? defaultGrade(state.setup)} compact />
         </div>
       )}
 
@@ -170,7 +170,7 @@ function FullDashboard({ first }: { first: string }) {
 
       {showExamPrep(state.setup) && (
         <div className="mt-4">
-          <ExamProgress st={state.examPrep ?? {}} compact />
+          <ExamProgress st={state.examPrep ?? {}} grade={state.examPrep?.grade ?? defaultGrade(state.setup)} compact />
         </div>
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-/* Exam Prep: for II PUC, CBSE 12, NEET and KCET students. Pick the exam and
+/* Exam Prep: for 1st/2nd PUC, CBSE 11/12, NEET and KCET students. Pick the exam and
    subject, see every chapter with how strong you are in it, read short notes,
    practise exam-style questions and get anything explained simply (English,
    Hinglish or Kannada). Free. */
@@ -17,8 +17,12 @@ import { ExamProgress } from "@/components/exam/exam-progress";
 import { FileIcon, VideoIcon } from "@/components/ui/icons";
 import { AssistantError, postAi } from "@/lib/assistant";
 import {
-  CHAPTERS,
   EXAMS,
+  chaptersFor,
+  defaultGrade,
+  gradeLabel,
+  parseKey,
+  type Grade,
   STATUS_LABEL,
   chapterKey,
   sanitizeNotes,
@@ -56,8 +60,10 @@ export default function ExamPrepPage() {
     const p = new URLSearchParams(window.location.search);
     const o = p.get("open");
     if (!o) return;
-    const [s] = o.split("/");
-    if ((Object.keys(CHAPTERS) as string[]).includes(s)) setSubject(s as Subject);
+    const k = parseKey(o);
+    if (!chaptersFor(k.grade, k.subject)?.includes(k.chapter)) return;
+    setSubject(k.subject);
+    if (k.grade !== grade) patch({ grade: k.grade });
     const t = p.get("tab");
     setOpenTab(t === "notes" || t === "practice" || t === "explain" ? t : "videos");
     setOpen(o);
@@ -66,15 +72,17 @@ export default function ExamPrepPage() {
   const subj = exam.subjects.includes(subject) ? subject : exam.subjects[0];
   const scores = prep.scores ?? {};
   const patch = (p: Partial<ExamPrepState>) => actions.patch({ examPrep: { ...(state.examPrep ?? {}), ...p } });
+  const grade: Grade = prep.grade ?? defaultGrade(state.setup);
 
-  const chapters = CHAPTERS[subj];
-  const practised = chapters.filter((c) => scores[chapterKey(subj, c)]).length;
+  const chapters = chaptersFor(grade, subj);
+  const key = (c: string) => chapterKey(subj, c, grade);
+  const practised = chapters.filter((c) => scores[key(c)]).length;
 
   if (!showExamPrep(state.setup)) {
     return (
       <div className="px-6 py-24 text-center">
         <p className="text-[15px] font-semibold text-white">Exam Prep is for school and PU students</p>
-        <p className="mt-1 text-[13px] text-white/55">It covers Class 12 board exams, NEET and KCET.</p>
+        <p className="mt-1 text-[13px] text-white/55">It covers Class 11 and 12 (PUC / CBSE), NEET and KCET.</p>
         <Button className="mt-4" onClick={() => router.push("/learn")}>
           Go to Learning
         </Button>
@@ -103,6 +111,15 @@ export default function ExamPrepPage() {
         ))}
       </div>
 
+      {/* class */}
+      <div role="radiogroup" aria-label="Class" className="mt-4 inline-flex rounded-lg border border-white/10 p-0.5">
+        {([11, 12] as const).map((g) => (
+          <button key={g} type="button" role="radio" aria-checked={grade === g} onClick={() => patch({ grade: g })} className={cn("h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors", grade === g ? "bg-[var(--color-plum)] text-white" : "text-white/55 hover:text-white")}>
+            {gradeLabel(exam.id, g)}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="min-w-0">
           {/* subject tabs */}
@@ -116,18 +133,18 @@ export default function ExamPrepPage() {
               ))}
             </div>
             <p className="pb-2.5 text-[12px] text-white/50 tabular-nums">
-              {practised}/{chapters.length} chapters practised · Class 12 NCERT
+              {practised}/{chapters.length} chapters practised · Class {grade} NCERT
             </p>
           </div>
 
           {/* chapters */}
-          <ol key={subj} className="mt-3 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08]">
+          <ol key={`${grade}-${subj}`} className="mt-3 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08]">
             {chapters.map((c, i) => {
-              const sc = scores[chapterKey(subj, c)];
+              const sc = scores[key(c)];
               const st = statusOf(sc);
               return (
                 <li key={c} className="ep-row" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
-                  <button type="button" onClick={() => setOpen(chapterKey(subj, c))} className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.025]">
+                  <button type="button" onClick={() => setOpen(key(c))} className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.025]">
                     <span className="w-6 shrink-0 text-[12px] text-white/35 tabular-nums">{i + 1}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13.5px] font-medium text-white">{c}</span>
@@ -143,12 +160,12 @@ export default function ExamPrepPage() {
                       )}
                     </span>
                     <span className="flex items-center gap-1.5 text-white/40">
-                      {prep.seen?.[chapterKey(subj, c)]?.video && (
+                      {prep.seen?.[key(c)]?.video && (
                         <span title="Watched a video">
                           <VideoIcon size={13} />
                         </span>
                       )}
-                      {prep.seen?.[chapterKey(subj, c)]?.notes && (
+                      {prep.seen?.[key(c)]?.notes && (
                         <span title="Read the notes">
                           <FileIcon size={13} />
                         </span>
@@ -164,7 +181,7 @@ export default function ExamPrepPage() {
         </div>
 
         <div className="space-y-5">
-          <ExamProgress st={prep} />
+          <ExamProgress st={prep} grade={grade} />
         </div>
       </div>
 
@@ -178,9 +195,9 @@ export default function ExamPrepPage() {
 type Tab = "videos" | "notes" | "practice" | "explain";
 
 function ChapterDrawer({ chapterId, exam, initialTab = "videos", onClose }: { chapterId: string; exam: ExamId; initialTab?: Tab; onClose: () => void }) {
-  const [subject, chapter] = chapterId.split(/\/(.+)/) as [Subject, string];
+  const { grade, subject, chapter } = parseKey(chapterId);
   const [tab, setTab] = useState<Tab>(initialTab);
-  const examLabel = EXAMS.find((e) => e.id === exam)!.label;
+  const examLabel = exam === "puc" ? gradeLabel(exam, grade) : `${EXAMS.find((e) => e.id === exam)!.label} · Class ${grade}`;
   return (
     <Drawer open onClose={onClose} eyebrow={`${examLabel} · ${subject}`} title={chapter} width="w-[600px]">
       <div role="tablist" className="-mt-1 mb-5 flex gap-1 rounded-xl border border-white/[0.08] p-1">
@@ -197,36 +214,36 @@ function ChapterDrawer({ chapterId, exam, initialTab = "videos", onClose }: { ch
           </button>
         ))}
       </div>
-      {tab === "videos" && <Videos subject={subject} chapter={chapter} exam={exam} onNext={() => setTab("notes")} />}
-      {tab === "notes" && <Notes subject={subject} chapter={chapter} exam={exam} onPractice={() => setTab("practice")} />}
-      {tab === "practice" && <Practice subject={subject} chapter={chapter} exam={exam} />}
+      {tab === "videos" && <Videos subject={subject} chapter={chapter} grade={grade} exam={exam} onNext={() => setTab("notes")} />}
+      {tab === "notes" && <Notes subject={subject} chapter={chapter} grade={grade} exam={exam} onPractice={() => setTab("practice")} />}
+      {tab === "practice" && <Practice subject={subject} chapter={chapter} grade={grade} exam={exam} />}
       {tab === "explain" && <Explain subject={subject} chapter={chapter} examLabel={examLabel} />}
     </Drawer>
   );
 }
 
-/* NEET and KCET: one-shot videos. II PUC and CBSE: one shot or full lectures. */
+/* NEET and KCET: one-shot videos. PUC and CBSE: one shot or full lectures. */
 /** remembers that the student opened a chapter's video or notes */
-function useMarkSeen(subject: Subject, chapter: string) {
+function useMarkSeen(subject: Subject, chapter: string, grade: Grade) {
   const { state, actions } = useStore();
   return (what: "video" | "notes") => {
-    const key = chapterKey(subject, chapter);
+    const key = chapterKey(subject, chapter, grade);
     if (state.examPrep?.seen?.[key]?.[what]) return;
     actions.patch({ examPrep: { ...(state.examPrep ?? {}), seen: { ...(state.examPrep?.seen ?? {}), [key]: { ...(state.examPrep?.seen?.[key] ?? {}), [what]: Date.now() } } } });
   };
 }
 
-function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter: string; exam: ExamId; onNext: () => void }) {
-  const markSeen = useMarkSeen(subject, chapter);
+function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; chapter: string; grade: Grade; exam: ExamId; onNext: () => void }) {
+  const markSeen = useMarkSeen(subject, chapter, grade);
   const { state, actions } = useStore();
   const vids = state.examPrep?.videos ?? {};
   const saveVid = (id: string, patch: Partial<{ done: number[]; notes: string }>) =>
     actions.patch({ examPrep: { ...(state.examPrep ?? {}), videos: { ...(state.examPrep?.videos ?? {}), [id]: { done: [], notes: "", ...(state.examPrep?.videos?.[id] ?? {}), ...patch } } } });
   const entrance = exam === "neet" || exam === "kcet";
   const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
-  const board = exam === "puc" ? "2nd puc" : "class 12 cbse";
+  const board = exam === "puc" ? (grade === 11 ? "1st puc" : "2nd puc") : `class ${grade} cbse`;
   const oneShot = entrance || kind === "oneshot";
-  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class 12 ${subject} lecture 1 detailed explanation`;
+  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class ${grade} ${subject} lecture 1 detailed explanation`;
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -272,18 +289,18 @@ function Videos({ subject, chapter, exam, onNext }: { subject: Subject; chapter:
   );
 }
 
-function Notes({ subject, chapter, exam, onPractice }: { subject: Subject; chapter: string; exam: ExamId; onPractice: () => void }) {
+function Notes({ subject, chapter, grade, exam, onPractice }: { subject: Subject; chapter: string; grade: Grade; exam: ExamId; onPractice: () => void }) {
   const { state, actions } = useStore();
-  const key = chapterKey(subject, chapter);
+  const key = chapterKey(subject, chapter, grade);
   const saved = state.examPrep?.notes?.[key];
-  const markSeen = useMarkSeen(subject, chapter);
+  const markSeen = useMarkSeen(subject, chapter, grade);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const load = async () => {
     setBusy(true);
     setErr("");
     try {
-      const n = sanitizeNotes(await postAi<unknown>("/api/exam-prep", { action: "notes", exam, subject, chapter }));
+      const n = sanitizeNotes(await postAi<unknown>("/api/exam-prep", { action: "notes", exam, subject, chapter, grade }));
       if (!n) throw new AssistantError("Couldn’t make notes right now. Try again.");
       actions.patch({ examPrep: { ...(state.examPrep ?? {}), notes: { ...(state.examPrep?.notes ?? {}), [key]: n } } });
     } catch (e) {
@@ -353,9 +370,9 @@ function Notes({ subject, chapter, exam, onPractice }: { subject: Subject; chapt
   );
 }
 
-function Practice({ subject, chapter, exam }: { subject: Subject; chapter: string; exam: ExamId }) {
+function Practice({ subject, chapter, grade, exam }: { subject: Subject; chapter: string; grade: Grade; exam: ExamId }) {
   const { state, actions } = useStore();
-  const key = chapterKey(subject, chapter);
+  const key = chapterKey(subject, chapter, grade);
   const [qs, setQs] = useState<PracticeQ[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -370,7 +387,7 @@ function Practice({ subject, chapter, exam }: { subject: Subject; chapter: strin
     setPicked([]);
     setDone(false);
     try {
-      const list = sanitizeQuestions(await postAi<unknown>("/api/exam-prep", { action: "quiz", exam, subject, chapter }));
+      const list = sanitizeQuestions(await postAi<unknown>("/api/exam-prep", { action: "quiz", exam, subject, chapter, grade }));
       if (list.length < 5) throw new AssistantError("Couldn’t make questions right now. Try again.");
       setQs(list);
     } catch (e) {
