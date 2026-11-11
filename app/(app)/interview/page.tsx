@@ -1,9 +1,10 @@
 "use client";
 
 /* Premium · AI mock interview (/interview).
-   setup → the AI writes questions for the role → the student answers each one by
-   typing or speaking (the question can be read aloud) → the AI scores every
-   answer and gives feedback with a model answer → saved to history. */
+   setup → the AI writes questions for the role → an on-screen interviewer (Asha)
+   asks each one aloud with lip sync, then the mic turns on and the student
+   answers by speaking or typing → the AI scores every answer and gives
+   feedback with a model answer → saved to history. */
 
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/free/parts";
@@ -18,18 +19,17 @@ import { KIND_LABEL, LEVEL_LABEL, MAX_SAVED, interviewStats, evaluate, makeQuest
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
 import { cn, uid } from "@/lib/utils";
-import { bestVoice, englishVoices, saveVoice, speakText, stopSpeaking, voicesReady } from "@/lib/tts";
+import { stopSpeaking } from "@/lib/tts";
+import { createTalker, type Talker } from "@/lib/talker";
 import { VOICE_LANGS, startRecording, transcribe, type Recorder } from "@/lib/voice";
+import { Interviewer, MicBars } from "@/components/interview/interviewer";
 
 type Phase = "setup" | "preparing" | "live" | "scoring" | "result";
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-/** Reads a question aloud with the smoothest English voice the browser has. */
-function speak(text: string, on: boolean, voice?: SpeechSynthesisVoice | null) {
-  if (!on || !text) return stopSpeaking();
-  void speakText(text, { voice });
-}
+const INTERVIEWER = "Asha";
+const LEAD_INS = ["Okay, thank you.", "Got it, thanks.", "Alright.", "Thank you. Next one.", "Okay."];
 
 function ScoreRing({ value, size = 120 }: { value: number; size?: number }) {
   const r = 15.5;
@@ -113,14 +113,30 @@ export default function InterviewPage() {
   const [secs, setSecs] = useState(0);
   const [open, setOpen] = useState<number | null>(0);
   const box = useRef<HTMLTextAreaElement>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [talker, setTalker] = useState<Talker | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+  const [handsFree, setHandsFree] = useState(true);
+  const [total, setTotal] = useState(0);
+  const micRef = useRef<() => void>(() => {});
   useEffect(() => {
-    void voicesReady().then((list) => {
-      setVoices(list);
-      setVoice(bestVoice(list));
-    });
+    const t = createTalker("hannah");
+    setTalker(t);
+    return () => t.dispose();
   }, []);
+  const quiet = () => {
+    talker?.stop();
+    setSpeaking(false);
+  };
+  const ask = async (k: number, again = false) => {
+    const q = questions[k];
+    if (!talker || !q) return;
+    const text = again || k === 0 ? (k === 0 && !again ? `Hi, I’m ${INTERVIEWER}. Let’s begin. ${q.q}` : q.q) : `${LEAD_INS[k % LEAD_INS.length]} ${q.q}`;
+    if (questions[k + 1]) talker.prefetch(questions[k + 1].q);
+    setSpeaking(true);
+    const r = await talker.say(text);
+    setSpeaking(false);
+    return r;
+  };
 
   // timer for the current question
   useEffect(() => {
@@ -129,10 +145,24 @@ export default function InterviewPage() {
     const t = setInterval(() => setSecs((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, [phase, i]);
-  // read each question aloud
+  // whole-interview clock
   useEffect(() => {
-    if (phase === "live" && questions[i]) speak(questions[i].q, readAloud, voice);
-  }, [phase, i]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (phase !== "live") return;
+    const t = setInterval(() => setTotal((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
+  // the interviewer asks each question, then (hands-free) starts listening
+  useEffect(() => {
+    if (phase !== "live" || !questions[i] || !talker) return;
+    if (!readAloud) return;
+    let live = true;
+    void ask(i).then((r) => {
+      if (live && r === "done" && handsFree && !(answers[i] ?? "").trim()) micRef.current();
+    });
+    return () => {
+      live = false;
+    };
+  }, [phase, i, talker]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stopSpeaking(), []);
 
   const profile = [state.setup?.academic.course, state.setup?.academic.field, state.setup?.academic.year, (state.setup?.skills.familiar ?? []).join(", ")].filter(Boolean).join(" · ");
@@ -148,6 +178,7 @@ export default function InterviewPage() {
       setQuestions(qs);
       setAnswers(qs.map(() => ""));
       setI(0);
+      setTotal(0);
       setPhase("live");
     } catch (e) {
       setError(e instanceof AssistantError ? e.message : "Couldn’t prepare questions. Try again.");
@@ -157,14 +188,14 @@ export default function InterviewPage() {
 
   const setAnswer = (text: string) => setAnswers((a) => a.map((x, k) => (k === i ? text : x)));
 
-  const mic = async () => {
+  const mic = async (auto = false) => {
     if (rec) {
       rec.stop();
       setRec(null);
       return;
     }
     try {
-      speak("", false);
+      quiet();
       const r = await startRecording(async (audio) => {
         setHearing(true);
         try {
@@ -178,14 +209,20 @@ export default function InterviewPage() {
       });
       setRec(r);
     } catch {
-      actions.toast("Microphone isn’t available. Allow mic access or type your answer.");
+      // the automatic mic just switches itself off; a tap on the mic explains why
+      if (auto) setHandsFree(false);
+      else actions.toast("Microphone isn’t available. Allow mic access or type your answer.");
     }
+  };
+
+  micRef.current = () => {
+    if (!rec && !hearing) void mic(true);
   };
 
   const finish = async (final: string[]) => {
     rec?.cancel();
     setRec(null);
-    speak("", false);
+    quiet();
     setPhase("scoring");
     try {
       const fb: Feedback = await evaluate({ role: role.trim(), kind, level, topics: kind === "custom" ? topics.trim() : undefined, items: questions.map((q, k) => ({ q: q.q, a: final[k] ?? "" })) });
@@ -201,6 +238,7 @@ export default function InterviewPage() {
   };
 
   const next = () => {
+    quiet();
     if (i < questions.length - 1) {
       rec?.stop();
       setRec(null);
@@ -230,112 +268,177 @@ export default function InterviewPage() {
   /* ---------- live ---------- */
   if (phase === "live" || phase === "scoring") {
     const q = questions[i];
+    const words = (answers[i] ?? "").trim().split(/\s+/).filter(Boolean).length;
+    const status = phase === "scoring" ? "scoring" : speaking ? "asking" : hearing ? "writing" : rec ? "listening" : "waiting";
     return (
-      <div className="px-6 py-7 lg:px-8">
-        <div className="mx-auto max-w-[820px]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[12px] font-medium tracking-wide text-accent uppercase">{role} · {KIND_LABEL[kind]}</p>
-              <p className="mt-0.5 text-[13px] text-white/55">
-                Question {i + 1} of {questions.length}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => { setReadAloud((v) => !v); speak(q.q, !readAloud, voice); }} className={cn("flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[12px] transition", readAloud ? "border-accent/50 text-accent" : "border-white/10 text-white/55")} title="Read questions aloud">
-                <VolumeIcon size={14} /> {readAloud ? "Voice on" : "Voice off"}
-              </button>
-              {readAloud && voices.length > 1 && (
-                <select
-                  value={voice?.name ?? ""}
-                  onChange={(e) => {
-                    const v = englishVoices().find((x) => x.name === e.target.value) ?? null;
-                    setVoice(v);
-                    if (v) saveVoice(v.name);
-                    speak(q.q, true, v);
-                  }}
-                  className="hidden h-9 max-w-[180px] rounded-lg border border-white/10 bg-white/[0.03] px-2 text-[12px] text-white/75 outline-none sm:block"
-                  aria-label="Interviewer voice"
-                >
-                  {voices.map((v) => (
-                    <option key={v.name} value={v.name}>{v.name.replace(/^(Microsoft|Google)\s*/, "").replace(/\s*\(.*\)$/, "").replace(/ Online$/, "")}</option>
-                  ))}
-                </select>
-              )}
-              <Button size="sm" variant="ghost" onClick={() => window.confirm("End the interview now? Unanswered questions count as skipped.") && finish(answers)} disabled={phase === "scoring"}>
-                End
-              </Button>
+      <div className="px-6 py-6 lg:px-8">
+        {/* top bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
+              <span className="relative h-2.5 w-2.5 rounded-full bg-emerald-400" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[14px] font-semibold text-white">Interview in progress</p>
+              <p className="truncate text-[12.5px] text-white/55">{role} · {KIND_LABEL[kind]} · {LEVEL_LABEL[level]}</p>
             </div>
           </div>
-          <div className="mt-3 flex gap-1.5">
-            {questions.map((_, k) => (
-              <span key={k} className={cn("h-1.5 flex-1 rounded-full transition-all", k < i ? "bg-accent" : k === i ? "bg-accent/60" : "bg-white/10")} />
-            ))}
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] text-white/60 tabular-nums">{fmt(total)}</span>
+            <button type="button" disabled={phase === "scoring"} onClick={() => window.confirm("End the interview now? Unanswered questions count as skipped.") && finish(answers)} className="h-9 rounded-lg border border-rose-400/40 px-3.5 text-[12.5px] font-medium text-rose-300 transition hover:bg-rose-500/10 disabled:opacity-40">
+              End interview
+            </button>
           </div>
+        </div>
 
-          <Card glow className="mt-6 p-6 sm:p-8">
-            {phase === "scoring" ? (
-              <div className="flex flex-col items-center py-12 text-center">
-                <FancyIcon name="sparkle" tone="violet" size={64} float />
-                <p className="mt-5 text-[18px] font-semibold text-white">Scoring your interview…</p>
-                <p className="mt-1 text-[13px] text-white/55">Reading every answer and writing feedback. About 10–20 seconds.</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start gap-4">
-                  <span className="relative shrink-0">
-                    <span className="absolute inset-0 animate-ping rounded-2xl bg-violet-500/20" />
-                    <FancyIcon name="bot" tone="violet" size={52} />
+        <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
+          <div className="min-w-0">
+            {/* video */}
+            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(124,58,237,0.6)]">
+              <Interviewer talker={talker} listening={status === "listening"} />
+              <div className="absolute top-3 left-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 backdrop-blur">
+                <span className={cn("h-2 w-2 rounded-full", speaking ? "bg-violet-400" : "bg-white/30")} />
+                <span className="text-[12.5px] font-medium text-white">{INTERVIEWER} · AI interviewer</span>
+                {speaking && (
+                  <span className="ml-1 flex h-3 items-end gap-[2px]" aria-hidden>
+                    {[0, 1, 2, 3].map((k) => <span key={k} className="iv-eq w-[2px] rounded-full bg-violet-300" style={{ animationDelay: `${k * 0.12}s` }} />)}
                   </span>
-                  <div className="min-w-0">
-                    <p className="text-[11.5px] font-medium text-white/45">Interviewer{q.focus ? ` · ${q.focus}` : ""}</p>
-                    <p key={i} className="land-screen-in mt-1 text-[19px] leading-snug font-semibold text-white sm:text-[21px]">{q.q}</p>
-                    <button type="button" onClick={() => speak(q.q, true, voice)} className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-white/50 hover:text-accent">
-                      <VolumeIcon size={13} /> Hear again
-                    </button>
-                  </div>
-                </div>
+                )}
+              </div>
+              <span className="absolute top-3 right-3 rounded-lg bg-black/40 px-2.5 py-1.5 text-[12px] text-white/75 backdrop-blur">
+                Question {i + 1} of {questions.length}
+              </span>
+              <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-3">
+                <button type="button" onClick={() => void mic()} disabled={hearing || phase === "scoring"} title={rec ? "Done answering" : "Answer by voice"} className={cn("flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur transition", rec ? "border-rose-400/60 bg-rose-500 text-[#ffffff]" : "border-white/15 bg-black/45 text-white hover:border-accent/60")}>
+                  {rec ? <StopIcon size={16} /> : <MicIcon size={18} />}
+                </button>
+                <button type="button" onClick={() => { const on = !readAloud; setReadAloud(on); if (on) void ask(i, true); else quiet(); }} title={readAloud ? "Mute interviewer" : "Unmute interviewer"} className={cn("flex h-12 w-12 items-center justify-center rounded-full border bg-black/45 backdrop-blur transition", readAloud ? "border-white/15 text-white" : "border-white/10 text-white/40")}>
+                  <VolumeIcon size={18} />
+                </button>
+                <button type="button" onClick={() => void ask(i, true)} disabled={speaking || phase === "scoring"} title="Ask again" className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur transition hover:border-accent/60 disabled:opacity-40">
+                  <RepeatIcon size={17} />
+                </button>
+                <button type="button" disabled={phase === "scoring"} onClick={() => window.confirm("End the interview now? Unanswered questions count as skipped.") && finish(answers)} title="End interview" className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500 text-[#ffffff] transition hover:bg-rose-600 disabled:opacity-40">
+                  <XIcon size={18} />
+                </button>
+              </div>
+            </div>
 
-                <div className="mt-6">
+            {/* question + answer */}
+            <div className="mt-4 rounded-2xl border border-accent/30 bg-[#0f0f13] p-5 shadow-[0_0_0_1px_rgba(167,139,250,0.08),0_0_40px_-18px_rgba(167,139,250,0.7)] sm:p-6">
+              {phase === "scoring" ? (
+                <div className="flex flex-col items-center py-10 text-center">
+                  <FancyIcon name="sparkle" tone="violet" size={56} float />
+                  <p className="mt-4 text-[17px] font-semibold text-white">Scoring your interview…</p>
+                  <p className="mt-1 text-[13px] text-white/55">Reading every answer and writing feedback. About 10–20 seconds.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="flex items-center gap-2 text-[12.5px] font-medium text-accent">
+                    <BotIcon size={14} /> {INTERVIEWER} asks{q.focus ? ` · ${q.focus}` : ""}
+                  </p>
+                  <p key={i} className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">{q.q}</p>
+
+                  <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                    {status === "listening" ? (
+                      <>
+                        <MicBars stream={rec?.stream ?? null} />
+                        <p className="mt-1 text-center text-[12.5px] text-white/60">Listening… speak your answer, then press <b className="text-white">Done</b>.</p>
+                      </>
+                    ) : (
+                      <p className="flex h-10 items-center justify-center gap-2 text-center text-[12.5px] text-white/55">
+                        {status === "asking" && <>
+                          <span className="flex h-3 items-end gap-[2px]" aria-hidden>{[0, 1, 2, 3, 4].map((k) => <span key={k} className="iv-eq w-[3px] rounded-full bg-violet-400" style={{ animationDelay: `${k * 0.1}s` }} />)}</span>
+                          {INTERVIEWER} is asking…
+                        </>}
+                        {status === "writing" && "Writing down your answer…"}
+                        {status === "waiting" && (answers[i] ? "Add more, or go to the next question." : "Press the mic to answer by voice, or type below.")}
+                      </p>
+                    )}
+                  </div>
+
                   <textarea
                     ref={box}
                     value={answers[i] ?? ""}
                     onChange={(e) => setAnswer(e.target.value)}
-                    rows={6}
-                    placeholder={rec ? "Listening… press Stop when you’re done." : "Type your answer, or press the mic and speak."}
-                    className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] p-4 text-[14.5px] leading-relaxed text-white placeholder:text-white/35 outline-none focus:border-accent"
+                    rows={4}
+                    placeholder="Your answer appears here. You can also type or edit it."
+                    className="mt-3 w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] p-4 text-[14.5px] leading-relaxed text-white placeholder:text-white/35 outline-none focus:border-accent"
                   />
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={mic}
-                        disabled={hearing}
-                        className={cn("relative flex h-11 items-center gap-2 rounded-xl px-4 text-[13.5px] font-semibold transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white hover:border-accent/50")}
-                      >
-                        {rec && <span className="absolute inset-0 animate-ping rounded-xl bg-rose-500/40" />}
-                        {rec ? <StopIcon size={14} className="relative" /> : <MicIcon size={15} />}
-                        <span className="relative">{hearing ? "Writing it down…" : rec ? "Stop" : "Speak answer"}</span>
+                      <button type="button" onClick={() => void mic()} disabled={hearing} className={cn("relative flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-semibold transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white hover:border-accent/50")}>
+                        {rec ? <StopIcon size={14} /> : <MicIcon size={15} />}
+                        {hearing ? "Writing it down…" : rec ? "Done" : "Speak answer"}
                       </button>
-                      <select value={lang} onChange={(e) => setLang(e.target.value)} className="h-11 rounded-xl border border-white/10 bg-white/[0.03] px-2 text-[12.5px] text-white/75 outline-none" aria-label="Language you speak in">
+                      <select value={lang} onChange={(e) => setLang(e.target.value)} className="h-10 rounded-xl border border-white/10 bg-[#121216] px-2 text-[12.5px] text-white/75 outline-none" aria-label="Language you speak in">
                         {VOICE_LANGS.map((l) => (
                           <option key={l.value} value={l.value}>{l.label}</option>
                         ))}
                       </select>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={cn("text-[12.5px] tabular-nums", secs > 150 ? "text-amber-300" : "text-white/45")}>{fmt(secs)} {secs > 150 ? "· try to wrap up" : ""}</span>
+                    <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" onClick={next}>Skip</Button>
                       <Button variant="primary" onClick={next} disabled={!(answers[i] ?? "").trim() || !!rec || hearing}>
                         {i < questions.length - 1 ? "Next question" : "Finish & get score"} <ArrowRightIcon size={14} />
                       </Button>
                     </div>
                   </div>
+                  {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* side */}
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
+              <p className="text-[13.5px] font-semibold text-white">This answer</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-white/[0.06] p-3">
+                  <p className="text-[11.5px] text-white/45">Time</p>
+                  <p className={cn("mt-1 text-[20px] font-semibold tabular-nums", secs > 150 ? "text-amber-300" : "text-white")}>{fmt(secs)}</p>
                 </div>
-                {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
-              </>
-            )}
-          </Card>
-          <p className="mt-4 text-center text-[12px] text-white/40">Tip: answer like a real interview. Use a short example (situation, what you did, result).</p>
+                <div className="rounded-xl border border-white/[0.06] p-3">
+                  <p className="text-[11.5px] text-white/45">Words</p>
+                  <p className={cn("mt-1 text-[20px] font-semibold tabular-nums", words >= 60 ? "text-emerald-300" : "text-white")}>{words}</p>
+                </div>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                <span className="block h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all" style={{ width: `${Math.min(100, (words / 120) * 100)}%` }} />
+              </div>
+              <p className="mt-2 text-[11.5px] text-white/45">Good answers are usually 60–150 words, about 1–2 minutes.</p>
+            </div>
+
+            <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
+              <p className="text-[13.5px] font-semibold text-white">Questions</p>
+              <ol className="mt-3 space-y-1.5">
+                {questions.map((x, k) => (
+                  <li key={k} className={cn("flex items-center gap-3 rounded-lg px-2.5 py-2 text-[12.5px]", k === i ? "bg-[var(--color-plum)] text-white" : "text-white/55")}>
+                    <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold", k < i ? "bg-emerald-400/20 text-emerald-300" : k === i ? "bg-accent text-[#120826]" : "bg-white/[0.06]")}>
+                      {k < i ? <CheckIcon size={11} /> : k + 1}
+                    </span>
+                    <span className="truncate">{x.focus || `Question ${k + 1}`}</span>
+                    {k < i && !(answers[k] ?? "").trim() && <span className="ml-auto text-[11px] text-white/35">skipped</span>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-4">
+              <input type="checkbox" checked={handsFree} onChange={(e) => setHandsFree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#a78bfa]" />
+              <span>
+                <span className="block text-[13px] font-medium text-white">Talk like a real interview</span>
+                <span className="mt-0.5 block text-[12px] text-white/50">After {INTERVIEWER} asks, the mic turns on by itself.</span>
+              </span>
+            </label>
+
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.05] p-4">
+              <p className="text-[12.5px] font-semibold text-cyan-300">Tip</p>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-white/70">Answer with a short real example: the situation, what you did, and the result.</p>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -15,6 +15,8 @@ export const VOICE_LANGS = [
 export const MAX_RECORD_SECONDS = 60;
 
 export interface Recorder {
+  /** the live mic stream, e.g. to draw a level meter */
+  stream: MediaStream;
   stop: () => void;
   cancel: () => void;
 }
@@ -35,6 +37,7 @@ export async function startRecording(onDone: (audio: Blob) => void): Promise<Rec
   rec.start();
   const limit = setTimeout(() => rec.state === "recording" && rec.stop(), MAX_RECORD_SECONDS * 1000);
   return {
+    stream,
     stop: () => {
       clearTimeout(limit);
       if (rec.state === "recording") rec.stop();
