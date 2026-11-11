@@ -8,6 +8,7 @@ import { LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Toaster } from "@/components/ui/toaster";
 import { useStore } from "@/lib/store";
 import { CommandMenu, openCommandMenu } from "./command-menu";
+import { CollegeSync } from "@/components/college/college-sync";
 import { MiniChat } from "./mini-chat";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
@@ -45,6 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
         <CommandMenu />
         <Toaster />
+        <CollegeSync />
       </div>
     );
   }
@@ -93,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {!hideMiniChat && <MiniChat />}
       <Toaster />
+      <CollegeSync />
     </div>
   );
 }

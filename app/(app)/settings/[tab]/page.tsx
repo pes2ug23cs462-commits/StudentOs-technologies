@@ -1,5 +1,6 @@
 "use client";
 
+import { JoinCollege } from "@/components/college/join-college";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -7,7 +8,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { photoFromFile } from "@/lib/photo";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/drawer";
-import { BellIcon, ChatIcon, LockIcon, SlidersIcon, TrophyIcon, UserIcon } from "@/components/ui/icons";
+import { BellIcon, ChatIcon, LockIcon, SlidersIcon, TrophyIcon, UserIcon, BuildingIcon } from "@/components/ui/icons";
 import { CertificatesPanel } from "@/components/learn/certificates-panel";
 import { SystemCheck } from "@/components/settings/system-check";
 import { Avatar, Card, ChipGroup, Input, Label, SwitchRow } from "@/components/ui/primitives";
@@ -24,6 +25,7 @@ const TABS = [
   { key: "study", label: "Study preferences", Icon: SlidersIcon },
   { key: "notifications", label: "Notifications", Icon: BellIcon },
   { key: "assistant", label: "Assistant", Icon: ChatIcon },
+  { key: "college", label: "My college", Icon: BuildingIcon },
   { key: "account", label: "Account & privacy", Icon: LockIcon },
   // Not in the menu: open /settings/system to test the API keys.
   { key: "system", label: "System check", Icon: SlidersIcon, hidden: true },
@@ -74,6 +76,7 @@ export default function SettingsPage() {
           {active === "study" && <StudyTab />}
           {active === "notifications" && <NotificationsTab />}
           {active === "assistant" && <AssistantTab />}
+          {active === "college" && <JoinCollege />}
           {active === "account" && <AccountTab />}
           {active === "system" && <SystemCheck />}
         </div>

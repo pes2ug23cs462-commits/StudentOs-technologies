@@ -93,6 +93,7 @@ const SUB: { path: string; label: string }[] = [
 export function crumbsFor(pathname: string): Crumb[] {
   if (pathname.startsWith("/certificates")) return [{ label: "Learning", href: "/learn" }, { label: "Certificates", href: "/certificates" }];
   if (pathname.startsWith("/settings")) return [{ label: "Settings", href: "/settings" }];
+  if (pathname.startsWith("/join")) return [{ label: "Settings", href: "/settings" }, { label: "My college", href: "/join" }];
   for (const g of NAV_GROUPS) {
     const hit = g.items.find((i) => isActive(pathname, i.match));
     if (!hit) continue;

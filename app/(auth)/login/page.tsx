@@ -34,7 +34,8 @@ export default function LogInPage() {
       setLoading(false);
       return;
     }
-    router.push("/dashboard");
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(next && /^\/(college|join)\b/.test(next) ? next : "/dashboard");
   };
 
   const wrong = serverError === "invalid-credentials";

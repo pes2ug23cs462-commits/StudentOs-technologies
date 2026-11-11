@@ -47,6 +47,46 @@ service cloud.firestore {
         && request.resource.data.role is string && request.resource.data.role.size() <= 90;
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
+    // ---------- Colleges (college dashboard at /college) ----------
+    function isStaff(cid) {
+      return request.auth != null && exists(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid));
+    }
+    function isCollegeAdmin(cid) {
+      return isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role == "admin";
+    }
+    match /colleges/{cid} {
+      // signed-in students see the college name when they enter its code
+      allow get: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid && request.resource.data.id == cid;
+      allow update: if isCollegeAdmin(cid);
+      allow delete: if false;
+      // faculty: the owner becomes admin; others join as teacher with the faculty code
+      match /staff/{uid} {
+        allow read: if isStaff(cid);
+        allow create: if request.auth != null && request.auth.uid == uid && (
+          (get(/databases/$(database)/documents/colleges/$(cid)).data.owner == uid && request.resource.data.role == "admin") ||
+          (request.resource.data.role == "teacher" && request.resource.data.staffCode == get(/databases/$(database)/documents/colleges/$(cid)/private/keys).data.staffCode)
+        );
+        allow update, delete: if isCollegeAdmin(cid);
+      }
+      // the faculty join code: staff can read it, only admins change it
+      match /private/{key} {
+        allow read: if isStaff(cid);
+        allow write: if isCollegeAdmin(cid);
+      }
+      // a student's shared summary: only they write it; staff read it; they or an admin delete it
+      match /members/{uid} {
+        allow read: if isStaff(cid);
+        allow create, update: if request.auth != null && request.auth.uid == uid && request.resource.data.uid == uid;
+        allow delete: if (request.auth != null && request.auth.uid == uid) || isCollegeAdmin(cid);
+      }
+    }
+    // student join codes → college id
+    match /collegeCodes/{code} {
+      allow get: if request.auth != null;
+      allow create: if request.auth != null && get(/databases/$(database)/documents/colleges/$(request.resource.data.cid)).data.owner == request.auth.uid;
+      allow update, delete: if false;
+    }
     // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;

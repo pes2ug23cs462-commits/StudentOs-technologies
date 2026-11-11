@@ -44,6 +44,7 @@ import type { ChatLock, ChatMeta } from "./chats";
 import type { InterviewRecord } from "./interview";
 import type { NoteSet } from "./notes";
 import type { ProjectIdea } from "./project-shared";
+import type { CollegeLink, StaffLink } from "./college";
 import type { ExamPrepState } from "./exam-prep";
 import type { CodingState } from "./coding/types";
 import type { TestRecord } from "./tests";
@@ -98,6 +99,10 @@ export interface AppState {
   projectIdeas?: { key: string; ideas: ProjectIdea[] };
   /** Exam Prep (PU / board / NEET / KCET): chapter scores, notes, focus minutes */
   examPrep?: ExamPrepState;
+  /** the college this student shares progress with */
+  college?: CollegeLink;
+  /** the college this person works at (faculty) */
+  staffOf?: StaffLink;
   /** asked to be told when Placement opportunities opens (ms) */
   placementNotify?: number;
   toasts: Toast[];

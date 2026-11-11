@@ -47,7 +47,8 @@ export default function SignUpPage() {
       setLoading(false);
       return;
     }
-    router.push("/setup/academic");
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(next && /^\/college\b/.test(next) ? next : "/setup/academic");
   };
 
   const errorCount = Object.values(errors).filter(Boolean).length;
