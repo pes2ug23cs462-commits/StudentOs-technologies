@@ -299,7 +299,10 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
     if (!link.title.trim() || !/^https?:\/\//.test(link.url.trim())) return actions.toast("Add a title and a link starting with https://");
     setModal(null);
     // sending a test / interview link to a new applicant means they are shortlisted for the first round
-    void update((a) => ({ ...a, ...(a.status === "applied" ? { status: "in-process" as const, round: 0 } : {}), links: [...a.links, { title: link.title.trim(), url: link.url.trim(), when: link.when.trim(), at: Date.now() }] }), `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`);
+    void update((a) => {
+      const b: Application = a.status === "applied" ? { ...a, status: "in-process", round: 0 } : a;
+      return { ...b, links: [...b.links, { title: link.title.trim(), url: link.url.trim(), when: link.when.trim(), at: Date.now(), round: b.round }] };
+    }, `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`);
     setLink({ title: "", url: "", when: "" });
   };
   const addOffer = () => {
@@ -408,7 +411,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                     <td colSpan={5} className="pb-3">
                       <div className="grid gap-3 rounded-xl bg-white/[0.03] p-3 text-[12.5px] md:grid-cols-3">
                         <div><p className="text-white/45">Headline</p><p className="text-white/80">{a.resume.headline || "—"}</p><p className="mt-2 text-white/45">Projects</p><p className="text-white/80">{a.resume.projects.join(", ") || "—"}</p></div>
-                        <div><p className="text-white/45">Links sent</p>{a.links.length ? a.links.map((l) => <p key={l.at + l.title} className="text-white/80">{l.title}{l.when ? ` · ${l.when}` : ""}</p>) : <p className="text-white/50">None yet</p>}</div>
+                        <div><p className="text-white/45">Links sent</p>{a.links.length ? a.links.map((l) => <p key={l.at + l.title} className="text-white/80">{l.title}{l.when ? ` · ${l.when}` : ""}<span className="text-white/40"> · {drive.rounds[l.round ?? 0] ?? "round"}{(l.round ?? 0) !== a.round || a.status !== "in-process" ? " (done)" : ""}</span></p>) : <p className="text-white/50">None yet</p>}</div>
                         <div><p className="text-white/45">Offer</p><p className="text-white/80">{a.offer ? `${a.offer.ctc}${a.offer.joining ? ` · joins ${a.offer.joining}` : ""}` : "—"}</p>{a.decision && <p className={a.decision === "accepted" ? "text-emerald-300" : "text-rose-300"}>Student {a.decision}</p>}</div>
                       </div>
                     </td>

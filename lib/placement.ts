@@ -44,6 +44,8 @@ export interface AppLink {
   /** when it happens, free text like "14 Nov, 10:00 AM" */
   when: string;
   at: number;
+  /** the round it was sent for; once the student moves on it no longer shows to them */
+  round?: number;
 }
 export interface Offer {
   ctc: string;
@@ -147,6 +149,13 @@ export function newApplication(state: AppState, uid: string, p: PlacementProfile
 
 /** Older applications that got a link while still "applied" count as in the first round. */
 export const effective = (a: Application): Application => (a.status === "applied" && a.links.length ? { ...a, status: "in-process", round: 0 } : a);
+
+/** Links the student should see now: only those for the round they are in. */
+export function currentLinks(a0: Application): AppLink[] {
+  const a = effective(a0);
+  if (a.status !== "in-process") return [];
+  return a.links.filter((l) => (l.round ?? 0) === a.round);
+}
 
 /** Where a student is: "Applied", "Online test", "Selected"… */
 export function stageLabel(a0: Application, d: Drive) {

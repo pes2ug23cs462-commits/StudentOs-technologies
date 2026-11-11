@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
 import { Input, Label } from "@/components/ui/primitives";
-import { BRANCHES, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
+import { BRANCHES, currentLinks, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -141,7 +141,7 @@ export function CampusDrives() {
   const openDrives = useMemo(() => drives.filter((d) => !apps[d.id] && !closed(d)), [drives, apps]);
   const mine = useMemo(() => drives.filter((d) => apps[d.id]), [drives, apps]);
   const offers = mine.filter((d) => apps[d.id]?.offer);
-  const newLinks = mine.reduce((n, d) => n + (apps[d.id]?.links.filter((l) => Date.now() - l.at < 3 * 86400000).length ?? 0), 0);
+  const newLinks = mine.reduce((n, d) => n + (apps[d.id] ? currentLinks(apps[d.id]!).filter((l) => Date.now() - l.at < 3 * 86400000).length : 0), 0);
 
   return (
     <div className="space-y-5">
@@ -249,9 +249,9 @@ export function CampusDrives() {
                 </div>
                 <Steps a={a} d={d} />
 
-                {a.links.length > 0 && (
+                {currentLinks(a).length > 0 && (
                   <div className="mt-4 space-y-2">
-                    {[...a.links].reverse().map((l) => (
+                    {[...currentLinks(a)].reverse().map((l) => (
                       <a key={l.at + l.title} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.05] px-4 py-3 hover:border-cyan-300/50">
                         <SendIcon size={15} className="text-cyan-300" />
                         <span className="min-w-0 flex-1">
