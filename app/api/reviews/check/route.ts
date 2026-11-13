@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
   if (!adminConfigured()) return NextResponse.json({ approved: false, reason: "manual" });
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ approved: false, reason: "manual" });
 
   try {

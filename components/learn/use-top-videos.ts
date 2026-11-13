@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { YtVideo } from "@/lib/youtube";
+import { ytFetch, type YtVideo } from "@/lib/youtube";
 
 type State = { loading: boolean; videos: YtVideo[]; available: boolean };
 const memo = new Map<string, { videos: YtVideo[]; available: boolean }>();
@@ -30,7 +30,7 @@ export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "one
     }
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
-    fetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}${kind !== "any" ? `&kind=${kind}` : ""}`)
+    ytFetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}${kind !== "any" ? `&kind=${kind}` : ""}`)
       .then((r) => (r.headers.get("content-type")?.includes("json") ? r.json() : { videos: [], reason: "no-api" }))
       .then((j: { videos?: YtVideo[]; reason?: string }) => {
         const v = { videos: j.videos ?? [], available: !j.reason };

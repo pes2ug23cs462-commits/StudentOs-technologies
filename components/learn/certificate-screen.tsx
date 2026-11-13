@@ -7,7 +7,7 @@ import { useLearning } from "@/components/learn/use-learning";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, CheckCircleIcon, FileIcon, LockIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/primitives";
-import { publishCert } from "@/lib/certs";
+import { issueCert, publishCert } from "@/lib/certs";
 import { QUIZ_SIZE, certLabel, courseDuration, findCourse, moduleKey } from "@/lib/learn";
 import { LEVEL_INFO } from "@/lib/setup";
 import { hms } from "@/lib/youtube";
@@ -43,7 +43,23 @@ export function CertificateScreen({ courseId, from }: { courseId: string; from: 
     if (!cert || !course || cp?.published || publishing.current) return;
     publishing.current = true;
     setPublishError(false);
-    publishCert({ ...cert, issuedAt: cp?.passedAt ?? new Date().toISOString() })
+    const direct = () => publishCert({ ...cert, issuedAt: cp?.passedAt ?? new Date().toISOString() });
+    // The server re-marks the passing attempt and writes the certificate. Without a saved attempt
+    // (passed before this check existed) or without the server's key, fall back to the old direct save.
+    const save = cp?.passProof?.length
+      ? issueCert({
+          id: cert.id,
+          courseId: course.id,
+          title: course.title,
+          level: course.level,
+          name: cert.name,
+          duration: cert.duration,
+          modules: course.modules.length,
+          answers: cp.passProof,
+          ...(course.quiz.length ? {} : { pool: cp.quizPool ?? [], sig: cp.quizSig }),
+        }).then((r) => (r === "fallback" ? direct() : undefined))
+      : direct();
+    save
       .then(() => setCourse(course.id, { published: true }))
       .catch((e) => {
         console.error("[certificate] couldn’t save to the verification list", e);

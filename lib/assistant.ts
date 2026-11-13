@@ -139,13 +139,14 @@ export async function suggestCourses(setup: SetupData | undefined, goals?: Goal[
 }
 
 /** Final-quiz questions for a personalised course, written from its modules and the videos watched. */
-export async function writeCourseQuiz(course: Course, l: Learning): Promise<QuizQuestion[]> {
-  const j = await postAi<{ questions?: unknown }>("/api/course-quiz", {
+export async function writeCourseQuiz(course: Course, l: Learning): Promise<{ questions: QuizQuestion[]; sig?: string }> {
+  const j = await postAi<{ questions?: unknown; sig?: string }>("/api/course-quiz", {
+    courseId: course.id,
     title: course.title,
     level: course.level,
     modules: course.modules.map((m) => ({ title: m.title, about: m.about, video: l.modules[moduleKey(course.id, m.id)]?.ytTitle ?? "" })),
   });
-  return sanitizeQuiz(j.questions ?? []);
+  return { questions: sanitizeQuiz(j.questions ?? []), ...(j.sig ? { sig: j.sig } : {}) };
 }
 
 /** One hint per quiz question (never the answer). */

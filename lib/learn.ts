@@ -323,6 +323,10 @@ export interface CourseProgress {
   hidden?: boolean;
   /** quiz questions written for a personalised course (made once, from its modules) */
   quizPool?: QuizQuestion[];
+  /** the server's signature on quizPool (personalised courses); without it the pool is written again */
+  quizSig?: string;
+  /** the passing attempt (question + chosen option), re-marked by the server before it issues the certificate */
+  passProof?: { q: string; a: string }[];
 }
 
 export interface Learning {

@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content.slice(0, 2000) }));
   if (!history.length || history[history.length - 1].role !== "user") return NextResponse.json({ error: "bad-request" }, { status: 400 });
 
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   // Attached files: text goes into the message, images go to a vision model.

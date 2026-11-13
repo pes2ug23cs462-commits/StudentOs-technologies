@@ -98,3 +98,11 @@ export function isoSeconds(iso: string) {
   if (!m) return 0;
   return (+(m[1] ?? 0)) * 86400 + (+(m[2] ?? 0)) * 3600 + (+(m[3] ?? 0)) * 60 + +(m[4] ?? 0);
 }
+
+/** GET from our YouTube API routes, signed in (they refuse anonymous calls). */
+export async function ytFetch(url: string): Promise<Response> {
+  const { auth } = await import("./firebase");
+  await auth.authStateReady?.().catch(() => {});
+  const token = await auth.currentUser?.getIdToken().catch(() => null);
+  return fetch(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
+}

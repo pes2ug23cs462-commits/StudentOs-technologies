@@ -21,7 +21,7 @@ function parse(raw: string): unknown {
 export async function POST(req: Request) {
   const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
   const b = (await req.json().catch(() => ({}))) as { profile?: unknown };
   const profile = String(b.profile ?? "").slice(0, 2000);

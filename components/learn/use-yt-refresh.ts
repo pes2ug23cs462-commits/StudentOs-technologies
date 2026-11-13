@@ -8,7 +8,7 @@
 
 import { useEffect } from "react";
 import { YT_REFRESH_MS, type ModuleProgress } from "@/lib/learn";
-import type { YtVideo } from "@/lib/youtube";
+import { ytFetch, type YtVideo } from "@/lib/youtube";
 import { useLearning } from "./use-learning";
 
 let running = false;
@@ -30,7 +30,7 @@ export function useYtRefresh() {
 
     const ids = [...new Set([...modules.map(([, p]) => p.yt!.slice(2)), ...videos.map(([id]) => id)])].slice(0, 50);
     running = true;
-    fetch(`/api/video-info?ids=${ids.join(",")}`)
+    ytFetch(`/api/video-info?ids=${ids.join(",")}`)
       .then((r) => (r.headers.get("content-type")?.includes("json") ? r.json() : {}))
       .then((j: { videos?: YtVideo[]; checked?: string[]; reason?: string }) => {
         if (j.reason || !j.checked) return; // YouTube unavailable: try again next time

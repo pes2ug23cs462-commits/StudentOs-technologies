@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const profile = String(body.profile ?? "").slice(0, 2500);
   if (profile.length < 20) return NextResponse.json({ error: "failed" }, { status: 400 });
   const level = ["beginner", "intermediate", "advanced"].includes(String(body.level)) ? String(body.level) : "beginner";
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const prompt = `You recommend free YouTube-based video courses to an Indian student. Use ONLY their profile below — do not assume they study tech.

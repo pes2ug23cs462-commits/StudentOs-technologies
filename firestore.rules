@@ -26,10 +26,8 @@ service cloud.firestore {
     // They can delete it when they delete their account.
     match /certificates/{certId} {
       allow get: if true;
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.id == certId;
-      allow update: if false;
+      // only the server writes certificates, after it re-marks the quiz (/api/certificates)
+      allow create, update: if false;
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
     // Student reviews of StudentOS: one per student (id = their uid).
@@ -93,9 +91,13 @@ service cloud.firestore {
         }
       }
       // a student's shared summary: only they write it; staff read it; they or an admin delete it
+      // joining needs the college's student join code, saved in the summary as `code`
       match /members/{uid} {
         allow read: if isStaff(cid);
-        allow create, update: if request.auth != null && request.auth.uid == uid && request.resource.data.uid == uid;
+        allow create, update: if request.auth != null && request.auth.uid == uid && request.resource.data.uid == uid
+          && request.resource.data.code is string
+          && exists(/databases/$(database)/documents/collegeCodes/$(request.resource.data.code))
+          && get(/databases/$(database)/documents/collegeCodes/$(request.resource.data.code)).data.cid == cid;
         allow delete: if (request.auth != null && request.auth.uid == uid) || isCollegeAdmin(cid);
       }
     }

@@ -30,12 +30,18 @@ export async function verifyIdToken(token: string | null): Promise<string | null
   }
 }
 
-/* Simple per-student limits so one account can't use up the shared free AI quota.
-   Kept in memory: it resets when the server restarts, which is fine for now. */
+/* Per-student limits so one account can't use up the shared AI quota.
+   The daily count lives in Firestore (usage/{uid}_{day}, closed to clients) when the
+   service account is set, so it holds across Vercel's many server instances. Without
+   it, or if Firestore can't be reached, the count falls back to this server's memory.
+   The per-minute burst limit is always in memory (a rough brake is enough there). */
+
+import { adminConfigured, adminIncrement } from "./firestore-admin";
+
 const usage = new Map<string, { minute: number[]; day: string; count: number }>();
 export const FREE_DAILY_MESSAGES = 60;
 
-export function takeQuota(uid: string): { ok: true; left: number } | { ok: false; reason: "minute" | "day" } {
+export async function takeQuota(uid: string): Promise<{ ok: true; left: number } | { ok: false; reason: "minute" | "day" }> {
   const now = Date.now();
   const today = new Date().toISOString().slice(0, 10);
   const u = usage.get(uid) ?? { minute: [], day: today, count: 0 };
@@ -46,5 +52,14 @@ export function takeQuota(uid: string): { ok: true; left: number } | { ok: false
   u.minute.push(now);
   u.count++;
   usage.set(uid, u);
-  return { ok: true, left: FREE_DAILY_MESSAGES - u.count };
+  let count = u.count;
+  if (adminConfigured()) {
+    try {
+      count = await adminIncrement(`usage/${uid}_${today}`, "count");
+    } catch {
+      /* Firestore unreachable: keep the in-memory count */
+    }
+  }
+  if (count > FREE_DAILY_MESSAGES) return { ok: false, reason: "day" };
+  return { ok: true, left: FREE_DAILY_MESSAGES - count };
 }

@@ -129,3 +129,43 @@ export async function adminPing() {
   await accessToken(sa);
   return sa.project_id;
 }
+
+type Field = string | number | boolean;
+const toValue = (v: Field) => (typeof v === "boolean" ? { booleanValue: v } : typeof v === "number" ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v }) : { stringValue: v });
+
+/** Creates a document; fails (returns false) if it already exists. */
+export async function adminCreate(collection: string, id: string, fields: Record<string, Field>) {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const res = await fetch(`${base(sa)}/${collection}?documentId=${encodeURIComponent(id)}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(sa)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toValue(v)])) }),
+    cache: "no-store",
+  });
+  if (res.status === 409) return false;
+  if (!res.ok) throw new Error(`create ${res.status}`);
+  return true;
+}
+
+/** Adds `by` to a number field (creating the document if needed) and returns the new value. */
+export async function adminIncrement(path: string, field: string, by = 1): Promise<number> {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const name = `projects/${sa.project_id}/databases/(default)/documents/${path}`;
+  const res = await fetch(`https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(sa)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ writes: [{ transform: { document: name, fieldTransforms: [{ fieldPath: field, increment: { integerValue: String(by) } }] } }] }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`increment ${res.status}`);
+  const j = (await res.json()) as { writeResults?: { transformResults?: Value[] }[] };
+  const v = j.writeResults?.[0]?.transformResults?.[0];
+  return v ? Number(plain(v)) : by;
+}
+
+/** A server-only secret for signing things the client hands back (from the service account key). */
+export function adminSecret(): string | null {
+  return process.env.QUIZ_SECRET || account()?.private_key || null;
+}

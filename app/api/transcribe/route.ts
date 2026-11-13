@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (!audio || audio.size === 0) return NextResponse.json({ error: "no-audio" }, { status: 400 });
   if (audio.size > MAX_BYTES) return NextResponse.json({ error: "too-long" }, { status: 413 });
 
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const out = new FormData();

@@ -43,6 +43,8 @@ export interface Staff {
 /** What a student shares with their college. */
 export interface MemberSummary {
   uid: string;
+  /** the student join code (checked by the rules) */
+  code?: string;
   name: string;
   section: string;
   course: string;
@@ -78,6 +80,8 @@ export interface CollegeLink {
   joinedAt: number;
   type?: CollegeType;
   placement?: PlacementProfile;
+  /** the student join code they used (the rules check it on every write) */
+  code?: string;
 }
 /** Saved in a faculty member's own data. */
 export interface StaffLink {
@@ -173,6 +177,7 @@ export function buildSummary(state: AppState, link: CollegeLink, uid: string, pr
   const a = state.setup?.academic;
   return {
     uid,
+    ...(link.code ? { code: link.code } : {}),
     name: state.profile.name || "Student",
     section: link.section,
     course: [a?.course, a?.field, a?.year].filter(Boolean).join(" · "),
@@ -197,12 +202,21 @@ export function buildSummary(state: AppState, link: CollegeLink, uid: string, pr
 }
 
 export async function joinCollege(state: AppState, uid: string, college: College, section: string): Promise<CollegeLink> {
-  const link: CollegeLink = { cid: college.id, name: college.name, section: section.trim() || "Not set", joinedAt: Date.now(), type: college.type };
+  const link: CollegeLink = { cid: college.id, name: college.name, section: section.trim() || "Not set", joinedAt: Date.now(), type: college.type, code: college.code };
   await setDoc(doc(db, "colleges", college.id, "members", uid), buildSummary(state, link, uid));
   return link;
 }
 export async function pushSummary(state: AppState, uid: string, link: CollegeLink) {
-  await setDoc(doc(db, "colleges", link.cid, "members", uid), buildSummary(state, link, uid));
+  await setDoc(doc(db, "colleges", link.cid, "members", uid), buildSummary(state, { ...link, code: link.code ?? (await codeOf(link.cid)) }, uid));
+}
+/** The student join code of a college (for links saved before the code was kept). */
+const codes = new Map<string, string>();
+export async function codeOf(cid: string): Promise<string | undefined> {
+  if (codes.has(cid)) return codes.get(cid);
+  const snap = await getDoc(doc(db, "colleges", cid)).catch(() => null);
+  const code = snap?.exists() ? (snap.data() as College).code : undefined;
+  if (code) codes.set(cid, code);
+  return code;
 }
 export async function leaveCollege(uid: string, link: CollegeLink) {
   await deleteDoc(doc(db, "colleges", link.cid, "members", uid));

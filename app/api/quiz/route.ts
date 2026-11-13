@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const text = String(body.text ?? "").slice(0, 12_000);
   if (text.trim().length < 80) return NextResponse.json({ error: "too-short" }, { status: 400 });
   const count = Math.min(Math.max(Number(body.count) || 5, 3), 8);
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const prompt = `Make ${count} multiple-choice revision questions from these study notes${body.title ? ` ("${String(body.title).slice(0, 100)}")` : ""}.

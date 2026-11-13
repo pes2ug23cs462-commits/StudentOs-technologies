@@ -43,6 +43,7 @@ export default function QuizPage() {
       const patch: Parameters<typeof setCourse>[1] = { attempts: (cp?.attempts ?? 0) + 1, best: Math.max(cp?.best ?? 0, score) };
       if (passed) {
         patch.passedAt = cp?.passedAt ?? new Date().toISOString();
+        if (!cp?.published) patch.passProof = qs.map((q, k) => ({ q: q.q, a: q.options[final[k] ?? -1] ?? "" }));
         if (cp?.certId || premium || certCount(learning) < FREE_CERT_LIMIT) {
           patch.certId = cp?.certId ?? newCertId();
           cert = "new";
@@ -100,16 +101,18 @@ export default function QuizPage() {
   }, [phase, i, qs, choose]);
 
   // Personalised courses get their quiz written once, from the modules and the videos watched.
-  const pool = course ? quizPool(course, learning) : [];
+  // a personalised pool from before pools were signed is written again, so a certificate can be checked
+  const cpNow = course ? learning.courses[course.id] : undefined;
+  const pool = course && (course.quiz.length || cpNow?.quizSig || !cpNow?.quizPool) ? quizPool(course, learning) : [];
   const ready = course ? courseStats(course, learning).ready : false;
   const [writing, setWriting] = useState<"idle" | "busy" | "failed">("idle");
   const writeQuiz = useCallback(async () => {
     if (!course) return;
     setWriting("busy");
     try {
-      const qs2 = await writeCourseQuiz(course, learning);
-      if (qs2.length < QUIZ_SIZE) throw new Error("short");
-      setCourse(course.id, { quizPool: qs2 });
+      const w = await writeCourseQuiz(course, learning);
+      if (w.questions.length < QUIZ_SIZE) throw new Error("short");
+      setCourse(course.id, { quizPool: w.questions, ...(w.sig ? { quizSig: w.sig } : {}) });
       setWriting("idle");
     } catch {
       setWriting("failed");

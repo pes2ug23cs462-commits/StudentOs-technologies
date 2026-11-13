@@ -4,12 +4,16 @@
    Videos that were deleted or made private are simply missing from the answer. */
 
 import { NextResponse } from "next/server";
+import { verifyIdToken } from "@/lib/server/auth";
 import { YtError, videoDetails } from "@/lib/server/youtube";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
 
 export async function GET(req: Request) {
+  // signed-in students only, so nobody else can spend the YouTube quota
+  const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
+  if (!uid) return NextResponse.json({ videos: [], reason: "signed-out" }, { status: 401 });
   const ids = [...new Set((new URL(req.url).searchParams.get("ids") ?? "").split(",").filter((x) => /^[\w-]{11}$/.test(x)))].sort().slice(0, 50);
   if (!ids.length) return NextResponse.json({ videos: [] });
   try {

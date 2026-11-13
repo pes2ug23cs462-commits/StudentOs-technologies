@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (!exam || !chaptersFor(grade, subject)?.includes(chapter)) return NextResponse.json({ error: "failed" }, { status: 400 });
   const cls = `Class ${grade}`;
   const lang = subject === "Hindi" ? "Simple Hindi (Devanagari)" : "Simple English";
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const notes = b.action === "notes";

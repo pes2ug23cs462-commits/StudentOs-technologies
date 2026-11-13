@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const perWeek = Math.min(7, Math.max(1, Number(b.perWeek) || 3));
   const minutes = [45, 60, 90].includes(Number(b.minutes)) ? Number(b.minutes) : 60;
   if (!s(b.goal) && !s(b.course)) return NextResponse.json({ error: "failed" }, { status: 400 });
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
 
   const prompt = `You are a study planner for an Indian college student. Write a realistic plan.

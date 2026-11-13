@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { image?: string };
   const image = String(body.image ?? "");
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 3_000_000) return NextResponse.json({ error: "bad-request" }, { status: 400 });
-  const quota = takeQuota(uid);
+  const quota = await takeQuota(uid);
   if (!quota.ok) return NextResponse.json({ error: quota.reason === "day" ? "daily-limit" : "slow-down" }, { status: 429 });
   try {
     const { text } = await chat(
