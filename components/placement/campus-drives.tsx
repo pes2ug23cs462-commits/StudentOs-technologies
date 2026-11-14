@@ -93,9 +93,15 @@ function PlacementAlerts() {
       setPush(next);
       if (next === "on") actions.toast("Notifications are on for this device.");
       if (next === "blocked") actions.toast("Notifications are blocked. Allow them for this site in your browser settings.");
-    } catch {
+    } catch (e) {
       setPush(was);
-      actions.toast("Couldn’t turn on notifications. Try again.");
+      const msg = `${(e as { code?: string })?.code ?? ""} ${e instanceof Error ? e.message : String(e)}`;
+      const brave = (navigator as Navigator & { brave?: unknown }).brave;
+      if (/push service|AbortError|token-subscribe|registration failed/i.test(msg))
+        actions.toast(brave ? "Brave blocks this. Open brave://settings/privacy, turn on “Use Google services for push messaging”, restart Brave and try again." : "Your browser’s push service refused. Try Chrome, or check that notifications aren’t blocked for this site.");
+      else if (/permission-denied|insufficient permissions/i.test(msg)) actions.toast("Notifications aren’t ready on the server yet (Firestore rules). Ask your admin to publish the latest rules.");
+      else if (/API key|401|403|authentication/i.test(msg)) actions.toast("Firebase refused the request. Check the Firebase API key restrictions allow this site.");
+      else actions.toast(`Couldn’t turn on notifications (${msg.trim().slice(0, 80) || "unknown error"}).`);
     }
   };
   const sw = (on: boolean) => (
