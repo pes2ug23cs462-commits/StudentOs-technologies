@@ -58,7 +58,9 @@ function account(): ServiceAccount | null {
     try {
       return parse(readFileSync(resolve(process.cwd(), file), "utf8"));
     } catch {
-      problem = "Can’t read the key file. Put service-account.json in the project folder (next to package.json).";
+      problem = fileVar
+        ? `FIREBASE_SERVICE_ACCOUNT is empty and the file "${fileVar}" (from FIREBASE_SERVICE_ACCOUNT_FILE) isn’t there. On Vercel: delete FIREBASE_SERVICE_ACCOUNT_FILE and paste the key JSON into FIREBASE_SERVICE_ACCOUNT.`
+        : "FIREBASE_SERVICE_ACCOUNT is empty and no key file was found. Paste the key JSON into FIREBASE_SERVICE_ACCOUNT.";
       // on Vercel there is no file: fall back to the JSON in FIREBASE_SERVICE_ACCOUNT
       if (!process.env.FIREBASE_SERVICE_ACCOUNT) return null;
     }
