@@ -105,6 +105,7 @@ service cloud.firestore {
             && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(uid))
             && request.resource.data.uid == uid && request.resource.data.status == "applied"
             && request.resource.data.round == 0 && request.resource.data.links.size() == 0 && !("offer" in request.resource.data);
+          allow delete: if isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"];
           allow update: if (isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"])
             || (request.auth != null && request.auth.uid == uid && "offer" in resource.data
                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["decision", "decidedAt", "updatedAt"]));

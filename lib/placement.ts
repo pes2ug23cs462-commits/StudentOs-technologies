@@ -8,7 +8,7 @@
    Assessment links and offers live on each student's application, so only that
    student (and the college) can see them. */
 
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { AppState } from "@/lib/store";
 
@@ -98,6 +98,12 @@ export async function loadDrives(cid: string): Promise<Drive[]> {
 }
 export async function saveDrive(cid: string, d: Drive) {
   await setDoc(driveRef(cid, d.id), d);
+}
+/** Deletes a drive and its applications (applications first, so none are left behind). */
+export async function deleteDrive(cid: string, did: string) {
+  const s = await getDocs(collection(db, "colleges", cid, "drives", did, "apps"));
+  await Promise.all(s.docs.map((d: { data: () => unknown }) => deleteDoc(appRef(cid, did, (d.data() as Application).uid)).catch(() => {})));
+  await deleteDoc(driveRef(cid, did));
 }
 export async function loadApps(cid: string, did: string): Promise<Application[]> {
   const s = await getDocs(collection(db, "colleges", cid, "drives", did, "apps"));

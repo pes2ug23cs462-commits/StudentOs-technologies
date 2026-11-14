@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
-import { BRANCHES, effective, closed, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
+import { BRANCHES, effective, closed, deleteDrive, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
 import { notifyPlacement, notifySummary, type NotifyEvent } from "@/lib/notify";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -115,6 +115,23 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
   const drive = drives.find((d) => d.id === open);
 
   const blank = (): Drive => ({ id: `d${Date.now().toString(36)}`, company: "", role: "", kind: "Full-time", ctc: "", location: "", about: "", rounds: ["Online test", "Technical interview", "HR interview"], elig: { branches: [], minCgpa: 0, maxBacklogs: 0, batch: "" }, deadline: "", open: true, createdAt: Date.now(), createdBy: uid ?? "" });
+  const remove = async (d: Drive) => {
+    if (!window.confirm(`Delete the ${d.company} drive? Its ${apps[d.id]?.length ?? 0} applications are deleted too. This can’t be undone.`)) return;
+    if (sample) {
+      setDrives((x) => x.filter((y) => y.id !== d.id));
+      setOpen(null);
+      return actions.toast("Sample data: not saved.");
+    }
+    try {
+      await deleteDrive(college.id, d.id);
+      setDrives((x) => x.filter((y) => y.id !== d.id));
+      setApps(({ [d.id]: _gone, ...rest }) => rest);
+      setOpen(null);
+      actions.toast(`${d.company} drive deleted.`);
+    } catch {
+      actions.toast("Couldn’t delete the drive. Try again.");
+    }
+  };
   const save = async (d: Drive) => {
     if (sample) {
       setDrives((x) => [d, ...x.filter((y) => y.id !== d.id)]);
@@ -148,6 +165,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
         canEdit={canEdit && !drive.partner}
         back={() => setOpen(null)}
         edit={() => setForm(drive)}
+        remove={() => void remove(drive)}
         setDrive={(d) => void save(d)}
         setApps={(list) => setApps((x) => ({ ...x, [drive.id]: list }))}
       />
@@ -334,7 +352,7 @@ export function DriveForm({ initial, onSave, onCancel, isNew }: { initial: Drive
 
 type Filter = "all" | "applied" | `r${number}` | "selected" | "rejected";
 
-function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edit, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; canEdit: boolean; back: () => void; edit: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
+function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edit, remove, setDrive, setApps }: { college: College; drive: Drive; apps: Application[]; sample: boolean; canEdit: boolean; back: () => void; edit: () => void; remove: () => void; setDrive: (d: Drive) => void; setApps: (a: Application[]) => void }) {
   const { actions } = useStore();
   const apps = useMemo(() => rawApps.map(effective), [rawApps]);
   const [filter, setFilter] = useState<Filter>("all");
@@ -419,6 +437,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
               <div className="flex gap-2">
                 <Button size="sm" variant="ghost" onClick={edit}>Edit</Button>
                 <Button size="sm" onClick={() => setDrive({ ...drive, open: !drive.open })}>{drive.open ? "Close applications" : "Reopen"}</Button>
+                <button type="button" onClick={remove} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-400/30 px-3 text-[12.5px] font-medium text-rose-300 transition hover:bg-rose-400/10 hover:text-rose-200"><XIcon size={13} /> Delete</button>
               </div>
             ) : drive.partner ? (
               <span className="rounded-lg border border-cyan-400/30 bg-cyan-400/[0.06] px-3 py-1.5 text-[12px] text-cyan-100">{drive.company} runs this drive through StudentOS</span>
