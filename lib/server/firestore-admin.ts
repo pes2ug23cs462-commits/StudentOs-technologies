@@ -215,3 +215,18 @@ export async function adminPush(token: string, n: { title: string; body: string;
   if (!res.ok) throw new Error(`push ${res.status}`);
   return true;
 }
+
+/** For the system check: can this service account send through FCM? Uses validate_only with a fake token. */
+export async function adminPushCheck(): Promise<string> {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(sa, "https://www.googleapis.com/auth/firebase.messaging")}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ validate_only: true, message: { token: "system-check", data: { t: "1" } } }),
+    cache: "no-store",
+  });
+  if (res.status === 400 || res.status === 404 || res.ok) return `Ready · Firebase Cloud Messaging (${sa.project_id})`;
+  if (res.status === 403) throw new Error("Turn on “Firebase Cloud Messaging API (V1)” in Google Cloud for this project, or the service account lacks permission.");
+  throw new Error(`Error ${res.status}`);
+}

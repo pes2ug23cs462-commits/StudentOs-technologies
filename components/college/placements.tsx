@@ -100,7 +100,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
       actions.toast(`${d.company} drive is live for eligible students.`);
       if (isNew && d.open) {
         const told = notifySummary(await notifyPlacement(college.id, d.id, "new-drive"));
-        if (told) actions.toast(`Eligible students told: ${told}.`);
+        if (told) actions.toast(told);
       }
     } catch {
       actions.toast("Couldn’t save the drive. Try again.");
@@ -295,7 +295,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
     actions.toast(sample ? "Sample data: not saved." : msg);
     if (!sample && event && tell) {
       const told = notifySummary(await notifyPlacement(college.id, drive.id, event, who));
-      if (told) actions.toast(`Students told: ${told}.`);
+      if (told) actions.toast(told);
     }
   };
   const advance = () =>

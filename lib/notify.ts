@@ -53,7 +53,7 @@ export async function disablePush(uid: string): Promise<PushState> {
 }
 
 export type NotifyEvent = "new-drive" | "link" | "advance" | "selected" | "offer" | "rejected";
-export type NotifyResult = { emailed: number; pushed: number; people: number; email?: boolean; already?: boolean };
+export type NotifyResult = { emailed: number; pushed: number; people: number; email?: boolean; already?: boolean; error?: string };
 
 /** Tells the affected students (server decides who). Null when alerts aren't set up or it failed. */
 export async function notifyPlacement(cid: string, did: string, event: NotifyEvent, uids?: string[]): Promise<NotifyResult | null> {
@@ -65,15 +65,24 @@ export async function notifyPlacement(cid: string, did: string, event: NotifyEve
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
       body: JSON.stringify({ cid, did, event, uids }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      return { emailed: 0, pushed: 0, people: 0, error: j.error || `status ${res.status}` };
+    }
     return (await res.json()) as NotifyResult;
   } catch {
-    return null;
+    return { emailed: 0, pushed: 0, people: 0, error: "offline" };
   }
 }
 
-/** "Emailed 12 · 8 notifications" for a toast; "" when nobody was told. */
+/** A toast line saying who was told, or why nobody was. */
 export function notifySummary(r: NotifyResult | null) {
-  if (!r || (!r.emailed && !r.pushed)) return "";
-  return [r.emailed ? `emailed ${r.emailed}` : "", r.pushed ? `${r.pushed} notification${r.pushed === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ");
+  if (!r) return "";
+  if (r.error === "not-configured") return "Students weren’t told: alerts aren’t set up yet (service account missing on the server).";
+  if (r.error === "not-allowed") return "Only the admin or placement coordinator can send alerts.";
+  if (r.error) return "Students weren’t told: alerts failed. Try again later.";
+  if (r.already) return "";
+  if (!r.people) return "No students to tell yet (nobody eligible has joined).";
+  const parts = [`${r.people} in-app`, r.emailed ? `${r.emailed} email${r.emailed === 1 ? "" : "s"}` : "", r.pushed ? `${r.pushed} phone/laptop` : ""].filter(Boolean).join(" · ");
+  return `Students told: ${parts}.`;
 }

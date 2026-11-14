@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/server/auth";
-import { adminPing } from "@/lib/server/firestore-admin";
+import { adminConfigured, adminPing, adminPushCheck } from "@/lib/server/firestore-admin";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -81,6 +81,30 @@ export async function GET(req: Request) {
       if (reason.includes("accessNotConfigured") || /not been used|disabled/i.test(j.error?.message ?? "")) throw new Error("Turn on “YouTube Data API v3” for this key in Google Cloud.");
       throw new Error(j.error?.message ?? `Error ${res.status}`);
     }),
+    run("email", "Placement emails (Resend)", async () => {
+      const key = process.env.RESEND_API_KEY;
+      if (!key) return missing("RESEND_API_KEY");
+      const from = process.env.EMAIL_FROM ?? "";
+      const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? "";
+      const res = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${key}` }, signal: timeout(), cache: "no-store" });
+      if (res.status === 401 || res.status === 403) {
+        const j = (await res.json().catch(() => ({}))) as { message?: string; name?: string };
+        if (/restricted/i.test(`${j.name} ${j.message}`)) return domain ? `Key works (sending only) · sender ${from}` : "Key works, but without EMAIL_FROM emails only reach the Resend account owner. Verify a domain in Resend and set EMAIL_FROM.";
+        throw new Error("Key is wrong. Copy it again from resend.com → API Keys.");
+      }
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const j = (await res.json()) as { data?: { name: string; status: string }[] };
+      if (!domain) throw new Error("Key works, but EMAIL_FROM is not set: Resend only delivers to your own email until a domain is verified and EMAIL_FROM uses it.");
+      const d = j.data?.find((x) => x.name.toLowerCase() === domain);
+      if (!d) throw new Error(`Key works, but ${domain} is not added in Resend → Domains.`);
+      if (d.status !== "verified") throw new Error(`${domain} is “${d.status}” in Resend. Add the DNS records it shows, then wait for “verified”.`);
+      return `Working · sending from ${from}`;
+    }, true),
+    run("push", "Phone / laptop notifications", async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY) return missing("NEXT_PUBLIC_FIREBASE_VAPID_KEY (then redeploy)");
+      if (!adminConfigured()) throw new Error("Needs the Firebase service account (FIREBASE_SERVICE_ACCOUNT).");
+      return adminPushCheck();
+    }, true),
   ]);
 
   return NextResponse.json({ checks, at: new Date().toISOString() });
