@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { AuthShell, AuthTabs } from "@/components/auth/auth-shell";
+import { AuthShell, AuthTabs, InstitutionBadge, useAuthNext } from "@/components/auth/auth-shell";
 import { OrDivider, PasswordInput, SocialButtons } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
 import { Checkbox, FieldError, Input, Label, Notice } from "@/components/ui/primitives";
@@ -11,6 +11,7 @@ import { authErrorText, isValidEmail, logIn, type AuthErrorCode } from "@/lib/au
 
 export default function LogInPage() {
   const router = useRouter();
+  const { next, org, keep } = useAuthNext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -34,17 +35,17 @@ export default function LogInPage() {
       setLoading(false);
       return;
     }
-    const next = new URLSearchParams(window.location.search).get("next");
-    router.push(next && /^\/(college|join)\b/.test(next) ? next : "/dashboard");
+    router.push(next ?? "/dashboard");
   };
 
   const wrong = serverError === "invalid-credentials";
 
   return (
-    <AuthShell>
-      <AuthTabs active="login" />
-      <h2 className="text-[26px] font-bold tracking-tight text-white">Welcome back</h2>
-      <p className="mt-1.5 text-[13px] text-white/55">Log in to pick up your plan where you left it.</p>
+    <AuthShell org={org}>
+      {org && <InstitutionBadge org={org} />}
+      <AuthTabs active="login" keep={keep} />
+      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "College admin log in" : org === "faculty" ? "Faculty log in" : "Welcome back"}</h2>
+      <p className="mt-1.5 text-[13px] text-white/55">{org ? "Log in to open your college dashboard." : "Log in to pick up your plan where you left it."}</p>
 
       {serverError && (
         <Notice tone="error" title={authErrorText[serverError].title} className="mt-4">
@@ -100,11 +101,11 @@ export default function LogInPage() {
       </form>
 
       <OrDivider>or</OrDivider>
-      <SocialButtons layout="stack" disabled={loading} onError={setServerError} remember={remember} />
+      <SocialButtons layout="stack" disabled={loading} onError={setServerError} remember={remember} next={next} />
 
       <p className="mt-5 text-center text-[13px] text-white/60">
-        New to StudentOS?{" "}
-        <Link href="/signup" className="font-semibold text-accent hover:underline">Create account</Link>
+        {org ? "New here?" : "New to StudentOS?"}{" "}
+        <Link href={keep("/signup")} className="font-semibold text-accent hover:underline">Create account</Link>
       </p>
       <p className="mt-3 text-center text-[11.5px] text-white/40">
         <Link href="/privacy" className="hover:text-white">Privacy Policy</Link> · <Link href="/terms" className="hover:text-white">Terms</Link>

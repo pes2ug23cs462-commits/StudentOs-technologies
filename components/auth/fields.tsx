@@ -39,7 +39,7 @@ const providers: { key: SocialProvider; Icon: (p: { size?: number }) => React.Re
 
 /* Google and GitHub sign in with Firebase. LinkedIn isn’t set up yet,
    so it explains that instead of failing silently. */
-export function SocialButtons({ layout, disabled, onError, remember = false }: { layout: "row" | "stack"; disabled?: boolean; onError?: (code: AuthErrorCode) => void; remember?: boolean }) {
+export function SocialButtons({ layout, disabled, onError, remember = false, next }: { layout: "row" | "stack"; disabled?: boolean; onError?: (code: AuthErrorCode) => void; remember?: boolean; next?: string | null }) {
   const router = useRouter();
   const [busy, setBusy] = useState<SocialProvider | null>(null);
   const [notice, setNotice] = useState<SocialProvider | null>(null);
@@ -49,7 +49,8 @@ export function SocialButtons({ layout, disabled, onError, remember = false }: {
     setBusy(p);
     const res = await signInWithProvider(p, remember);
     if (res.ok) {
-      router.push(res.isNew ? "/setup/academic" : "/dashboard");
+      // college / faculty sign-in goes straight back to the college page, with no student setup
+      router.push(next ?? (res.isNew ? "/setup/academic" : "/dashboard"));
       return;
     }
     setBusy(null);

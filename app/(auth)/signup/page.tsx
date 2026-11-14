@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { AuthShell, AuthTabs } from "@/components/auth/auth-shell";
+import { AuthShell, AuthTabs, InstitutionBadge, useAuthNext } from "@/components/auth/auth-shell";
 import { OrDivider, PasswordInput, SocialButtons } from "@/components/auth/fields";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Notice } from "@/components/ui/primitives";
@@ -14,6 +14,7 @@ type Errors = Partial<Record<Field, string>>;
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { next, org, keep } = useAuthNext();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState<AuthErrorCode | null>(null);
@@ -47,17 +48,20 @@ export default function SignUpPage() {
       setLoading(false);
       return;
     }
-    const next = new URLSearchParams(window.location.search).get("next");
-    router.push(next && /^\/college\b/.test(next) ? next : "/setup/academic");
+    // college / faculty accounts skip the student setup
+    router.push(next?.startsWith("/college") ? next : "/setup/academic");
   };
 
   const errorCount = Object.values(errors).filter(Boolean).length;
 
   return (
-    <AuthShell>
-      <AuthTabs active="signup" />
-      <h2 className="text-[26px] font-bold tracking-tight text-white">Create your account</h2>
-      <p className="mt-1.5 text-[13px] text-white/55">Free to start. You’ll set up your first study plan right after.</p>
+    <AuthShell org={org}>
+      {org && <InstitutionBadge org={org} />}
+      <AuthTabs active="signup" keep={keep} />
+      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "Create your college account" : org === "faculty" ? "Create your faculty account" : "Create your account"}</h2>
+      <p className="mt-1.5 text-[13px] text-white/55">
+        {org === "admin" ? "Next you’ll set up your college. No student setup." : org === "faculty" ? "Next you’ll join your college with the codes your admin shared." : "Free to start. You’ll set up your first study plan right after."}
+      </p>
 
       {errorCount > 0 && (
         <Notice tone="error" title={`Check ${errorCount} field${errorCount > 1 ? "s" : ""}`} className="mt-4">
@@ -68,7 +72,7 @@ export default function SignUpPage() {
         <Notice tone="error" title={authErrorText[serverError].title} className="mt-4">
           {authErrorText[serverError].body}{" "}
           {serverError === "email-in-use" && (
-            <Link href="/login" className="text-accent hover:underline">
+            <Link href={keep("/login")} className="text-accent hover:underline">
               Log in
             </Link>
           )}
@@ -76,7 +80,7 @@ export default function SignUpPage() {
       )}
 
       <div className="mt-4">
-        <SocialButtons layout="row" disabled={loading} onError={setServerError} />
+        <SocialButtons layout="row" disabled={loading} onError={setServerError} next={next} />
       </div>
       <OrDivider>or sign up with email</OrDivider>
 
@@ -118,7 +122,7 @@ export default function SignUpPage() {
       </p>
       <p className="mt-4 text-center text-[13px] text-white/60">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-accent hover:underline">Log in</Link>
+        <Link href={keep("/login")} className="font-semibold text-accent hover:underline">Log in</Link>
       </p>
     </AuthShell>
   );
