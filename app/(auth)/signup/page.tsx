@@ -58,9 +58,9 @@ export default function SignUpPage() {
     <AuthShell org={org}>
       {org && <InstitutionBadge org={org} />}
       <AuthTabs active="signup" keep={keep} />
-      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "Create your college account" : org === "faculty" ? "Create your faculty account" : "Create your account"}</h2>
+      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "Create your college account" : org === "faculty" ? "Create your faculty account" : org === "company" ? "Create your recruiter account" : "Create your account"}</h2>
       <p className="mt-1.5 text-[13px] text-white/55">
-        {org === "admin" ? "Next you’ll set up your college. No student setup." : org === "faculty" ? "Next you’ll join your college with the codes your admin shared." : "Free to start. You’ll set up your first study plan right after."}
+        {org === "company" ? "Next you’ll enter your company code. No student setup." : org === "admin" ? "Next you’ll set up your college. No student setup." : org === "faculty" ? "Next you’ll join your college with the codes your admin shared." : "Free to start. You’ll set up your first study plan right after."}
       </p>
 
       {errorCount > 0 && (

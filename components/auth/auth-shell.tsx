@@ -11,21 +11,28 @@ import { HeroPanel } from "./hero-panel";
 
 /** Where to go after signing in, from ?next= (only our college and join pages are allowed),
     and whether this is the college / faculty sign-in. Read after mount so the page can be prerendered. */
+export type Org = "admin" | "faculty" | "company" | "team";
+
 export function useAuthNext() {
   const [next, setNext] = useState<string | null>(null);
   useEffect(() => {
     const n = new URLSearchParams(window.location.search).get("next");
     setNext(n && /^\/(college|join|company|partner)\b/.test(n) && !n.startsWith("//") ? n : null);
   }, []);
-  const org: "admin" | "faculty" | null = next?.startsWith("/college") ? (/[?&]as=faculty\b/.test(next) ? "faculty" : "admin") : null;
+  const org: Org | null = next?.startsWith("/college") ? (/[?&]as=faculty\b/.test(next) ? "faculty" : "admin") : next?.startsWith("/company") ? "company" : next?.startsWith("/partner") ? "team" : null;
   /** keeps ?next= on links between the auth pages */
   const keep = (href: string) => (next ? `${href}?next=${encodeURIComponent(next)}` : href);
   return { next, org, keep };
 }
 
 /* Left panel for principals, faculty and placement officers. */
-function InstitutionPanel({ org }: { org: "admin" | "faculty" }) {
-  const points = [
+function InstitutionPanel({ org }: { org: Org }) {
+  const hire = org === "company" || org === "team";
+  const points = hire ? [
+    { Icon: BriefcaseIcon, title: "Applicants from partner colleges", text: "One list across every college that approved your drive." },
+    { Icon: BarChartIcon, title: "Mock interview and coding scores", text: "Shortlist faster with StudentOS scores next to each resume." },
+    { Icon: ShieldIcon, title: "Colleges stay in control", text: "Students only see a drive after their college approves it." },
+  ] : [
     { Icon: BarChartIcon, title: "Readiness by class and section", text: "See who is behind, chapter by chapter, before the exam." },
     { Icon: BriefcaseIcon, title: "Placements in one place", text: "Drives, shortlists, test links, rounds and offers." },
     { Icon: ShieldIcon, title: "Consent first", text: "Students choose to share. They can leave anytime." },
@@ -37,17 +44,17 @@ function InstitutionPanel({ org }: { org: "admin" | "faculty" }) {
       <Link href="/institutions" className="relative flex items-center gap-2.5">
         <LogoMark size={30} />
         <Wordmark className="text-[18px]" />
-        <span className="rounded-full border border-cyan-400/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">for Institutions</span>
+        <span className="rounded-full border border-cyan-400/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">{org === "company" ? "for Companies" : org === "team" ? "Team" : "for Institutions"}</span>
       </Link>
       <div className="relative max-w-[520px]">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-300">
           <BuildingIcon size={24} />
         </span>
         <h1 className="mt-6 text-[40px] leading-[1.1] font-semibold tracking-[-0.02em] text-white">
-          {org === "faculty" ? "Your classes and drives, in one view." : "Your whole college, in one view."}
+          {org === "company" ? "Hire freshers from partner colleges." : org === "team" ? "Placement partner console." : org === "faculty" ? "Your classes and drives, in one view." : "Your whole college, in one view."}
         </h1>
         <p className="mt-3 text-[15px] text-white/60">
-          {org === "faculty" ? "Sign in, then join your college with the two codes your admin shares." : "Sign in, then set up your college in two minutes. The first month is a free pilot."}
+          {org === "company" ? "Sign in, then enter the company code StudentOS gave you." : org === "team" ? "For the StudentOS team only." : org === "faculty" ? "Sign in, then join your college with the two codes your admin shares." : "Sign in, then set up your college in two minutes. The first month is a free pilot."}
         </p>
         <ul className="mt-8 space-y-5">
           {points.map(({ Icon, title, text }) => (
@@ -72,7 +79,7 @@ function InstitutionPanel({ org }: { org: "admin" | "faculty" }) {
 
 /* Two-column auth layout: illustration on the left, form on the right.
    College and faculty sign-in (`org`) gets its own left panel. */
-export function AuthShell({ children, org }: { children: ReactNode; org?: "admin" | "faculty" | null }) {
+export function AuthShell({ children, org }: { children: ReactNode; org?: Org | null }) {
   return (
     <main className="grid min-h-screen grid-cols-1 items-start bg-ink lg:grid-cols-[1.5fr_1fr]">
       {org ? <InstitutionPanel org={org} /> : <HeroPanel />}
@@ -123,11 +130,11 @@ export function AuthTabs({ active, keep = (h: string) => h }: { active: "signup"
 }
 
 /** Small label above the college / faculty forms, with a way back to the student log-in. */
-export function InstitutionBadge({ org }: { org: "admin" | "faculty" }) {
+export function InstitutionBadge({ org }: { org: Org }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] px-3 py-2">
       <span className="flex items-center gap-2 text-[12.5px] font-medium text-cyan-100">
-        <BuildingIcon size={14} /> {org === "faculty" ? "Faculty / placement officer" : "Principal / college admin"}
+        <BuildingIcon size={14} /> {org === "company" ? "Company / recruiter" : org === "team" ? "StudentOS team" : org === "faculty" ? "Faculty / placement officer" : "Principal / college admin"}
       </span>
       <Link href="/login" className="text-[11.5px] text-white/50 hover:text-white">
         I’m a student

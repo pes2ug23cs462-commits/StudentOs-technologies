@@ -44,8 +44,8 @@ export default function LogInPage() {
     <AuthShell org={org}>
       {org && <InstitutionBadge org={org} />}
       <AuthTabs active="login" keep={keep} />
-      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "College admin log in" : org === "faculty" ? "Faculty log in" : "Welcome back"}</h2>
-      <p className="mt-1.5 text-[13px] text-white/55">{org ? "Log in to open your college dashboard." : "Log in to pick up your plan where you left it."}</p>
+      <h2 className="text-[26px] font-bold tracking-tight text-white">{org === "admin" ? "College admin log in" : org === "faculty" ? "Faculty log in" : org === "company" ? "Recruiter log in" : org === "team" ? "Team log in" : "Welcome back"}</h2>
+      <p className="mt-1.5 text-[13px] text-white/55">{org === "company" ? "Log in to see your drives and applicants." : org === "team" ? "Log in to manage partner drives." : org ? "Log in to open your college dashboard." : "Log in to pick up your plan where you left it."}</p>
 
       {serverError && (
         <Notice tone="error" title={authErrorText[serverError].title} className="mt-4">
