@@ -10,7 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircleIcon, ArrowLeftIcon, BarChartIcon, BookIcon, BriefcaseIcon, BuildingIcon, CheckIcon, DownloadIcon, FileIcon, GridIcon, HomeIcon, LayersIcon, LockIcon, LogOutIcon, MenuIcon, SearchIcon, ShieldIcon, SparkleIcon, UsersIcon, XIcon } from "@/components/ui/icons";
+import { AlertCircleIcon, ArrowLeftIcon, BarChartIcon, BookIcon, BriefcaseIcon, BuildingIcon, CheckIcon, DownloadIcon, FileIcon, GridIcon, HomeIcon, LayersIcon, LockIcon, LogOutIcon, MenuIcon, PencilIcon, SearchIcon, ShieldIcon, SparkleIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Toaster } from "@/components/ui/toaster";
 import { logOut } from "@/lib/auth";
@@ -47,6 +47,7 @@ import {
 } from "@/lib/college";
 import { qrPath } from "@/lib/qr";
 import { useStore } from "@/lib/store";
+import { CollegeLogo, LogoEditor } from "@/components/college/college-logo";
 import { cn } from "@/lib/utils";
 import { Placements } from "./placements";
 import { Skyline3D, Tilt } from "./skyline-3d";
@@ -284,6 +285,7 @@ export function CollegeConsole() {
   const [err, setErr] = useState("");
   const [sample, setSample] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [logoOpen, setLogoOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("app-ui");
@@ -331,9 +333,17 @@ export function CollegeConsole() {
         <Wordmark className="text-[15px]" />
         <span className="ml-auto rounded-md border border-white/15 px-1.5 py-0.5 text-[9.5px] font-semibold tracking-wider text-white/60">COLLEGE</span>
       </div>
-      <div className="mt-5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-        <p className="truncate text-[13px] font-semibold text-white">{college?.name ?? link.name}</p>
-        <p className="mt-0.5 text-[11.5px] text-white/45">{type === "school" ? "PU / school" : "Degree college"} · {ROLE_LABEL[role] ?? role}</p>
+      <div className="group relative mt-5 flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-2.5 py-2.5">
+        <CollegeLogo name={college?.name ?? link.name} logo={college?.logo} size={38} />
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-semibold text-white">{college?.name ?? link.name}</p>
+          <p className="mt-0.5 truncate text-[11.5px] text-white/45">{type === "school" ? "PU / school" : "Degree college"} · {ROLE_LABEL[role] ?? role}</p>
+        </div>
+        {role === "admin" && college && (
+          <button type="button" onClick={() => setLogoOpen(true)} aria-label={college.logo ? "Change college logo" : "Add college logo"} title={college.logo ? "Change logo" : "Add your logo"} className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-[#1a1726] text-white/70 opacity-80 transition hover:text-white group-hover:opacity-100">
+            <PencilIcon size={11} />
+          </button>
+        )}
       </div>
       <nav className="mt-4 space-y-0.5">
         {visibleNav.map(({ key, label, Icon, degree }) => (
@@ -360,8 +370,10 @@ export function CollegeConsole() {
       )}
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-white/[0.06] bg-[#0b0b0d]/95 px-4 backdrop-blur lg:hidden">
         <button type="button" onClick={() => setMenu(true)} aria-label="Open menu" className="rounded-lg p-2 text-white/80"><MenuIcon size={18} /></button>
+        <CollegeLogo name={college?.name ?? link.name} logo={college?.logo} size={26} />
         <span className="truncate text-[14px] font-semibold text-white">{college?.name ?? link.name}</span>
       </header>
+      {logoOpen && college && <LogoEditor college={college} onClose={() => setLogoOpen(false)} onSaved={setCollege} />}
 
       <main className="lg:pl-[236px]">
         <div className="pointer-events-none fixed inset-0 lg:left-[236px]" style={{ background: "radial-gradient(900px 340px at 35% -60px, rgba(124,58,237,0.2), transparent)" }} />

@@ -5,9 +5,10 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BuildingIcon, CheckIcon, LockIcon, XIcon } from "@/components/ui/icons";
+import { CheckIcon, LockIcon, XIcon } from "@/components/ui/icons";
 import { Card, Input, Label } from "@/components/ui/primitives";
-import { cleanCode, findByCode, joinCollege, leaveCollege, pushSummary, type College } from "@/lib/college";
+import { cleanCode, collegeInfo, findByCode, joinCollege, leaveCollege, pushSummary, type College } from "@/lib/college";
+import { CollegeLogo } from "@/components/college/college-logo";
 import { useStore } from "@/lib/store";
 
 const SEES = ["Your name and class / section", "Test scores for each chapter", "Videos and tests done, last active day", "Mock interview scores, coding and projects count"];
@@ -21,6 +22,10 @@ export function JoinCollege({ initialCode = "" }: { initialCode?: string }) {
   const [section, setSection] = useState(link?.section ?? "");
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [linkLogo, setLinkLogo] = useState<string | undefined>();
+  useEffect(() => {
+    if (link?.cid) void collegeInfo(link.cid).then((c) => setLinkLogo(c?.logo || undefined));
+  }, [link?.cid]);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const school = state.setup?.academic.type === "school";
@@ -104,7 +109,7 @@ export function JoinCollege({ initialCode = "" }: { initialCode?: string }) {
     return (
       <Card className="p-6">
         <div className="flex flex-wrap items-start gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-plum)] text-accent"><BuildingIcon size={22} /></span>
+          <CollegeLogo name={link.name} logo={linkLogo} size={48} className="rounded-xl" />
           <div className="min-w-0 flex-1">
             <p className="text-[12px] font-medium text-emerald-300">Sharing your progress</p>
             <p className="mt-0.5 text-[18px] font-semibold text-white">{link.name}</p>
@@ -140,7 +145,7 @@ export function JoinCollege({ initialCode = "" }: { initialCode?: string }) {
       {college && (
         <div className="mt-6 space-y-5">
           <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-[var(--color-plum)]/40 p-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent"><BuildingIcon size={20} /></span>
+            <CollegeLogo name={college.name} logo={college.logo} size={44} className="rounded-xl" />
             <div>
               <p className="text-[15px] font-semibold text-white">{college.name}</p>
               <p className="text-[12.5px] text-white/55">{college.city || (college.type === "school" ? "PU / school" : "Degree college")}</p>

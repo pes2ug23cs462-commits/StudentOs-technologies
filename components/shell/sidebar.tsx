@@ -11,6 +11,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logOut } from "@/lib/auth";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
+import { collegeInfo } from "@/lib/college";
+import { CollegeLogo } from "@/components/college/college-logo";
 import { showExamPrep } from "@/lib/exam-prep";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -85,6 +87,7 @@ function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
           </button>
         </div>
       )}
+      {state.college && <CollegeChip cid={state.college.cid} name={state.college.name} />}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -191,5 +194,23 @@ function RecentChats({ onNavigate }: { onNavigate?: () => void }) {
         {chats.length === 0 && state.planAcceptedOn && <p className="px-3 py-1.5 text-[11.5px] text-white/40">Your AI chats will appear here.</p>}
       </div>
     </>
+  );
+}
+
+/* The student's college (with its logo), above their name. */
+function CollegeChip({ cid, name }: { cid: string; name: string }) {
+  const [logo, setLogo] = useState<string | undefined>();
+  useEffect(() => {
+    let live = true;
+    void collegeInfo(cid).then((c) => live && setLogo(c?.logo || undefined));
+    return () => {
+      live = false;
+    };
+  }, [cid]);
+  return (
+    <Link href="/settings/college" className="mb-1 flex items-center gap-2 rounded-lg px-1.5 py-1.5 text-[11.5px] text-white/60 hover:bg-white/[0.04] hover:text-white" title="Your college">
+      <CollegeLogo name={name} logo={logo} size={22} className="rounded-md" />
+      <span className="truncate">{name}</span>
+    </Link>
   );
 }

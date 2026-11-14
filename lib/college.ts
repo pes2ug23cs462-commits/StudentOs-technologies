@@ -12,7 +12,7 @@
    readiness. Never chats, notes, phone or email. They can stop any time, which
    deletes their summary. */
 
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CHAPTERS, CHAPTERS_10, CHAPTERS_11, levelOf, parseKey, type ExamPrepState } from "@/lib/exam-prep";
 import type { PlacementProfile } from "@/lib/placement";
@@ -32,6 +32,10 @@ export interface College {
   code: string;
   owner: string;
   createdAt: number;
+  /** small square logo as a PNG/WebP data URL (≤ ~80 KB), set by the admin */
+  logo?: string;
+  /** the college's website, e.g. pes.edu (used to find the logo) */
+  website?: string;
 }
 export interface Staff {
   uid: string;
@@ -111,6 +115,28 @@ export async function createCollege(o: { name: string; type: CollegeType; city: 
 export async function getCollege(cid: string): Promise<College | null> {
   const s = await getDoc(doc(db, "colleges", cid));
   return s.exists() ? (s.data() as College) : null;
+}
+
+/** Admin only (rules): sets or removes the college logo and website. */
+export async function saveBranding(cid: string, b: { logo: string; website: string }) {
+  await updateDoc(doc(db, "colleges", cid), { logo: b.logo, website: b.website });
+  infoCache.delete(cid);
+}
+
+/** Name + logo of a college, cached for the session (students see it on their pages). */
+const infoCache = new Map<string, Promise<College | null>>();
+export function collegeInfo(cid: string): Promise<College | null> {
+  if (!infoCache.has(cid)) infoCache.set(cid, getCollege(cid).catch(() => null));
+  return infoCache.get(cid)!;
+}
+
+/** "PES University" → "PES", "St Joseph's PU College" → "SJ" (skips small words). */
+export function collegeInitials(name: string) {
+  const words = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter((w) => w && !/^(of|the|and|for|college|pu|degree)$/i.test(w));
+  const acronym = words.find((w) => /^[A-Z]{2,4}$/.test(w));
+  if (acronym) return acronym;
+  const pick = (words.length ? words : name.split(/\s+/)).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "");
+  return pick.join("") || "C";
 }
 
 /** The college for a student join code. */

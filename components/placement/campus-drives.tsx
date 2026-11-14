@@ -12,6 +12,8 @@ import { Input, Label } from "@/components/ui/primitives";
 import { BRANCHES, currentLinks, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
 import { disablePush, enablePush, pushState, type PushState } from "@/lib/notify";
 import { useStore } from "@/lib/store";
+import { collegeInfo } from "@/lib/college";
+import { CollegeLogo } from "@/components/college/college-logo";
 import { cn } from "@/lib/utils";
 
 const fmtDate = (s: string) => (s ? new Date(s + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
@@ -138,6 +140,10 @@ export function CampusDrives() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<"open" | "mine">("open");
   const [busy, setBusy] = useState("");
+  const [logo, setLogo] = useState<string | undefined>();
+  useEffect(() => {
+    void collegeInfo(link.cid).then((c) => setLogo(c?.logo || undefined));
+  }, [link.cid]);
 
   useEffect(() => {
     if (!uid) return;
@@ -201,7 +207,10 @@ export function CampusDrives() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[12px] font-medium tracking-wide text-accent uppercase">Campus placements</p>
-          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-white">{link.name}</h1>
+          <h1 className="mt-1 flex items-center gap-3 text-[26px] font-semibold tracking-tight text-white">
+            <CollegeLogo name={link.name} logo={logo} size={40} />
+            {link.name}
+          </h1>
           <p className="mt-1 text-[13px] text-white/55">Drives your placement cell posted. Only you and your college see your applications.</p>
         </div>
         <div className="flex gap-2">

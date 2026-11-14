@@ -63,6 +63,7 @@ export const BookIcon = make(<><rect x="4" y="3" width="16" height="18" rx="2" /
 export const FlagIcon = make(<path d="M4 22V4M4 4h12l-2 4 2 4H4" />, "FlagIcon");
 export const PlayIcon = make(<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none" />, "PlayIcon");
 export const PauseIcon = make(<path d="M8 5v14M16 5v14" strokeWidth={2.6} />, "PauseIcon");
+export const ImageIcon = make(<><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></>, "ImageIcon");
 export const PencilIcon = make(<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z" />, "PencilIcon");
 export const RefreshIcon = make(<><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8" /><path d="M21 3v5h-5" /></>, "RefreshIcon");
 export const RepeatIcon = make(<><path d="m17 2 4 4-4 4" /><path d="M3 11V10a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></>, "RepeatIcon");
