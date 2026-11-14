@@ -183,7 +183,7 @@ export function PartnerConsole() {
             <div className="mt-3 space-y-2">
               {data.companies.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/[0.07] px-3 py-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[13px] font-extrabold text-[#0b0a12]">{c.name.slice(0, 1)}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#ffffff] text-[13px] font-extrabold text-[#0b0a12]">{c.name.slice(0, 1)}</span>
                   <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{c.name}</span><span className="block text-[11px] text-white/40">{c.website || "—"}</span></span>
                   <button type="button" onClick={() => void navigator.clipboard.writeText(`Join ${c.name} on StudentOS: ${window.location.origin}/company · code ${c.code}`).then(() => actions.toast("Invite copied."))} title="Copy recruiter invite" className="flex items-center gap-1.5 rounded-lg border border-white/10 px-2 py-1 font-mono text-[12px] tracking-wider text-white/75 hover:text-white">
                     {c.code} <CopyIcon size={12} />

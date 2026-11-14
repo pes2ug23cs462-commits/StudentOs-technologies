@@ -198,7 +198,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
             .filter((o) => o.status === "pending")
             .map((o) => (
               <div key={o.pid} className="flex flex-wrap items-start gap-4 rounded-2xl border border-cyan-400/35 bg-[#13121b] p-5">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[18px] font-extrabold text-[#0b0a12]">{o.company.slice(0, 1)}</span>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#ffffff] text-[18px] font-extrabold text-[#0b0a12]">{o.company.slice(0, 1)}</span>
                 <div className="min-w-[240px] flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-[16px] font-semibold text-white">
                     {o.company} · {o.role}

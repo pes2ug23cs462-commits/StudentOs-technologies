@@ -19,13 +19,21 @@ import { TopBar } from "./top-bar";
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { status } = useStore();
+  const { status, state } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Logged-out visitors go to the login page.
   useEffect(() => {
     if (status === "signed-out") router.replace("/login");
   }, [status, router]);
+  // A student who logs in (email and password) before finishing setup goes back to it,
+  // instead of an empty dashboard. College staff and anyone with a plan are left alone.
+  useEffect(() => {
+    if (status !== "ready" || pathname !== "/dashboard") return;
+    if (state.setup?.assessmentDone || state.staffOf || state.sessions.length) return;
+    const steps = ["/setup/academic", "/setup/academic", "/setup/goals", "/setup/skills", "/setup/review", "/setup/assessment"];
+    router.replace(steps[Math.min(state.setup?.reached ?? 1, 5)]);
+  }, [status, pathname, state.setup, state.staffOf, state.sessions.length, router]);
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);

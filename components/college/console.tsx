@@ -88,7 +88,7 @@ function Status({ v }: { v: number | null }) {
 function Qr({ text, size = 132 }: { text: string; size?: number }) {
   const { d, size: n } = qrPath(text);
   return (
-    <svg viewBox={`0 0 ${n} ${n}`} width={size} height={size} className="rounded-lg bg-white" role="img" aria-label="QR code to join">
+    <svg viewBox={`0 0 ${n} ${n}`} width={size} height={size} className="rounded-lg bg-[#ffffff]" role="img" aria-label="QR code to join">
       <path d={d} fill="#0b0a14" />
     </svg>
   );

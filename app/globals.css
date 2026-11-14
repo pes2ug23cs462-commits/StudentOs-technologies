@@ -184,7 +184,10 @@ html.light {
   --color-plum-strong: #ede9fe;  /* user bubbles, sessions */
 
   /* Secondary highlight → readable cyan; success stays green */
+  --color-cyan-100: #0e7490;
   --color-cyan-200: #0e7490;
+  --color-emerald-200: #15803d;
+  --color-violet-100: #6d28d9;
   --color-cyan-300: #0e7490;
   --color-cyan-400: #0891b2;
   --color-emerald-300: #15803d;
@@ -956,3 +959,22 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 .iv-eq { height: 100%; transform-origin: bottom; animation: iv-eq 0.7s ease-in-out infinite alternate; }
 @keyframes iv-eq { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .iv-eq { animation: none; transform: scaleY(0.6); } }
+
+/* Light theme for panels painted with a fixed dark colour (college console, placements,
+   company and team pages, interview report, dialogs). Video frames, the code editor and
+   caption overlays keep their dark colour on purpose. */
+html.light :where(
+  .bg-\[\#0f0f11\], .bg-\[\#121216\], .bg-\[\#121118\], .bg-\[\#13121b\], .bg-\[\#0f0f13\],
+  .bg-\[\#0d0b16\], .bg-\[\#0d0c14\]\/90, .bg-\[\#16131f\], .bg-\[\#0f0b1d\], .bg-\[\#1a1726\], .bg-\[\#1a1a1f\]
+) {
+  background-color: #ffffff;
+}
+html.light :where(.bg-\[\#0b0b0d\], .bg-\[\#0b0b0d\]\/95) {
+  background-color: var(--color-panel);
+}
+html.light :where(.bg-\[\#08070d\]) {
+  background-color: var(--color-ink);
+}
+html.light :where(.bg-\[\#0b0a12\]) {
+  background-color: #f1f2fb;
+}

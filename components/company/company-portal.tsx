@@ -93,7 +93,7 @@ export function CompanyPortal() {
     <aside className="flex w-full flex-col gap-1 border-b border-white/[0.06] bg-[#0b0b0d] px-3 py-4 lg:min-h-screen lg:w-[240px] lg:border-r lg:border-b-0">
       <Brand />
       <div className="mt-4 mb-3 flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-2.5 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[15px] font-extrabold text-[#0b0a12]">{who.company.name.slice(0, 1)}</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#ffffff] text-[15px] font-extrabold text-[#0b0a12]">{who.company.name.slice(0, 1)}</span>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold">{who.company.name}</p>
           <p className="truncate text-[11.5px] text-white/45">Recruiter · {state.profile.name}</p>
