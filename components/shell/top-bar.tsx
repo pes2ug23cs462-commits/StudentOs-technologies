@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRightIcon, SearchIcon } from "@/components/ui/icons";
 import { openCommandMenu } from "./command-menu";
+import { NotificationBell } from "./notification-bell";
 import { crumbsFor } from "./nav";
 
 export function TopBar() {
@@ -36,6 +37,7 @@ export function TopBar() {
       </nav>
       <div className="ml-auto flex items-center gap-3">
         <span className="text-[12px] text-white/45">{today}</span>
+        <NotificationBell />
         <button type="button" onClick={openCommandMenu} className="flex h-7 items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 text-[12px] text-white/55 hover:border-white/15 hover:text-white">
           <SearchIcon size={12} /> Search
           <kbd className="rounded border border-white/12 px-1 font-sans text-[10px] text-white/45">⌘K</kbd>

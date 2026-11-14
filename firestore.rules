@@ -5,6 +5,15 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // A student's notifications (the bell). Only the server writes them; the student can
+    // read them, mark them read and delete them.
+    match /users/{uid}/inbox/{id} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["read"]);
+      allow create: if false;
+    }
+
     // A student's saved AI Assistant conversations.
     match /users/{uid}/chats/{chatId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
@@ -22,8 +31,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
     // Certificates: anyone with the ID can check one on /verify (no listing).
-    // A student can only create their own, once, and never change it.
-    // They can delete it when they delete their account.
+    // Only the server creates them, after re-marking the quiz (/api/certificates).
+    // A student can delete their own when they delete their account.
     match /certificates/{certId} {
       allow get: if true;
       // only the server writes certificates, after it re-marks the quiz (/api/certificates)
@@ -45,6 +54,12 @@ service cloud.firestore {
         && request.resource.data.role is string && request.resource.data.role.size() <= 90;
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
+    // Push notification token for placement alerts: one per student, only they can
+    // read or change it (the server sends with the service account).
+    match /pushTokens/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
     // ---------- Colleges (college dashboard at /college) ----------
     function isStaff(cid) {
       return request.auth != null && exists(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid));

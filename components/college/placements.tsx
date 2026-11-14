@@ -10,6 +10,7 @@ import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon, SendIc
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
 import { BRANCHES, effective, closed, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
+import { notifyPlacement, notifySummary, type NotifyEvent } from "@/lib/notify";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Tilt } from "./skyline-3d";
@@ -92,10 +93,15 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
       return actions.toast("Sample data: not saved.");
     }
     try {
+      const isNew = !drives.some((y) => y.id === d.id);
       await saveDrive(college.id, d);
       setDrives((x) => [d, ...x.filter((y) => y.id !== d.id)].sort((a, b) => b.createdAt - a.createdAt));
       setForm(null);
       actions.toast(`${d.company} drive is live for eligible students.`);
+      if (isNew && d.open) {
+        const told = notifySummary(await notifyPlacement(college.id, d.id, "new-drive"));
+        if (told) actions.toast(`Eligible students told: ${told}.`);
+      }
     } catch {
       actions.toast("Couldn’t save the drive. Try again.");
     }
@@ -268,13 +274,15 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
   const [link, setLink] = useState({ title: "", url: "", when: "" });
   const [offer, setOffer] = useState({ ctc: drive.ctc, joining: "", url: "", note: "" });
   const [openRow, setOpenRow] = useState<string | null>(null);
+  const [tell, setTell] = useState(true);
 
   const steps = [{ label: "applied", n: apps.length }, ...drive.rounds.map((r, i) => ({ label: r.toLowerCase(), n: apps.filter((a) => (a.status === "in-process" && a.round >= i) || (a.status === "selected")).length })), { label: "selected", n: apps.filter((a) => a.status === "selected").length }];
   const list = apps.filter((a) => (filter === "all" ? true : filter === "applied" ? a.status === "applied" : filter === "selected" ? a.status === "selected" : filter === "rejected" ? a.status === "rejected" : a.status === "in-process" && a.round === Number(filter.slice(1))));
   const chosen = apps.filter((a) => picked.has(a.uid));
 
-  const update = async (fn: (a: Application) => Application, msg: string) => {
+  const update = async (fn: (a: Application) => Application, msg: string, event?: NotifyEvent) => {
     const next = apps.map((a) => (picked.has(a.uid) ? { ...fn(a), updatedAt: Date.now() } : a));
+    const who = [...picked];
     if (!sample) {
       try {
         await Promise.all(next.filter((a) => picked.has(a.uid)).map((a) => saveApp(college.id, drive.id, a)));
@@ -285,6 +293,10 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
     setApps(next);
     setPicked(new Set());
     actions.toast(sample ? "Sample data: not saved." : msg);
+    if (!sample && event && tell) {
+      const told = notifySummary(await notifyPlacement(college.id, drive.id, event, who));
+      if (told) actions.toast(`Students told: ${told}.`);
+    }
   };
   const advance = () =>
     update((a) => {
@@ -292,9 +304,9 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
       if (a.status === "in-process" && a.round < drive.rounds.length - 1) return { ...a, round: a.round + 1 };
       if (a.status === "in-process") return { ...a, status: "selected" };
       return a;
-    }, `${picked.size} moved to the next round`);
-  const reject = () => update((a) => ({ ...a, status: "rejected" }), `${picked.size} marked not selected`);
-  const select = () => update((a) => ({ ...a, status: "selected" }), `${picked.size} marked selected`);
+    }, `${picked.size} moved to the next round`, "advance");
+  const reject = () => update((a) => ({ ...a, status: "rejected" }), `${picked.size} marked not selected`, "rejected");
+  const select = () => update((a) => ({ ...a, status: "selected" }), `${picked.size} marked selected`, "selected");
   const sendLink = () => {
     if (!link.title.trim() || !/^https?:\/\//.test(link.url.trim())) return actions.toast("Add a title and a link starting with https://");
     setModal(null);
@@ -302,14 +314,14 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
     void update((a) => {
       const b: Application = a.status === "applied" ? { ...a, status: "in-process", round: 0 } : a;
       return { ...b, links: [...b.links, { title: link.title.trim(), url: link.url.trim(), when: link.when.trim(), at: Date.now(), round: b.round }] };
-    }, `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`);
+    }, `Link sent to ${picked.size} student${picked.size > 1 ? "s" : ""}`, "link");
     setLink({ title: "", url: "", when: "" });
   };
   const addOffer = () => {
     if (!offer.ctc.trim()) return actions.toast("Add the package.");
     if (offer.url && !/^https?:\/\//.test(offer.url.trim())) return actions.toast("The offer letter link must start with https://");
     setModal(null);
-    void update((a) => ({ ...a, status: "selected", offer: { ctc: offer.ctc.trim(), joining: offer.joining.trim(), url: offer.url.trim(), note: offer.note.trim(), at: Date.now() } }), `Offer added for ${picked.size} student${picked.size > 1 ? "s" : ""}`);
+    void update((a) => ({ ...a, status: "selected", offer: { ctc: offer.ctc.trim(), joining: offer.joining.trim(), url: offer.url.trim(), note: offer.note.trim(), at: Date.now() } }), `Offer added for ${picked.size} student${picked.size > 1 ? "s" : ""}`, "offer");
   };
   const csv = () => {
     const rows = [["Name", "Branch", "Section", "CGPA", "Backlogs", "Batch", "Stage", "Offer", "Decision", "Email"], ...apps.map((a) => [a.name, a.branch, a.section, a.cgpa, a.backlogs, a.batch, stageLabel(a, drive), a.offer?.ctc ?? "", a.decision ?? "", a.email])];
@@ -378,6 +390,9 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
             <Button size="sm" icon={<CheckIcon size={13} />} onClick={select}>Mark selected</Button>
             <Button size="sm" icon={<TrophyIcon size={13} />} onClick={() => setModal("offer")}>Add offer</Button>
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} onClick={reject}>Not selected</Button>
+            <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[12px] text-white/70" title="Email and phone notification to the picked students">
+              <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#a78bfa]" /> Notify students
+            </label>
           </div>
         )}
 

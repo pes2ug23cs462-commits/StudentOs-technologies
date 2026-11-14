@@ -45,6 +45,8 @@ export interface MemberSummary {
   uid: string;
   /** the student join code (checked by the rules) */
   code?: string;
+  email?: string;
+  notifyEmail?: boolean;
   name: string;
   section: string;
   course: string;
@@ -82,6 +84,8 @@ export interface CollegeLink {
   placement?: PlacementProfile;
   /** the student join code they used (the rules check it on every write) */
   code?: string;
+  /** false = no placement emails */
+  notifyEmail?: boolean;
 }
 /** Saved in a faculty member's own data. */
 export interface StaffLink {
@@ -178,6 +182,8 @@ export function buildSummary(state: AppState, link: CollegeLink, uid: string, pr
   return {
     uid,
     ...(link.code ? { code: link.code } : {}),
+    // degree colleges: the email for placement alerts (the student can turn emails off)
+    ...(link.type === "degree" && state.profile.email ? { email: state.profile.email, notifyEmail: link.notifyEmail !== false } : {}),
     name: state.profile.name || "Student",
     section: link.section,
     course: [a?.course, a?.field, a?.year].filter(Boolean).join(" · "),

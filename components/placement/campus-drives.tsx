@@ -7,9 +7,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
+import { BellIcon, BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, MailIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
 import { Input, Label } from "@/components/ui/primitives";
 import { BRANCHES, currentLinks, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
+import { disablePush, enablePush, pushState, type PushState } from "@/lib/notify";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +72,52 @@ function Steps({ a: a0, d }: { a: Application; d: Drive }) {
         );
       })}
     </ol>
+  );
+}
+
+/* Placement alerts: email (on by default) and phone / laptop notifications (opt-in). */
+function PlacementAlerts() {
+  const { state, actions, uid } = useStore();
+  const link = state.college!;
+  const [push, setPush] = useState<PushState | "busy" | null>(null);
+  useEffect(() => {
+    if (uid) void pushState(uid).then(setPush);
+  }, [uid]);
+  const emailOn = link.notifyEmail !== false;
+  const togglePush = async () => {
+    if (!uid || push === "busy") return;
+    const was = push;
+    setPush("busy");
+    try {
+      const next = was === "on" ? await disablePush(uid) : await enablePush(uid);
+      setPush(next);
+      if (next === "on") actions.toast("Notifications are on for this device.");
+      if (next === "blocked") actions.toast("Notifications are blocked. Allow them for this site in your browser settings.");
+    } catch {
+      setPush(was);
+      actions.toast("Couldn’t turn on notifications. Try again.");
+    }
+  };
+  const sw = (on: boolean) => (
+    <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition", on ? "bg-accent" : "bg-white/15")}>
+      <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", on ? "left-[18px]" : "left-0.5")} />
+    </span>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-white/[0.08] bg-[#0f0f11] px-4 py-3">
+      <p className="mr-auto text-[13px] font-medium text-white">
+        Placement alerts
+        <span className="block text-[11.5px] font-normal text-white/45">New drives you can apply to, test links, rounds and offers.</span>
+      </p>
+      <button type="button" role="switch" aria-checked={emailOn} onClick={() => actions.patch({ college: { ...link, notifyEmail: !emailOn } })} className="flex items-center gap-2 text-[12.5px] text-white/75">
+        <MailIcon size={14} className="text-white/45" /> Email {state.profile.email ? <span className="text-white/35">({state.profile.email})</span> : null} {sw(emailOn)}
+      </button>
+      {push && push !== "unsupported" && (
+        <button type="button" role="switch" aria-checked={push === "on"} disabled={push === "busy" || push === "blocked"} onClick={() => void togglePush()} className="flex items-center gap-2 text-[12.5px] text-white/75 disabled:opacity-60" title={push === "blocked" ? "Blocked in your browser settings" : undefined}>
+          <BellIcon size={14} className="text-white/45" /> {push === "blocked" ? "Notifications blocked" : "Notifications on this device"} {sw(push === "on")}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -160,6 +207,8 @@ export function CampusDrives() {
           ))}
         </div>
       </div>
+
+      <PlacementAlerts />
 
       {(!profile || editing) && <ProfileForm initial={profile} onSave={saveProfile} onCancel={profile ? () => setEditing(false) : undefined} />}
       {profile && !editing && (

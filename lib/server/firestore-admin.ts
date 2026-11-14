@@ -65,15 +65,17 @@ function account(): ServiceAccount | null {
 
 export const adminConfigured = () => !!account();
 
-let cached: { token: string; exp: number } | null = null;
+const cachedTokens = new Map<string, { token: string; exp: number }>();
+const DATASTORE = "https://www.googleapis.com/auth/datastore";
 
 const b64url = (s: string | Buffer) => Buffer.from(s).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
 
-async function accessToken(sa: ServiceAccount) {
+async function accessToken(sa: ServiceAccount, scope = DATASTORE) {
+  const cached = cachedTokens.get(scope);
   if (cached && cached.exp - 60 > Date.now() / 1000) return cached.token;
   const now = Math.floor(Date.now() / 1000);
   const head = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claim = b64url(JSON.stringify({ iss: sa.client_email, scope: "https://www.googleapis.com/auth/datastore", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }));
+  const claim = b64url(JSON.stringify({ iss: sa.client_email, scope, aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }));
   const signer = createSign("RSA-SHA256");
   signer.update(`${head}.${claim}`);
   const jwt = `${head}.${claim}.${b64url(signer.sign(sa.private_key))}`;
@@ -85,12 +87,25 @@ async function accessToken(sa: ServiceAccount) {
   });
   if (!res.ok) throw new Error(`token ${res.status}`);
   const j = (await res.json()) as { access_token: string; expires_in: number };
-  cached = { token: j.access_token, exp: now + j.expires_in };
+  cachedTokens.set(scope, { token: j.access_token, exp: now + j.expires_in });
   return j.access_token;
 }
 
-type Value = { stringValue?: string; integerValue?: string; doubleValue?: number; booleanValue?: boolean; nullValue?: null };
-const plain = (v: Value) => (v.stringValue ?? (v.integerValue !== undefined ? Number(v.integerValue) : (v.doubleValue ?? v.booleanValue ?? null)));
+type Value = {
+  stringValue?: string;
+  integerValue?: string;
+  doubleValue?: number;
+  booleanValue?: boolean;
+  nullValue?: null;
+  mapValue?: { fields?: Record<string, Value> };
+  arrayValue?: { values?: Value[] };
+};
+const plain = (v: Value): unknown =>
+  v.mapValue
+    ? Object.fromEntries(Object.entries(v.mapValue.fields ?? {}).map(([k, x]) => [k, plain(x)]))
+    : v.arrayValue
+      ? (v.arrayValue.values ?? []).map(plain)
+      : (v.stringValue ?? (v.integerValue !== undefined ? Number(v.integerValue) : (v.doubleValue ?? v.booleanValue ?? null)));
 
 function base(sa: ServiceAccount) {
   return `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents`;
@@ -168,4 +183,35 @@ export async function adminIncrement(path: string, field: string, by = 1): Promi
 /** A server-only secret for signing things the client hands back (from the service account key). */
 export function adminSecret(): string | null {
   return process.env.QUIZ_SECRET || account()?.private_key || null;
+}
+
+/** Lists a collection's documents (up to `max`), with their fields as plain values. */
+export async function adminList(collection: string, max = 1000): Promise<{ id: string; data: Record<string, unknown> }[]> {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const out: { id: string; data: Record<string, unknown> }[] = [];
+  let page = "";
+  do {
+    const res = await fetch(`${base(sa)}/${collection}?pageSize=300${page ? `&pageToken=${encodeURIComponent(page)}` : ""}`, { headers: { Authorization: `Bearer ${await accessToken(sa)}` }, cache: "no-store" });
+    if (!res.ok) throw new Error(`list ${res.status}`);
+    const j = (await res.json()) as { documents?: { name: string; fields?: Record<string, Value> }[]; nextPageToken?: string };
+    for (const d of j.documents ?? []) out.push({ id: d.name.split("/").pop() ?? "", data: Object.fromEntries(Object.entries(d.fields ?? {}).map(([k, v]) => [k, plain(v)])) });
+    page = j.nextPageToken ?? "";
+  } while (page && out.length < max);
+  return out.slice(0, max);
+}
+
+/** Sends one web push notification through Firebase Cloud Messaging. False when the token is no longer valid. */
+export async function adminPush(token: string, n: { title: string; body: string; url: string }): Promise<boolean> {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(sa, "https://www.googleapis.com/auth/firebase.messaging")}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ message: { token, data: { title: n.title, body: n.body, url: n.url }, webpush: { headers: { Urgency: "high", TTL: "86400" } } } }),
+    cache: "no-store",
+  });
+  if (res.status === 404 || res.status === 400) return false;
+  if (!res.ok) throw new Error(`push ${res.status}`);
+  return true;
 }

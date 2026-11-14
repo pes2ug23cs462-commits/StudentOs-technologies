@@ -8,6 +8,7 @@ import { LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Toaster } from "@/components/ui/toaster";
 import { useStore } from "@/lib/store";
 import { CommandMenu, openCommandMenu } from "./command-menu";
+import { NotificationBell } from "./notification-bell";
 import { CollegeSync } from "@/components/college/college-sync";
 import { MiniChat } from "./mini-chat";
 import { Sidebar } from "./sidebar";
@@ -65,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Wordmark className="text-[15px]" />
         </Link>
         <span className="ml-auto" />
+        <NotificationBell compact />
         <button type="button" onClick={openCommandMenu} aria-label="Search" className="rounded-lg p-2 text-white/70 hover:bg-white/10">
           <SearchIcon size={17} />
         </button>
