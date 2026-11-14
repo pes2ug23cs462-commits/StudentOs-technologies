@@ -59,10 +59,12 @@ function account(): ServiceAccount | null {
       return parse(readFileSync(resolve(process.cwd(), file), "utf8"));
     } catch {
       problem = "Can’t read the key file. Put service-account.json in the project folder (next to package.json).";
-      return null;
+      // on Vercel there is no file: fall back to the JSON in FIREBASE_SERVICE_ACCOUNT
+      if (!process.env.FIREBASE_SERVICE_ACCOUNT) return null;
     }
   }
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  // the JSON pasted into FIREBASE_SERVICE_ACCOUNT_FILE by mistake still works
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT || (fileVar?.startsWith("{") ? fileVar : "");
   if (raw) return parse(raw);
   problem = fileVar?.startsWith("{")
     ? "FIREBASE_SERVICE_ACCOUNT_FILE should be a file name, not the JSON. Put service-account.json in the project folder."
