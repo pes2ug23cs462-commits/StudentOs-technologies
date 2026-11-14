@@ -5,7 +5,9 @@
 import { auth } from "./firebase";
 import type { AppLink, Drive, Offer } from "./placement";
 
-export class PartnerError extends Error {}
+export class PartnerError extends Error {
+  detail = "";
+}
 
 export async function partnerApi<T>(action: string, body: Record<string, unknown> = {}): Promise<T> {
   await auth.authStateReady?.().catch(() => {});
@@ -16,8 +18,12 @@ export async function partnerApi<T>(action: string, body: Record<string, unknown
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
     body: JSON.stringify({ action, ...body }),
   });
-  const j = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) throw new PartnerError(j.error || `status ${res.status}`);
+  const j = (await res.json().catch(() => ({}))) as T & { error?: string; detail?: string };
+  if (!res.ok) {
+    const e = new PartnerError(j.error || `status ${res.status}`);
+    e.detail = j.detail ?? "";
+    throw e;
+  }
   return j;
 }
 
@@ -29,7 +35,10 @@ export const PARTNER_ERROR: Record<string, string> = {
   "bad-code": "That company code isn’t right. Check it with StudentOS.",
   failed: "Something went wrong. Try again.",
 };
-export const partnerErrorText = (e: unknown) => PARTNER_ERROR[e instanceof Error ? e.message : ""] ?? "Something went wrong. Try again.";
+export const partnerErrorText = (e: unknown) => {
+  const t = PARTNER_ERROR[e instanceof Error ? e.message : ""] ?? "Something went wrong. Try again.";
+  return e instanceof PartnerError && e.detail ? `${t} ${e.detail}` : t;
+};
 
 export type Whoami = { team: boolean; company: { id: string; name: string; website: string; logo?: string } | null };
 export type PartnerCompany = { id: string; name: string; website: string; code: string };

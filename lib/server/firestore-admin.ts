@@ -20,13 +20,20 @@ let problem = "";
 
 function parse(raw: string): ServiceAccount | null {
   try {
-    const j = JSON.parse(raw.trim().replace(/^'|'$/g, "")) as ServiceAccount;
+    let v: unknown = JSON.parse(raw.trim().replace(/^'|'$/g, ""));
+    // pasted as a quoted string, or as base64 of the file
+    if (typeof v === "string") v = JSON.parse(v);
+    const j = v as ServiceAccount;
     if (!j.client_email || !j.private_key) {
       problem = "The key JSON is missing client_email or private_key. Download a new key.";
       return null;
     }
     return { ...j, private_key: j.private_key.replace(/\\n/g, "\n"), project_id: j.project_id || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "" };
   } catch {
+    try {
+      const dec = Buffer.from(raw.trim(), "base64").toString("utf8");
+      if (dec.trim().startsWith("{")) return parse(dec);
+    } catch {}
     problem = "FIREBASE_SERVICE_ACCOUNT isn’t valid JSON. It must be on ONE line, or use FIREBASE_SERVICE_ACCOUNT_FILE instead.";
     return null;
   }
@@ -64,6 +71,8 @@ function account(): ServiceAccount | null {
 }
 
 export const adminConfigured = () => !!account();
+/** why the service account can’t be used (empty when it can) */
+export const adminProblem = () => (account() ? "" : problem);
 
 const cachedTokens = new Map<string, { token: string; exp: number }>();
 const DATASTORE = "https://www.googleapis.com/auth/datastore";

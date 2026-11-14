@@ -12,7 +12,7 @@
 
 import { NextResponse } from "next/server";
 import { verifyIdUser } from "@/lib/server/auth";
-import { adminConfigured, adminCreate, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
+import { adminConfigured, adminProblem, adminCreate, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -84,7 +84,7 @@ const EVENT_OF: Record<string, NotifyEv> = { advance: "advance", select: "select
 export async function POST(req: Request) {
   const me = await verifyIdUser(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!me) return bad("signed-out", 401);
-  if (!adminConfigured()) return bad("not-configured", 503);
+  if (!adminConfigured()) return NextResponse.json({ error: "not-configured", detail: adminProblem() }, { status: 503 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const action = str(b.action, 40);
   const team = (process.env.STUDENTOS_TEAM_EMAILS ?? "").toLowerCase().split(/[,\s]+/).filter(Boolean);
