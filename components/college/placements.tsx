@@ -372,6 +372,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
       if (a.status === "applied") return { ...a, status: "in-process", round: 0 };
       if (a.status === "in-process" && a.round < drive.rounds.length - 1) return { ...a, round: a.round + 1 };
       if (a.status === "in-process") return { ...a, status: "selected" };
+      if (a.status === "rejected") return { ...a, status: "in-process" };
       return a;
     }, `${picked.size} moved to the next round`, "advance");
   const reject = () => update((a) => ({ ...a, status: "rejected" }), `${picked.size} marked not selected`, "rejected");

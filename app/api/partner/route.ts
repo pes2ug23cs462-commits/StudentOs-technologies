@@ -60,6 +60,8 @@ function apply(op: string, a: App, rounds: number, p: Record<string, unknown>): 
     if (a.status === "applied") return { ...a, status: "in-process", round: 0, updatedAt: now };
     if (a.status === "in-process" && a.round < rounds - 1) return { ...a, round: a.round + 1, updatedAt: now };
     if (a.status === "in-process") return { ...a, status: "selected", updatedAt: now };
+    // marked "not selected" by mistake: back into the same round
+    if (a.status === "rejected") return { ...a, status: "in-process", updatedAt: now };
     return null;
   }
   if (op === "select") return { ...a, status: "selected", updatedAt: now };

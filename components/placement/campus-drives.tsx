@@ -149,7 +149,7 @@ export function CampusDrives() {
   useEffect(() => {
     if (!uid) return;
     let live = true;
-    (async () => {
+    const run = async () => {
       try {
         const ds = await loadDrives(link.cid);
         const mine = await Promise.all(ds.map((d) => myApp(link.cid, d.id, uid).then((a) => [d.id, a] as const)));
@@ -161,9 +161,16 @@ export function CampusDrives() {
       } finally {
         if (live) setLoading(false);
       }
-    })();
+    };
+    void run();
+    // keep rounds, links and offers fresh: when the tab comes back and every minute
+    const onFocus = () => document.visibilityState === "visible" && void run();
+    document.addEventListener("visibilitychange", onFocus);
+    const t = setInterval(onFocus, 60000);
     return () => {
       live = false;
+      document.removeEventListener("visibilitychange", onFocus);
+      clearInterval(t);
     };
   }, [link.cid, uid]);
 
