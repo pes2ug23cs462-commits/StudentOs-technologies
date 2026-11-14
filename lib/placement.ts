@@ -36,6 +36,8 @@ export interface Drive {
   open: boolean;
   createdAt: number;
   createdBy: string;
+  /** a StudentOS partner drive: the company runs the rounds; the college approved it */
+  partner?: { pid: string; companyId: string; minInterview?: number };
 }
 export type AppStatus = "applied" | "in-process" | "selected" | "rejected";
 export interface AppLink {
@@ -74,6 +76,8 @@ export interface Application {
   decision?: "accepted" | "declined";
   decidedAt?: number;
   updatedAt: number;
+  /** best mock-interview and coding-round scores on StudentOS when they applied (shown to companies) */
+  scores?: { interview?: number; coding?: number };
 }
 /** The student's own placement details, kept in their data. */
 export interface PlacementProfile {
@@ -140,11 +144,21 @@ export function newApplication(state: AppState, uid: string, p: PlacementProfile
       projects: (state.entries ?? []).filter((e) => e.kind === "project").map((e) => e.title).slice(0, 6),
     },
     appliedAt: Date.now(),
+    ...interviewScores(state),
     round: 0,
     status: "applied",
     links: [],
     updatedAt: Date.now(),
   };
+}
+
+function interviewScores(state: AppState): { scores?: Application["scores"] } {
+  const ivs = state.interviews ?? [];
+  const best = (xs: number[]) => (xs.length ? Math.max(...xs) : undefined);
+  const interview = best(ivs.filter((h) => h.kind !== "coding").map((h) => h.feedback.overall));
+  const coding = best(ivs.filter((h) => h.kind === "coding").map((h) => h.feedback.overall));
+  if (interview == null && coding == null) return {};
+  return { scores: { ...(interview != null ? { interview } : {}), ...(coding != null ? { coding } : {}) } };
 }
 
 /** Older applications that got a link while still "applied" count as in the first round. */

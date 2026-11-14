@@ -49,7 +49,7 @@ export default function SignUpPage() {
       return;
     }
     // college / faculty accounts skip the student setup
-    router.push(next?.startsWith("/college") ? next : "/setup/academic");
+    router.push(next && /^\/(college|company|partner)\b/.test(next) ? next : "/setup/academic");
   };
 
   const errorCount = Object.values(errors).filter(Boolean).length;

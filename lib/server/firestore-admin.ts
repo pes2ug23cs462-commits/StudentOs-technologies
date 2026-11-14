@@ -230,3 +230,53 @@ export async function adminPushCheck(): Promise<string> {
   if (res.status === 403) throw new Error("Turn on “Firebase Cloud Messaging API (V1)” in Google Cloud for this project, or the service account lacks permission.");
   throw new Error(`Error ${res.status}`);
 }
+
+type Any = unknown;
+const deep = (v: Any): Value =>
+  v === null || v === undefined
+    ? { nullValue: null }
+    : typeof v === "boolean"
+      ? { booleanValue: v }
+      : typeof v === "number"
+        ? Number.isInteger(v)
+          ? { integerValue: String(v) }
+          : { doubleValue: v }
+        : typeof v === "string"
+          ? { stringValue: v }
+          : Array.isArray(v)
+            ? { arrayValue: { values: v.filter((x) => x !== undefined).map(deep) } }
+            : { mapValue: { fields: Object.fromEntries(Object.entries(v as Record<string, Any>).filter(([, x]) => x !== undefined).map(([k, x]) => [k, deep(x)])) } };
+
+/** Writes a whole document (creates or replaces), any JSON-like value. */
+export async function adminSet(path: string, data: Record<string, unknown>) {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const res = await fetch(`${base(sa)}/${path}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${await accessToken(sa)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: (deep(data) as { mapValue: { fields: Record<string, Value> } }).mapValue.fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`set ${res.status}`);
+}
+
+/** Sets some fields (any JSON-like values) on a document, creating it if needed. */
+export async function adminMerge(path: string, data: Record<string, unknown>) {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const mask = Object.keys(data).map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join("&");
+  const res = await fetch(`${base(sa)}/${path}?${mask}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${await accessToken(sa)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: (deep(data) as { mapValue: { fields: Record<string, Value> } }).mapValue.fields }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`merge ${res.status}`);
+}
+
+export async function adminDelete(path: string) {
+  const sa = account();
+  if (!sa) throw new Error("no-admin");
+  const res = await fetch(`${base(sa)}/${path}`, { method: "DELETE", headers: { Authorization: `Bearer ${await accessToken(sa)}` }, cache: "no-store" });
+  if (!res.ok && res.status !== 404) throw new Error(`delete ${res.status}`);
+}

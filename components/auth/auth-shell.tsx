@@ -15,7 +15,7 @@ export function useAuthNext() {
   const [next, setNext] = useState<string | null>(null);
   useEffect(() => {
     const n = new URLSearchParams(window.location.search).get("next");
-    setNext(n && /^\/(college|join)\b/.test(n) && !n.startsWith("//") ? n : null);
+    setNext(n && /^\/(college|join|company|partner)\b/.test(n) && !n.startsWith("//") ? n : null);
   }, []);
   const org: "admin" | "faculty" | null = next?.startsWith("/college") ? (/[?&]as=faculty\b/.test(next) ? "faculty" : "admin") : null;
   /** keeps ?next= on links between the auth pages */

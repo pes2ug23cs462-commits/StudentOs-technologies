@@ -43,6 +43,7 @@ export const ChevronRightIcon = make(<path d="m9 18 6-6-6-6" />, "ChevronRightIc
 export const ArrowLeftIcon = make(<path d="M19 12H5M12 19l-7-7 7-7" />, "ArrowLeftIcon");
 export const ArrowRightIcon = make(<path d="M5 12h14M12 5l7 7-7 7" />, "ArrowRightIcon");
 export const ArrowUpIcon = make(<path d="M12 19V5M5 12l7-7 7 7" />, "ArrowUpIcon");
+export const CopyIcon = make(<><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></>, "CopyIcon");
 export const DownloadIcon = make(<path d="M12 4v11M7 10l5 5 5-5M5 20h14" />, "DownloadIcon");
 export const CheckIcon = make(<path d="M20 6 9 17l-5-5" />, "CheckIcon");
 export const CheckCircleIcon = make(<><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.5 2.5 4.5-5" /></>, "CheckCircleIcon");

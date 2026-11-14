@@ -87,6 +87,12 @@ service cloud.firestore {
         allow read: if isStaff(cid);
         allow write: if isCollegeAdmin(cid);
       }
+      // StudentOS partner drives offered to this college: only the server writes them
+      // (/api/partner); the college's staff can read them and decide through the server.
+      match /partner/{pid} {
+        allow read: if isStaff(cid);
+        allow write: if false;
+      }
       // campus placement drives: the admin or placement coordinator posts them; other staff and joined students read them
       match /drives/{did} {
         allow read: if isStaff(cid) || (request.auth != null && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(request.auth.uid)));

@@ -11,6 +11,9 @@ import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
 import { BRANCHES, effective, closed, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
 import { notifyPlacement, notifySummary, type NotifyEvent } from "@/lib/notify";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { partnerApi, partnerErrorText, type OfferedDrive } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Tilt } from "./skyline-3d";
@@ -56,6 +59,31 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<string | null>(null);
   const [form, setForm] = useState<Drive | null>(null);
+  const [offered, setOffered] = useState<OfferedDrive[]>([]);
+  const [deciding, setDeciding] = useState("");
+
+  /** StudentOS partner drives offered to this college (only staff can read them) */
+  const loadOffered = async () => {
+    if (sample) return setOffered([]);
+    try {
+      const snap = await getDocs(collection(db, "colleges", college.id, "partner"));
+      setOffered(snap.docs.map((d: { data: () => unknown }) => d.data() as OfferedDrive).sort((a: OfferedDrive, b: OfferedDrive) => b.sentAt - a.sentAt));
+    } catch {
+      setOffered([]);
+    }
+  };
+  const decide = async (o: OfferedDrive, decision: "approved" | "declined") => {
+    setDeciding(o.pid);
+    try {
+      const r = await partnerApi<{ told?: { people: number; emailed: number; pushed: number } | null }>("college-decide", { cid: college.id, pid: o.pid, decision });
+      actions.toast(decision === "approved" ? `${o.company} is live for your students${r.told?.people ? ` · ${r.told.people} told` : ""}.` : `${o.company} hidden from your students.`);
+      await Promise.all([loadOffered(), load()]);
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setDeciding("");
+    }
+  };
 
   const load = async () => {
     if (sample) {
@@ -80,6 +108,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
   useEffect(() => {
     setOpen(null);
     void load();
+    void loadOffered();
   }, [sample, college.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => placementStats(drives, apps), [drives, apps]);
@@ -116,7 +145,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
         drive={drive}
         apps={apps[drive.id] ?? []}
         sample={sample}
-        canEdit={canEdit}
+        canEdit={canEdit && !drive.partner}
         back={() => setOpen(null)}
         edit={() => setForm(drive)}
         setDrive={(d) => void save(d)}
@@ -142,6 +171,45 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
           </Tilt>
         ))}
       </div>
+      {offered.some((o) => o.status === "pending") && (
+        <div className="space-y-3">
+          <h2 className="flex items-center gap-2 text-[15px] font-semibold text-white">
+            From StudentOS <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-200">{offered.filter((o) => o.status === "pending").length} waiting for you</span>
+          </h2>
+          {offered
+            .filter((o) => o.status === "pending")
+            .map((o) => (
+              <div key={o.pid} className="flex flex-wrap items-start gap-4 rounded-2xl border border-cyan-400/35 bg-[#13121b] p-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[18px] font-extrabold text-[#0b0a12]">{o.company.slice(0, 1)}</span>
+                <div className="min-w-[240px] flex-1">
+                  <p className="flex flex-wrap items-center gap-2 text-[16px] font-semibold text-white">
+                    {o.company} · {o.role}
+                    <span className="rounded-full bg-cyan-400/12 px-2 py-0.5 text-[11px] font-semibold text-cyan-200">via StudentOS</span>
+                  </p>
+                  <p className="mt-1 text-[12.5px] text-white/55">
+                    {[o.kind, o.ctc, o.location, o.deadline ? `apply by ${new Date(o.deadline + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""].filter(Boolean).join(" · ")}
+                  </p>
+                  <p className="mt-1 text-[12.5px] text-white/55">
+                    {o.rounds.join(" → ")}
+                    {o.elig.branches.length ? ` · ${o.elig.branches.join(", ")}` : ""}
+                    {o.elig.minCgpa ? ` · CGPA ${o.elig.minCgpa}+` : ""}
+                    {o.minInterview ? ` · StudentOS mock interview ${o.minInterview}+` : ""}
+                  </p>
+                  {o.about && <p className="mt-2 line-clamp-2 text-[12.5px] text-white/45">{o.about}</p>}
+                  <p className="mt-2 text-[11.5px] text-white/40">{o.company} runs the rounds through StudentOS. You see every applicant and offer in this drive.</p>
+                </div>
+                {canEdit ? (
+                  <div className="flex min-w-[180px] flex-col gap-2">
+                    <Button variant="primary" loading={deciding === o.pid} onClick={() => void decide(o, "approved")}>Approve for our students</Button>
+                    <Button variant="ghost" disabled={deciding === o.pid} onClick={() => void decide(o, "declined")}>Not for us</Button>
+                  </div>
+                ) : (
+                  <ReadOnly />
+                )}
+              </div>
+            ))}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-semibold text-white">Drives</h2>
         {canEdit ? <Button variant="primary" size="sm" icon={<PlusIcon size={14} />} onClick={() => setForm(blank())}>New drive</Button> : <ReadOnly />}
@@ -161,6 +229,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[15px] font-semibold text-white">{d.company}</p>
                         <p className="truncate text-[12.5px] text-white/55">{d.role} · {d.kind}</p>
+                        {d.partner && <span className="mt-1 inline-block rounded-full bg-cyan-400/12 px-2 py-0.5 text-[10.5px] font-semibold text-cyan-200">via StudentOS</span>}
                       </div>
                       <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-medium", isClosed ? "bg-white/[0.06] text-white/50" : "bg-emerald-400/12 text-emerald-300")}>{isClosed ? "Closed" : "Open"}</span>
                     </div>
@@ -197,7 +266,7 @@ function ReadOnly() {
 
 /* ---------------- new / edit drive ---------------- */
 
-function DriveForm({ initial, onSave, onCancel }: { initial: Drive; onSave: (d: Drive) => void; onCancel: () => void }) {
+export function DriveForm({ initial, onSave, onCancel, isNew }: { initial: Drive; onSave: (d: Drive) => void; onCancel: () => void; isNew?: boolean }) {
   const [d, setD] = useState<Drive>(initial);
   const [rounds, setRounds] = useState(initial.rounds.join("\n"));
   const [err, setErr] = useState("");
@@ -214,7 +283,7 @@ function DriveForm({ initial, onSave, onCancel }: { initial: Drive; onSave: (d: 
     <div className="mx-auto max-w-[820px]">
       <button type="button" onClick={onCancel} className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><ArrowLeftIcon size={13} /> Drives</button>
       <Card className="p-6">
-        <h2 className="text-[18px] font-semibold text-white">{initial.company ? "Edit drive" : "New drive"}</h2>
+        <h2 className="text-[18px] font-semibold text-white">{initial.company && !isNew ? "Edit drive" : "New drive"}</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div><Label htmlFor="co">Company</Label><Input id="co" value={d.company} onChange={(e) => set({ company: e.target.value })} placeholder="e.g. Infosys" /></div>
           <div><Label htmlFor="ro">Role</Label><Input id="ro" value={d.role} onChange={(e) => set({ role: e.target.value })} placeholder="e.g. Systems Engineer" /></div>
@@ -254,7 +323,7 @@ function DriveForm({ initial, onSave, onCancel }: { initial: Drive; onSave: (d: 
         {err && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{err}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>{initial.company ? "Save drive" : "Post drive"}</Button>
+          <Button variant="primary" onClick={submit}>{initial.company && !isNew ? "Save drive" : isNew ? "Send to colleges" : "Post drive"}</Button>
         </div>
       </Card>
     </div>
@@ -350,6 +419,8 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 <Button size="sm" variant="ghost" onClick={edit}>Edit</Button>
                 <Button size="sm" onClick={() => setDrive({ ...drive, open: !drive.open })}>{drive.open ? "Close applications" : "Reopen"}</Button>
               </div>
+            ) : drive.partner ? (
+              <span className="rounded-lg border border-cyan-400/30 bg-cyan-400/[0.06] px-3 py-1.5 text-[12px] text-cyan-100">{drive.company} runs this drive through StudentOS</span>
             ) : (
               <ReadOnly />
             )}

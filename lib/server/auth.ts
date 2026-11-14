@@ -3,6 +3,35 @@
 
 
 const cache = new Map<string, { uid: string; until: number }>();
+const people = new Map<string, { uid: string; email: string; verified: boolean; until: number }>();
+
+/** Like verifyIdToken, plus the account's email and whether it is verified. */
+export async function verifyIdUser(token: string | null): Promise<{ uid: string; email: string; verified: boolean } | null> {
+  if (!token) return null;
+  const hit = people.get(token);
+  if (hit && hit.until > Date.now()) return hit;
+  const key = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${key}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken: token }),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const j = (await res.json()) as { users?: { localId?: string; email?: string; emailVerified?: boolean; providerUserInfo?: { providerId?: string }[] }[] };
+    const u = j.users?.[0];
+    if (!u?.localId) return null;
+    const google = (u.providerUserInfo ?? []).some((p) => p.providerId === "google.com");
+    const out = { uid: u.localId, email: (u.email ?? "").toLowerCase(), verified: !!u.emailVerified || google };
+    if (people.size > 2000) people.clear();
+    people.set(token, { ...out, until: Date.now() + 5 * 60_000 });
+    return out;
+  } catch {
+    return null;
+  }
+}
 
 export async function verifyIdToken(token: string | null): Promise<string | null> {
   if (!token) return null;

@@ -140,6 +140,7 @@ export function CampusDrives() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<"open" | "mine">("open");
   const [busy, setBusy] = useState("");
+  const bestIv = Math.max(0, ...(state.interviews ?? []).filter((h) => h.kind !== "coding").map((h) => h.feedback.overall));
   const [logo, setLogo] = useState<string | undefined>();
   useEffect(() => {
     void collegeInfo(link.cid).then((c) => setLogo(c?.logo || undefined));
@@ -259,7 +260,7 @@ export function CampusDrives() {
         openDrives.length ? (
           <div className="grid gap-4 md:grid-cols-2">
             {openDrives.map((d) => {
-              const why = ineligible(d, profile);
+              const why = ineligible(d, profile) ?? (d.partner?.minInterview && bestIv < d.partner.minInterview ? `Needs a StudentOS mock interview score of ${d.partner.minInterview}+ (yours: ${bestIv || "none yet"})` : null);
               const left = daysLeft(d.deadline);
               return (
                 <div key={d.id} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
@@ -268,6 +269,7 @@ export function CampusDrives() {
                     <div className="min-w-0 flex-1">
                       <p className="text-[15.5px] font-semibold text-white">{d.company}</p>
                       <p className="text-[12.5px] text-white/55">{d.role} · {d.kind}{d.location ? ` · ${d.location}` : ""}</p>
+                      {d.partner && <span className="mt-1 inline-block rounded-full bg-cyan-400/12 px-2 py-0.5 text-[10.5px] font-semibold text-cyan-200">via StudentOS</span>}
                     </div>
                     <span className={cn("flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px]", left <= 2 ? "bg-amber-400/15 text-amber-200" : "bg-white/[0.06] text-white/60")}><ClockIcon size={11} /> {left <= 0 ? "Last day" : `${left} day${left > 1 ? "s" : ""} left`}</span>
                   </div>
@@ -279,6 +281,7 @@ export function CampusDrives() {
                     <span className="rounded-md bg-white/[0.05] px-2 py-0.5">{d.rounds.join(" → ")}</span>
                   </div>
                   {d.about && <p className="mt-3 line-clamp-2 text-[12.5px] text-white/55">{d.about}</p>}
+                  {d.partner && !why && <p className="mt-3 text-[11.5px] text-white/45">Brought by StudentOS, approved by your college. When you apply, {d.company} sees your application, resume and StudentOS interview scores.</p>}
                   <div className="mt-4 flex items-center justify-between gap-3">
                     <span className="text-[11.5px] text-white/45">Apply by {fmtDate(d.deadline)}</span>
                     {why ? (
