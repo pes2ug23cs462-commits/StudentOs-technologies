@@ -40,7 +40,7 @@ export const partnerErrorText = (e: unknown) => {
   return e instanceof PartnerError && e.detail ? `${t} ${e.detail}` : t;
 };
 
-export type Whoami = { team: boolean; company: { id: string; name: string; website: string; logo?: string } | null };
+export type Whoami = { team: boolean; email?: string; verified?: boolean; teamSet?: boolean; company: { id: string; name: string; website: string; logo?: string } | null };
 export type PartnerCompany = { id: string; name: string; website: string; code: string };
 export type PartnerCollege = { id: string; name: string; type: string; city: string };
 export type PartnerDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, "pending" | "approved" | "declined">; minInterview: number };

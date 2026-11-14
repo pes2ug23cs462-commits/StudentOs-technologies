@@ -56,7 +56,19 @@ export function PartnerConsole() {
       </div>
     );
   if (err) return <div className="flex min-h-screen items-center justify-center bg-ink p-6 text-[14px] text-rose-300">{err}</div>;
-  if (who && !who.team) return <div className="flex min-h-screen items-center justify-center bg-ink p-6 text-center text-[14px] text-white/60">This page is only for the StudentOS team.</div>;
+  if (who && !who.team)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-ink p-6 text-center text-[14px] text-white/60">
+        <div className="max-w-md space-y-2">
+          <p>This page is only for the StudentOS team.</p>
+          <p className="text-[12.5px] text-white/45">
+            Logged in as <span className="text-white/80">{who.email || "an account with no email"}</span>
+            {!who.teamSet ? " · STUDENTOS_TEAM_EMAILS isn’t set on the server." : !who.verified ? " · this email isn’t verified yet (verify it, or log in with Google)." : " · this email isn’t in STUDENTOS_TEAM_EMAILS."}
+          </p>
+          <button type="button" onClick={() => void logOut().then(() => (window.location.href = "/login?next=/partner"))} className="text-[12.5px] text-accent hover:underline">Log in with another account</button>
+        </div>
+      </div>
+    );
 
   const addCompany = async () => {
     if (co.name.trim().length < 2) return;

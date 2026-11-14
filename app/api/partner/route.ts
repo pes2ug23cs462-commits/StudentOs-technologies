@@ -87,7 +87,7 @@ export async function POST(req: Request) {
   if (!adminConfigured()) return NextResponse.json({ error: "not-configured", detail: adminProblem() }, { status: 503 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const action = str(b.action, 40);
-  const team = (process.env.STUDENTOS_TEAM_EMAILS ?? "").toLowerCase().split(/[,\s]+/).filter(Boolean);
+  const team = (process.env.STUDENTOS_TEAM_EMAILS ?? "").toLowerCase().split(/[,;\s"']+/).filter(Boolean);
   const isTeam = me.verified && !!me.email && team.includes(me.email);
   const origin = new URL(req.url).origin;
 
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     if (action === "whoami") {
       const staff = await adminGet(`companyStaff/${me.uid}`);
       const company = staff ? await adminGet(`companies/${str(staff.coid, 80)}`) : null;
-      return NextResponse.json({ team: isTeam, company: company ? { id: str(company.id), name: str(company.name), website: str(company.website), logo: str(company.logo, 120000) } : null });
+      return NextResponse.json({ team: isTeam, email: me.email, verified: me.verified, teamSet: team.length > 0, company: company ? { id: str(company.id), name: str(company.name), website: str(company.website), logo: str(company.logo, 120000) } : null });
     }
 
     /* ---------------- StudentOS team ---------------- */
