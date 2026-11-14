@@ -5,7 +5,7 @@
 
 export const mailConfigured = () => !!process.env.RESEND_API_KEY;
 
-export type Mail = { to: string; subject: string; text: string; html: string };
+export type Mail = { to: string; subject: string; text: string; html: string; replyTo?: string };
 
 /** Sends the emails; returns how many Resend accepted. Never throws. */
 export async function sendMails(list: Mail[]): Promise<number> {
@@ -19,7 +19,7 @@ export async function sendMails(list: Mail[]): Promise<number> {
       const res = await fetch("https://api.resend.com/emails/batch", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify(chunk.map((m) => ({ from, to: [m.to], subject: m.subject, text: m.text, html: m.html }))),
+        body: JSON.stringify(chunk.map((m) => ({ from, to: [m.to], subject: m.subject, text: m.text, html: m.html, ...(m.replyTo ? { reply_to: m.replyTo } : {}) }))),
         cache: "no-store",
       });
       if (res.ok) sent += chunk.length;
@@ -33,10 +33,10 @@ export async function sendMails(list: Mail[]): Promise<number> {
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** A simple, readable email: heading, a few lines, one button. */
-export function mailHtml(o: { heading: string; lines: string[]; button: string; url: string; foot: string }) {
+export function mailHtml(o: { heading: string; lines: string[]; button: string; url: string; foot: string; brand?: string }) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f3f8;font-family:Arial,Helvetica,sans-serif;color:#1a1726">
 <div style="max-width:520px;margin:0 auto;padding:28px 18px">
-<p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#7c3aed">StudentOS · Placements</p>
+<p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#7c3aed">${esc(o.brand ?? "StudentOS · Placements")}</p>
 <div style="background:#ffffff;border-radius:14px;padding:26px 24px">
 <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3">${esc(o.heading)}</h1>
 ${o.lines.map((l) => `<p style="margin:0 0 8px;font-size:14.5px;line-height:1.5;color:#3d3a4a">${esc(l)}</p>`).join("")}

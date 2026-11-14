@@ -7,10 +7,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useResumePrint } from "@/components/resume/resume-print";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Textarea, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
+import { fallbackResume } from "@/lib/resume-snapshot";
 import { partnerApi, partnerErrorText, type Applicant, type CompanyDrive, type Whoami } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,7 @@ type Op = "advance" | "select" | "reject" | "link" | "offer";
 
 const stage = (a: Applicant, rounds: string[]) => (a.status === "applied" ? "New" : a.status === "selected" ? (a.offer ? "Offer sent" : "Selected") : a.status === "rejected" ? "Not selected" : rounds[a.round] ?? `Round ${a.round + 1}`);
 const key = (a: { cid: string; uid: string }) => `${a.cid}/${a.uid}`;
+const cvOf = (a: Applicant) => ({ name: a.name, cv: a.cv ?? fallbackResume(a) });
 const scoreTone = (v?: number) => (v == null ? "text-white/35" : v >= 75 ? "text-emerald-300" : v >= 60 ? "text-cyan-200" : "text-amber-300");
 
 function Shell({ children, side }: { children: React.ReactNode; side?: React.ReactNode }) {
@@ -177,6 +180,7 @@ function Applicants({ pid }: { pid: string }) {
   const [link, setLink] = useState({ title: "", url: "", when: "" });
   const [offer, setOffer] = useState({ ctc: "", joining: "", url: "", note: "" });
   const [person, setPerson] = useState<Applicant | null>(null);
+  const resumes = useResumePrint();
 
   const load = () =>
     partnerApi<Detail>("company-applicants", { pid })
@@ -242,7 +246,10 @@ function Applicants({ pid }: { pid: string }) {
             {data.drive.deadline ? ` · apply by ${new Date(data.drive.deadline + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}
           </p>
         </div>
-        <Button size="sm" variant="ghost" icon={<DownloadIcon size={13} />} onClick={csv}>Excel</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="ghost" icon={<FileIcon size={13} />} disabled={!list.length} onClick={() => resumes.print(list.map(cvOf))}>Resumes (PDF)</Button>
+          <Button size="sm" variant="ghost" icon={<DownloadIcon size={13} />} onClick={csv}>Excel</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -285,6 +292,7 @@ function Applicants({ pid }: { pid: string }) {
             <Button size="sm" icon={<CheckIcon size={13} />} disabled={busy} onClick={() => void run("select")}>Mark selected</Button>
             <Button size="sm" icon={<TrophyIcon size={13} />} disabled={busy} onClick={() => setModal("offer")}>Send offer</Button>
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} disabled={busy} onClick={() => void run("reject")}>Not selected</Button>
+            <Button size="sm" variant="ghost" icon={<FileIcon size={13} />} onClick={() => resumes.print((data?.applicants ?? []).filter((a) => picked.has(key(a))).map(cvOf))}>Resumes</Button>
             <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[12px] text-white/70">
               <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#a78bfa]" /> Notify students
             </label>
@@ -293,7 +301,7 @@ function Applicants({ pid }: { pid: string }) {
 
         {list.length ? (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[780px] text-[13px]">
+            <table className="w-full min-w-[860px] text-[13px]">
               <thead>
                 <tr className="text-left text-[11.5px] text-white/45">
                   <th className="w-8 pb-2"><input type="checkbox" aria-label="Pick all" checked={picked.size > 0 && picked.size === list.length} onChange={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map(key)))} className="accent-[#a78bfa]" /></th>
@@ -303,6 +311,7 @@ function Applicants({ pid }: { pid: string }) {
                   <th className="pb-2 font-medium">Mock interview</th>
                   <th className="pb-2 font-medium">Coding round</th>
                   <th className="pb-2 font-medium">Stage</th>
+                  <th className="pb-2 font-medium"><span className="sr-only">Resume</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -315,6 +324,7 @@ function Applicants({ pid }: { pid: string }) {
                     <td className={cn("py-2.5 font-semibold tabular-nums", scoreTone(a.scores?.interview))}>{a.scores?.interview ?? "—"}</td>
                     <td className={cn("py-2.5 font-semibold tabular-nums", scoreTone(a.scores?.coding))}>{a.scores?.coding ?? "—"}</td>
                     <td className="py-2.5"><span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : "bg-white/[0.06] text-white/75")}>{stage(a, rounds)}{a.decision ? ` · ${a.decision}` : ""}</span></td>
+                    <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -368,6 +378,7 @@ function Applicants({ pid }: { pid: string }) {
         </div>
       )}
 
+      {resumes.node}
       {person && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/50" onClick={() => setPerson(null)} aria-hidden />
@@ -375,6 +386,7 @@ function Applicants({ pid }: { pid: string }) {
             <button type="button" onClick={() => setPerson(null)} className="flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><ArrowLeftIcon size={13} /> Back</button>
             <h2 className="mt-4 text-[22px] font-semibold">{person.name}</h2>
             <p className="mt-1 text-[13px] text-white/55">{person.branch} · CGPA {person.cgpa} · {person.batch} batch · {person.college}</p>
+            <button type="button" onClick={() => resumes.print([cvOf(person)])} className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-black"><FileIcon size={15} /> Download resume (PDF)</button>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-white/[0.04] p-3"><p className={cn("text-[22px] font-bold", scoreTone(person.scores?.interview))}>{person.scores?.interview ?? "—"}</p><p className="text-[11.5px] text-white/45">Mock interview</p></div>
               <div className="rounded-xl bg-white/[0.04] p-3"><p className={cn("text-[22px] font-bold", scoreTone(person.scores?.coding))}>{person.scores?.coding ?? "—"}</p><p className="text-[11.5px] text-white/45">Coding round</p></div>

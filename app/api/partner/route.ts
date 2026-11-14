@@ -112,6 +112,31 @@ export async function POST(req: Request) {
           drives: drives.map((d) => d.data).sort((x, y) => Number(y.createdAt) - Number(x.createdAt)),
         });
       }
+      if (action === "team-careers") {
+        const teams = ["Engineering", "Design", "Marketing", "Content", "Operations"];
+        const list = (v: unknown, n: number, max: number) => (Array.isArray(v) ? v : []).map((x) => str(x, max)).filter(Boolean).slice(0, n);
+        const roles = (Array.isArray(b.roles) ? b.roles : []).slice(0, 40).map((x) => x as Record<string, unknown>).map((x) => ({
+          id: id(x.id) || `r${Date.now().toString(36)}`,
+          title: str(x.title, 80),
+          team: teams.includes(str(x.team)) ? str(x.team) : "Engineering",
+          where: str(x.where, 40) || "Remote",
+          pay: str(x.pay, 40) || "Unpaid",
+          length: str(x.length, 40) || "3 months",
+          tags: list(x.tags, 6, 24),
+          does: list(x.does, 8, 160),
+          wants: list(x.wants, 8, 160),
+          paused: x.paused === true,
+          postedAt: Number(x.postedAt) || Date.now(),
+          ai: x.ai !== false,
+          within: Math.min(14, Math.max(1, Number(x.within) || 3)),
+          windowStart: Number(x.windowStart) > 0 ? Number(x.windowStart) : 0,
+          windowEnd: Number(x.windowEnd) > Number(x.windowStart) ? Number(x.windowEnd) : 0,
+          questions: Math.min(10, Math.max(3, Number(x.questions) || 6)),
+          ivFocus: str(x.ivFocus, 300),
+        })).filter((x) => x.title);
+        await adminSet("site/careers", { open: b.open !== false, roles, updatedAt: Date.now() });
+        return NextResponse.json({ ok: true, roles: roles.length });
+      }
       if (action === "team-company") {
         const name = str(b.name, 80);
         if (name.length < 2) return bad("name");
@@ -210,6 +235,7 @@ export async function POST(req: Request) {
               backlogs: Number(a.backlogs) || 0,
               batch: str(a.batch, 4),
               resume: a.resume ?? null,
+              cv: a.cv ?? null,
               scores: a.scores ?? null,
               status: str(a.status, 20),
               round: Number(a.round) || 0,

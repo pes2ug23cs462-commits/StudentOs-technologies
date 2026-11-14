@@ -1,53 +1,77 @@
 "use client";
 
-/* Careers (/careers). A PREVIEW: hiring hasn’t opened yet, and the page says so
-   clearly. Edit the roles and wording below when hiring starts, then set
-   HIRING_OPEN to true so the Apply buttons open an email. */
+/* Careers (/careers). Roles, how hiring works and an application form.
+   Roles come from lib/careers (the team posts them in /partner → Careers).
+   Applying saves the application on StudentOS and gives the AI interview link. */
 
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
 import { Glass, TiltCard, delay as d, usePointerVars } from "@/components/site/motion";
-import { CONTACT_EMAIL, SiteShell } from "@/components/site/site-shell";
-import { ArrowRightIcon, MailIcon } from "@/components/ui/icons";
+import { SiteShell } from "@/components/site/site-shell";
+import { ArrowRightIcon, CheckIcon, MailIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
+import { CAREER_TEAMS, DEFAULT_CAREERS, careersApi, careersErrorText, fmtWhen, loadCareers, type CareerRole, type CareerTeam, type CareersDoc } from "@/lib/careers";
 import { cn } from "@/lib/utils";
 
-/** Flip to true when applications open. */
-const HIRING_OPEN = false;
 
 const PERKS: { icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
-  { icon: "rocket", tone: "violet", title: "High Impact", text: "Work on a product that helps students study better every day." },
-  { icon: "users", tone: "cyan", title: "Grow Together", text: "Learn, build and level up with a small, driven team." },
-  { icon: "laptop", tone: "indigo", title: "Flexible Work", text: "Remote-friendly and planned around your college." },
-  { icon: "diamond", tone: "pink", title: "Real Ownership", text: "Take initiative, own your work and see real results." },
+  { icon: "rocket", tone: "violet", title: "Real product, real users", text: "What you build goes live for students, not into a drawer." },
+  { icon: "users", tone: "cyan", title: "Work with the founders", text: "Small team, direct feedback, no layers in between." },
+  { icon: "laptop", tone: "indigo", title: "Remote and flexible", text: "Planned around your college timetable and exams." },
+  { icon: "diamond", tone: "pink", title: "Own your work", text: "Pick a problem, ship it, and put it in your portfolio." },
 ];
 
 const VALUES: { icon: FancyIconName; tone: FancyTone; label: string }[] = [
-  { icon: "target", tone: "violet", label: "Collaborative" },
-  { icon: "bolt", tone: "amber", label: "Fast-Paced" },
-  { icon: "heart", tone: "pink", label: "Inclusive" },
-  { icon: "sprout", tone: "emerald", label: "Learning-Driven" },
+  { icon: "target", tone: "violet", label: "Student-first" },
+  { icon: "bolt", tone: "amber", label: "Ship fast" },
+  { icon: "heart", tone: "pink", label: "Kind and honest" },
+  { icon: "sprout", tone: "emerald", label: "Always learning" },
 ];
 
-const ROLES: { icon: FancyIconName; tone: FancyTone; title: string; meta: string[]; tags: string[] }[] = [
-  { icon: "bot", tone: "cyan", title: "AI/ML Intern", meta: ["Remote", "Unpaid (3 Months)"], tags: ["AI", "ML", "Python"] },
-  { icon: "palette", tone: "pink", title: "UI/UX Design Intern", meta: ["Remote", "Unpaid (3 Months)"], tags: ["Figma", "UX", "Design"] },
-  { icon: "megaphone", tone: "amber", title: "Marketing Intern", meta: ["Remote", "Unpaid (3 Months)"], tags: ["Content", "Growth", "Social"] },
-  { icon: "quiz", tone: "violet", title: "Content & Graphics Intern", meta: ["Remote", "Unpaid (3 Months)"], tags: ["Content", "Design", "Branding"] },
+const TEAM: { name: string; role: string; tone: string }[] = [
+  { name: "Rahul Rathod", role: "Founder & CEO", tone: "from-violet-500 to-fuchsia-500" },
+  { name: "Mahesh Ajjer", role: "Co-founder · Marketing", tone: "from-amber-400 to-pink-500" },
+  { name: "Manmohan Gowda", role: "Co-founder · Technical", tone: "from-cyan-400 to-indigo-500" },
 ];
 
-const mailto = (subject: string) =>
-  `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Hi StudentOS team,\n\nName:\nCollege, course and year:\nRole:\nLinks (resume / portfolio / GitHub):\nWhy I want to join:\n")}`;
+const LOOK: Record<CareerTeam, { icon: FancyIconName; tone: FancyTone }> = {
+  Engineering: { icon: "code", tone: "indigo" },
+  Design: { icon: "palette", tone: "pink" },
+  Marketing: { icon: "megaphone", tone: "amber" },
+  Content: { icon: "quiz", tone: "violet" },
+  Operations: { icon: "target", tone: "emerald" },
+};
+const look = (r: CareerRole) => (/\b(ai|ml)\b/i.test(r.title) ? { icon: "bot" as const, tone: "cyan" as const } : LOOK[r.team] ?? LOOK.Engineering);
 
-function SoonBadge({ className }: { className?: string }) {
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-300/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200", className)}>
+const STEPS: { icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
+  { icon: "mail", tone: "violet", title: "Apply", text: "Fill the short form. It takes 2 minutes." },
+  { icon: "bot", tone: "cyan", title: "AI interview", text: "A short interview with our AI, in the time window you get. Type or speak." },
+  { icon: "chat", tone: "emerald", title: "Team review", text: "Our team reads your answers and the AI’s notes, and calls if it’s a fit." },
+  { icon: "rocket", tone: "amber", title: "Offer", text: "We send your offer letter, you meet the team and start." },
+];
+
+const FAQ: { q: string; a: string }[] = [
+  { q: "Who can apply?", a: "College students from any year and any branch. What you’ve built matters more than marks." },
+  { q: "Is it paid?", a: "These internships are unpaid right now. Each role card says so; we’ll update it when that changes." },
+  { q: "Is it remote?", a: "Yes. Work is planned around your classes and exams." },
+  { q: "How long does it last?", a: "Three months to start with." },
+  { q: "How does the AI interview work?", a: "After you apply you get a link. Open it within your time window, then answer 5–8 questions by typing or speaking. It takes about 15 minutes. People on our team make the final decision, not the AI." },
+  { q: "I don’t see my role.", a: "Apply anyway with “Other” and tell us what you’d like to work on." },
+];
+
+
+function HiringBadge({ open, className }: { open: boolean; className?: string }) {
+  return open ? (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300", className)}>
       <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
       </span>
-      Launching soon
+      We’re hiring
     </span>
+  ) : (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-300/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200", className)}>Applications paused</span>
   );
 }
 
@@ -172,7 +196,109 @@ function CultureVisual() {
   );
 }
 
+/* ---------- application form: saved on StudentOS, then the AI interview link ---------- */
+function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: CareerRole[]; onClose: () => void }) {
+  const [f, setF] = useState({ name: "", email: "", phone: "", college: "", roleId, resume: "", links: "", why: "" });
+  const [tried, setTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState<{ token: string; start: number; end: number; ai: boolean; again?: boolean } | null>(null);
+  const missing = f.name.trim().length < 2 || !/^\S+@\S+\.\S+$/.test(f.email.trim()) || f.phone.replace(/\D/g, "").length < 10 || f.college.trim().length < 2 || !/^https?:\/\/\S+\.\S+/.test(f.resume.trim());
+  const field = "mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-[14px] text-white outline-none placeholder:text-white/35 focus:border-violet-400/60";
+  const role = roles.find((r) => r.id === f.roleId);
+  const submit = async () => {
+    setTried(true);
+    setErr("");
+    if (missing) return;
+    setBusy(true);
+    try {
+      setDone(await careersApi<{ token: string; start: number; end: number; ai: boolean; again?: boolean }>("apply", f));
+    } catch (e) {
+      setErr(careersErrorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const link = done ? `${typeof window !== "undefined" ? window.location.origin : ""}/careers/interview/${done.token}` : "";
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-[#000000]/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div role="dialog" aria-label="Apply to StudentOS" className="relative max-h-[92dvh] w-full max-w-[520px] overflow-y-auto rounded-t-3xl border border-white/10 bg-[#121118] p-6 sm:rounded-3xl sm:p-7">
+        <button type="button" onClick={onClose} aria-label="Close" className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full text-white/55 hover:bg-white/[0.06] hover:text-white"><XIcon size={16} /></button>
+        {done ? (
+          <div className="py-2 text-center">
+            <div className="mx-auto w-fit"><FancyIcon name="check" tone="emerald" size={64} /></div>
+            <h3 className="mt-4 text-[22px] font-semibold text-white">{done.again ? "You’ve already applied" : "Application sent!"}</h3>
+            {done.ai ? (
+              <>
+                <p className="mx-auto mt-2 max-w-[380px] text-[14px] leading-relaxed text-white/65">Next is a short <b className="text-white">AI interview</b> (about 15 minutes). Type or speak your answers.</p>
+                <div className="mt-5 rounded-2xl border border-violet-400/30 bg-violet-500/10 p-4 text-left">
+                  <p className="text-[12px] font-semibold tracking-wide text-violet-200 uppercase">Finish it between</p>
+                  <p className="mt-1 text-[15px] font-semibold text-white">{fmtWhen(done.start)} – {fmtWhen(done.end)} <span className="text-[12px] font-normal text-white/50">IST</span></p>
+                  <p className="mt-2 text-[12px] text-white/55">We also emailed you this link. Keep it private.</p>
+                </div>
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                  <a href={link} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff]">{Date.now() >= done.start ? "Start interview now" : "Open my interview page"} <ArrowRightIcon size={15} /></a>
+                  <button type="button" onClick={() => void navigator.clipboard?.writeText(link)} className="h-12 rounded-xl border border-white/15 px-4 text-[13.5px] font-medium text-white/80 hover:text-white">Copy link</button>
+                </div>
+              </>
+            ) : (
+              <p className="mx-auto mt-2 max-w-[380px] text-[14px] leading-relaxed text-white/65">Our team will read it and get back to you by email or phone.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <FancyIcon name="mail" tone="violet" size={42} />
+              <div>
+                <h3 className="text-[19px] font-semibold text-white">Apply to StudentOS</h3>
+                <p className="text-[12.5px] text-white/55">{role?.ai !== false && role ? "Takes 2 minutes. Then a short AI interview." : "Takes 2 minutes."}</p>
+              </div>
+            </div>
+            <div className="mt-5 space-y-3.5">
+              <label className="block text-[13px] font-medium text-white/80">Full name<input className={field} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Your name" /></label>
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                <label className="block text-[13px] font-medium text-white/80">Email<input className={field} type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="you@college.edu" /></label>
+                <label className="block text-[13px] font-medium text-white/80">Phone (WhatsApp)<input className={field} type="tel" inputMode="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="98765 43210" /></label>
+              </div>
+              <label className="block text-[13px] font-medium text-white/80">College, course and year<input className={field} value={f.college} onChange={(e) => setF({ ...f, college: e.target.value })} placeholder="e.g. B.Tech CSE, 3rd year, Mysuru" /></label>
+              <label className="block text-[13px] font-medium text-white/80">
+                Role
+                <select className={field} value={f.roleId} onChange={(e) => setF({ ...f, roleId: e.target.value })}>
+                  {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-medium text-white/80">Resume link<input className={field} value={f.resume} onChange={(e) => setF({ ...f, resume: e.target.value })} placeholder="https://drive.google.com/… (set to “Anyone with the link”)" /></label>
+              <label className="block text-[13px] font-medium text-white/80">Portfolio, GitHub, LinkedIn <span className="font-normal text-white/40">(optional)</span><input className={field} value={f.links} onChange={(e) => setF({ ...f, links: e.target.value })} placeholder="https://…" /></label>
+              <label className="block text-[13px] font-medium text-white/80">Why StudentOS? <span className="font-normal text-white/40">(optional)</span><textarea className={cn(field, "h-24 resize-none py-2.5")} value={f.why} onChange={(e) => setF({ ...f, why: e.target.value })} placeholder="A few lines about you and what you’d like to build" /></label>
+            </div>
+            {tried && missing && <p className="mt-3 text-[12.5px] text-rose-300">Add your name, a valid email, a 10-digit phone, your college and a resume link starting with https://</p>}
+            {err && <p className="mt-3 text-[12.5px] text-rose-300">{err}</p>}
+            <button type="button" disabled={busy} onClick={() => void submit()} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5 disabled:opacity-60">
+              {busy ? "Sending…" : "Submit application"} {!busy && <ArrowRightIcon size={15} />}
+            </button>
+            <p className="mt-3 text-center text-[11.5px] text-white/40">We use these details only for hiring.</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function CareersPage() {
+  const [data, setData] = useState<CareersDoc>(DEFAULT_CAREERS);
+  useEffect(() => {
+    void loadCareers().then(setData);
+  }, []);
+  const live = data.roles.filter((r) => !r.paused);
+  const HIRING_OPEN = data.open && live.length > 0;
+  const TEAMS = ["All", ...CAREER_TEAMS.filter((t) => live.some((r) => r.team === t))] as ("All" | CareerTeam)[];
+  const [team, setTeam] = useState<"All" | CareerTeam>("All");
+  const [open, setOpen] = useState<string | null>(null);
+  const [apply, setApply] = useState<string | null>(null);
+  const [faq, setFaq] = useState<number | null>(0);
+  const roles = useMemo(() => live.filter((r) => team === "All" || r.team === team), [team, live]);
   return (
     <SiteShell>
       {/* ---------- hero ---------- */}
@@ -185,29 +311,30 @@ export function CareersPage() {
           <div>
             <div className="hero-in flex flex-wrap items-center gap-2" style={d(0)}>
               <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">Careers at StudentOS</span>
-              <SoonBadge />
+              <HiringBadge open={HIRING_OPEN} />
             </div>
-            <h1 className="hero-in mt-5 text-[44px] leading-[1.05] font-bold tracking-[-0.03em] sm:text-[62px]" style={d(0.1)}>
-              Build the Future <br className="hidden sm:block" />
-              of <span className="land-shine">Student Success</span>
+            <h1 className="hero-in mt-5 text-[42px] leading-[1.05] font-bold tracking-[-0.03em] sm:text-[60px]" style={d(0.1)}>
+              Build the future <br className="hidden sm:block" />
+              of <span className="land-shine">student success</span>
             </h1>
             <p className="hero-in mt-5 max-w-[520px] text-[16.5px] leading-relaxed text-white/62" style={d(0.25)}>
-              Join a passionate team of builders, designers and problem-solvers creating an all-in-one platform for students.
+              StudentOS helps students plan, learn, practise interviews and get placed. Join the team building it, while you’re still a student yourself.
             </p>
             <div className="hero-in mt-7 flex flex-wrap gap-3" style={d(0.4)}>
               <a href="#roles" className="group inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.45)] transition hover:-translate-y-0.5">
-                View Open Positions <ArrowRightIcon size={15} className="transition group-hover:translate-x-1" />
+                See open roles <ArrowRightIcon size={15} className="transition group-hover:translate-x-1" />
               </a>
-              <a href="#culture" className="inline-flex h-12 items-center rounded-xl border border-violet-400/40 bg-white/[0.03] px-6 text-[14.5px] font-medium text-white/90 transition hover:border-violet-300">
-                Our Culture
+              <a href="#process" className="inline-flex h-12 items-center rounded-xl border border-violet-400/40 bg-white/[0.03] px-6 text-[14.5px] font-medium text-white/90 transition hover:border-violet-300">
+                How hiring works
               </a>
             </div>
-            {/* preview notice */}
-            <div className="hero-in mt-7 flex max-w-[520px] items-start gap-3 rounded-2xl border border-amber-300/30 bg-amber-300/[0.07] p-4" style={d(0.55)}>
-              <FancyIcon name="bolt" tone="amber" size={36} />
-              <p className="text-[13px] leading-relaxed text-white/75">
-                <b className="text-white">Careers at StudentOS are launching soon.</b> This page is a preview, so the roles below are examples and applications aren’t open yet. Check back soon!
-              </p>
+            <div className="hero-in mt-8 flex flex-wrap gap-6" style={d(0.55)}>
+              {[[String(live.length), live.length === 1 ? "open role" : "open roles"], ["Remote", "around your classes"], ["3 founders", "+ PM + 10 interns"]].map(([v, l]) => (
+                <div key={l}>
+                  <p className="text-[22px] font-bold text-white">{v}</p>
+                  <p className="text-[12px] text-white/50">{l}</p>
+                </div>
+              ))}
             </div>
           </div>
           <HeroScene />
@@ -229,91 +356,161 @@ export function CareersPage() {
         </div>
       </section>
 
-      {/* ---------- culture ---------- */}
-      <section id="culture" className="mx-auto grid max-w-[1200px] scroll-mt-20 items-center gap-12 px-5 py-20 lg:grid-cols-2">
-        <div className="reveal">
-          <CultureVisual />
-        </div>
-        <div className="reveal" style={d(0.1)}>
-          <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">Our Culture</span>
-          <h2 className="mt-4 text-[34px] leading-tight font-bold tracking-tight sm:text-[42px]">A Student-First, Builder-First Team</h2>
-          <p className="mt-4 text-[15.5px] leading-relaxed text-white/62">We’re a young, ambitious, student-driven team that values curiosity, collaboration and real impact.</p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            {VALUES.map((v, i) => (
-              <span key={v.label} className="reveal group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pr-4 pl-1.5 text-[13.5px] font-medium text-white/85 transition hover:border-violet-400/50" style={d(0.08 * i)}>
-                <FancyIcon name={v.icon} tone={v.tone} size={30} /> {v.label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ---------- roles ---------- */}
       <section id="roles" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.015]">
         <div className="mx-auto max-w-[1200px] px-5 py-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-4">
             <div>
-              <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">Open Positions</span>
-              <h2 className="mt-4 text-[34px] leading-tight font-bold tracking-tight sm:text-[42px]">Current Opportunities</h2>
-              <p className="mt-2 text-[14.5px] text-white/55">Explore roles and be a part of StudentOS.</p>
+              <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">Open roles</span>
+              <h2 className="mt-4 text-[34px] leading-tight font-bold tracking-tight sm:text-[42px]">Find your place</h2>
+              <p className="mt-2 text-[14.5px] text-white/55">Tap a role to see what you’ll do and what we look for.</p>
             </div>
-            <SoonBadge className="text-[12px]" />
+            <div className="flex flex-wrap gap-2">
+              {TEAMS.map((t) => (
+                <button key={t} type="button" onClick={() => setTeam(t)} className={cn("h-9 rounded-full border px-4 text-[13px] font-medium transition", team === t ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/10 text-white/60 hover:text-white")}>
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {ROLES.map((r, i) => (
-              <div key={r.title} className="reveal" style={d(0.08 * i)}>
-                <TiltCard className="flex h-full flex-col rounded-3xl border border-white/10 bg-ink p-6 hover:border-violet-400/50">
-                  <div className="relative flex items-start justify-between">
-                    <FancyIcon name={r.icon} tone={r.tone} size={50} />
-                    <span className="rounded-full bg-amber-300/10 px-2 py-0.5 text-[10.5px] font-medium text-amber-200">Opening soon</span>
-                  </div>
-                  <h3 className="relative mt-4 text-[17px] font-semibold text-white">{r.title}</h3>
-                  <p className="relative mt-1 text-[12.5px] text-white/55">{r.meta.join(" • ")}</p>
-                  <div className="relative mt-3 flex flex-wrap gap-1.5">
-                    {r.tags.map((t) => (
-                      <span key={t} className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11.5px] text-white/65">{t}</span>
-                    ))}
-                  </div>
-                  <div className="relative mt-auto pt-5">
-                    {HIRING_OPEN ? (
-                      <a href={mailto(`Application: ${r.title} · StudentOS`)} className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-violet-300 hover:text-violet-200">
-                        Apply Now <ArrowRightIcon size={13} />
-                      </a>
-                    ) : (
-                      <span className="inline-flex cursor-not-allowed items-center gap-1.5 text-[13.5px] font-semibold text-white/40" title="Applications open soon">
-                        Applications open soon
+          {!HIRING_OPEN && (
+            <div className="mt-10 rounded-3xl border border-dashed border-white/15 p-10 text-center">
+              <p className="text-[15px] font-semibold text-white">No open roles right now</p>
+              <p className="mt-1 text-[13.5px] text-white/55">You can still send us your profile. We’ll write when something opens.</p>
+            </div>
+          )}
+          <div className="mt-10 space-y-3">
+            {(HIRING_OPEN ? roles : []).map((r, i) => {
+              const isOpen = open === r.id;
+              return (
+                <div key={r.id} className="reveal" style={d(0.06 * i)}>
+                  <div className={cn("rounded-3xl border bg-ink transition", isOpen ? "border-violet-400/50" : "border-white/10 hover:border-violet-400/35")}>
+                    <button type="button" onClick={() => setOpen(isOpen ? null : r.id)} aria-expanded={isOpen} className="flex w-full flex-wrap items-center gap-4 p-5 text-left sm:p-6">
+                      <FancyIcon name={look(r).icon} tone={look(r).tone} size={48} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[17px] font-semibold text-white">{r.title}</span>
+                        <span className="mt-0.5 block text-[12.5px] text-white/55">{[r.team, r.where, r.pay, r.length].filter(Boolean).join(" · ")}</span>
                       </span>
+                      <span className="hidden flex-wrap gap-1.5 md:flex">
+                        {r.tags.map((t) => <span key={t} className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11.5px] text-white/65">{t}</span>)}
+                      </span>
+                      <span className={cn("flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/60 transition", isOpen && "rotate-90 text-white")}><ArrowRightIcon size={14} /></span>
+                    </button>
+                    {isOpen && (
+                      <div className="grid gap-6 border-t border-white/[0.07] p-5 sm:p-6 md:grid-cols-[1fr_1fr_auto]">
+                        {[["What you’ll do", r.does], ["What we look for", r.wants]].map(([h, list]) => (
+                          <div key={h as string}>
+                            <p className="text-[12px] font-semibold tracking-wide text-white/45 uppercase">{h as string}</p>
+                            <ul className="mt-3 space-y-2">
+                              {(list as string[]).map((x) => <li key={x} className="flex gap-2 text-[13.5px] text-white/75"><CheckIcon size={15} className="mt-0.5 shrink-0 text-emerald-300" /> {x}</li>)}
+                            </ul>
+                          </div>
+                        ))}
+                        <div className="flex items-end">
+                          {HIRING_OPEN ? (
+                            <button type="button" onClick={() => setApply(r.id)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5">
+                              Apply <ArrowRightIcon size={14} />
+                            </button>
+                          ) : (
+                            <span className="text-[13px] text-white/45">Applications paused</span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                </TiltCard>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- culture + team ---------- */}
+      <section id="culture" className="mx-auto grid max-w-[1200px] scroll-mt-20 items-center gap-12 px-5 py-20 lg:grid-cols-2">
+        <div className="reveal">
+          <CultureVisual />
+        </div>
+        <div className="reveal" style={d(0.1)}>
+          <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">Our culture</span>
+          <h2 className="mt-4 text-[34px] leading-tight font-bold tracking-tight sm:text-[42px]">Student-first, builder-first</h2>
+          <p className="mt-4 text-[15.5px] leading-relaxed text-white/62">A small team of founders, a product manager and student interns. We use StudentOS ourselves, so every fix is personal.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {VALUES.map((v, i) => (
+              <span key={v.label} className="reveal inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pr-4 pl-1.5 text-[13.5px] font-medium text-white/85" style={d(0.08 * i)}>
+                <FancyIcon name={v.icon} tone={v.tone} size={30} /> {v.label}
+              </span>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {TEAM.map((m) => (
+              <TiltCard key={m.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <span className={cn("flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br text-[14px] font-bold text-[#ffffff]", m.tone)}>{m.name.split(" ").map((x) => x[0]).join("")}</span>
+                <p className="mt-3 text-[14px] font-semibold text-white">{m.name}</p>
+                <p className="text-[12px] text-white/55">{m.role}</p>
+              </TiltCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- process ---------- */}
+      <section id="process" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.015]">
+        <div className="mx-auto max-w-[1200px] px-5 py-20">
+          <div className="reveal text-center">
+            <span className="rounded-full border border-violet-400/40 bg-violet-500/15 px-3 py-1 text-[12px] font-medium text-violet-200">How hiring works</span>
+            <h2 className="mt-4 text-[34px] leading-tight font-bold tracking-tight sm:text-[42px]">Four simple steps</h2>
+          </div>
+          <div className="relative mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="absolute top-[34px] right-[12%] left-[12%] hidden h-px bg-gradient-to-r from-violet-500/0 via-violet-400/50 to-cyan-400/0 lg:block" />
+            {STEPS.map((s, i) => (
+              <div key={s.title} className="reveal relative text-center" style={d(0.1 * i)}>
+                <div className="mx-auto flex w-fit flex-col items-center">
+                  <FancyIcon name={s.icon} tone={s.tone} size={68} />
+                  <span className="-mt-3 rounded-full border border-white/10 bg-ink px-2 py-0.5 text-[11px] font-semibold text-white/70">Step {i + 1}</span>
+                </div>
+                <p className="mt-3 text-[16px] font-semibold text-white">{s.title}</p>
+                <p className="mx-auto mt-1 max-w-[230px] text-[13px] leading-relaxed text-white/55">{s.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ---------- FAQ ---------- */}
+      <section className="mx-auto max-w-[860px] px-5 py-20">
+        <h2 className="reveal text-center text-[30px] font-bold tracking-tight sm:text-[38px]">Questions</h2>
+        <div className="mt-8 space-y-2.5">
+          {FAQ.map((f, i) => (
+            <div key={f.q} className="reveal rounded-2xl border border-white/10 bg-white/[0.03]" style={d(0.05 * i)}>
+              <button type="button" onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-medium text-white">
+                {f.q}
+                <span className={cn("text-[20px] leading-none text-white/50 transition", faq === i && "rotate-45 text-violet-300")}>+</span>
+              </button>
+              {faq === i && <p className="px-5 pb-4 text-[14px] leading-relaxed text-white/62">{f.a}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ---------- CTA ---------- */}
-      <section className="mx-auto max-w-[1200px] px-5 py-20">
+      <section className="mx-auto max-w-[1200px] px-5 pb-20">
         <div className="reveal land-ring rounded-3xl">
           <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl bg-[linear-gradient(120deg,rgba(124,58,237,0.45),rgba(124,58,237,0.12)_55%,rgba(34,211,238,0.08))] p-8 sm:p-10">
             <div className="flex items-start gap-4">
               <FancyIcon name="mail" tone="violet" size={56} float />
               <div>
-                <h2 className="text-[26px] font-bold tracking-tight sm:text-[32px]">{HIRING_OPEN ? "Don’t see a role for you?" : "Want to hear when we launch?"}</h2>
-                <p className="mt-2 max-w-[520px] text-[14.5px] text-white/70">
-                  {HIRING_OPEN ? "We’re always looking for passionate people. Send us your profile and let’s talk!" : "Careers at StudentOS are launching soon. Email us and we’ll let you know as soon as applications open."}
-                </p>
+                <h2 className="text-[26px] font-bold tracking-tight sm:text-[32px]">Don’t see a role for you?</h2>
+                <p className="mt-2 max-w-[520px] text-[14.5px] text-white/70">Tell us what you’d like to build. Good people get a place even without a listed role.</p>
               </div>
             </div>
-            <a
-              href={HIRING_OPEN ? mailto("Application · StudentOS") : `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Notify me: StudentOS careers")}`}
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#ffffff] px-6 text-[14.5px] font-semibold text-[#3b0764] shadow-[0_12px_40px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
-            >
-              <MailIcon size={16} /> {HIRING_OPEN ? "Send Your Application" : "Notify Me"}
-            </a>
+            <button type="button" onClick={() => setApply("other")} className="inline-flex h-12 items-center gap-2 rounded-xl bg-[#ffffff] px-6 text-[14.5px] font-semibold text-[#3b0764] shadow-[0_12px_40px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5">
+              <MailIcon size={16} /> Send your profile
+            </button>
           </div>
         </div>
       </section>
+
+      {apply && <ApplyDialog roleId={apply} roles={live} onClose={() => setApply(null)} />}
     </SiteShell>
   );
 }

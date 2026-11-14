@@ -11,6 +11,8 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { AppState } from "@/lib/store";
+import type { ResumeSnapshot } from "@/lib/free";
+import { resumeSnapshot } from "@/lib/resume-snapshot";
 
 export type DriveKind = "Full-time" | "Internship" | "Internship + PPO";
 export interface Eligibility {
@@ -67,6 +69,8 @@ export interface Application {
   backlogs: number;
   batch: string;
   resume: { headline: string; skills: string; links: string; projects: string[] };
+  /** the full resume when they applied (older applications don't have it) */
+  cv?: ResumeSnapshot;
   appliedAt: number;
   /** index of the round the student has reached (0 = first round) */
   round: number;
@@ -149,6 +153,7 @@ export function newApplication(state: AppState, uid: string, p: PlacementProfile
       links: r?.links ?? "",
       projects: (state.entries ?? []).filter((e) => e.kind === "project").map((e) => e.title).slice(0, 6),
     },
+    cv: resumeSnapshot(state),
     appliedAt: Date.now(),
     ...interviewScores(state),
     round: 0,

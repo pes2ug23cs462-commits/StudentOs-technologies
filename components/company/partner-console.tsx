@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DriveForm } from "@/components/college/placements";
+import { CareersEditor } from "@/components/company/careers-editor";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CopyIcon, LogOutIcon, PlusIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Wordmark } from "@/components/ui/primitives";
@@ -25,6 +26,8 @@ export function PartnerConsole() {
   const [err, setErr] = useState("");
   const [co, setCo] = useState({ name: "", website: "" });
   const [busy, setBusy] = useState("");
+  const qs = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const [tab, setTab] = useState<"drives" | "careers">(qs?.get("tab") === "careers" ? "careers" : "drives");
   const [draft, setDraft] = useState<{ companyId: string; colleges: Set<string>; minInterview: number; drive: Drive | null } | null>(null);
 
   useEffect(() => {
@@ -110,10 +113,21 @@ export function PartnerConsole() {
         <span className="rounded-md border border-cyan-400/40 px-1.5 py-0.5 text-[9.5px] font-semibold tracking-wider text-cyan-200">TEAM</span>
         <button type="button" onClick={() => void logOut().then(() => (window.location.href = "/"))} className="ml-auto flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><LogOutIcon size={14} /> Log out</button>
       </header>
-      <h1 className="mt-6 text-[28px] font-semibold tracking-tight">Placement partner</h1>
-      <p className="mt-1 text-[14px] text-white/55">Bring companies to partner colleges. Each college approves a drive before its students see it.</p>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[28px] font-semibold tracking-tight">{tab === "careers" ? "Careers" : "Placement partner"}</h1>
+          <p className="mt-1 text-[14px] text-white/55">{tab === "careers" ? "Roles on /careers, applications and AI interview reports." : "Bring companies to partner colleges. Each college approves a drive before its students see it."}</p>
+        </div>
+        <div className="flex rounded-xl border border-white/10 p-1">
+          {([["drives", "Partner drives"], ["careers", "Careers"]] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setTab(k)} className={cn("h-8 rounded-lg px-3.5 text-[13px] font-medium transition", tab === k ? "bg-[var(--color-plum)] text-white" : "text-white/60 hover:text-white")}>{l}</button>
+          ))}
+        </div>
+      </div>
 
-      {!data ? (
+      {tab === "careers" ? (
+        <CareersEditor openApp={qs?.get("app")} />
+      ) : !data ? (
         <div className="mt-6 h-64 animate-pulse rounded-2xl bg-white/[0.04]" />
       ) : draft ? (
         <div className="mt-6 space-y-5">

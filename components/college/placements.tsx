@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, PlusIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
 import { BRANCHES, effective, closed, deleteDrive, loadApps, loadDrives, placementStats, sampleDrives, saveApp, saveDrive, stageLabel, type Application, type Drive, type DriveKind } from "@/lib/placement";
@@ -17,6 +17,8 @@ import { partnerApi, partnerErrorText, type OfferedDrive } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Tilt } from "./skyline-3d";
+import { useResumePrint } from "@/components/resume/resume-print";
+import { fallbackResume } from "@/lib/resume-snapshot";
 
 const fmtDate = (s: string) => (s ? new Date(s + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
 
@@ -358,6 +360,8 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
   const [filter, setFilter] = useState<Filter>("all");
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<null | "link" | "offer">(null);
+  const resumes = useResumePrint();
+  const cvOf = (a: Application) => ({ name: a.name, cv: a.cv ?? fallbackResume({ ...a, college: college.name }) });
   const [link, setLink] = useState({ title: "", url: "", when: "" });
   const [offer, setOffer] = useState({ ctc: drive.ctc, joining: "", url: "", note: "" });
   const [openRow, setOpenRow] = useState<string | null>(null);
@@ -470,7 +474,8 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
           {([["all", `All ${apps.length}`], ["applied", "New"], ...drive.rounds.map((r, i) => [`r${i}`, r]), ["selected", "Selected"], ["rejected", "Not selected"]] as [Filter, string][]).map(([k, l]) => (
             <button key={k} type="button" onClick={() => { setFilter(k); setPicked(new Set()); }} className={cn("h-8 rounded-lg border px-3 text-[12px]", filter === k ? "border-accent/60 bg-[var(--color-plum)] text-white" : "border-white/10 text-white/60")}>{l}</button>
           ))}
-          <Button size="sm" variant="ghost" className="ml-auto" icon={<DownloadIcon size={13} />} onClick={csv} disabled={!apps.length}>Excel</Button>
+          <Button size="sm" variant="ghost" className="ml-auto" icon={<FileIcon size={13} />} onClick={() => resumes.print(list.map(cvOf))} disabled={!list.length}>Resumes (PDF)</Button>
+          <Button size="sm" variant="ghost" icon={<DownloadIcon size={13} />} onClick={csv} disabled={!apps.length}>Excel</Button>
         </div>
 
         {canEdit && picked.size > 0 && (
@@ -481,6 +486,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
             <Button size="sm" icon={<CheckIcon size={13} />} onClick={select}>Mark selected</Button>
             <Button size="sm" icon={<TrophyIcon size={13} />} onClick={() => setModal("offer")}>Add offer</Button>
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} onClick={reject}>Not selected</Button>
+            <Button size="sm" variant="ghost" icon={<FileIcon size={13} />} onClick={() => resumes.print(list.filter((a) => picked.has(a.uid)).map(cvOf))}>Resumes</Button>
             <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[12px] text-white/70" title="Email and phone notification to the picked students">
               <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#a78bfa]" /> Notify students
             </label>
@@ -497,6 +503,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 <th className="pb-2 font-medium">CGPA</th>
                 <th className="hidden pb-2 font-medium md:table-cell">Skills</th>
                 <th className="pb-2 font-medium">Stage</th>
+                <th className="pb-2"><span className="sr-only">Resume</span></th>
               </tr>
             </thead>
             <tbody>
@@ -510,11 +517,12 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                   <td className="py-2.5 whitespace-nowrap">
                     <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-medium", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : a.status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, drive)}</span>
                   </td>
+                  <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
                 </tr>,
                 openRow === a.uid && (
                   <tr key={a.uid + "-o"}>
                     {canEdit && <td />}
-                    <td colSpan={5} className="pb-3">
+                    <td colSpan={6} className="pb-3">
                       <div className="grid gap-3 rounded-xl bg-white/[0.03] p-3 text-[12.5px] md:grid-cols-3">
                         <div><p className="text-white/45">Headline</p><p className="text-white/80">{a.resume.headline || "—"}</p><p className="mt-2 text-white/45">Projects</p><p className="text-white/80">{a.resume.projects.join(", ") || "—"}</p></div>
                         <div><p className="text-white/45">Links sent</p>{a.links.length ? a.links.map((l) => <p key={l.at + l.title} className="text-white/80">{l.title}{l.when ? ` · ${l.when}` : ""}<span className="text-white/40"> · {drive.rounds[l.round ?? 0] ?? "round"}{(l.round ?? 0) !== a.round || a.status !== "in-process" ? " (done)" : ""}</span></p>) : <p className="text-white/50">None yet</p>}</div>
@@ -531,6 +539,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
         )}
       </Card>
 
+      {resumes.node}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setModal(null)}>
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#121216] p-6" onClick={(e) => e.stopPropagation()}>

@@ -397,6 +397,18 @@ html.light .setup-left {
   }
 }
 
+/* Resumes downloaded by a college or company: one per page. */
+@media print {
+  #resume-batch { position: absolute !important; left: 0 !important; top: 0 !important; visibility: visible !important; }
+  #resume-batch #resume-print {
+    position: relative !important;
+    inset: auto !important;
+    break-after: page;
+    page-break-after: always;
+  }
+  #resume-batch #resume-print:last-child { break-after: auto; page-break-after: auto; }
+}
+
 /* Certificate: print only the certificate, landscape. */
 @page cert { size: A4 landscape; margin: 0; }
 @media print {

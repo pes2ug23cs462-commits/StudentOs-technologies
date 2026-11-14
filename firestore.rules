@@ -124,6 +124,15 @@ service cloud.firestore {
       }
     }
     // student join codes → college id
+    // Careers page roles: everyone can read; the StudentOS team edits them through the server.
+    match /site/careers {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Careers applications and AI interviews: only the server reads and writes them.
+    match /careerApps/{token} {
+      allow read, write: if false;
+    }
     match /collegeCodes/{code} {
       allow get: if request.auth != null;
       allow create: if request.auth != null && get(/databases/$(database)/documents/colleges/$(request.resource.data.cid)).data.owner == request.auth.uid;

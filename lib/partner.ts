@@ -4,6 +4,7 @@
 
 import { auth } from "./firebase";
 import type { AppLink, Drive, Offer } from "./placement";
+import type { ResumeSnapshot } from "./free";
 
 export class PartnerError extends Error {
   detail = "";
@@ -59,6 +60,7 @@ export type Applicant = {
   backlogs: number;
   batch: string;
   resume: { headline: string; skills: string; links: string; projects: string[] } | null;
+  cv: ResumeSnapshot | null;
   scores: { interview?: number; coding?: number } | null;
   status: "applied" | "in-process" | "selected" | "rejected";
   round: number;

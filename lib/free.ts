@@ -182,6 +182,11 @@ export function suggestedTimeline(currentYear: number, today = new Date()): Time
 
 /* ---------------- Resume ---------------- */
 
+/** a certificate line on the resume */
+export type ResumeCert = { title: string; issuer: string; id: string; date: string };
+/** a frozen copy of a student's resume, sent with a placement application */
+export type ResumeSnapshot = { r: ResumeData; entries: Entry[]; certs: ResumeCert[] };
+
 export interface ResumeData {
   name: string;
   headline: string;
