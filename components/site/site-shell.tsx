@@ -93,10 +93,10 @@ export function SiteNav() {
 }
 
 const COLUMNS = [
-  { title: "Product", links: [{ href: "/#features", label: "Features" }, { href: "/#how", label: "How It Works" }, { href: "/#faq", label: "FAQ" }, { href: "/institutions", label: "For Institutions" }, { href: "/verify", label: "Verify a Certificate" }] },
+  { title: "Product", links: [{ href: "/#features", label: "Features" }, { href: "/#how", label: "How It Works" }, { href: "/#faq", label: "FAQ" }, { href: "/institutions", label: "For Institutions" }, { href: "/company", label: "For Companies" }, { href: "/verify", label: "Verify a Certificate" }] },
   { title: "Company", links: [{ href: "/about", label: "About" }, { href: "/careers", label: "Careers" }, { href: "/contact", label: "Contact" }] },
   { title: "Legal", links: [{ href: "/privacy", label: "Privacy Policy" }, { href: "/terms", label: "Terms and Conditions" }] },
-  { title: "Account", links: [{ href: "/login", label: "Log In" }, { href: "/signup", label: "Sign Up" }] },
+  { title: "Account", links: [{ href: "/login", label: "Log In" }, { href: "/signup", label: "Sign Up" }, { href: "/partner", label: "StudentOS Team" }] },
 ];
 
 export function SiteFooter() {
