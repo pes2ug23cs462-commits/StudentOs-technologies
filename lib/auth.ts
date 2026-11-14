@@ -167,6 +167,8 @@ export async function signInWithProvider(provider: SocialProvider, remember = fa
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
     const p = provider === "github" ? new GithubAuthProvider() : new GoogleAuthProvider();
     if (p instanceof GithubAuthProvider) p.addScope("user:email");
+    // always show Google's account chooser, so people can pick which Gmail to use
+    else p.setCustomParameters({ prompt: "select_account" });
     const cred = await signInWithPopup(auth, p);
     return {
       ok: true,
