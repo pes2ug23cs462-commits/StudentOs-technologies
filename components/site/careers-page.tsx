@@ -6,6 +6,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { TextRevealFaqs } from "@/components/landing/text-reveal-faqs";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
 import { Glass, TiltCard, delay as d, usePointerVars } from "@/components/site/motion";
 import { SiteShell } from "@/components/site/site-shell";
@@ -297,7 +298,6 @@ export function CareersPage() {
   const [team, setTeam] = useState<"All" | CareerTeam>("All");
   const [open, setOpen] = useState<string | null>(null);
   const [apply, setApply] = useState<string | null>(null);
-  const [faq, setFaq] = useState<number | null>(0);
   const roles = useMemo(() => live.filter((r) => team === "All" || r.team === team), [team, live]);
   return (
     <SiteShell>
@@ -477,19 +477,8 @@ export function CareersPage() {
       </section>
 
       {/* ---------- FAQ ---------- */}
-      <section className="mx-auto max-w-[860px] px-5 py-20">
-        <h2 className="reveal text-center text-[30px] font-bold tracking-tight sm:text-[38px]">Questions</h2>
-        <div className="mt-8 space-y-2.5">
-          {FAQ.map((f, i) => (
-            <div key={f.q} className="reveal rounded-2xl border border-white/10 bg-white/[0.03]" style={d(0.05 * i)}>
-              <button type="button" onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-medium text-white">
-                {f.q}
-                <span className={cn("text-[20px] leading-none text-white/50 transition", faq === i && "rotate-45 text-violet-300")}>+</span>
-              </button>
-              {faq === i && <p className="px-5 pb-4 text-[14px] leading-relaxed text-white/62">{f.a}</p>}
-            </div>
-          ))}
-        </div>
+      <section className="reveal mx-auto max-w-[1080px] px-5 py-20">
+        <TextRevealFaqs items={FAQ} sub="Everything students ask before applying." contactHref="/contact" />
       </section>
 
       {/* ---------- CTA ---------- */}
