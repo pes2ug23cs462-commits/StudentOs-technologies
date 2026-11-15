@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { A, B, CONTACT_EMAIL, LegalPage, P, UL } from "@/components/legal/legal-page";
 
-export const metadata: Metadata = { title: "Privacy Policy · StudentOS" };
+export const metadata: Metadata = { title: "Privacy Policy", description: "What data StudentOS collects, why, and how you control it.", alternates: { canonical: "/privacy" } };
 
 /* Public page. Keep it in step with what the app really does: if a feature starts
    collecting or sharing new data, update this page and the “Last updated” date. */

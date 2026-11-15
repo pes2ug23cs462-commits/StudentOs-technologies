@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { A, B, CONTACT_EMAIL, LegalPage, P, UL } from "@/components/legal/legal-page";
 
-export const metadata: Metadata = { title: "Terms and Conditions · StudentOS" };
+export const metadata: Metadata = { title: "Terms and Conditions", description: "The terms for using StudentOS.", alternates: { canonical: "/terms" } };
 
 /* Public page. Free-plan numbers here should match the app
    (FREE_CERT_LIMIT, FREE_DAILY_MESSAGES, FREE_MATERIAL_LIMIT). */

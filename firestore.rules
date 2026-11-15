@@ -133,6 +133,9 @@ service cloud.firestore {
     match /careerApps/{token} {
       allow read, write: if false;
     }
+    match /careerDedupe/{key} {
+      allow read, write: if false;
+    }
     match /collegeCodes/{code} {
       allow get: if request.auth != null;
       allow create: if request.auth != null && get(/databases/$(database)/documents/colleges/$(request.resource.data.cid)).data.owner == request.auth.uid;
