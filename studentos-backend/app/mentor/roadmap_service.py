@@ -59,6 +59,80 @@ class RoadmapService:
                 return roadmap
         return None
 
+    def get_roadmap_by_id(self, roadmap_id: str) -> Optional[dict]:
+        return self.roadmaps.get(roadmap_id)
+
+    # =====================================================================
+    # RESPONSIBILITY #3: BASIC PROGRESS TRACKING
+    # =====================================================================
+
+    def calculate_progress(self, progress_data: Optional[dict]) -> dict:
+        """
+        Calculates student learning progress based on completed/pending tasks
+        and milestones. Safely handles empty, invalid, or missing data.
+        """
+        if not progress_data or not isinstance(progress_data, dict):
+            return {
+                "total_tasks": 0,
+                "completed_tasks": 0,
+                "pending_tasks": 0,
+                "completion_percentage": 0.0,
+                "total_milestones": 0,
+                "completed_milestones": 0,
+                "pending_milestones": 0,
+                "summary": "No progress data available.",
+            }
+
+        tasks = progress_data.get("tasks", [])
+        milestones = progress_data.get("milestones", [])
+
+        if not isinstance(tasks, list):
+            tasks = []
+        if not isinstance(milestones, list):
+            milestones = []
+
+        total_tasks = len(tasks)
+        completed_tasks = 0
+        pending_tasks = 0
+
+        for task in tasks:
+            if isinstance(task, dict) and task.get("completed") is True:
+                completed_tasks += 1
+            else:
+                pending_tasks += 1
+
+        completion_percentage = (
+            round((completed_tasks / total_tasks) * 100, 2)
+            if total_tasks > 0
+            else 0.0
+        )
+
+        total_milestones = len(milestones)
+        completed_milestones = 0
+        pending_milestones = 0
+
+        for m in milestones:
+            if isinstance(m, dict) and m.get("completed") is True:
+                completed_milestones += 1
+            else:
+                pending_milestones += 1
+
+        summary = (
+            f"Progress Summary: {completed_tasks}/{total_tasks} tasks completed "
+            f"({completion_percentage}%). {completed_milestones}/{total_milestones} milestones finished."
+        )
+
+        return {
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "pending_tasks": pending_tasks,
+            "completion_percentage": completion_percentage,
+            "total_milestones": total_milestones,
+            "completed_milestones": completed_milestones,
+            "pending_milestones": pending_milestones,
+            "summary": summary,
+        }
+
 
 # =====================================================================
 # INTEGRATION CONNECTORS WITH GROQ LLM PROVIDER
