@@ -43,7 +43,7 @@ export const partnerErrorText = (e: unknown) => {
 
 export type Whoami = { team: boolean; email?: string; verified?: boolean; teamSet?: boolean; company: { id: string; name: string; website: string; logo?: string } | null };
 export type PartnerCompany = { id: string; name: string; website: string; code: string };
-export type PartnerCollege = { id: string; name: string; type: string; city: string };
+export type PartnerCollege = { id: string; name: string; type: string; city: string; status: "pending" | "approved" | "rejected"; createdAt: number; ownerName?: string; ownerEmail?: string };
 export type PartnerDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, "pending" | "approved" | "declined">; minInterview: number };
 /** what a college sees in colleges/{cid}/partner/{pid} */
 export type OfferedDrive = Drive & { pid: string; companyId: string; status: "pending" | "approved" | "declined"; minInterview: number; sentAt: number };

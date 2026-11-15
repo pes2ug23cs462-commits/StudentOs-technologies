@@ -27,7 +27,7 @@ export function PartnerConsole() {
   const [co, setCo] = useState({ name: "", website: "" });
   const [busy, setBusy] = useState("");
   const qs = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const [tab, setTab] = useState<"drives" | "careers">(qs?.get("tab") === "careers" ? "careers" : "drives");
+  const [tab, setTab] = useState<"drives" | "colleges" | "careers">(qs?.get("tab") === "careers" ? "careers" : qs?.get("tab") === "colleges" ? "colleges" : "drives");
   const [draft, setDraft] = useState<{ companyId: string; colleges: Set<string>; minInterview: number; drive: Drive | null; editing?: boolean } | null>(null);
 
   useEffect(() => {
@@ -48,7 +48,8 @@ export function PartnerConsole() {
       .catch((e) => setErr(partnerErrorText(e)));
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const degree = useMemo(() => (data?.colleges ?? []).filter((c) => c.type === "degree"), [data]);
+  const degree = useMemo(() => (data?.colleges ?? []).filter((c) => c.type === "degree" && c.status === "approved"), [data]);
+  const pending = (data?.colleges ?? []).filter((c) => c.status === "pending");
   const nameOf = (cid: string) => data?.colleges.find((c) => c.id === cid)?.name ?? cid;
 
   if (status === "loading") return <div className="min-h-screen bg-ink" />;
@@ -121,6 +122,19 @@ export function PartnerConsole() {
       setBusy("");
     }
   };
+  const decideCollege = async (c: PartnerCollege, decision: "approved" | "rejected") => {
+    if (decision === "rejected" && !window.confirm(`Reject ${c.name}? Its admin gets an email, and students can’t join it.`)) return;
+    setBusy(`col-${c.id}`);
+    try {
+      const r = await partnerApi<{ emailed: boolean }>("team-college-decide", { cid: c.id, decision });
+      actions.toast(`${c.name} ${decision === "approved" ? "is live" : "was rejected"}.${r.emailed ? " Its admin got an email." : ""}`);
+      await load();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
   const blank = (companyName: string): Drive => ({ id: `pd${Date.now().toString(36)}`, company: companyName, role: "", kind: "Full-time", ctc: "", location: "", about: "", rounds: ["Online test", "Technical interview", "HR interview"], elig: { branches: [], minCgpa: 0, maxBacklogs: 0, batch: "" }, deadline: "", open: true, createdAt: Date.now(), createdBy: "" });
 
   return (
@@ -133,12 +147,15 @@ export function PartnerConsole() {
       </header>
       <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight">{tab === "careers" ? "Careers" : "Placement partner"}</h1>
-          <p className="mt-1 text-[14px] text-white/55">{tab === "careers" ? "Roles on /careers, applications and AI interview reports." : "Bring companies to partner colleges. Each college approves a drive before its students see it."}</p>
+          <h1 className="text-[28px] font-semibold tracking-tight">{tab === "careers" ? "Careers" : tab === "colleges" ? "Colleges" : "Placement partner"}</h1>
+          <p className="mt-1 text-[14px] text-white/55">{tab === "careers" ? "Roles on /careers, applications and AI interview reports." : tab === "colleges" ? "Every new college waits here until the team approves it. Students can only join live colleges." : "Bring companies to partner colleges. Each college approves a drive before its students see it."}</p>
         </div>
         <div className="flex rounded-xl border border-white/10 p-1">
-          {([["drives", "Partner drives"], ["careers", "Careers"]] as const).map(([k, l]) => (
-            <button key={k} type="button" onClick={() => setTab(k)} className={cn("h-8 rounded-lg px-3.5 text-[13px] font-medium transition", tab === k ? "bg-[var(--color-plum)] text-white" : "text-white/60 hover:text-white")}>{l}</button>
+          {([["drives", "Partner drives"], ["colleges", "Colleges"], ["careers", "Careers"]] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setTab(k)} className={cn("flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium transition", tab === k ? "bg-[var(--color-plum)] text-white" : "text-white/60 hover:text-white")}>
+              {l}
+              {k === "colleges" && pending.length > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[10.5px] font-bold text-[#1a1306]">{pending.length}</span>}
+            </button>
           ))}
         </div>
       </div>
@@ -147,6 +164,41 @@ export function PartnerConsole() {
         <CareersEditor openApp={qs?.get("app")} />
       ) : !data ? (
         <div className="mt-6 h-64 animate-pulse rounded-2xl bg-white/[0.04]" />
+      ) : tab === "colleges" ? (
+        <div className="mt-6 space-y-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+            <h2 className="text-[15px] font-semibold">Waiting for approval {pending.length > 0 && <span className="ml-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11.5px] text-amber-200">{pending.length}</span>}</h2>
+            {pending.length ? (
+              <div className="mt-4 space-y-3">
+                {pending.map((c) => (
+                  <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14.5px] font-semibold">{c.name}</p>
+                      <p className="mt-0.5 text-[12px] text-white/50">{[c.type === "degree" ? "Degree college" : "PU / school", c.city, c.createdAt ? `asked ${new Date(c.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""].filter(Boolean).join(" · ")}</p>
+                      <p className="mt-1 text-[12.5px] text-white/70">{c.ownerName || "Unknown"}{c.ownerEmail && <> · <a href={`mailto:${c.ownerEmail}`} className="text-accent hover:underline">{c.ownerEmail}</a></>}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" disabled={busy === `col-${c.id}`} onClick={() => void decideCollege(c, "rejected")}>Reject</Button>
+                    <Button size="sm" variant="primary" loading={busy === `col-${c.id}`} onClick={() => void decideCollege(c, "approved")}>Approve</Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-[13px] text-white/45">No college is waiting. New ones show up here.</p>
+            )}
+          </section>
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+            <h2 className="text-[15px] font-semibold">All colleges <span className="ml-1 text-[12.5px] font-normal text-white/45">{data.colleges.length}</span></h2>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {[...data.colleges].sort((a, b) => b.createdAt - a.createdAt).map((c) => (
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/[0.07] px-3 py-2.5">
+                  <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{c.name}</span><span className="block text-[11px] text-white/40">{[c.type === "degree" ? "Degree" : "PU / school", c.city].filter(Boolean).join(" · ")}</span></span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[11px]", c.status === "approved" ? STATUS.approved : c.status === "pending" ? STATUS.pending : "bg-rose-400/12 text-rose-300")}>{c.status === "approved" ? "live" : c.status}</span>
+                  {c.status === "rejected" && <button type="button" disabled={busy === `col-${c.id}`} onClick={() => void decideCollege(c, "approved")} className="text-[11.5px] text-accent hover:underline">Approve</button>}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       ) : draft ? (
         <div className="mt-6 space-y-5">
           <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
@@ -174,7 +226,7 @@ export function PartnerConsole() {
                 ))}
               </div>
             ) : (
-              <p className="text-[12.5px] text-white/45">No degree colleges on StudentOS yet.</p>
+              <p className="text-[12.5px] text-white/45">No live degree colleges yet. Approve them in the Colleges tab.</p>
             )}
           </section>
           {draft.drive ? (

@@ -36,7 +36,11 @@ export interface College {
   logo?: string;
   /** the college's website, e.g. pes.edu (used to find the logo) */
   website?: string;
+  /** new colleges wait for the StudentOS team (only the server changes it); none = an older college, live */
+  status?: "pending" | "approved" | "rejected";
 }
+/** Live colleges can take students; a new one waits for StudentOS approval. */
+export const isLive = (c: Pick<College, "status">) => !c.status || c.status === "approved";
 export interface Staff {
   uid: string;
   name: string;
@@ -104,7 +108,7 @@ export const cleanCode = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, ""
 
 export async function createCollege(o: { name: string; type: CollegeType; city: string; uid: string; staffName: string; email: string }): Promise<College> {
   const id = `c${Date.now().toString(36)}${makeCode(4).toLowerCase()}`;
-  const college: College = { id, name: o.name.trim(), type: o.type, city: o.city.trim(), code: makeCode(), owner: o.uid, createdAt: Date.now() };
+  const college: College = { id, name: o.name.trim(), type: o.type, city: o.city.trim(), code: makeCode(), owner: o.uid, createdAt: Date.now(), status: "pending" };
   await setDoc(doc(db, "colleges", id), college);
   await setDoc(doc(db, "colleges", id, "staff", o.uid), { uid: o.uid, name: o.staffName, email: o.email, role: "admin", at: Date.now() } satisfies Staff);
   await setDoc(doc(db, "colleges", id, "private", "keys"), { staffCode: makeCode(8) });

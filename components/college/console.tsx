@@ -19,6 +19,7 @@ import {
   avg,
   chapterStats,
   createCollege,
+  isLive,
   examReadiness,
   getCollege,
   getStaffCode,
@@ -316,7 +317,10 @@ export function CollegeConsole() {
   }, [status, link?.cid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const type: CollegeType = college?.type ?? "school";
-  const members = useMemo(() => (sample ? sampleMembers(type) : real), [sample, real, type]);
+  const live = college ? isLive(college) : true;
+  /** a college waiting for approval only sees sample data */
+  const showSample = sample || !live;
+  const members = useMemo(() => (showSample ? sampleMembers(type) : real), [showSample, real, type]);
   const role: StaffRole = staff.find((x) => x.uid === uid)?.role ?? link?.role ?? "teacher";
 
   if (status === "loading") return <div className="min-h-screen bg-ink" />;
@@ -392,15 +396,16 @@ export function CollegeConsole() {
             </div>
           ) : (
             <>
-              <Header college={college} tab={tab} type={type} sample={sample} setSample={setSample} realCount={real.length} />
+              {!live && <Pending college={college} />}
+              <Header college={college} tab={tab} type={type} sample={showSample} setSample={live ? setSample : () => {}} realCount={real.length} />
               <div key={tab} className="page-enter mt-5">
                 {tab === "overview" && <Overview college={college} members={members} joinUrl={joinUrl} go={go} />}
                 {tab === "sections" && <Sections members={members} type={type} />}
                 {tab === "chapters" && (type === "school" ? <Chapters members={members} /> : <Placement members={members} />)}
-                {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={sample} canEdit={canRunPlacements(role)} />}
+                {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={showSample} canEdit={canRunPlacements(role)} />}
                 {tab === "students" && role !== "viewer" && <Students members={members} type={type} />}
                 {tab === "faculty" && <Faculty college={college} staff={staff} role={role} staffCode={staffCode} reload={load} uid={uid} />}
-                {tab === "privacy" && <Privacy members={members} sample={sample} />}
+                {tab === "privacy" && <Privacy members={members} sample={showSample} />}
                 {tab === "reports" && <Reports college={college} members={members} type={type} />}
               </div>
             </>
@@ -408,6 +413,25 @@ export function CollegeConsole() {
         </div>
       </main>
       <Toaster />
+    </div>
+  );
+}
+
+function Pending({ college }: { college: College }) {
+  const rejected = college.status === "rejected";
+  return (
+    <div className={cn("mb-5 flex items-start gap-3 rounded-2xl border p-4", rejected ? "border-rose-400/25 bg-rose-500/[0.06]" : "border-amber-400/25 bg-amber-400/[0.06]")}>
+      <AlertCircleIcon size={18} className={cn("mt-0.5 shrink-0", rejected ? "text-rose-300" : "text-amber-200")} />
+      <div className="text-[13px] leading-relaxed text-white/75">
+        {rejected ? (
+          <p><b className="text-white">This college wasn’t approved.</b> Write to <a href="mailto:support@student-os.in" className="text-accent hover:underline">support@student-os.in</a> and we’ll help.</p>
+        ) : (
+          <>
+            <p><b className="text-white">Waiting for StudentOS approval.</b> We check every new college, usually within one working day, and email you when it’s live.</p>
+            <p className="mt-1 text-white/55">Until then you see sample data, and students can’t join with your code yet. Questions: <a href="mailto:support@student-os.in" className="text-accent hover:underline">support@student-os.in</a></p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

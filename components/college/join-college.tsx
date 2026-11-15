@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, LockIcon, XIcon } from "@/components/ui/icons";
 import { Card, Input, Label } from "@/components/ui/primitives";
-import { cleanCode, collegeInfo, findByCode, joinCollege, leaveCollege, pushSummary, type College } from "@/lib/college";
+import { cleanCode, collegeInfo, findByCode, isLive, joinCollege, leaveCollege, pushSummary, type College } from "@/lib/college";
 import { CollegeLogo } from "@/components/college/college-logo";
 import { useStore } from "@/lib/store";
 
@@ -37,7 +37,8 @@ export function JoinCollege({ initialCode = "" }: { initialCode?: string }) {
     try {
       const col = await findByCode(c);
       if (!col) setError("No college has this code. Check it with your teacher.");
-      setCollege(col);
+      else if (!isLive(col)) setError(`${col.name} isn’t live on StudentOS yet. Ask your teacher, and try again in a day or two.`);
+      setCollege(col && isLive(col) ? col : null);
     } catch {
       setError("Couldn’t check the code. Check your internet and try again.");
     } finally {

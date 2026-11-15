@@ -67,18 +67,24 @@ service cloud.firestore {
     function isCollegeAdmin(cid) {
       return isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role == "admin";
     }
+    // older colleges have no status and count as live; new ones need the StudentOS team's approval
+    function isLive(cid) {
+      return get(/databases/$(database)/documents/colleges/$(cid)).data.get("status", "approved") == "approved";
+    }
     match /colleges/{cid} {
       // signed-in students see the college name when they enter its code
       allow get: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid && request.resource.data.id == cid;
-      allow update: if isCollegeAdmin(cid);
+      // a new college starts "pending"; only the StudentOS team (through the server) approves it
+      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid && request.resource.data.id == cid
+        && request.resource.data.status == "pending";
+      allow update: if isCollegeAdmin(cid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["status", "decidedAt", "decidedBy"]);
       allow delete: if false;
       // faculty: the owner becomes admin; others join as teacher with the faculty code
       match /staff/{uid} {
         allow read: if isStaff(cid);
         allow create: if request.auth != null && request.auth.uid == uid && (
           (get(/databases/$(database)/documents/colleges/$(cid)).data.owner == uid && request.resource.data.role == "admin") ||
-          (request.resource.data.role == "teacher" && request.resource.data.staffCode == get(/databases/$(database)/documents/colleges/$(cid)/private/keys).data.staffCode)
+          (request.resource.data.role == "teacher" && isLive(cid) && request.resource.data.staffCode == get(/databases/$(database)/documents/colleges/$(cid)/private/keys).data.staffCode)
         );
         allow update, delete: if isCollegeAdmin(cid);
       }
@@ -96,7 +102,7 @@ service cloud.firestore {
       // campus placement drives: the admin or placement coordinator posts them; other staff and joined students read them
       match /drives/{did} {
         allow read: if isStaff(cid) || (request.auth != null && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(request.auth.uid)));
-        allow write: if isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"];
+        allow write: if isStaff(cid) && isLive(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"];
         // applications: a student creates and reads only their own; the admin or placement coordinator updates rounds, links and offers;
         // the student can only answer the offer
         match /apps/{uid} {
@@ -117,6 +123,7 @@ service cloud.firestore {
       match /members/{uid} {
         allow read: if isStaff(cid);
         allow create, update: if request.auth != null && request.auth.uid == uid && request.resource.data.uid == uid
+          && isLive(cid)
           && request.resource.data.code is string
           && exists(/databases/$(database)/documents/collegeCodes/$(request.resource.data.code))
           && get(/databases/$(database)/documents/collegeCodes/$(request.resource.data.code)).data.cid == cid;

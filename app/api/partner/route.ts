@@ -15,6 +15,7 @@ import { verifyIdUser } from "@/lib/server/auth";
 import { adminConfigured, adminProblem, adminCreate, adminDelete, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
 import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
+import { mailHtml, sendMails } from "@/lib/server/mail";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
@@ -134,7 +135,14 @@ export async function POST(req: Request) {
       if (action === "team-overview") {
         const [colleges, companies, drives] = await Promise.all([adminList("colleges", 1000), adminList("companies", 500), adminList("partnerDrives", 500)]);
         return NextResponse.json({
-          colleges: colleges.map((c) => ({ id: c.id, name: str(c.data.name), type: str(c.data.type), city: str(c.data.city) })),
+          colleges: await Promise.all(
+            colleges.map(async (c) => {
+              const status = ["pending", "rejected"].includes(str(c.data.status)) ? str(c.data.status) : "approved";
+              // who asked: read only for colleges still waiting, to keep reads low
+              const owner = status === "pending" && str(c.data.owner) ? await adminGet(`colleges/${c.id}/staff/${str(c.data.owner)}`).catch(() => null) : null;
+              return { id: c.id, name: str(c.data.name), type: str(c.data.type), city: str(c.data.city), status, createdAt: Number(c.data.createdAt) || 0, ...(owner ? { ownerName: str(owner.name), ownerEmail: str(owner.email) } : {}) };
+            }),
+          ),
           companies: companies.map((c) => ({ id: c.id, name: str(c.data.name), website: str(c.data.website), code: str(c.data.code) })),
           drives: drives.map((d) => d.data).sort((x, y) => Number(y.createdAt) - Number(x.createdAt)),
         });
@@ -196,6 +204,24 @@ export async function POST(req: Request) {
           }),
         );
         return NextResponse.json({ drive: p });
+      }
+      if (action === "team-college-decide") {
+        const cid = id(b.cid), decision = str(b.decision, 10);
+        if (!cid || !["approved", "rejected"].includes(decision)) return bad("bad-request");
+        const c = await adminGet(`colleges/${cid}`);
+        if (!c) return bad("no-college", 404);
+        await adminMerge(`colleges/${cid}`, { status: decision, decidedAt: Date.now(), decidedBy: me.email });
+        const owner = str(c.owner) ? await adminGet(`colleges/${cid}/staff/${str(c.owner)}`).catch(() => null) : null;
+        const to = owner ? str(owner.email) : "";
+        let emailed = false;
+        if (to) {
+          const ok = decision === "approved";
+          const lines = ok
+            ? [`Hi ${str(owner?.name) || "there"}, ${str(c.name)} is now live on StudentOS.`, "Share your college code with students so they can join, and invite your faculty from the Faculty page."]
+            : [`Hi ${str(owner?.name) || "there"}, we couldn’t approve ${str(c.name)} on StudentOS right now.`, "Reply to this email and our team will help."];
+          emailed = (await sendMails([{ to, subject: ok ? `${str(c.name)} is live on StudentOS` : `About ${str(c.name)} on StudentOS`, text: lines.join("\n\n"), replyTo: "support@student-os.in", html: mailHtml({ brand: "StudentOS · Colleges", heading: ok ? "Your college is live" : "About your college request", lines, button: ok ? "Open the college dashboard" : "Visit StudentOS", url: ok ? `${origin}/college` : origin, foot: "You get this because you created a college on StudentOS." }) }])) > 0;
+        }
+        return NextResponse.json({ ok: true, emailed });
       }
       if (action === "team-drive-delete") {
         const pid = id(b.pid);
