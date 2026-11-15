@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TextRevealFaqs } from "@/components/landing/text-reveal-faqs";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
 import { Glass, TiltCard, delay as d, usePointerVars } from "@/components/site/motion";
-import { SiteShell } from "@/components/site/site-shell";
+import { HR_EMAIL, SiteShell } from "@/components/site/site-shell";
 import { ArrowRightIcon, CheckIcon, MailIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
 import { CAREER_TEAMS, DEFAULT_CAREERS, careersApi, careersErrorText, fmtWhen, loadCareers, type CareerRole, type CareerTeam, type CareersDoc } from "@/lib/careers";
@@ -279,7 +279,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
             <button type="button" disabled={busy} onClick={() => void submit()} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5 disabled:opacity-60">
               {busy ? "Sending…" : "Submit application"} {!busy && <ArrowRightIcon size={15} />}
             </button>
-            <p className="mt-3 text-center text-[11.5px] text-white/40">We use these details only for hiring.</p>
+            <p className="mt-3 text-center text-[11.5px] text-white/40">We use these details only for hiring. Questions? <a href={`mailto:${HR_EMAIL}`} className="text-white/70 hover:underline">{HR_EMAIL}</a></p>
           </>
         )}
       </div>

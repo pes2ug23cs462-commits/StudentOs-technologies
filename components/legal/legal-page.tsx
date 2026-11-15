@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { SiteFooter, SiteNav } from "@/components/site/site-shell";
 
 export const LEGAL_UPDATED = "8 November 2026";
-export const CONTACT_EMAIL = "studentoshr@gmail.com";
+export const CONTACT_EMAIL = "support@student-os.in";
 
 export function LegalPage({ title, intro, sections, other }: { title: string; intro: ReactNode; sections: { id: string; title: string; body: ReactNode }[]; other: { href: string; label: string } }) {
   return (

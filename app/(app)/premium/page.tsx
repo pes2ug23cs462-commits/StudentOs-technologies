@@ -27,7 +27,7 @@ const FREE = ["AI study plan and schedule", "Personalised video courses", "AI as
 export default function PremiumPage() {
   const { premium, loading } = usePremium();
   const { state } = useStore();
-  const ask = `mailto:studentoshr@gmail.com?subject=${encodeURIComponent("Premium early access · StudentOS")}&body=${encodeURIComponent(`Hi StudentOS team,\n\nI'd like early access to Premium.\n\nName: ${state.profile.name}\nEmail: ${state.profile.email}\n`)}`;
+  const ask = `mailto:support@student-os.in?subject=${encodeURIComponent("Premium early access · StudentOS")}&body=${encodeURIComponent(`Hi StudentOS team,\n\nI'd like early access to Premium.\n\nName: ${state.profile.name}\nEmail: ${state.profile.email}\n`)}`;
 
   return (
     <div className="px-6 py-7 lg:px-8">

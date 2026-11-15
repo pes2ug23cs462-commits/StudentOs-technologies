@@ -12,7 +12,9 @@ import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useReveal } from "./motion";
 
-export const CONTACT_EMAIL = "studentoshr@gmail.com";
+export const CONTACT_EMAIL = "support@student-os.in";
+/** for hiring: careers questions and replies to applicants */
+export const HR_EMAIL = "hr@student-os.in";
 
 const NAV = [
   { href: "/#features", label: "Features" },
