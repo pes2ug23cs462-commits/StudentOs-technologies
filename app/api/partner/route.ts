@@ -12,7 +12,7 @@
 
 import { NextResponse } from "next/server";
 import { verifyIdUser } from "@/lib/server/auth";
-import { adminConfigured, adminProblem, adminCreate, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
+import { adminConfigured, adminProblem, adminCreate, adminDelete, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
 import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 
@@ -41,6 +41,19 @@ type Drive = {
   deadline: string; open: boolean; createdAt: number; createdBy: string;
 };
 type PDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, string>; minInterview: number };
+
+/** Take a partner drive back from one college. Returns true when the college keeps a closed copy because students already applied. */
+async function withdraw(cid: string, pid: string, status?: string): Promise<boolean> {
+  await adminDelete(`colleges/${cid}/partner/${pid}`);
+  if (status !== "approved") return false;
+  const apps = await adminList(`colleges/${cid}/drives/${pid}/apps`, 1).catch(() => []);
+  if (!apps.length) {
+    await adminDelete(`colleges/${cid}/drives/${pid}`);
+    return false;
+  }
+  await adminMerge(`colleges/${cid}/drives/${pid}`, { open: false });
+  return true;
+}
 
 function cleanDrive(d: Record<string, unknown>, pid: string, by: string): Drive {
   const e = (d.elig ?? {}) as Record<string, unknown>;
@@ -172,6 +185,8 @@ export async function POST(req: Request) {
         const statuses: Record<string, string> = {};
         for (const c of colleges) statuses[c] = old?.statuses?.[c] ?? "pending";
         const p: PDrive = { ...drive, pid, companyId, colleges, statuses, minInterview: num(b.minInterview, 0, 100) };
+        // colleges taken off an edited drive lose the offer (an approved one with applications is closed, not deleted)
+        await Promise.all((old?.colleges ?? []).filter((c) => !colleges.includes(c)).map((cid) => withdraw(cid, pid, old?.statuses?.[cid])));
         await adminSet(`partnerDrives/${pid}`, p);
         // offer it to each college that hasn't decided yet; keep approved copies up to date
         await Promise.all(
@@ -181,6 +196,14 @@ export async function POST(req: Request) {
           }),
         );
         return NextResponse.json({ drive: p });
+      }
+      if (action === "team-drive-delete") {
+        const pid = id(b.pid);
+        const p = pid ? ((await adminGet(`partnerDrives/${pid}`)) as PDrive | null) : null;
+        if (!p) return bad("no-drive", 404);
+        const kept = (await Promise.all((p.colleges ?? []).map((cid) => withdraw(cid, pid, p.statuses?.[cid])))).filter(Boolean).length;
+        await adminDelete(`partnerDrives/${pid}`);
+        return NextResponse.json({ ok: true, kept });
       }
       return bad("action");
     }

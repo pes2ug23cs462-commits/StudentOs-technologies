@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DriveForm } from "@/components/college/placements";
 import { CareersEditor } from "@/components/company/careers-editor";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { CopyIcon, LogOutIcon, PlusIcon } from "@/components/ui/icons";
+import { CopyIcon, LogOutIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
 import { partnerApi, partnerErrorText, type PartnerCollege, type PartnerCompany, type PartnerDrive, type Whoami } from "@/lib/partner";
@@ -28,7 +28,7 @@ export function PartnerConsole() {
   const [busy, setBusy] = useState("");
   const qs = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const [tab, setTab] = useState<"drives" | "careers">(qs?.get("tab") === "careers" ? "careers" : "drives");
-  const [draft, setDraft] = useState<{ companyId: string; colleges: Set<string>; minInterview: number; drive: Drive | null } | null>(null);
+  const [draft, setDraft] = useState<{ companyId: string; colleges: Set<string>; minInterview: number; drive: Drive | null; editing?: boolean } | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.add("app-ui");
@@ -94,8 +94,26 @@ export function PartnerConsole() {
     setBusy("drive");
     try {
       await partnerApi("team-drive", { drive, companyId: draft.companyId, colleges: [...draft.colleges], minInterview: draft.minInterview });
-      actions.toast(`Sent to ${draft.colleges.size} college${draft.colleges.size === 1 ? "" : "s"} for approval.`);
+      actions.toast(draft.editing ? "Drive updated. Colleges see the change." : `Sent to ${draft.colleges.size} college${draft.colleges.size === 1 ? "" : "s"} for approval.`);
       setDraft(null);
+      await load();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
+  const edit = (d: PartnerDrive) => {
+    const { pid, companyId, colleges, statuses: _s, minInterview, ...rest } = d;
+    void _s;
+    setDraft({ companyId, colleges: new Set(colleges ?? []), minInterview: minInterview ?? 0, drive: { ...blank(rest.company), ...rest, id: pid, rounds: rest.rounds ?? [], elig: { ...blank("").elig, ...(rest.elig ?? {}) } } as Drive, editing: true });
+  };
+  const remove = async (d: PartnerDrive) => {
+    if (!window.confirm(`Delete the ${d.company} · ${d.role} drive? It is taken back from every college. Colleges where students already applied keep a closed copy of their applications.`)) return;
+    setBusy(`del-${d.pid}`);
+    try {
+      const r = await partnerApi<{ kept: number }>("team-drive-delete", { pid: d.pid });
+      actions.toast(r.kept ? `Drive deleted. ${r.kept} college${r.kept === 1 ? "" : "s"} keep a closed copy with applications.` : "Drive deleted.");
       await load();
     } catch (e) {
       actions.toast(partnerErrorText(e));
@@ -135,7 +153,7 @@ export function PartnerConsole() {
             <div className="grid gap-4 md:grid-cols-[1fr_200px]">
               <div>
                 <Label htmlFor="pc">Company</Label>
-                <select id="pc" value={draft.companyId} onChange={(e) => setDraft({ ...draft, companyId: e.target.value, drive: blank(data.companies.find((c) => c.id === e.target.value)?.name ?? "") })} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white">
+                <select id="pc" value={draft.companyId} disabled={draft.editing} onChange={(e) => setDraft({ ...draft, companyId: e.target.value, drive: blank(data.companies.find((c) => c.id === e.target.value)?.name ?? "") })} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white disabled:opacity-60">
                   <option value="">Pick a company</option>
                   {data.companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -145,7 +163,7 @@ export function PartnerConsole() {
                 <Input id="mi" type="number" min={0} max={100} value={draft.minInterview || ""} onChange={(e) => setDraft({ ...draft, minInterview: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })} placeholder="0 = anyone" />
               </div>
             </div>
-            <p className="mt-4 mb-2 text-[12.5px] font-medium text-white/75">Send to partner colleges ({draft.colleges.size} picked)</p>
+            <p className="mt-4 mb-2 text-[12.5px] font-medium text-white/75">Send to partner colleges ({draft.colleges.size} picked){draft.editing && <span className="font-normal text-white/45"> · unticking a college takes the drive back from it</span>}</p>
             {degree.length ? (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {degree.map((c) => (
@@ -161,7 +179,7 @@ export function PartnerConsole() {
           </section>
           {draft.drive ? (
             <div className={cn(busy === "drive" && "pointer-events-none opacity-60")}>
-              <DriveForm isNew key={draft.companyId} initial={draft.drive} onCancel={() => setDraft(null)} onSave={(d) => void send(d)} />
+              <DriveForm isNew={!draft.editing} key={draft.companyId} initial={draft.drive} onCancel={() => setDraft(null)} onSave={(d) => void send(d)} />
             </div>
           ) : (
             <p className="text-[13px] text-white/45">Pick the company to fill in the drive. <button type="button" onClick={() => setDraft(null)} className="text-accent hover:underline">Cancel</button></p>
@@ -178,7 +196,11 @@ export function PartnerConsole() {
               <div className="mt-4 space-y-3">
                 {data.drives.map((d) => (
                   <div key={d.pid} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-                    <p className="text-[14.5px] font-semibold">{d.company} · {d.role}</p>
+                    <div className="flex items-start gap-2">
+                      <p className="min-w-0 flex-1 text-[14.5px] font-semibold">{d.company} · {d.role}</p>
+                      <button type="button" onClick={() => edit(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[12.5px] font-medium text-white/75 transition hover:border-white/25 hover:text-white">Edit</button>
+                      <button type="button" disabled={busy === `del-${d.pid}`} onClick={() => void remove(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-400/30 px-3 text-[12.5px] font-medium text-rose-300 transition hover:bg-rose-400/10 disabled:opacity-50"><XIcon size={13} /> Delete</button>
+                    </div>
                     <p className="mt-0.5 text-[12px] text-white/50">{[d.kind, d.ctc, d.deadline ? `apply by ${d.deadline}` : "", d.minInterview ? `interview ${d.minInterview}+` : ""].filter(Boolean).join(" · ")}</p>
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {Object.entries(d.statuses ?? {}).map(([cid, s]) => (
