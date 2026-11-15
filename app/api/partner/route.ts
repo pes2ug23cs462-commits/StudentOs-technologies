@@ -13,12 +13,26 @@
 import { NextResponse } from "next/server";
 import { verifyIdUser } from "@/lib/server/auth";
 import { adminConfigured, adminProblem, adminCreate, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
+import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
 const id = (v: unknown) => (/^[\w-]{1,80}$/.test(String(v ?? "")) ? String(v) : "");
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
+/** Scores as the company sees them: a score counts as verified only if the server signed it for this student. */
+function verifiedScores(uid: string, raw: unknown) {
+  const sc = (raw ?? {}) as { interview?: unknown; coding?: unknown; proof?: { interview?: { score?: number; at?: number; sig?: string }; coding?: { score?: number; at?: number; sig?: string } } };
+  const one = (kind: "interview" | "coding") => {
+    const v = Number(sc[kind]);
+    if (!Number.isFinite(v)) return {};
+    const p = sc.proof?.[kind];
+    const ok = !!p && Number(p.score) === v && checkScore(uid, kind, p);
+    return { [kind]: Math.round(v), [`${kind}Verified`]: ok };
+  };
+  const out = { ...one("interview"), ...one("coding") };
+  return Object.keys(out).length ? out : null;
+}
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
 
 type Drive = {
@@ -236,7 +250,7 @@ export async function POST(req: Request) {
               batch: str(a.batch, 4),
               resume: a.resume ?? null,
               cv: a.cv ?? null,
-              scores: a.scores ?? null,
+              scores: verifiedScores(str(a.uid, 128), a.scores),
               status: str(a.status, 20),
               round: Number(a.round) || 0,
               links: a.links ?? [],

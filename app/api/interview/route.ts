@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import { AiError, chat } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 import { isPremium } from "@/lib/server/premium";
+import { signScore } from "@/lib/server/score-sign";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -170,8 +171,10 @@ Reply with JSON only:
           const x = r.rubric!.find((y) => y.key === k);
           return { key: k, score: pct(x?.score), note: s(x?.note, 200) };
         });
+        const overall = pct(r.overall);
         return NextResponse.json({
-          overall: pct(r.overall),
+          overall,
+          proof: signScore(uid, "coding", overall),
           verdict: s(r.verdict, 30),
           summary: s(r.summary, 400),
           rubric,
@@ -208,7 +211,7 @@ Write "verdict", "summary", "strengths", "tips", "good" and "improve" in simple 
           tips: (r.tips ?? []).map((x) => s(x, 200)).filter(Boolean).slice(0, 3),
           items: r.items.slice(0, items.length).map((x) => ({ score: Math.max(0, Math.min(10, Math.round(Number(x.score) || 0))), good: s(x.good, 300), improve: s(x.improve, 300), better: s(x.better, 700) })),
         };
-        return NextResponse.json(out);
+        return NextResponse.json({ ...out, proof: signScore(uid, "interview", out.overall) });
       }
       return NextResponse.json({ error: "failed" }, { status: 502 });
     }

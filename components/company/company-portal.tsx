@@ -24,6 +24,19 @@ const stage = (a: Applicant, rounds: string[]) => (a.status === "applied" ? "New
 const key = (a: { cid: string; uid: string }) => `${a.cid}/${a.uid}`;
 const cvOf = (a: Applicant) => ({ name: a.name, cv: a.cv ?? fallbackResume(a) });
 const scoreTone = (v?: number) => (v == null ? "text-white/35" : v >= 75 ? "text-emerald-300" : v >= 60 ? "text-cyan-200" : "text-amber-300");
+/** only scores the server signed count for filters and sorting */
+const ivOk = (a: Applicant) => (a.scores?.interviewVerified ? (a.scores.interview ?? -1) : -1);
+
+/** A score with a ✓ when StudentOS verified it; an unverified one is shown greyed and labelled. */
+function Score({ v, ok, big }: { v?: number; ok?: boolean; big?: boolean }) {
+  if (v == null) return <span className="text-white/35">—</span>;
+  return (
+    <span className="inline-flex items-baseline gap-1.5" title={ok ? "Verified by StudentOS" : "Not verified: this score couldn’t be checked"}>
+      <span className={cn("font-semibold tabular-nums", big && "text-[22px] font-bold", ok ? scoreTone(v) : "text-white/40 line-through decoration-white/25")}>{v}</span>
+      {ok ? <span className="rounded bg-emerald-400/12 px-1 text-[10px] font-semibold text-emerald-300">✓ Verified</span> : <span className="text-[10.5px] text-white/40">not verified</span>}
+    </span>
+  );
+}
 
 function Shell({ children, side }: { children: React.ReactNode; side?: React.ReactNode }) {
   return (
@@ -197,9 +210,9 @@ function Applicants({ pid }: { pid: string }) {
   const colleges = useMemo(() => [...new Set((data?.applicants ?? []).map((a) => a.college))].sort(), [data]);
   const list = (data?.applicants ?? [])
     .filter((a) => college === "all" || a.college === college)
-    .filter((a) => !minIv || (a.scores?.interview ?? 0) >= minIv)
+    .filter((a) => !minIv || ivOk(a) >= minIv)
     .filter((a) => (tab === "all" ? true : tab === "new" ? a.status === "applied" : tab === "selected" ? a.status === "selected" : tab === "rejected" ? a.status === "rejected" : a.status === "in-process" && a.round === Number(tab.slice(1))))
-    .sort((a, b) => (b.scores?.interview ?? -1) - (a.scores?.interview ?? -1));
+    .sort((a, b) => ivOk(b) - ivOk(a));
   const count = (f: (a: Applicant) => boolean) => (data?.applicants ?? []).filter(f).length;
 
   const run = async (op: Op, extra: Record<string, unknown> = {}) => {
@@ -220,7 +233,7 @@ function Applicants({ pid }: { pid: string }) {
   };
   const csv = () => {
     if (!data) return;
-    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Coding round", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.coding ?? "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
+    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
     const blob = new Blob(["﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     Object.assign(document.createElement("a"), { href: u, download: `${data.drive.company} ${data.drive.role} applicants.csv` }).click();
@@ -321,8 +334,8 @@ function Applicants({ pid }: { pid: string }) {
                     <td className="py-2.5"><button type="button" onClick={() => setPerson(a)} className="font-medium text-white hover:text-accent">{a.name}</button></td>
                     <td className="py-2.5 text-white/65">{a.college}</td>
                     <td className="py-2.5 text-white/65">{a.branch} · {a.cgpa}{a.backlogs ? ` · ${a.backlogs} backlogs` : ""}</td>
-                    <td className={cn("py-2.5 font-semibold tabular-nums", scoreTone(a.scores?.interview))}>{a.scores?.interview ?? "—"}</td>
-                    <td className={cn("py-2.5 font-semibold tabular-nums", scoreTone(a.scores?.coding))}>{a.scores?.coding ?? "—"}</td>
+                    <td className="py-2.5"><Score v={a.scores?.interview} ok={a.scores?.interviewVerified} /></td>
+                    <td className="py-2.5"><Score v={a.scores?.coding} ok={a.scores?.codingVerified} /></td>
                     <td className="py-2.5"><span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : "bg-white/[0.06] text-white/75")}>{stage(a, rounds)}{a.decision ? ` · ${a.decision}` : ""}</span></td>
                     <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
                   </tr>
@@ -333,7 +346,7 @@ function Applicants({ pid }: { pid: string }) {
         ) : (
           <p className="mt-8 mb-6 text-center text-[13px] text-white/45">{data.applicants.length ? "No one matches these filters." : "No applicants yet. Students apply once their college approves the drive."}</p>
         )}
-        <p className="mt-3 text-[11.5px] text-white/35">Scores are the student’s best StudentOS mock interview and coding round when they applied.</p>
+        <p className="mt-3 text-[11.5px] text-white/35">Scores are the student’s best StudentOS mock interview and coding round when they applied. “✓ Verified” means StudentOS gave that score; filters and sorting use verified scores only.</p>
       </section>
 
       {modal && (
@@ -388,8 +401,8 @@ function Applicants({ pid }: { pid: string }) {
             <p className="mt-1 text-[13px] text-white/55">{person.branch} · CGPA {person.cgpa} · {person.batch} batch · {person.college}</p>
             <button type="button" onClick={() => resumes.print([cvOf(person)])} className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-black"><FileIcon size={15} /> Download resume (PDF)</button>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-white/[0.04] p-3"><p className={cn("text-[22px] font-bold", scoreTone(person.scores?.interview))}>{person.scores?.interview ?? "—"}</p><p className="text-[11.5px] text-white/45">Mock interview</p></div>
-              <div className="rounded-xl bg-white/[0.04] p-3"><p className={cn("text-[22px] font-bold", scoreTone(person.scores?.coding))}>{person.scores?.coding ?? "—"}</p><p className="text-[11.5px] text-white/45">Coding round</p></div>
+              <div className="rounded-xl bg-white/[0.04] p-3"><Score big v={person.scores?.interview} ok={person.scores?.interviewVerified} /><p className="mt-1 text-[11.5px] text-white/45">Mock interview</p></div>
+              <div className="rounded-xl bg-white/[0.04] p-3"><Score big v={person.scores?.coding} ok={person.scores?.codingVerified} /><p className="mt-1 text-[11.5px] text-white/45">Coding round</p></div>
             </div>
             <p className="mt-4 text-[12px] text-white/45">Stage</p>
             <p className="text-[14px]">{stage(person, rounds)}{person.decision ? ` · offer ${person.decision}` : ""}</p>

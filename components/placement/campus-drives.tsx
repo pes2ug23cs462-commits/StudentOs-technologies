@@ -140,7 +140,8 @@ export function CampusDrives() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<"open" | "mine">("open");
   const [busy, setBusy] = useState("");
-  const bestIv = Math.max(0, ...(state.interviews ?? []).filter((h) => h.kind !== "coding").map((h) => h.feedback.overall));
+  // partner drives count only scores StudentOS signed (interviews taken after scores became verified)
+  const bestIv = Math.max(0, ...(state.interviews ?? []).filter((h) => h.kind !== "coding" && h.feedback.proof).map((h) => h.feedback.overall));
   const [logo, setLogo] = useState<string | undefined>();
   useEffect(() => {
     void collegeInfo(link.cid).then((c) => setLogo(c?.logo || undefined));
@@ -267,7 +268,7 @@ export function CampusDrives() {
         openDrives.length ? (
           <div className="grid gap-4 md:grid-cols-2">
             {openDrives.map((d) => {
-              const why = ineligible(d, profile) ?? (d.partner?.minInterview && bestIv < d.partner.minInterview ? `Needs a StudentOS mock interview score of ${d.partner.minInterview}+ (yours: ${bestIv || "none yet"})` : null);
+              const why = ineligible(d, profile) ?? (d.partner?.minInterview && bestIv < d.partner.minInterview ? `Needs a verified StudentOS mock interview score of ${d.partner.minInterview}+ (yours: ${bestIv || "none yet"}). Take a mock interview to get one.` : null);
               const left = daysLeft(d.deadline);
               return (
                 <div key={d.id} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">

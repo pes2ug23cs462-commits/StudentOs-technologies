@@ -15,7 +15,9 @@ export type InterviewStyle = "friendly" | "neutral" | "tough";
 export const STYLE_LABEL: Record<InterviewStyle, string> = { friendly: "Friendly", neutral: "Neutral", tough: "Tough" };
 export const LANG_LABEL: Record<InterviewLang, string> = { en: "English", hi: "Hindi" };
 export type ItemFeedback = { score: number; good: string; improve: string; better: string };
-export type Feedback = { overall: number; verdict: string; summary: string; strengths: string[]; tips: string[]; items: ItemFeedback[] };
+/** the server's signature on a score, so a placement application can show it as verified */
+export type ScoreProof = { at: number; sig: string };
+export type Feedback = { overall: number; verdict: string; summary: string; strengths: string[]; tips: string[]; items: ItemFeedback[]; proof?: ScoreProof | null };
 
 export interface InterviewRecord {
   id: string;
@@ -127,5 +129,5 @@ export async function codeFollowups(o: { problem: ProblemBrief; code: string; la
 }
 
 export async function codeEvaluate(o: { problem: ProblemBrief; code: string; lang: string; passed: number; total: number; seconds: number; level: InterviewLevel; style?: InterviewStyle; ilang?: InterviewLang; history: ChatLine[]; events: RoundEvent[]; candidates: { id: string; title: string; level: string; topics: string[] }[] }) {
-  return postAi<{ overall: number; verdict: string; summary: string; rubric: { key: RubricItem["key"]; score: number; note: string }[]; moments: Moment[]; practice: PracticeItem[] }>("/api/interview", { action: "code-evaluate", ...o, history: o.history.slice(-30), events: o.events.slice(0, 30) });
+  return postAi<{ overall: number; proof?: ScoreProof | null; verdict: string; summary: string; rubric: { key: RubricItem["key"]; score: number; note: string }[]; moments: Moment[]; practice: PracticeItem[] }>("/api/interview", { action: "code-evaluate", ...o, history: o.history.slice(-30), events: o.events.slice(0, 30) });
 }

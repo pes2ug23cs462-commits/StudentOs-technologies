@@ -81,7 +81,7 @@ export interface Application {
   decidedAt?: number;
   updatedAt: number;
   /** best mock-interview and coding-round scores on StudentOS when they applied (shown to companies) */
-  scores?: { interview?: number; coding?: number };
+  scores?: { interview?: number; coding?: number; /** server signatures, checked on the company portal */ proof?: { interview?: { score: number; at: number; sig: string }; coding?: { score: number; at: number; sig: string } } };
 }
 /** The student's own placement details, kept in their data. */
 export interface PlacementProfile {
@@ -165,11 +165,20 @@ export function newApplication(state: AppState, uid: string, p: PlacementProfile
 
 function interviewScores(state: AppState): { scores?: Application["scores"] } {
   const ivs = state.interviews ?? [];
-  const best = (xs: number[]) => (xs.length ? Math.max(...xs) : undefined);
-  const interview = best(ivs.filter((h) => h.kind !== "coding").map((h) => h.feedback.overall));
-  const coding = best(ivs.filter((h) => h.kind === "coding").map((h) => h.feedback.overall));
-  if (interview == null && coding == null) return {};
-  return { scores: { ...(interview != null ? { interview } : {}), ...(coding != null ? { coding } : {}) } };
+  // the best score of each kind; a server-signed one wins a tie, so it can show as verified
+  const best = (xs: typeof ivs) => xs.reduce<(typeof ivs)[number] | null>((b, h) => (!b || h.feedback.overall > b.feedback.overall || (h.feedback.overall === b.feedback.overall && h.feedback.proof && !b.feedback.proof) ? h : b), null);
+  const iv = best(ivs.filter((h) => h.kind !== "coding"));
+  const cd = best(ivs.filter((h) => h.kind === "coding"));
+  if (!iv && !cd) return {};
+  const proof = (h: (typeof ivs)[number] | null) => (h?.feedback.proof ? { score: h.feedback.overall, at: h.feedback.proof.at, sig: h.feedback.proof.sig } : undefined);
+  const p = { ...(proof(iv) ? { interview: proof(iv) } : {}), ...(proof(cd) ? { coding: proof(cd) } : {}) };
+  return {
+    scores: {
+      ...(iv ? { interview: iv.feedback.overall } : {}),
+      ...(cd ? { coding: cd.feedback.overall } : {}),
+      ...(Object.keys(p).length ? { proof: p } : {}),
+    },
+  };
 }
 
 /** Older applications that got a link while still "applied" count as in the first round. */

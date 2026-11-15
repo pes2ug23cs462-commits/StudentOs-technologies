@@ -257,7 +257,7 @@ export default function InterviewPage() {
         level,
         questions: [{ q: problem.title, focus: problem.topics.join(", ") }],
         answers: [r.code],
-        feedback: { overall: ev.overall, verdict: ev.verdict, summary: ev.summary, strengths: [], tips: [], items: [] },
+        feedback: { overall: ev.overall, verdict: ev.verdict, summary: ev.summary, strengths: [], tips: [], items: [], ...(ev.proof ? { proof: ev.proof } : {}) },
         lang: ilang,
         style,
         coding: {

@@ -61,7 +61,7 @@ export type Applicant = {
   batch: string;
   resume: { headline: string; skills: string; links: string; projects: string[] } | null;
   cv: ResumeSnapshot | null;
-  scores: { interview?: number; coding?: number } | null;
+  scores: { interview?: number; coding?: number; interviewVerified?: boolean; codingVerified?: boolean } | null;
   status: "applied" | "in-process" | "selected" | "rejected";
   round: number;
   links: AppLink[];
