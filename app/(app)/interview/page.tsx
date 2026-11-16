@@ -613,7 +613,7 @@ export default function InterviewPage() {
 
           {/* side */}
           <div className="space-y-4">
-            {strict && <SelfView onBreach={proctor.report} />}
+            {strict && <SelfView onBreach={proctor.report} voice={{ paused: speaking }} />}
             <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
               <p className="text-[13.5px] font-semibold text-white">This answer</p>
               <div className="mt-3 grid grid-cols-2 gap-2">

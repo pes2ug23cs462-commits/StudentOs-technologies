@@ -79,6 +79,10 @@ export async function watchPresence(
   let state: "on" | "away" | "out" = "on";
   let since = now();
   let warned = false;
+  // mouth movement over the last ~1.2 s (for the voice check): jaw-open score and the gap
+  // between the inner lips relative to face height; talking makes both go up and down
+  const mouthHist: { t: number; jaw: number; gap: number }[] = [];
+  let lastFaceAt = 0;
   // a second face on camera (someone helping): checked on its own, it can overlap a look-away
   let twoSince: number | null = null;
   let twoWarned = false;
@@ -112,6 +116,16 @@ export async function watchPresence(
         twoSince = null;
         twoWarned = false;
       }
+      if (face) {
+        const s = r.faceBlendshapes?.[0]?.categories;
+        const jaw = s?.find((c) => c.categoryName === "jawOpen")?.score ?? 0;
+        const up = face[13], low = face[14], top = face[10], chin = face[152];
+        const gap = up && low && top && chin ? Math.abs(low.y - up.y) / Math.max(1e-6, chin.y - top.y) : 0;
+        const t = performance.now();
+        lastFaceAt = t;
+        mouthHist.push({ t, jaw, gap });
+        while (mouthHist.length && t - mouthHist[0].t > 1200) mouthHist.shift();
+      }
       samples++;
       const next = !face ? "out" : facing(face, r.faceBlendshapes?.[0]?.categories) ? "on" : "away";
       if (next === "on") onScreen++;
@@ -123,8 +137,14 @@ export async function watchPresence(
     } catch {
       /* a skipped frame is fine */
     }
-  }, 300);
+  }, 150);
   return {
+    /** How much the lips moved in the last ~1.2 s (0 = still, about 0.1 or more = talking); -1 with no face. */
+    mouth(): number {
+      if (performance.now() - lastFaceAt > 800 || mouthHist.length < 3) return -1;
+      const range = (k: "jaw" | "gap") => Math.max(...mouthHist.map((m) => m[k])) - Math.min(...mouthHist.map((m) => m[k]));
+      return Math.max(range("jaw"), range("gap") * 4);
+    },
     stop(): PresenceSummary | null {
       clearInterval(timer);
       flush("on");

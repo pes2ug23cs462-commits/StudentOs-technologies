@@ -14,7 +14,7 @@ export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 3;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk";
+export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
@@ -22,6 +22,7 @@ export const BREACH_TEXT: Record<Breach, string> = {
   out: "You moved out of the camera.",
   people: "Someone else appeared on the camera.",
   talk: "Talking was heard. Tests are taken in silence.",
+  voice: "A voice was heard while your lips weren’t moving. Only you should answer.",
 };
 /** Covers the app around a strict round, so only the round is on screen. */
 export const STRICT_SHELL = "fixed inset-0 z-[60] overflow-auto bg-ink";
@@ -236,17 +237,101 @@ export function StrictDock({ left, onBreach, listen = true }: { left: number; on
   );
 }
 
-/** Camera self-view that reports looking away, leaving the frame, or a second person. */
-export function SelfView({ onBreach, className }: { onBreach: (b: Breach) => void; className?: string }) {
+/** Thresholds for the voice check (see useVoiceMatch). */
+const STILL_LIPS = 0.045; // mouth() below this = lips not moving
+const VOICE_WINDOW = 40; // last 4 s (10 checks a second)
+const VOICE_STILL = 22; // ~2.2 s of voice with still lips in that window
+const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops speaking
+
+/**
+ * Voice check for a spoken interview: the mic hears speech while the camera sees the
+ * student's lips still (someone else answering or prompting). Off while the AI
+ * interviewer speaks, and for a moment after, so its voice from the speakers doesn't count.
+ * Only numbers are used; nothing is recorded or sent.
+ */
+function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMismatch: () => void) {
+  const [mic, setMic] = useState<"off" | "on" | "blocked">("off");
+  const cb = useRef(onMismatch);
+  cb.current = onMismatch;
+  const mouthRef = useRef(mouth);
+  mouthRef.current = mouth;
+  const pausedRef = useRef(paused);
+  const pausedAt = useRef(0);
+  if (pausedRef.current && !paused) pausedAt.current = Date.now();
+  pausedRef.current = paused;
+  useEffect(() => {
+    if (!on) return;
+    let dead = false, stream: MediaStream | null = null, ctx: AudioContext | null = null, timer = 0;
+    if (!navigator.mediaDevices?.getUserMedia || typeof AudioContext === "undefined") {
+      setMic("blocked");
+      return;
+    }
+    navigator.mediaDevices
+      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false } })
+      .then((st) => {
+        stream = st;
+        if (dead) return st.getTracks().forEach((t) => t.stop());
+        ctx = new AudioContext();
+        const an = ctx.createAnalyser();
+        an.fftSize = 1024;
+        ctx.createMediaStreamSource(st).connect(an);
+        setMic("on");
+        const bins = new Uint8Array(an.frequencyBinCount);
+        const hz = ctx.sampleRate / an.fftSize;
+        const lo = Math.floor(300 / hz), hi = Math.ceil(3400 / hz);
+        let floor = 0, n = 0, armed = true, quiet = 0;
+        const recent: number[] = []; // 1 = voice with still lips, 0 = anything else
+        timer = window.setInterval(() => {
+          an.getByteFrequencyData(bins);
+          let sum = 0;
+          for (let i = lo; i <= hi; i++) sum += bins[i];
+          const level = sum / (hi - lo + 1);
+          n++;
+          floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
+          const voice = n > 20 && level > Math.max(floor * 1.8, floor + 18);
+          const muted = pausedRef.current || Date.now() - pausedAt.current < ECHO_MS;
+          if (muted) {
+            recent.length = 0;
+            return;
+          }
+          const m = mouthRef.current();
+          // no face: "out of the camera" already covers it
+          recent.push(voice && m >= 0 && m < STILL_LIPS ? 1 : 0);
+          if (recent.length > VOICE_WINDOW) recent.shift();
+          quiet = voice ? 0 : quiet + 1;
+          if (!armed && quiet >= 30) armed = true;
+          if (armed && recent.reduce((a, b) => a + b, 0) >= VOICE_STILL) {
+            armed = false;
+            recent.length = 0;
+            cb.current();
+          }
+        }, 100);
+      })
+      .catch(() => setMic("blocked"));
+    return () => {
+      dead = true;
+      window.clearInterval(timer);
+      void ctx?.close().catch(() => {});
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, [on]);
+  return mic;
+}
+
+/** Camera self-view that reports looking away, leaving the frame, or a second person.
+    With `voice`, it also checks that speech heard matches the student's lips moving. */
+export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach) => void; className?: string; voice?: { paused: boolean } }) {
   const video = useRef<HTMLVideoElement>(null);
   const [cam, setCam] = useState<"starting" | "on" | "blocked">("starting");
   const [watching, setWatching] = useState(false);
   const cb = useRef(onBreach);
   cb.current = onBreach;
+  const watcher = useRef<{ mouth: () => number } | null>(null);
+  const mic = useVoiceMatch(!!voice && watching, () => watcher.current?.mouth() ?? -1, voice?.paused ?? false, () => cb.current("voice"));
   useEffect(() => {
     let dead = false;
     let stream: MediaStream | null = null;
-    let w: { stop: () => unknown } | null = null;
+    let w: Awaited<ReturnType<typeof watchPresence>> = null;
     if (!navigator.mediaDevices?.getUserMedia) {
       setCam("blocked");
       return;
@@ -262,6 +347,7 @@ export function SelfView({ onBreach, className }: { onBreach: (b: Breach) => voi
         const clock = () => performance.now() / 1000;
         w = await watchPresence(video.current, clock, () => {}, { secs: LOOK_SECS, on: (k) => cb.current(k) });
         if (dead) return void w?.stop();
+        watcher.current = w;
         setWatching(!!w);
       })
       .catch(() => setCam("blocked"));
@@ -277,6 +363,11 @@ export function SelfView({ onBreach, className }: { onBreach: (b: Breach) => voi
       <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
         {cam === "blocked" ? "Camera blocked: allow it to keep strict mode fair" : cam === "starting" ? "Starting camera…" : watching ? "Watching: keep your eyes on the screen" : "Camera on"}
       </span>
+      {voice && watching && (
+        <span className="absolute top-2 left-2 rounded-md bg-black/55 px-2 py-1 text-[10.5px] text-white/80 backdrop-blur">
+          {mic === "on" ? "Voice check on: only you answer" : mic === "blocked" ? "Mic blocked: voice check off" : "Starting voice check…"}
+        </span>
+      )}
     </div>
   );
 }
