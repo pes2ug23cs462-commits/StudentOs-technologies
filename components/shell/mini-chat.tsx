@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { SideChat } from "./side-chat";
 import { ChatIcon, MaximizeIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
 import { useStore } from "@/lib/store";
@@ -23,7 +24,7 @@ const EDGE = 64; // px from the right edge of the window that wakes the widget
    out again shortly after the cursor leaves. A thin handle on the edge shows where
    it is. On touch screens there is no cursor, so a small round button sits tucked
    into the bottom-right corner instead. */
-function EdgeReveal({ children, touchHref, attention }: { children: ReactNode; touchHref: string; attention?: boolean }) {
+function EdgeReveal({ children, touchHref, onTouch, attention }: { children: ReactNode; touchHref: string; onTouch?: () => void; attention?: boolean }) {
   const [mouse, setMouse] = useState(false);
   const [shown, setShown] = useState(false);
   const over = useRef(false);
@@ -61,6 +62,17 @@ function EdgeReveal({ children, touchHref, attention }: { children: ReactNode; t
   }, [mouse]);
 
   if (!mouse) {
+    if (onTouch)
+      return (
+        <button
+          type="button"
+          onClick={onTouch}
+          aria-label="Ask StudentOS"
+          className="fixed right-3 bottom-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-violet-400/30 bg-raised/90 shadow-[0_8px_24px_rgba(0,0,0,0.45)] backdrop-blur"
+        >
+          <LogoMark size={24} />
+        </button>
+      );
     return (
       <Link
         href={touchHref}
@@ -140,21 +152,40 @@ export function MiniChat() {
     );
   }
 
+  return <AskWidget />;
+}
+
+/* Done with setup: the widget opens the assistant as a side panel on this page. */
+function AskWidget() {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  // a strict test or interview goes full screen: never offer the assistant there
+  useEffect(() => {
+    const onFs = () => document.fullscreenElement && setOpen(false);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
   return (
-    <EdgeReveal touchHref="/assistant">
-    <Link
-      href="/assistant"
-      className="flex items-center gap-3 rounded-xl border border-violet-400/25 bg-raised/90 py-2 pr-2 pl-3 shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur transition hover:border-violet-400/45"
+    <>
+    {!open && (
+    <EdgeReveal touchHref="/assistant" onTouch={() => setOpen(true)}>
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="flex items-center gap-3 rounded-xl border border-violet-400/25 bg-raised/90 py-2 pr-2 pl-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur transition hover:border-violet-400/45"
     >
       <LogoMark size={22} />
       <span>
         <span className="block text-[12.5px] font-semibold text-white">Ask StudentOS</span>
-        <span className="block text-[10.5px] text-white/50">Conversation saved</span>
+        <span className="block text-[10.5px] text-white/50">Opens beside this page</span>
       </span>
       <span className="ml-2 rounded-md border border-white/10 p-1.5 text-white/70">
-        <MaximizeIcon size={12} />
+        <ChatIcon size={12} />
       </span>
-    </Link>
+    </button>
     </EdgeReveal>
+    )}
+    <SideChat open={open} onClose={close} />
+    </>
   );
 }

@@ -56,7 +56,7 @@ export function StudyCard({ s }: { s: Study }) {
   };
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-accent/25 bg-[#110f17]">
+    <div className="@container mt-3 overflow-hidden rounded-2xl border border-accent/25 bg-[#110f17]">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 border-b border-white/[0.06] px-4 py-3 text-left">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent"><OpenBookIcon size={16} /></span>
         <span className="min-w-0 flex-1">
@@ -109,7 +109,7 @@ export function StudyCard({ s }: { s: Study }) {
           {/* courses */}
           <div>
             <p className="mb-2 flex items-center gap-2 text-[12px] font-semibold tracking-wide text-white/50 uppercase"><BookIcon size={13} /> Courses</p>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 @md:grid-cols-2">
               {own.map((c) => (
                 <Link key={c.id} href={`/learn/${c.id}`} className="group rounded-xl border border-white/[0.07] p-3 transition hover:border-accent/40">
                   <span className="text-[10.5px] font-semibold text-cyan-300">ON STUDENTOS · {c.modules.length} module{c.modules.length === 1 ? "" : "s"} · certificate</span>
