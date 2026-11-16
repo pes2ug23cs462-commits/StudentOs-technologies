@@ -20,6 +20,8 @@ import { nextSession } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import { NOW, TODAY, cn, greeting, uid } from "@/lib/utils";
 import { ActionCard } from "@/components/chat/action-card";
+import { StudyCard } from "@/components/chat/study-card";
+import { parseStudy } from "@/lib/assistant-study";
 import { applyAction, markApplied, parseActions } from "@/lib/assistant-actions";
 import { starterResume } from "@/lib/resume-starter";
 
@@ -324,12 +326,14 @@ export default function AssistantPage() {
                 ) : (
                   <AssistantMessage key={m.id} time={m.time}>
                     {(() => {
-                      const parsed = parseActions(m.text);
+                      const st = parseStudy(m.text);
+                      const parsed = parseActions(st.text);
                       return (
                         <>
                           <div className={m.id === fresh ? "answer-reveal" : undefined}>
                             <Markdown text={parsed.text} />
                           </div>
+                          {st.study.map((s) => <StudyCard key={s.topic} s={s} />)}
                           {parsed.actions.map((p) => (
                             <ActionCard key={p.index} action={p.action} applied={p.applied} onApply={() => apply(m.id, p.index, p.action)} />
                           ))}

@@ -161,6 +161,14 @@ function Tests() {
 
   const [phase, setPhase] = useState<Phase>("setup");
   const [subject, setSubject] = useState("");
+  // opened from the assistant: /tests?subject=Data%20structures opens a new test on it
+  useEffect(() => {
+    const sub = params.get("subject")?.trim().slice(0, 80);
+    if (sub) {
+      setSubject(sub);
+      setSetupOpen(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [topics, setTopics] = useState("");
   const [level, setLevel] = useState<TestLevel>("intermediate");
   const [count, setCount] = useState(10);

@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { AiError, chat, type ChatMessage, type ContentPart } from "@/lib/server/ai";
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 import { ACTIONS_PROMPT } from "@/lib/assistant-actions";
+import { STUDY_PROMPT } from "@/lib/assistant-study";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -30,6 +31,8 @@ Rules:
 - If someone seems in distress, respond kindly and suggest talking to someone they trust or a counsellor.
 
 ${ACTIONS_PROMPT}
+
+${STUDY_PROMPT}
 
 Student details (from their StudentOS account, may be incomplete):
 ${context.slice(0, 3500)}`;

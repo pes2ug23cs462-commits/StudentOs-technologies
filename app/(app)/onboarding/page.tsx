@@ -1,5 +1,7 @@
 "use client";
 
+import { parseActions } from "@/lib/assistant-actions";
+import { parseStudy } from "@/lib/assistant-study";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnswerChip, AssistantMessage, Composer, Disclaimer, Thinking, UserBubble, clockTime } from "@/components/chat/parts";
@@ -93,7 +95,7 @@ export default function OnboardingPage() {
     setThinking(true);
     try {
       const reply = await askAssistant(text, { context: buildContext(state), tone: state.assistant.tone });
-      setMessages((m) => [...m, { id: ++msgId.current, role: "assistant", text: reply, time: clockTime() }]);
+      setMessages((m) => [...m, { id: ++msgId.current, role: "assistant", text: parseActions(parseStudy(reply).text).text, time: clockTime() }]);
     } catch (e) {
       if (e instanceof OfflineError) setMessages((m) => m.map((x) => (x.id === id ? { ...x, failed: true } : x)));
       else if (e instanceof AssistantError) setMessages((m) => [...m, { id: ++msgId.current, role: "assistant", text: e.message, time: clockTime() }]);

@@ -1,5 +1,7 @@
 "use client";
 
+import { parseActions } from "@/lib/assistant-actions";
+import { parseStudy } from "@/lib/assistant-study";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -256,7 +258,7 @@ function AssistantPanel() {
     setBusy(true);
     try {
       const a = await askAssistant(q, { context: buildContext(state), tone: state.assistant.tone });
-      setLog((l) => [...l, { role: "assistant", text: a }]);
+      setLog((l) => [...l, { role: "assistant", text: parseActions(parseStudy(a).text).text }]);
     } catch (e) {
       setLog((l) => [...l, { role: "assistant", text: e instanceof AssistantError ? e.message : "I couldn’t reach the server. Check your connection and try again." }]);
     } finally {
