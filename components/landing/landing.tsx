@@ -30,12 +30,12 @@ import { cn } from "@/lib/utils";
 const DEGREES = ["B.Tech", "B.Com", "BBA", "B.Sc", "B.A.", "BCA", "MBA", "M.Com", "M.Tech", "MCA", "Diploma", "School"];
 
 const RING: { icon: FancyIconName; label: string; tone: FancyTone }[] = [
-  { icon: "plan", label: "AI study plan", tone: "violet" },
-  { icon: "video", label: "Video courses", tone: "cyan" },
-  { icon: "assistant", label: "AI assistant", tone: "emerald" },
-  { icon: "certificate", label: "Certificates", tone: "amber" },
-  { icon: "quiz", label: "Notes to quiz", tone: "pink" },
-  { icon: "resume", label: "Resume", tone: "indigo" },
+  { icon: "target", label: "Aptitude practice", tone: "violet" },
+  { icon: "mic", label: "Mock interviews", tone: "cyan" },
+  { icon: "resume", label: "Resume check", tone: "indigo" },
+  { icon: "rocket", label: "Campus drives", tone: "emerald" },
+  { icon: "plan", label: "AI study plan", tone: "amber" },
+  { icon: "assistant", label: "AI assistant", tone: "pink" },
 ];
 
 const STEPS: { n: string; icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
@@ -131,19 +131,19 @@ function HeroStage() {
         <div className="absolute top-[6%] left-[2%] hidden sm:block" style={layer(36)}>
           <div className="hero-pop" style={d(1.2)}>
             <Glass className="flex items-center gap-2 rounded-full px-3.5 py-2 text-[11.5px] text-white/85 [animation:hero-bob_6s_ease-in-out_infinite]">
-              <FancyIcon name="check" tone="emerald" size={22} /> Plan saved · 40 sessions
+              <FancyIcon name="target" tone="emerald" size={22} /> Readiness 72 / 100 · up 8 this week
             </Glass>
           </div>
         </div>
         <div className="absolute right-[2%] bottom-[8%] hidden sm:block" style={layer(44)}>
           <div className="hero-pop" style={d(1.5)}>
-            <Glass className="w-[210px] p-3.5 [animation:hero-bob_7s_ease-in-out_1s_infinite]">
-              <p className="text-[9.5px] font-semibold tracking-wider text-accent uppercase">Next session</p>
-              <p className="mt-0.5 text-[12.5px] font-semibold text-white">Tally Prime · GST</p>
+            <Glass className="w-[230px] p-3.5 [animation:hero-bob_7s_ease-in-out_1s_infinite]">
+              <p className="text-[9.5px] font-semibold tracking-wider text-accent uppercase">Next campus drive</p>
+              <p className="mt-0.5 text-[12.5px] font-semibold text-white">Software Engineer</p>
               <div className="mt-2 flex items-center justify-between">
-                <p className="text-[10.5px] text-white/50">Today · 7:00 PM</p>
+                <p className="text-[10.5px] text-white/50">Aptitude round · Fri 10 AM</p>
                 <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[10px] font-semibold text-black [animation:hero-pulse_1.8s_ease-out_infinite]">
-                  <PlayIcon size={7} /> Start
+                  <PlayIcon size={7} /> Prepare
                 </span>
               </div>
             </Glass>
@@ -152,7 +152,7 @@ function HeroStage() {
         <div className="absolute top-[10%] right-[0%] hidden lg:block" style={layer(30)}>
           <div className="hero-pop" style={d(1.8)}>
             <Glass className="flex items-center gap-2 rounded-full px-3.5 py-2 text-[11.5px] text-white/85 [animation:hero-bob_8s_ease-in-out_0.5s_infinite]">
-              <FancyIcon name="certificate" tone="amber" size={22} /> Certificate unlocked
+              <FancyIcon name="check" tone="amber" size={22} /> Shortlisted for round 2
             </Glass>
           </div>
         </div>
