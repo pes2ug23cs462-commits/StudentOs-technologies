@@ -14,7 +14,8 @@ import { BRANCHES, effective, closed, deleteDrive, loadApps, loadDrives, placeme
 import { notifyPlacement, notifySummary, type NotifyEvent } from "@/lib/notify";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { partnerApi, partnerErrorText, type OfferedDrive } from "@/lib/partner";
+import { partnerApi, partnerErrorText, type OfferedDrive, type TestResult, type TestSummary } from "@/lib/partner";
+import { TestCell } from "@/components/company/company-test";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Tilt } from "./skyline-3d";
@@ -368,6 +369,15 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
   const [offer, setOffer] = useState({ ctc: drive.ctc, joining: "", url: "", note: "" });
   const [openRow, setOpenRow] = useState<string | null>(null);
   const [tell, setTell] = useState(true);
+  // a partner company's online test on StudentOS: its results for this college's students
+  const [test, setTest] = useState<{ test: TestSummary | null; results: Record<string, TestResult> } | null>(null);
+  useEffect(() => {
+    if (!drive.partner || sample) return;
+    partnerApi<{ test: TestSummary | null; results: Record<string, TestResult> }>("college-test-results", { cid: college.id, pid: drive.id })
+      .then(setTest)
+      .catch(() => setTest(null));
+  }, [drive.id, drive.partner, sample, college.id]);
+  const showTest = !!test?.test;
 
   const steps = [{ label: "applied", n: apps.length }, ...drive.rounds.map((r, i) => ({ label: r.toLowerCase(), n: apps.filter((a) => (a.status === "in-process" && a.round >= i) || (a.status === "selected")).length })), { label: "selected", n: apps.filter((a) => a.status === "selected").length }];
   const list = apps.filter((a) => (filter === "all" ? true : filter === "applied" ? a.status === "applied" : filter === "selected" ? a.status === "selected" : filter === "rejected" ? a.status === "rejected" : a.status === "in-process" && a.round === Number(filter.slice(1))));
@@ -504,6 +514,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 <th className="pb-2 font-medium">Branch</th>
                 <th className="pb-2 font-medium">CGPA</th>
                 <th className="hidden pb-2 font-medium md:table-cell">Skills</th>
+                {showTest && <th className="pb-2 font-medium">{test!.test!.title}</th>}
                 <th className="pb-2 font-medium">Stage</th>
                 <th className="pb-2"><span className="sr-only">Resume</span></th>
               </tr>
@@ -516,6 +527,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                   <td className="py-2.5 pr-3 text-white/60">{a.branch}</td>
                   <td className="py-2.5 pr-3 text-white/60 tabular-nums">{a.cgpa}</td>
                   <td className="hidden max-w-[260px] truncate py-2.5 pr-3 text-[12px] text-white/55 md:table-cell">{a.resume.skills || "—"}</td>
+                  {showTest && <td className="py-2.5 pr-3"><TestCell r={test!.results[a.uid]} /></td>}
                   <td className="py-2.5 whitespace-nowrap">
                     <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-medium", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : a.status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, drive)}</span>
                   </td>
@@ -524,7 +536,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 openRow === a.uid && (
                   <tr key={a.uid + "-o"}>
                     {canEdit && <td />}
-                    <td colSpan={6} className="pb-3">
+                    <td colSpan={showTest ? 7 : 6} className="pb-3">
                       <div className="grid gap-3 rounded-xl bg-white/[0.03] p-3 text-[12.5px] md:grid-cols-3">
                         <div><p className="text-white/45">Headline</p><p className="text-white/80">{a.resume.headline || "—"}</p><p className="mt-2 text-white/45">Projects</p><p className="text-white/80">{a.resume.projects.join(", ") || "—"}</p></div>
                         <div><p className="text-white/45">Links sent</p>{a.links.length ? a.links.map((l) => <p key={l.at + l.title} className="text-white/80">{l.title}{l.when ? ` · ${l.when}` : ""}<span className="text-white/40"> · {drive.rounds[l.round ?? 0] ?? "round"}{(l.round ?? 0) !== a.round || a.status !== "in-process" ? " (done)" : ""}</span></p>) : <p className="text-white/50">None yet</p>}</div>

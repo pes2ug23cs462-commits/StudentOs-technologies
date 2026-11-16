@@ -80,6 +80,8 @@ export interface Application {
   decision?: "accepted" | "declined";
   decidedAt?: number;
   updatedAt: number;
+  /** online tests taken on StudentOS for a partner drive, by round (written by the server; the score stays with the company) */
+  tests?: Record<string, { done: boolean; at: number }>;
   /** best mock-interview and coding-round scores on StudentOS when they applied (shown to companies) */
   scores?: { interview?: number; coding?: number; /** server signatures, checked on the company portal */ proof?: { interview?: { score: number; at: number; sig: string }; coding?: { score: number; at: number; sig: string } } };
 }

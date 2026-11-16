@@ -16,6 +16,7 @@ import { adminConfigured, adminProblem, adminCreate, adminDelete, adminGet, admi
 import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 import { mailHtml, sendMails } from "@/lib/server/mail";
+import { PROBLEMS } from "@/lib/coding/problems";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
@@ -109,6 +110,54 @@ function apply(op: string, a: App, rounds: number, p: Record<string, unknown>): 
   }
   return null;
 }
+/* ---------- online tests a company runs on StudentOS ----------
+   partnerDrives/{pid}/tests/main          the test, with the answers (server only)
+   partnerDrives/{pid}/attempts/{cid}_{uid} one student's attempt and score (server only)
+   The student's application gets only { tests: { [round]: { done, at } } }, never the score. */
+type TestQ = { q: string; options: string[]; answer: number };
+/** `coding`: ids of StudentOS coding problems (lib/coding/problems.ts); their hidden expected outputs stay here */
+type Test = { round: number; title: string; minutes: number; open: boolean; questions: TestQ[]; coding?: string[]; updatedAt: number };
+type CodeResult = { id: string; title: string; passed: number; total: number; lang: string; code: string };
+type Attempt = { uid: string; cid: string; round: number; order: number[]; startedAt: number; endsAt: number; done: boolean; submittedAt?: number; answers?: number[]; correct?: number; total?: number; coding?: CodeResult[]; warnings?: string[]; ended?: boolean; late?: boolean };
+const problem = (pid: string) => PROBLEMS.find((p) => p.id === pid);
+/** Same comparison as the coding runner: numbers within 1e-6, arrays and objects by value. */
+function same(a: unknown, b: unknown): boolean {
+  if (typeof a === "number" && typeof b === "number") return a === b || Math.abs(a - b) < 1e-6;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => same(x, b[i]));
+  if (a && b && typeof a === "object" && typeof b === "object") {
+    const ka = Object.keys(a as object), kb = Object.keys(b as object);
+    return ka.length === kb.length && ka.every((k) => same((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+  }
+  return a === b;
+}
+/** What the company and the college see of an attempt. */
+const resultOf = (x: Attempt) =>
+  x.done
+    ? { correct: Number(x.correct) || 0, total: Number(x.total) || 0, coding: (x.coding ?? []).map((c) => ({ title: c.title, passed: c.passed, total: c.total, lang: c.lang })), warnings: x.warnings ?? [], ended: !!x.ended, late: !!x.late, at: Number(x.submittedAt) || 0 }
+    : { started: true as const, at: Number(x.startedAt) || 0 };
+const summaryOf = (t: Test) => ({ round: t.round, title: t.title, minutes: t.minutes, open: t.open, count: t.questions.length, coding: (t.coding ?? []).length });
+const BREACHES = ["tab", "fullscreen", "away", "out", "people", "talk", "voice"];
+function cleanTest(t: Record<string, unknown>, rounds: number): Test | null {
+  const qs = (Array.isArray(t.questions) ? t.questions : []).slice(0, 100).map((x) => {
+    const q = (x ?? {}) as Record<string, unknown>;
+    const options = (Array.isArray(q.options) ? q.options : []).map((o) => String(o ?? "").trim().slice(0, 200)).filter(Boolean).slice(0, 6);
+    const answer = Math.floor(Number(q.answer));
+    return { q: String(q.q ?? "").trim().slice(0, 600), options, answer };
+  }).filter((q) => q.q && q.options.length >= 2 && q.answer >= 0 && q.answer < q.options.length);
+  const coding = [...new Set((Array.isArray(t.coding) ? t.coding : []).map((x) => str(x, 60)).filter((x) => problem(x)))].slice(0, 3);
+  if (!qs.length && !coding.length) return null;
+  return { round: Math.max(0, Math.min(rounds - 1, Math.floor(Number(t.round) || 0))), title: str(t.title, 80) || "Online test", minutes: num(t.minutes, 5, 180) || 30, open: t.open === true, questions: qs, coding, updatedAt: Date.now() };
+}
+const shuffled = (n: number) => {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const GRACE_MS = 90_000;
+
 const EVENT_OF: Record<string, NotifyEv> = { advance: "advance", select: "selected", reject: "rejected", link: "link", offer: "offer" };
 
 export async function POST(req: Request) {
@@ -254,6 +303,86 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    /* ---------------- a college's placement cell sees its students' test results ---------------- */
+    if (action === "college-test-results") {
+      const cid = id(b.cid), pid = id(b.pid);
+      if (!cid || !pid) return bad("bad-request");
+      const staff = await adminGet(`colleges/${cid}/staff/${me.uid}`);
+      if (!staff || !["admin", "placement"].includes(str(staff.role))) return bad("not-allowed", 403);
+      const p = (await adminGet(`partnerDrives/${pid}`)) as PDrive | null;
+      if (!p || p.statuses?.[cid] !== "approved") return NextResponse.json({ test: null, results: {} });
+      const [t, attempts] = await Promise.all([adminGet(`partnerDrives/${pid}/tests/main`) as Promise<Test | null>, adminList(`partnerDrives/${pid}/attempts`, 2000).catch(() => [])]);
+      const mineOnly = attempts.map(({ data }) => data as Attempt).filter((x) => x.cid === cid);
+      return NextResponse.json({ test: t ? summaryOf(t) : null, results: Object.fromEntries(mineOnly.map((x) => [x.uid, resultOf(x)])) });
+    }
+
+    /* ---------------- a student takes a company's online test ---------------- */
+    if (action.startsWith("student-test-")) {
+      const cid = id(b.cid), pid = id(b.pid);
+      if (!cid || !pid) return bad("bad-request");
+      const [p, a, t] = await Promise.all([
+        adminGet(`partnerDrives/${pid}`) as Promise<PDrive | null>,
+        adminGet(`colleges/${cid}/drives/${pid}/apps/${me.uid}`) as Promise<App | null>,
+        adminGet(`partnerDrives/${pid}/tests/main`) as Promise<Test | null>,
+      ]);
+      // only a shortlisted student of an approved college, in the test's round, while it is open
+      if (!p || p.statuses?.[cid] !== "approved" || !a || !t) return NextResponse.json({ test: null });
+      const inRound = a.status === "in-process" && Number(a.round) === t.round;
+      const aKey = `partnerDrives/${pid}/attempts/${cid}_${me.uid}`;
+      const at = (await adminGet(aKey)) as Attempt | null;
+      const info = { title: t.title, minutes: t.minutes, count: t.questions.length, coding: (t.coding ?? []).length, company: p.company, role: p.role };
+      if (action === "student-test-info") {
+        if (!inRound && !at) return NextResponse.json({ test: null });
+        return NextResponse.json({ test: info, open: t.open, attempt: at ? { done: at.done, endsAt: at.endsAt } : null });
+      }
+      if (!inRound) return bad("not-allowed", 403);
+      if (action === "student-test-start") {
+        if (at?.done) return bad("done", 409);
+        if (!t.open && !at) return bad("closed", 409);
+        let att = at;
+        if (!att) {
+          const now = Date.now();
+          att = { uid: me.uid, cid, round: t.round, order: shuffled(t.questions.length), startedAt: now, endsAt: now + t.minutes * 60_000, done: false };
+          await adminSet(aKey, att);
+        }
+        // the same order again after a refresh; the clock keeps running from the first start
+        const questions = att.order.map((i) => t.questions[i]).filter(Boolean).map((q) => ({ q: q.q, options: q.options }));
+        // coding: the visible examples with answers; every test's input, but not its expected output
+        const coding = (t.coding ?? []).map(problem).filter(Boolean).map((c) => ({
+          id: c!.id, title: c!.title, level: c!.level, statement: c!.statement, constraints: c!.constraints, params: c!.params, fn: c!.fn, starter: c!.starter,
+          examples: c!.tests.slice(0, c!.shown),
+          inputs: c!.tests.map((x) => x.args),
+        }));
+        return NextResponse.json({ test: info, questions, coding, endsAt: att.endsAt, now: Date.now() });
+      }
+      if (action === "student-test-submit") {
+        if (!at) return bad("not-started", 409);
+        if (at.done) return bad("done", 409);
+        const given = (Array.isArray(b.answers) ? b.answers : []).slice(0, at.order.length).map((x) => (Number.isInteger(x) ? Number(x) : -1));
+        let correct = 0;
+        at.order.forEach((qi, k) => {
+          if (t.questions[qi] && given[k] === t.questions[qi].answer) correct++;
+        });
+        // coding: the outputs the student's code gave in their browser, checked against the hidden expected outputs
+        const sentCode = (Array.isArray(b.code) ? b.code : []).map((x) => (x ?? {}) as Record<string, unknown>);
+        const coding: CodeResult[] = (t.coding ?? []).map((pid) => {
+          const pr = problem(pid)!;
+          const c = sentCode.find((x) => x.id === pid);
+          const outs = Array.isArray(c?.outputs) ? (c!.outputs as unknown[]) : [];
+          const passed = pr.tests.filter((x, i) => i < outs.length && same(outs[i], x.expected)).length;
+          return { id: pid, title: pr.title, passed, total: pr.tests.length, lang: c?.lang === "python" ? "python" : "javascript", code: String(c?.code ?? "").slice(0, 8000) };
+        });
+        const now = Date.now();
+        const warnings = (Array.isArray(b.warnings) ? b.warnings : []).map((w) => str(w, 12)).filter((w) => BREACHES.includes(w)).slice(0, 10);
+        const done: Attempt = { ...at, done: true, submittedAt: now, answers: given, correct, total: at.order.length, coding, warnings, ended: b.ended === true, late: now > at.endsAt + GRACE_MS };
+        await adminSet(aKey, done);
+        const tests = { ...((a.tests ?? {}) as Record<string, unknown>), [String(t.round)]: { done: true, at: now } };
+        await adminMerge(`colleges/${cid}/drives/${pid}/apps/${me.uid}`, { tests });
+        return NextResponse.json({ ok: true });
+      }
+      return bad("action");
+    }
+
     /* ---------------- companies ---------------- */
     if (action === "company-join") {
       const code = str(b.code, 12).toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -284,6 +413,11 @@ export async function POST(req: Request) {
         const p = await mine(id(b.pid));
         if (!p) return bad("no-drive", 404);
         const approved = Object.entries(p.statuses ?? {}).filter(([, s]) => s === "approved").map(([cid]) => cid);
+        const [test, attempts] = await Promise.all([
+          adminGet(`partnerDrives/${p.pid}/tests/main`) as Promise<Test | null>,
+          adminList(`partnerDrives/${p.pid}/attempts`, 2000).catch(() => []),
+        ]);
+        const result = Object.fromEntries(attempts.map(({ data }) => [`${(data as Attempt).cid}/${(data as Attempt).uid}`, resultOf(data as Attempt)]));
         const per = await Promise.all(
           approved.map(async (cid) => {
             const [college, apps] = await Promise.all([adminGet(`colleges/${cid}`), adminList(`colleges/${cid}/drives/${p.pid}/apps`, 1000).catch(() => [])]);
@@ -306,10 +440,35 @@ export async function POST(req: Request) {
               offer: a.offer ?? null,
               decision: str(a.decision, 10),
               appliedAt: Number(a.appliedAt) || 0,
+              test: result[`${cid}/${str(a.uid, 128)}`] ?? null,
             }));
           }),
         );
-        return NextResponse.json({ drive: { pid: p.pid, role: p.role, kind: p.kind, ctc: p.ctc, deadline: p.deadline, rounds: p.rounds, company: p.company }, applicants: per.flat() });
+        return NextResponse.json({
+          drive: { pid: p.pid, role: p.role, kind: p.kind, ctc: p.ctc, deadline: p.deadline, rounds: p.rounds, company: p.company },
+          applicants: per.flat(),
+          test: test ? summaryOf(test) : null,
+        });
+      }
+      if (action === "company-test-get") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        return NextResponse.json({ test: await adminGet(`partnerDrives/${p.pid}/tests/main`) });
+      }
+      if (action === "company-test-save") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        const t = cleanTest((b.test ?? {}) as Record<string, unknown>, Math.max(1, p.rounds.length));
+        if (!t) return bad("bad-test");
+        // once a student has started, the questions and round stay as they were (their order is saved)
+        const prev = (await adminGet(`partnerDrives/${p.pid}/tests/main`)) as Test | null;
+        const started = prev ? (await adminList(`partnerDrives/${p.pid}/attempts`, 1).catch(() => [])).length > 0 : false;
+        if (prev && started) {
+          t.questions = prev.questions;
+          t.round = prev.round;
+        }
+        await adminSet(`partnerDrives/${p.pid}/tests/main`, t);
+        return NextResponse.json({ ok: true, count: t.questions.length });
       }
       if (action === "company-update") {
         const p = await mine(id(b.pid));

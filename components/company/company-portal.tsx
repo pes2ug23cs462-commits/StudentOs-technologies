@@ -13,11 +13,12 @@ import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, LogOut
 import { Input, Label, LogoMark, Textarea, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
 import { fallbackResume } from "@/lib/resume-snapshot";
-import { partnerApi, partnerErrorText, type Applicant, type CompanyDrive, type Whoami } from "@/lib/partner";
+import { partnerApi, partnerErrorText, type Applicant, type CompanyDrive, type TestSummary, type Whoami } from "@/lib/partner";
+import { TestCard, TestCell } from "@/components/company/company-test";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[] };
+type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[]; test?: TestSummary | null };
 type Op = "advance" | "select" | "reject" | "link" | "offer";
 
 const stage = (a: Applicant, rounds: string[]) => (a.status === "applied" ? "New" : a.status === "selected" ? (a.offer ? "Offer sent" : "Selected") : a.status === "rejected" ? "Not selected" : rounds[a.round] ?? `Round ${a.round + 1}`);
@@ -233,7 +234,7 @@ function Applicants({ pid }: { pid: string }) {
   };
   const csv = () => {
     if (!data) return;
-    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
+    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Test score", "Test warnings", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", a.test && "correct" in a.test ? `${a.test.correct}/${a.test.total}` : "", a.test && "correct" in a.test ? (a.test.ended ? "ended" : a.test.warnings.length) : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
     const blob = new Blob(["﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     Object.assign(document.createElement("a"), { href: u, download: `${data.drive.company} ${data.drive.role} applicants.csv` }).click();
@@ -273,6 +274,8 @@ function Applicants({ pid }: { pid: string }) {
           </div>
         ))}
       </div>
+
+      <TestCard pid={pid} rounds={rounds} summary={data.test ?? null} onSaved={() => void load()} />
 
       <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
@@ -323,6 +326,7 @@ function Applicants({ pid }: { pid: string }) {
                   <th className="pb-2 font-medium">Branch · CGPA</th>
                   <th className="pb-2 font-medium">Mock interview</th>
                   <th className="pb-2 font-medium">Coding round</th>
+                  {data.test && <th className="pb-2 font-medium">Test</th>}
                   <th className="pb-2 font-medium">Stage</th>
                   <th className="pb-2 font-medium"><span className="sr-only">Resume</span></th>
                 </tr>
@@ -336,6 +340,7 @@ function Applicants({ pid }: { pid: string }) {
                     <td className="py-2.5 text-white/65">{a.branch} · {a.cgpa}{a.backlogs ? ` · ${a.backlogs} backlogs` : ""}</td>
                     <td className="py-2.5"><Score v={a.scores?.interview} ok={a.scores?.interviewVerified} /></td>
                     <td className="py-2.5"><Score v={a.scores?.coding} ok={a.scores?.codingVerified} /></td>
+                    {data.test && <td className="py-2.5"><TestCell r={a.test} /></td>}
                     <td className="py-2.5"><span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : "bg-white/[0.06] text-white/75")}>{stage(a, rounds)}{a.decision ? ` · ${a.decision}` : ""}</span></td>
                     <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
                   </tr>

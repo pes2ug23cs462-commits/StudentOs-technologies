@@ -15,6 +15,31 @@ import { useStore } from "@/lib/store";
 import { collegeInfo } from "@/lib/college";
 import { CollegeLogo } from "@/components/college/college-logo";
 import { cn } from "@/lib/utils";
+import { partnerApi, type StudentTestInfo } from "@/lib/partner";
+
+/** A company's online test on StudentOS, shown when the student is in its round. */
+function TestEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
+  const [info, setInfo] = useState<StudentTestInfo | null>(null);
+  const taken = Object.values(a.tests ?? {}).some((t) => t.done);
+  useEffect(() => {
+    if (!d.partner || a.status !== "in-process") return;
+    partnerApi<StudentTestInfo>("student-test-info", { cid, pid: d.id })
+      .then(setInfo)
+      .catch(() => setInfo(null));
+  }, [cid, d.id, d.partner, a.status, a.round]);
+  if (!info?.test) return null;
+  const done = info.attempt?.done || taken;
+  return (
+    <Link href={`/placement/test?c=${cid}&d=${d.id}`} className={cn("mt-4 flex items-center gap-3 rounded-xl border px-4 py-3 transition", done ? "border-white/10 bg-white/[0.02]" : "border-amber-400/35 bg-amber-400/[0.06] hover:border-amber-300/60")}>
+      <ClockIcon size={16} className={done ? "text-white/45" : "text-amber-300"} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13.5px] font-semibold text-white">{info.test.title} · on StudentOS</span>
+        <span className="block text-[12px] text-white/55">{done ? "Submitted. The company will tell you the result." : `${[info.test.count ? `${info.test.count} questions` : "", info.test.coding ? `${info.test.coding} coding` : ""].filter(Boolean).join(" + ")} · ${info.test.minutes} min · strict mode${info.open || info.attempt ? "" : " · opens soon"}`}</span>
+      </span>
+      {!done && <span className="text-[12.5px] font-medium text-amber-200">{info.attempt ? "Continue →" : info.open ? "Start →" : "View →"}</span>}
+    </Link>
+  );
+}
 
 const fmtDate = (s: string) => (s ? new Date(s + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
 const daysLeft = (s: string) => Math.ceil((new Date(s + "T23:59:59").getTime() - Date.now()) / 86400000);
@@ -323,6 +348,7 @@ export function CampusDrives() {
                   <span className={cn("rounded-md px-2.5 py-1 text-[12px] font-medium", a.status === "selected" ? "bg-emerald-400/15 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/50" : effective(a).status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, d)}</span>
                 </div>
                 <Steps a={a} d={d} />
+                <TestEntry cid={link.cid} d={d} a={a} />
                 {a.status !== "rejected" && !a.offer && (
                   <Link href={`/placement/prep/${d.id}`} className="mt-4 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 transition hover:border-accent/60">
                     <span className="min-w-0 flex-1"><span className="block text-[13.5px] font-semibold text-white">Prepare for {d.company}</span><span className="block text-[12px] text-white/55">Rounds, a 7-day plan and what {d.company} asked your seniors</span></span>

@@ -35,7 +35,18 @@ export const PARTNER_ERROR: Record<string, string> = {
   "no-company": "Join your company first.",
   "bad-code": "That company code isn’t right. Check it with StudentOS.",
   failed: "Something went wrong. Try again.",
+  done: "You have already submitted this test.",
+  closed: "This test isn’t open yet. The company will open it at the test time.",
+  "not-started": "Start the test first.",
+  "bad-test": "Add at least one question (with 2+ options and the right answer marked) or a coding problem.",
 };
+
+/* ---------- online tests a company runs on StudentOS ---------- */
+export type TestQuestion = { q: string; options: string[]; answer: number };
+export type CompanyTest = { round: number; title: string; minutes: number; open: boolean; questions: TestQuestion[]; /** StudentOS coding problem ids */ coding?: string[] };
+export type TestSummary = { round: number; title: string; minutes: number; open: boolean; count: number; coding?: number };
+export type TestResult = { correct: number; total: number; coding?: { title: string; passed: number; total: number; lang: string }[]; warnings: string[]; ended: boolean; late: boolean; at: number } | { started: true; at: number };
+export type StudentTestInfo = { test: { title: string; minutes: number; count: number; coding?: number; company: string; role: string } | null; open?: boolean; attempt?: { done: boolean; endsAt: number } | null };
 export const partnerErrorText = (e: unknown) => {
   const t = PARTNER_ERROR[e instanceof Error ? e.message : ""] ?? "Something went wrong. Try again.";
   return e instanceof PartnerError && e.detail ? `${t} ${e.detail}` : t;
@@ -68,4 +79,5 @@ export type Applicant = {
   offer: Offer | null;
   decision: string;
   appliedAt: number;
+  test?: TestResult | null;
 };
