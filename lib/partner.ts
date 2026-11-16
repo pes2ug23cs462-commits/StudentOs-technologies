@@ -81,16 +81,18 @@ export type Applicant = {
   appliedAt: number;
   test?: TestResult | null;
   iv?: IvResult | null;
+  ivHr?: IvResult | null;
   live?: LiveResult | null;
 };
 
 /* ---------- AI technical interview and live interview ---------- */
-export type IvSetup = { round: number; title: string; focus: string; questions: string[]; count: number; open: boolean };
+export type IvKind = "technical" | "hr";
+export type IvSetup = { kind?: IvKind; round: number; title: string; focus: string; questions: string[]; count: number; open: boolean };
 export type IvSummary = { round: number; title: string; count: number; open: boolean; focus: string };
 export type IvResult = { overall: number | null; verdict: string; warnings: string[]; ended: boolean; at: number } | { started: true; at: number; index: number; total: number };
 export type IvReport = { overall: number; verdict: string; summary: string; strengths: string[]; concerns: string[]; items: { score: number; note: string }[] };
 export type IvAttemptFull = { uid: string; cid: string; name: string; questions: string[]; answers: { a: string; secs: number }[]; done: boolean; report?: IvReport | null; warnings?: string[]; ended?: boolean };
-export type StudentIvInfo = { iv: { title: string; count: number; company: string; role: string } | null; open?: boolean; attempt?: { done: boolean; index: number; total: number } | null };
+export type StudentIvInfo = { iv: { kind?: IvKind; title: string; count: number; company: string; role: string } | null; open?: boolean; attempt?: { done: boolean; index: number; total: number } | null };
 export type IvView = { index: number; total: number; question: string; done: boolean };
 export type LiveResult = { room: string; at: number; minutes: number; feedback: { score: number; verdict: string; notes: string; at: number } | null };
 export type LiveSide = { sdp?: { type: RTCSdpType; sdp: string; v: number } | null; cands?: RTCIceCandidateInit[]; need?: number; warnings?: string[]; at?: number };

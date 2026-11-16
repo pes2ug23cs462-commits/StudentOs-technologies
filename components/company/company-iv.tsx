@@ -9,23 +9,29 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, MicIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import { BREACH_TEXT, type Breach } from "@/components/interview/proctor";
-import { partnerApi, partnerErrorText, type Applicant, type IvAttemptFull, type IvResult, type IvSetup, type IvSummary } from "@/lib/partner";
+import { partnerApi, partnerErrorText, type Applicant, type IvAttemptFull, type IvKind, type IvResult, type IvSetup, type IvSummary } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const verdictTone = (v: string) => (v === "Strong yes" ? "text-emerald-300" : v === "Yes" ? "text-cyan-200" : v === "Maybe" ? "text-amber-200" : "text-rose-300");
 
-export function IvCard({ pid, rounds, summary, onSaved }: { pid: string; rounds: string[]; summary: IvSummary | null; onSaved: () => void }) {
+const KIND = {
+  technical: { name: "AI technical interview", title: "Technical interview", blurb: "StudentOS’s AI interviewer asks every shortlisted student your technical questions, by voice, and gives you a scored report.", focus: "e.g. Java, OOP, DBMS joins, one project they built", own: "e.g. Explain the difference between an abstract class and an interface.", hint: "The AI writes questions on these topics for the role.", round: /tech|interview/i },
+  hr: { name: "AI HR interview", title: "HR interview", blurb: "Asha runs a first HR round: about them, why your company, strengths, teamwork and fit. Use it to screen, then meet the best live.", focus: "e.g. communication, why our company, relocation to Bangalore, night shifts, joining in July", own: "e.g. Are you open to working in any of our cities?", hint: "The AI writes HR questions on these points. It never asks about religion, caste, marriage, health or family plans.", round: /hr/i },
+} as const;
+
+export function IvCard({ pid, kind = "technical", rounds, summary, onSaved }: { pid: string; kind?: IvKind; rounds: string[]; summary: IvSummary | null; onSaved: () => void }) {
+  const K = KIND[kind];
   const { actions } = useStore();
   const [edit, setEdit] = useState(false);
   const [busy, setBusy] = useState(false);
   const toggle = async () => {
     setBusy(true);
     try {
-      const r = await partnerApi<{ iv: IvSetup | null }>("company-iv-get", { pid });
+      const r = await partnerApi<{ iv: IvSetup | null }>("company-iv-get", { pid, kind });
       if (!r.iv) return;
-      await partnerApi("company-iv-save", { pid, iv: { ...r.iv, open: !r.iv.open } });
-      actions.toast(r.iv.open ? "AI interview closed." : "AI interview is open. Students in that round can start it.");
+      await partnerApi("company-iv-save", { pid, kind, iv: { ...r.iv, open: !r.iv.open } });
+      actions.toast(r.iv.open ? `${K.name} closed.` : `${K.name} is open. Students in that round can start it.`);
       onSaved();
     } catch (e) {
       actions.toast(partnerErrorText(e));
@@ -37,27 +43,28 @@ export function IvCard({ pid, rounds, summary, onSaved }: { pid: string; rounds:
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-400/15 text-violet-200"><MicIcon size={18} /></span>
+        <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", kind === "hr" ? "bg-cyan-400/15 text-cyan-200" : "bg-violet-400/15 text-violet-200")}><MicIcon size={18} /></span>
         <div className="min-w-0 flex-1">
-          <p className="text-[14.5px] font-semibold text-white">{summary ? summary.title : "AI technical interview"}</p>
-          <p className="text-[12.5px] text-white/55">{summary ? `${summary.count} questions · for “${round}”${summary.focus ? ` · ${summary.focus}` : ""} · strict mode` : "StudentOS’s AI interviewer asks every shortlisted student your technical questions, by voice, and gives you a scored report."}</p>
+          <p className="text-[14.5px] font-semibold text-white">{summary ? summary.title : K.name}</p>
+          <p className="text-[12.5px] text-white/55">{summary ? `${kind === "hr" ? "HR · " : ""}${summary.count} questions · for “${round}”${summary.focus ? ` · ${summary.focus}` : ""} · strict mode` : K.blurb}</p>
         </div>
         {summary && <span className={cn("rounded-md px-2 py-0.5 text-[11.5px] font-semibold", summary.open ? "bg-emerald-400/15 text-emerald-300" : "bg-white/[0.06] text-white/55")}>{summary.open ? "Open" : "Closed"}</span>}
         {summary && <Button size="sm" loading={busy} onClick={() => void toggle()}>{summary.open ? "Close" : "Open"}</Button>}
         <Button size="sm" variant={summary ? "ghost" : "primary"} icon={summary ? <PencilIcon size={13} /> : <PlusIcon size={13} />} onClick={() => setEdit(true)}>{summary ? "Edit" : "Set up"}</Button>
       </div>
-      {edit && <IvEditor pid={pid} rounds={rounds} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); onSaved(); }} />}
+      {edit && <IvEditor pid={pid} kind={kind} rounds={rounds} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); onSaved(); }} />}
     </section>
   );
 }
 
-function IvEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: string[]; onClose: () => void; onSaved: () => void }) {
+function IvEditor({ pid, kind, rounds, onClose, onSaved }: { pid: string; kind: IvKind; rounds: string[]; onClose: () => void; onSaved: () => void }) {
+  const K = KIND[kind];
   const { actions } = useStore();
   const [iv, setIv] = useState<IvSetup | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    partnerApi<{ iv: IvSetup | null }>("company-iv-get", { pid })
-      .then((r) => setIv(r.iv ?? { round: Math.max(0, rounds.findIndex((x) => /tech|interview/i.test(x))), title: "Technical interview", focus: "", questions: [], count: 6, open: false }))
+    partnerApi<{ iv: IvSetup | null }>("company-iv-get", { pid, kind })
+      .then((r) => setIv(r.iv ?? { kind, round: Math.max(0, rounds.findIndex((x) => K.round.test(x))), title: K.title, focus: "", questions: [], count: kind === "hr" ? 5 : 6, open: false }))
       .catch((e) => {
         actions.toast(partnerErrorText(e));
         onClose();
@@ -67,8 +74,8 @@ function IvEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: stri
     if (!iv) return;
     setBusy(true);
     try {
-      await partnerApi("company-iv-save", { pid, iv: { ...iv, questions: iv.questions.map((q) => q.trim()).filter(Boolean) } });
-      actions.toast("AI interview saved.");
+      await partnerApi("company-iv-save", { pid, kind, iv: { ...iv, questions: iv.questions.map((q) => q.trim()).filter(Boolean) } });
+      actions.toast(`${K.name} saved.`);
       onSaved();
     } catch (e) {
       actions.toast(partnerErrorText(e));
@@ -79,9 +86,9 @@ function IvEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: stri
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden />
-      <aside role="dialog" aria-label="AI technical interview" className="relative flex h-full w-full max-w-[620px] flex-col border-l border-white/10 bg-[#121118]">
+      <aside role="dialog" aria-label={K.name} className="relative flex h-full w-full max-w-[620px] flex-col border-l border-white/10 bg-[#121118]">
         <header className="flex items-center gap-3 border-b border-white/[0.07] px-6 py-4">
-          <h2 className="flex-1 text-[17px] font-semibold">AI technical interview</h2>
+          <h2 className="flex-1 text-[17px] font-semibold">{K.name}</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-white/60 hover:bg-white/10 hover:text-white"><XIcon size={16} /></button>
         </header>
         {!iv ? (
@@ -104,9 +111,9 @@ function IvEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: stri
               </div>
             </div>
             <div>
-              <Label htmlFor="if">Topics to check</Label>
-              <Textarea id="if" rows={2} value={iv.focus} onChange={(e) => setIv({ ...iv, focus: e.target.value })} placeholder="e.g. Java, OOP, DBMS joins, one project they built" />
-              <p className="mt-1 text-[11.5px] text-white/45">The AI writes questions on these topics for the role. Each student gets their own set, so answers can’t be passed around.</p>
+              <Label htmlFor="if">{kind === "hr" ? "What to check" : "Topics to check"}</Label>
+              <Textarea id="if" rows={2} value={iv.focus} onChange={(e) => setIv({ ...iv, focus: e.target.value })} placeholder={K.focus} />
+              <p className="mt-1 text-[11.5px] text-white/45">{K.hint} Each student gets their own set, so answers can’t be passed around.</p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -116,13 +123,13 @@ function IvEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: stri
               {iv.questions.map((q, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <span className="mt-2.5 w-5 text-[12px] text-white/45">{i + 1}.</span>
-                  <Textarea rows={2} value={q} onChange={(e) => setIv({ ...iv, questions: iv.questions.map((x, k) => (k === i ? e.target.value : x)) })} placeholder="e.g. Explain the difference between an abstract class and an interface." className="flex-1" />
+                  <Textarea rows={2} value={q} onChange={(e) => setIv({ ...iv, questions: iv.questions.map((x, k) => (k === i ? e.target.value : x)) })} placeholder={K.own} className="flex-1" />
                   <button type="button" onClick={() => setIv({ ...iv, questions: iv.questions.filter((_, k) => k !== i) })} aria-label={`Remove question ${i + 1}`} className="rounded-lg p-2 text-white/45 hover:bg-white/10 hover:text-rose-300"><TrashIcon size={14} /></button>
                 </div>
               ))}
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-[12.5px] text-white/60">
-              Students take it in strict mode: full screen, camera on, a check that the voice heard is theirs, and no one else in view. You get a score out of 100, a verdict, strengths, concerns and every answer.
+              Students take it in strict mode: full screen, camera on, a check that the voice heard is theirs, and no one else in view. You get a score out of 100, a verdict, strengths, concerns and every answer.{kind === "hr" ? " The final HR call stays with your team: schedule a live interview for the students you pick." : ""}
             </div>
           </div>
         )}
@@ -148,25 +155,25 @@ export function IvCell({ r, onOpen }: { r: IvResult | null | undefined; onOpen: 
 }
 
 /** Every question, answer and score, plus the AI's summary. */
-export function IvReportDrawer({ pid, a, onClose }: { pid: string; a: Applicant; onClose: () => void }) {
+export function IvReportDrawer({ pid, a, kind = "technical", onClose }: { pid: string; a: Applicant; kind?: IvKind; onClose: () => void }) {
   const { actions } = useStore();
   const [x, setX] = useState<IvAttemptFull | null>(null);
   const [busy, setBusy] = useState(false);
   const load = (retry = false) =>
-    partnerApi<{ attempt: IvAttemptFull }>("company-iv-report", { pid, cid: a.cid, uid: a.uid, retry })
+    partnerApi<{ attempt: IvAttemptFull }>("company-iv-report", { pid, kind, cid: a.cid, uid: a.uid, retry })
       .then((r) => setX(r.attempt))
       .catch((e) => actions.toast(partnerErrorText(e)));
   useEffect(() => {
     void load();
-  }, [pid, a.cid, a.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pid, a.cid, a.uid, kind]); // eslint-disable-line react-hooks/exhaustive-deps
   const rep = x?.report;
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/55" onClick={onClose} aria-hidden />
-      <aside role="dialog" aria-label={`AI interview report for ${a.name}`} className="relative h-full w-full max-w-[560px] overflow-y-auto border-l border-white/10 bg-[#121118] p-6">
+      <aside role="dialog" aria-label={`${KIND[kind].name} report for ${a.name}`} className="relative h-full w-full max-w-[560px] overflow-y-auto border-l border-white/10 bg-[#121118] p-6">
         <button type="button" onClick={onClose} className="flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><ArrowLeftIcon size={13} /> Back</button>
         <h2 className="mt-4 text-[22px] font-semibold">{a.name}</h2>
-        <p className="text-[13px] text-white/55">AI technical interview · {a.college}</p>
+        <p className="text-[13px] text-white/55">{KIND[kind].name} · {a.college}</p>
         {!x ? (
           <div className="mt-6 h-40 animate-pulse rounded-xl bg-white/[0.04]" />
         ) : (

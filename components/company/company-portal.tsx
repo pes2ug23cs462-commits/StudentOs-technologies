@@ -20,7 +20,7 @@ import type { IvSummary } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[]; test?: TestSummary | null; iv?: IvSummary | null };
+type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[]; test?: TestSummary | null; iv?: IvSummary | null; ivHr?: IvSummary | null };
 type Op = "advance" | "select" | "reject" | "link" | "offer";
 
 const stage = (a: Applicant, rounds: string[]) => (a.status === "applied" ? "New" : a.status === "selected" ? (a.offer ? "Offer sent" : "Selected") : a.status === "rejected" ? "Not selected" : rounds[a.round] ?? `Round ${a.round + 1}`);
@@ -29,6 +29,23 @@ const cvOf = (a: Applicant) => ({ name: a.name, cv: a.cv ?? fallbackResume(a) })
 const scoreTone = (v?: number) => (v == null ? "text-white/35" : v >= 75 ? "text-emerald-300" : v >= 60 ? "text-cyan-200" : "text-amber-300");
 /** only scores the server signed count for filters and sorting */
 const ivOk = (a: Applicant) => (a.scores?.interviewVerified ? (a.scores.interview ?? -1) : -1);
+/* Screening: every score a company can sort and cut by, 0–100 (−1 = none yet). */
+type Metric = "mock" | "test" | "ai" | "hr";
+const METRIC_LABEL: Record<Metric, string> = { mock: "Mock interview", test: "Online test", ai: "AI technical", hr: "AI HR" };
+const ivScore = (r: Applicant["iv"]) => (r && !("started" in r) && r.overall != null ? r.overall : -1);
+const scoreOf = (a: Applicant, m: Metric) => {
+  if (m === "mock") return ivOk(a);
+  if (m === "ai") return ivScore(a.iv);
+  if (m === "hr") return ivScore(a.ivHr);
+  const t = a.test;
+  if (!t || "started" in t) return -1;
+  const coding = t.coding ?? [];
+  const parts = (t.total ? 1 : 0) + coding.length;
+  if (!parts) return -1;
+  // MCQ share and each coding problem's share of hidden tests, averaged
+  const sum = (t.total ? t.correct / t.total : 0) + coding.reduce((n, c) => n + (c.total ? c.passed / c.total : 0), 0);
+  return Math.round((sum / parts) * 100);
+};
 
 /** A score with a ✓ when StudentOS verified it; an unverified one is shown greyed and labelled. */
 function Score({ v, ok, big }: { v?: number; ok?: boolean; big?: boolean }) {
@@ -203,13 +220,15 @@ function Applicants({ pid }: { pid: string }) {
   const [college, setCollege] = useState("all");
   const [tab, setTab] = useState("all");
   const [minIv, setMinIv] = useState(0);
+  const [metric, setMetric] = useState<Metric>("mock");
+  const [topN, setTopN] = useState(20);
   const [tell, setTell] = useState(true);
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState<null | "link" | "offer" | "live">(null);
   const [link, setLink] = useState({ title: "", url: "", when: "" });
   const [offer, setOffer] = useState({ ctc: "", joining: "", url: "", note: "" });
   const [person, setPerson] = useState<Applicant | null>(null);
-  const [report, setReport] = useState<Applicant | null>(null);
+  const [report, setReport] = useState<{ a: Applicant; kind: "technical" | "hr" } | null>(null);
   const [slot, setSlot] = useState({ start: "", minutes: 30 });
   const resumes = useResumePrint();
 
@@ -228,9 +247,9 @@ function Applicants({ pid }: { pid: string }) {
   const colleges = useMemo(() => [...new Set((data?.applicants ?? []).map((a) => a.college))].sort(), [data]);
   const list = (data?.applicants ?? [])
     .filter((a) => college === "all" || a.college === college)
-    .filter((a) => !minIv || ivOk(a) >= minIv)
+    .filter((a) => !minIv || scoreOf(a, metric) >= minIv)
     .filter((a) => (tab === "all" ? true : tab === "new" ? a.status === "applied" : tab === "selected" ? a.status === "selected" : tab === "rejected" ? a.status === "rejected" : a.status === "in-process" && a.round === Number(tab.slice(1))))
-    .sort((a, b) => ivOk(b) - ivOk(a));
+    .sort((a, b) => scoreOf(b, metric) - scoreOf(a, metric));
   const count = (f: (a: Applicant) => boolean) => (data?.applicants ?? []).filter(f).length;
 
   const run = async (op: Op, extra: Record<string, unknown> = {}) => {
@@ -251,7 +270,7 @@ function Applicants({ pid }: { pid: string }) {
   };
   const csv = () => {
     if (!data) return;
-    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Test score", "Test warnings", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", a.test && "correct" in a.test ? `${a.test.correct}/${a.test.total}` : "", a.test && "correct" in a.test ? (a.test.ended ? "ended" : a.test.warnings.length) : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
+    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Test score", "Test warnings", "AI technical", "AI HR", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", a.test && "correct" in a.test ? `${a.test.correct}/${a.test.total}` : "", a.test && "correct" in a.test ? (a.test.ended ? "ended" : a.test.warnings.length) : "", ivScore(a.iv) >= 0 ? ivScore(a.iv) : "", ivScore(a.ivHr) >= 0 ? ivScore(a.ivHr) : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
     const blob = new Blob(["﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     Object.assign(document.createElement("a"), { href: u, download: `${data.drive.company} ${data.drive.role} applicants.csv` }).click();
@@ -312,9 +331,10 @@ function Applicants({ pid }: { pid: string }) {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-3">
         <TestCard pid={pid} rounds={rounds} summary={data.test ?? null} onSaved={() => void load()} />
-        <IvCard pid={pid} rounds={rounds} summary={data.iv ?? null} onSaved={() => void load()} />
+        <IvCard pid={pid} kind="technical" rounds={rounds} summary={data.iv ?? null} onSaved={() => void load()} />
+        <IvCard pid={pid} kind="hr" rounds={rounds} summary={data.ivHr ?? null} onSaved={() => void load()} />
       </div>
 
       <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
@@ -333,12 +353,24 @@ function Applicants({ pid }: { pid: string }) {
               {colleges.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
-          {[0, 60, 70, 80].map((v) => (
+          <label className="flex items-center gap-2 text-white/55">
+            Screen by
+            <select value={metric} onChange={(e) => { setMetric(e.target.value as Metric); setMinIv(0); }} className="h-8 rounded-lg border border-white/10 bg-field px-2 text-white" aria-label="Screen by score">
+              {(["mock", "test", "ai", "hr"] as Metric[]).filter((m) => m === "mock" || (m === "test" ? !!data.test : m === "ai" ? !!data.iv : !!data.ivHr)).map((m) => <option key={m} value={m}>{METRIC_LABEL[m]}</option>)}
+            </select>
+          </label>
+          {[0, 50, 60, 70, 80].map((v) => (
             <button key={v} type="button" onClick={() => setMinIv(v)} className={cn("h-8 rounded-lg border px-3 transition", minIv === v ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100" : "border-white/10 text-white/60 hover:text-white")}>
-              {v ? `Interview ${v}+` : "Any score"}
+              {v ? `${v}+` : "Any score"}
             </button>
           ))}
+          <span className="ml-auto flex items-center gap-2 text-white/55">
+            Pick top
+            <input type="number" min={1} max={500} value={topN} onChange={(e) => setTopN(Math.max(1, Math.min(500, Number(e.target.value) || 1)))} aria-label="How many to pick" className="h-8 w-16 rounded-lg border border-white/10 bg-field px-2 text-white" />
+            <Button size="sm" disabled={!list.length} onClick={() => setPicked(new Set(list.filter((a) => scoreOf(a, metric) >= 0).slice(0, topN).map(key)))}>Pick</Button>
+          </span>
         </div>
+        <p className="mt-2 text-[11.5px] text-white/40">Screening: choose a round’s score, set a cut-off, pick the top students, then “Move to next round”. Students with no score yet are listed last and never picked.</p>
 
         {picked.size > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-[var(--color-plum)]/50 px-3 py-2.5">
@@ -368,7 +400,8 @@ function Applicants({ pid }: { pid: string }) {
                   <th className="pb-2 font-medium">Mock interview</th>
                   <th className="pb-2 font-medium">Coding round</th>
                   {data.test && <th className="pb-2 font-medium">Test</th>}
-                  {data.iv && <th className="pb-2 font-medium">AI interview</th>}
+                  {data.iv && <th className="pb-2 font-medium">AI technical</th>}
+                  {data.ivHr && <th className="pb-2 font-medium">AI HR</th>}
                   {hasLive && <th className="pb-2 font-medium">Live interview</th>}
                   <th className="pb-2 font-medium">Stage</th>
                   <th className="pb-2 font-medium"><span className="sr-only">Resume</span></th>
@@ -384,7 +417,8 @@ function Applicants({ pid }: { pid: string }) {
                     <td className="py-2.5"><Score v={a.scores?.interview} ok={a.scores?.interviewVerified} /></td>
                     <td className="py-2.5"><Score v={a.scores?.coding} ok={a.scores?.codingVerified} /></td>
                     {data.test && <td className="py-2.5"><TestCell r={a.test} /></td>}
-                    {data.iv && <td className="py-2.5"><IvCell r={a.iv} onOpen={() => setReport(a)} /></td>}
+                    {data.iv && <td className="py-2.5"><IvCell r={a.iv} onOpen={() => setReport({ a, kind: "technical" })} /></td>}
+                    {data.ivHr && <td className="py-2.5"><IvCell r={a.ivHr} onOpen={() => setReport({ a, kind: "hr" })} /></td>}
                     {hasLive && <td className="py-2.5"><LiveCell pid={pid} r={a.live} /></td>}
                     <td className="py-2.5"><span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : "bg-white/[0.06] text-white/75")}>{stage(a, rounds)}{a.decision ? ` · ${a.decision}` : ""}</span></td>
                     <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
@@ -454,7 +488,7 @@ function Applicants({ pid }: { pid: string }) {
       )}
 
       {resumes.node}
-      {report && <IvReportDrawer pid={pid} a={report} onClose={() => setReport(null)} />}
+      {report && <IvReportDrawer pid={pid} a={report.a} kind={report.kind} onClose={() => setReport(null)} />}
       {person && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/50" onClick={() => setPerson(null)} aria-hidden />

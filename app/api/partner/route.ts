@@ -17,7 +17,7 @@ import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 import { mailHtml, sendMails } from "@/lib/server/mail";
 import { PROBLEMS } from "@/lib/coding/problems";
-import { cleanIv, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide } from "@/lib/server/company-rounds";
+import { cleanIv, ivAttemptKey, ivDoc, ivKindOf, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide } from "@/lib/server/company-rounds";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
@@ -323,25 +323,27 @@ export async function POST(req: Request) {
       return NextResponse.json({
         test: t ? summaryOf(t) : null,
         results: Object.fromEntries(mineOnly.map((x) => [x.uid, resultOf(x)])),
-        iv: Object.fromEntries(ivAtts.map(({ data }) => data as IvAttempt).filter((x) => x.cid === cid).map((x) => [x.uid, ivResultOf(x)])),
+        iv: Object.fromEntries(ivAtts.map(({ data }) => data as IvAttempt).filter((x) => x.cid === cid && x.kind !== "hr").map((x) => [x.uid, ivResultOf(x)])),
+        ivHr: Object.fromEntries(ivAtts.map(({ data }) => data as IvAttempt).filter((x) => x.cid === cid && x.kind === "hr").map((x) => [x.uid, ivResultOf(x)])),
         live: Object.fromEntries(lives.map(({ data }) => data as LiveMeta).filter((x) => x.cid === cid).map((x) => [x.uid, liveResultOf(x)])),
       });
     }
 
     /* ---------------- a student takes a company's AI technical interview ---------------- */
     if (action.startsWith("student-iv-")) {
-      const cid = id(b.cid), pid = id(b.pid);
+      const cid = id(b.cid), pid = id(b.pid), kind = ivKindOf(b.kind);
       if (!cid || !pid) return bad("bad-request");
-      const [p, a, iv] = await Promise.all([
+      const [p, a, raw] = await Promise.all([
         adminGet(`partnerDrives/${pid}`) as Promise<PDrive | null>,
         adminGet(`colleges/${cid}/drives/${pid}/apps/${me.uid}`) as Promise<App | null>,
-        adminGet(`partnerDrives/${pid}/aiInterview/main`) as Promise<IvSetup | null>,
+        adminGet(ivDoc(pid, kind)) as Promise<IvSetup | null>,
       ]);
+      const iv = raw ? { ...raw, kind } : null;
       if (!p || p.statuses?.[cid] !== "approved" || !a || !iv) return NextResponse.json({ iv: null });
       const inRound = a.status === "in-process" && Number(a.round) === iv.round;
-      const key = `partnerDrives/${pid}/ivAttempts/${cid}_${me.uid}`;
+      const key = ivAttemptKey(pid, cid, me.uid, kind);
       const at = (await adminGet(key)) as IvAttempt | null;
-      const info = { title: iv.title, count: iv.count, company: p.company, role: p.role };
+      const info = { kind, title: iv.title, count: iv.count, company: p.company, role: p.role };
       const view = (x: IvAttempt) => ({ index: x.answers.length, total: x.questions.length, question: x.answers.length < x.questions.length ? x.questions[x.answers.length] : "", done: x.done });
       if (action === "student-iv-info") {
         if (!inRound && !at) return NextResponse.json({ iv: null });
@@ -353,7 +355,7 @@ export async function POST(req: Request) {
         if (at) return NextResponse.json({ iv: info, ...view(at) });
         if (!iv.open) return bad("closed", 409);
         const questions = await ivQuestions(iv, p.role, p.company);
-        const x: IvAttempt = { uid: me.uid, cid, name: str(a.name, 60), round: iv.round, questions, answers: [], startedAt: Date.now(), done: false };
+        const x: IvAttempt = { uid: me.uid, cid, name: str(a.name, 60), kind, round: iv.round, questions, answers: [], startedAt: Date.now(), done: false };
         await adminSet(key, x as unknown as Record<string, unknown>);
         return NextResponse.json({ iv: info, ...view(x) });
       }
@@ -381,7 +383,7 @@ export async function POST(req: Request) {
         } catch {
           /* the company can ask for the report again */
         }
-        const ivs = { ...((a.ivs ?? {}) as Record<string, unknown>), [String(iv.round)]: { done: true, at: at.doneAt } };
+        const ivs = { ...((a.ivs ?? {}) as Record<string, unknown>), [`${iv.round}${kind === "hr" ? "_hr" : ""}`]: { done: true, at: at.doneAt } };
         await adminMerge(`colleges/${cid}/drives/${pid}/apps/${me.uid}`, { ivs });
         return NextResponse.json({ done: true });
       }
@@ -517,12 +519,14 @@ export async function POST(req: Request) {
           adminList(`partnerDrives/${p.pid}/attempts`, 2000).catch(() => []),
         ]);
         const result = Object.fromEntries(attempts.map(({ data }) => [`${(data as Attempt).cid}/${(data as Attempt).uid}`, resultOf(data as Attempt)]));
-        const [ivSetup, ivAtts, lives] = await Promise.all([
-          adminGet(`partnerDrives/${p.pid}/aiInterview/main`) as Promise<IvSetup | null>,
+        const [ivSetup, ivHrSetup, ivAtts, lives] = await Promise.all([
+          adminGet(ivDoc(p.pid, "technical")) as Promise<IvSetup | null>,
+          adminGet(ivDoc(p.pid, "hr")) as Promise<IvSetup | null>,
           adminList(`partnerDrives/${p.pid}/ivAttempts`, 2000).catch(() => []),
           adminList(`partnerDrives/${p.pid}/live`, 2000).catch(() => []),
         ]);
-        const ivBy = Object.fromEntries(ivAtts.map(({ data }) => [`${(data as IvAttempt).cid}/${(data as IvAttempt).uid}`, ivResultOf(data as IvAttempt)]));
+        const ivBy = Object.fromEntries(ivAtts.filter(({ data }) => (data as IvAttempt).kind !== "hr").map(({ data }) => [`${(data as IvAttempt).cid}/${(data as IvAttempt).uid}`, ivResultOf(data as IvAttempt)]));
+        const ivHrBy = Object.fromEntries(ivAtts.filter(({ data }) => (data as IvAttempt).kind === "hr").map(({ data }) => [`${(data as IvAttempt).cid}/${(data as IvAttempt).uid}`, ivResultOf(data as IvAttempt)]));
         const liveBy: Record<string, ReturnType<typeof liveResultOf>[]> = {};
         for (const { data } of lives) (liveBy[`${(data as LiveMeta).cid}/${(data as LiveMeta).uid}`] ??= []).push(liveResultOf(data as LiveMeta));
         const per = await Promise.all(
@@ -549,6 +553,7 @@ export async function POST(req: Request) {
               appliedAt: Number(a.appliedAt) || 0,
               test: result[`${cid}/${str(a.uid, 128)}`] ?? null,
               iv: ivBy[`${cid}/${str(a.uid, 128)}`] ?? null,
+              ivHr: ivHrBy[`${cid}/${str(a.uid, 128)}`] ?? null,
               live: (liveBy[`${cid}/${str(a.uid, 128)}`] ?? []).sort((x, y) => y.at - x.at)[0] ?? null,
             }));
           }),
@@ -558,6 +563,7 @@ export async function POST(req: Request) {
           applicants: per.flat(),
           test: test ? summaryOf(test) : null,
           iv: ivSetup ? { round: ivSetup.round, title: ivSetup.title, count: ivSetup.count, open: ivSetup.open, focus: ivSetup.focus } : null,
+          ivHr: ivHrSetup ? { round: ivHrSetup.round, title: ivHrSetup.title, count: ivHrSetup.count, open: ivHrSetup.open, focus: ivHrSetup.focus } : null,
         });
       }
       if (action === "company-test-get") {
@@ -583,24 +589,27 @@ export async function POST(req: Request) {
       if (action === "company-iv-get") {
         const p = await mine(id(b.pid));
         if (!p) return bad("no-drive", 404);
-        return NextResponse.json({ iv: await adminGet(`partnerDrives/${p.pid}/aiInterview/main`) });
+        return NextResponse.json({ iv: await adminGet(ivDoc(p.pid, ivKindOf(b.kind))) });
       }
       if (action === "company-iv-save") {
         const p = await mine(id(b.pid));
         if (!p) return bad("no-drive", 404);
-        const iv = cleanIv((b.iv ?? {}) as Record<string, unknown>, Math.max(1, p.rounds.length));
-        await adminSet(`partnerDrives/${p.pid}/aiInterview/main`, iv as unknown as Record<string, unknown>);
+        const kind = ivKindOf(b.kind);
+        const iv = cleanIv((b.iv ?? {}) as Record<string, unknown>, Math.max(1, p.rounds.length), kind);
+        await adminSet(ivDoc(p.pid, kind), iv as unknown as Record<string, unknown>);
         return NextResponse.json({ ok: true });
       }
       if (action === "company-iv-report") {
         const p = await mine(id(b.pid));
         if (!p) return bad("no-drive", 404);
-        const key = `partnerDrives/${p.pid}/ivAttempts/${id(b.cid)}_${id(b.uid)}`;
+        const kind = ivKindOf(b.kind);
+        const key = ivAttemptKey(p.pid, id(b.cid), id(b.uid), kind);
         const x = (await adminGet(key)) as IvAttempt | null;
         if (!x) return bad("no-drive", 404);
         // the report failed the first time: make it now
         if (x.done && !x.report && b.retry === true) {
-          const iv = (await adminGet(`partnerDrives/${p.pid}/aiInterview/main`)) as IvSetup | null;
+          const iv = (await adminGet(ivDoc(p.pid, kind))) as IvSetup | null;
+          x.kind = kind;
           x.report = await ivReport(x, p.role, iv?.focus ?? "");
           await adminSet(key, x as unknown as Record<string, unknown>);
         }

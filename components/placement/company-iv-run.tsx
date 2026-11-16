@@ -11,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import { AlertCircleIcon, ArrowRightIcon, CheckIcon, MicIcon, ShieldIcon } from "@/components/ui/icons";
 import { Interviewer } from "@/components/interview/interviewer";
 import { enterFullscreen, MAX_WARNINGS, ProctorBadge, ProctorWarning, SelfView, STRICT_SHELL, useProctor, type Breach } from "@/components/interview/proctor";
-import { partnerApi, partnerErrorText, type IvView, type StudentIvInfo } from "@/lib/partner";
+import { partnerApi, partnerErrorText, type IvKind, type IvView, type StudentIvInfo } from "@/lib/partner";
 import { createTalker, type Talker } from "@/lib/talker";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 type Rec = { start: () => void; stop: () => void; onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onend: (() => void) | null; continuous: boolean; interimResults: boolean; lang: string };
 
-export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
+export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pid: string; kind?: IvKind }) {
   const { actions } = useStore();
   const [info, setInfo] = useState<StudentIvInfo | null>(null);
   const [v, setV] = useState<IvView | null>(null);
@@ -36,13 +36,13 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
   const canSpeak = typeof window !== "undefined" && !!((window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition);
 
   useEffect(() => {
-    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid })
+    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid, kind })
       .then((r) => {
         setInfo(r);
         if (r.attempt?.done) setDone({ ended: false });
       })
       .catch((e) => setErr(partnerErrorText(e)));
-  }, [cid, pid]);
+  }, [cid, pid, kind]);
   useEffect(() => () => talker?.dispose(), [talker]);
 
   const finish = useCallback(
@@ -53,7 +53,7 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
       talker?.stop();
       setBusy("finish");
       try {
-        await partnerApi("student-iv-finish", { cid, pid, warnings, ended });
+        await partnerApi("student-iv-finish", { cid, pid, kind, warnings, ended });
         setDone({ ended });
         setV(null);
       } catch (e) {
@@ -63,7 +63,7 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
         setBusy("");
       }
     },
-    [cid, pid, talker, actions],
+    [cid, pid, kind, talker, actions],
   );
   const finishRef = useRef(finish);
   finishRef.current = finish;
@@ -89,7 +89,7 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
     enterFullscreen();
     setBusy("start");
     try {
-      const r = await partnerApi<IvView & { iv: unknown }>("student-iv-start", { cid, pid });
+      const r = await partnerApi<IvView & { iv: unknown }>("student-iv-start", { cid, pid, kind });
       setV(r);
     } catch (e) {
       actions.toast(partnerErrorText(e));
@@ -125,7 +125,7 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
     talker?.stop();
     setBusy("next");
     try {
-      const r = await partnerApi<IvView>("student-iv-answer", { cid, pid, index: v.index, answer, secs: Math.round((Date.now() - qAt) / 1000) });
+      const r = await partnerApi<IvView>("student-iv-answer", { cid, pid, kind, index: v.index, answer, secs: Math.round((Date.now() - qAt) / 1000) });
       setAnswer("");
       if (r.index >= r.total) {
         proctor.stop();
@@ -177,7 +177,7 @@ export function CompanyIvRun({ cid, pid }: { cid: string; pid: string }) {
       <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">{info.iv.company} · {info.iv.role}</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">{info.iv.title}</h1>
-        <p className="mt-1 text-[13.5px] text-white/60">Asha, the AI interviewer, asks {info.iv.count} questions. Answer each by speaking or typing, about 1–2 minutes each.</p>
+        <p className="mt-1 text-[13.5px] text-white/60">Asha, the AI interviewer, asks {info.iv.count} {kind === "hr" ? "HR questions: about you, why this company, and how you work with others" : "questions"}. Answer each by speaking or typing, about 1–2 minutes each. {kind === "hr" ? "Be yourself and give real examples." : ""}</p>
         <div className="mt-5 rounded-xl border border-amber-400/25 bg-amber-400/[0.05] p-4">
           <p className="flex items-center gap-2 text-[13.5px] font-semibold text-amber-100"><ShieldIcon size={15} /> Strict mode</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-white/70">

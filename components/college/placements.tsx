@@ -370,17 +370,18 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
   const [openRow, setOpenRow] = useState<string | null>(null);
   const [tell, setTell] = useState(true);
   // a partner company's online test on StudentOS: its results for this college's students
-  const [test, setTest] = useState<{ test: TestSummary | null; results: Record<string, TestResult>; iv?: Record<string, IvResult>; live?: Record<string, LiveResult> } | null>(null);
+  const [test, setTest] = useState<{ test: TestSummary | null; results: Record<string, TestResult>; iv?: Record<string, IvResult>; ivHr?: Record<string, IvResult>; live?: Record<string, LiveResult> } | null>(null);
   useEffect(() => {
     if (!drive.partner || sample) return;
-    partnerApi<{ test: TestSummary | null; results: Record<string, TestResult>; iv?: Record<string, IvResult>; live?: Record<string, LiveResult> }>("college-test-results", { cid: college.id, pid: drive.id })
+    partnerApi<{ test: TestSummary | null; results: Record<string, TestResult>; iv?: Record<string, IvResult>; ivHr?: Record<string, IvResult>; live?: Record<string, LiveResult> }>("college-test-results", { cid: college.id, pid: drive.id })
       .then(setTest)
       .catch(() => setTest(null));
   }, [drive.id, drive.partner, sample, college.id]);
   const showTest = !!test?.test;
   const showIv = Object.keys(test?.iv ?? {}).length > 0;
+  const showHr = Object.keys(test?.ivHr ?? {}).length > 0;
   const showLive = Object.keys(test?.live ?? {}).length > 0;
-  const extraCols = (showTest ? 1 : 0) + (showIv ? 1 : 0) + (showLive ? 1 : 0);
+  const extraCols = (showTest ? 1 : 0) + (showIv ? 1 : 0) + (showHr ? 1 : 0) + (showLive ? 1 : 0);
 
   const steps = [{ label: "applied", n: apps.length }, ...drive.rounds.map((r, i) => ({ label: r.toLowerCase(), n: apps.filter((a) => (a.status === "in-process" && a.round >= i) || (a.status === "selected")).length })), { label: "selected", n: apps.filter((a) => a.status === "selected").length }];
   const list = apps.filter((a) => (filter === "all" ? true : filter === "applied" ? a.status === "applied" : filter === "selected" ? a.status === "selected" : filter === "rejected" ? a.status === "rejected" : a.status === "in-process" && a.round === Number(filter.slice(1))));
@@ -518,7 +519,8 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 <th className="pb-2 font-medium">CGPA</th>
                 <th className="hidden pb-2 font-medium md:table-cell">Skills</th>
                 {showTest && <th className="pb-2 font-medium">{test!.test!.title}</th>}
-                {showIv && <th className="pb-2 font-medium">AI interview</th>}
+                {showIv && <th className="pb-2 font-medium">AI technical</th>}
+                {showHr && <th className="pb-2 font-medium">AI HR</th>}
                 {showLive && <th className="pb-2 font-medium">Live interview</th>}
                 <th className="pb-2 font-medium">Stage</th>
                 <th className="pb-2"><span className="sr-only">Resume</span></th>
@@ -534,6 +536,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                   <td className="hidden max-w-[260px] truncate py-2.5 pr-3 text-[12px] text-white/55 md:table-cell">{a.resume.skills || "—"}</td>
                   {showTest && <td className="py-2.5 pr-3"><TestCell r={test!.results[a.uid]} /></td>}
                   {showIv && <td className="py-2.5 pr-3 text-[12.5px]">{(() => { const r = test!.iv![a.uid]; return !r ? <span className="text-white/35">—</span> : "started" in r ? <span className="text-amber-200">In progress</span> : <span><b className="tabular-nums text-white">{r.overall ?? "…"}</b><span className="text-white/45">/100</span> <span className="text-cyan-200">{r.verdict}</span>{r.warnings.length ? <span className="block text-[11px] text-amber-200">{r.ended ? "Ended: warnings" : `${r.warnings.length} warnings`}</span> : null}</span>; })()}</td>}
+                  {showHr && <td className="py-2.5 pr-3 text-[12.5px]">{(() => { const r = test!.ivHr![a.uid]; return !r ? <span className="text-white/35">—</span> : "started" in r ? <span className="text-amber-200">In progress</span> : <span><b className="tabular-nums text-white">{r.overall ?? "…"}</b><span className="text-white/45">/100</span> <span className="text-cyan-200">{r.verdict}</span>{r.warnings.length ? <span className="block text-[11px] text-amber-200">{r.ended ? "Ended: warnings" : `${r.warnings.length} warnings`}</span> : null}</span>; })()}</td>}
                   {showLive && <td className="py-2.5 pr-3 text-[12.5px]">{(() => { const r = test!.live![a.uid]; return !r ? <span className="text-white/35">—</span> : r.feedback ? <span><b className="tabular-nums text-white">{r.feedback.score}</b><span className="text-white/45">/10</span> <span className="text-cyan-200">{r.feedback.verdict}</span></span> : <span className="text-white/65">{new Date(r.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span>; })()}</td>}
                   <td className="py-2.5 whitespace-nowrap">
                     <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-medium", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : a.status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, drive)}</span>

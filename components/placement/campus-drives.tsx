@@ -42,19 +42,19 @@ function TestEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
 }
 
 /** A company's AI technical interview on StudentOS, shown when the student is in its round. */
-function IvEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
+function IvEntry({ cid, d, a, kind = "technical" }: { cid: string; d: Drive; a: Application; kind?: "technical" | "hr" }) {
   const [info, setInfo] = useState<StudentIvInfo | null>(null);
-  const taken = Object.values(a.ivs ?? {}).some((t) => t.done);
+  const taken = Object.entries(a.ivs ?? {}).some(([k, t]) => t.done && k.endsWith("_hr") === (kind === "hr"));
   useEffect(() => {
     if (!d.partner || a.status !== "in-process") return;
-    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid: d.id })
+    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid: d.id, kind })
       .then(setInfo)
       .catch(() => setInfo(null));
-  }, [cid, d.id, d.partner, a.status, a.round]);
+  }, [cid, d.id, d.partner, a.status, a.round, kind]);
   if (!info?.iv) return null;
   const done = info.attempt?.done || taken;
   return (
-    <Link href={`/placement/ai-interview?c=${cid}&d=${d.id}`} className={cn("mt-3 flex items-center gap-3 rounded-xl border px-4 py-3 transition", done ? "border-white/10 bg-white/[0.02]" : "border-violet-400/35 bg-violet-400/[0.07] hover:border-violet-300/60")}>
+    <Link href={`/placement/ai-interview?c=${cid}&d=${d.id}${kind === "hr" ? "&k=hr" : ""}`} className={cn("mt-3 flex items-center gap-3 rounded-xl border px-4 py-3 transition", done ? "border-white/10 bg-white/[0.02]" : "border-violet-400/35 bg-violet-400/[0.07] hover:border-violet-300/60")}>
       <MicIcon size={16} className={done ? "text-white/45" : "text-violet-300"} />
       <span className="min-w-0 flex-1">
         <span className="block text-[13.5px] font-semibold text-white">{info.iv.title} · AI interviewer</span>
@@ -374,6 +374,7 @@ export function CampusDrives() {
                 <Steps a={a} d={d} />
                 <TestEntry cid={link.cid} d={d} a={a} />
                 <IvEntry cid={link.cid} d={d} a={a} />
+                <IvEntry cid={link.cid} d={d} a={a} kind="hr" />
                 {a.status !== "rejected" && !a.offer && (
                   <Link href={`/placement/prep/${d.id}`} className="mt-4 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 transition hover:border-accent/60">
                     <span className="min-w-0 flex-1"><span className="block text-[13.5px] font-semibold text-white">Prepare for {d.company}</span><span className="block text-[12px] text-white/55">Rounds, a 7-day plan and what {d.company} asked your seniors</span></span>
