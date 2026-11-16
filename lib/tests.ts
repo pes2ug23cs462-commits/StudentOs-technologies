@@ -20,6 +20,8 @@ export interface TestRecord {
   used: number;
   /** right / total per topic */
   byTopic: Record<string, { right: number; total: number }>;
+  /** strict mode closed the test after 3 warnings */
+  ended?: boolean;
   /** questions and answers, kept only for the latest few tests */
   review?: { questions: TestQuestion[]; answers: (number | null)[] };
 }

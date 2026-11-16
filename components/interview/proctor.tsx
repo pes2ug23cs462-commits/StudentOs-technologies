@@ -14,13 +14,16 @@ export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 3;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out";
+export type Breach = "tab" | "fullscreen" | "away" | "out" | "people";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
   away: "You looked away from the screen.",
   out: "You moved out of the camera.",
+  people: "Someone else appeared on the camera.",
 };
+/** Covers the app around a strict round, so only the round is on screen. */
+export const STRICT_SHELL = "fixed inset-0 z-[60] overflow-auto bg-ink";
 
 export function enterFullscreen() {
   const el = document.documentElement;
@@ -94,7 +97,7 @@ export function useProctor(on: boolean, onExit: (log: Breach[]) => void) {
 }
 
 /** The warning shown after each breach. */
-export function ProctorWarning({ warn, count, onResume }: { warn: Breach | null; count: number; onResume: () => void }) {
+export function ProctorWarning({ warn, count, onResume, what = "interview" }: { warn: Breach | null; count: number; onResume: () => void; what?: "interview" | "test" }) {
   if (!warn) return null;
   const last = count >= MAX_WARNINGS;
   return (
@@ -106,10 +109,10 @@ export function ProctorWarning({ warn, count, onResume }: { warn: Breach | null;
         <p id="pw-title" className="mt-4 text-[18px] font-semibold text-white">Warning {count} of {MAX_WARNINGS}</p>
         <p className="mt-2 text-[14px] text-white/75">{BREACH_TEXT[warn]}</p>
         <p className={cn("mt-3 rounded-lg px-3 py-2 text-[12.5px]", last ? "bg-rose-500/12 text-rose-200" : "bg-white/[0.04] text-white/55")}>
-          {last ? "This was your last warning. One more time and the interview ends." : `Stay on this screen and look at the camera. After ${MAX_WARNINGS} warnings, the next one ends the interview.`}
+          {last ? `This was your last warning. One more time and the ${what} ends.` : `Stay on this screen and look at the camera. After ${MAX_WARNINGS} warnings, the next one ends the ${what}.`}
         </p>
         <button type="button" autoFocus onClick={onResume} className="mt-5 h-11 w-full rounded-xl bg-accent text-[14px] font-semibold text-[#120826] transition hover:brightness-110">
-          Back to interview
+          Back to {what}
         </button>
       </div>
     </div>
@@ -125,7 +128,19 @@ export function ProctorBadge({ left }: { left: number }) {
   );
 }
 
-/** Camera self-view that reports looking away or leaving the frame. */
+/** A small camera and the warnings left, pinned to a corner of a strict test. */
+export function StrictDock({ left, onBreach }: { left: number; onBreach: (b: Breach) => void }) {
+  return (
+    <div className="fixed right-4 bottom-4 z-[70] w-[210px] space-y-2">
+      <SelfView onBreach={onBreach} className="shadow-2xl" />
+      <div className="flex justify-end rounded-lg bg-[#0b0b0d]/90 backdrop-blur">
+        <ProctorBadge left={left} />
+      </div>
+    </div>
+  );
+}
+
+/** Camera self-view that reports looking away, leaving the frame, or a second person. */
 export function SelfView({ onBreach, className }: { onBreach: (b: Breach) => void; className?: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const [cam, setCam] = useState<"starting" | "on" | "blocked">("starting");

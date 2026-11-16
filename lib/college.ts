@@ -17,6 +17,8 @@ import { db } from "@/lib/firebase";
 import { CHAPTERS, CHAPTERS_10, CHAPTERS_11, levelOf, parseKey, type ExamPrepState } from "@/lib/exam-prep";
 import type { PlacementProfile } from "@/lib/placement";
 import type { AppState } from "@/lib/store";
+import { aptitudeScore } from "@/lib/aptitude";
+import { resumeCheck } from "@/lib/resume-check";
 
 export type CollegeType = "school" | "degree";
 export type StaffRole = "admin" | "placement" | "teacher" | "viewer";
@@ -72,6 +74,10 @@ export interface MemberSummary {
   codingSolved: number;
   projects: number;
   resumeDone: boolean;
+  /** resume checklist score 0–100 (newer apps) */
+  resumeScore?: number;
+  /** aptitude accuracy over the last 5 attempts, 0–100 (newer apps) */
+  aptitudeAvg?: number;
   modulesDone: number;
   /** test scores outside exam prep (Practice Arena), average % */
   practiceAvg: number;
@@ -229,6 +235,8 @@ export function buildSummary(state: AppState, link: CollegeLink, uid: string, pr
     codingSolved: Object.keys(state.coding?.solved ?? {}).length,
     projects: (state.entries ?? []).filter((e) => e.kind === "project").length,
     resumeDone: !!(state.resume && state.resume.summary?.trim() && state.resume.skills?.trim()),
+    resumeScore: resumeCheck(state).score,
+    aptitudeAvg: aptitudeScore(state.aptitude),
     modulesDone: Object.values(state.learning?.modules ?? {}).filter((m) => m.done).length,
     practiceAvg: tests.length ? Math.round(tests.slice(0, 10).reduce((n, t) => n + (t.total ? (t.score / t.total) * 100 : 0), 0) / Math.min(10, tests.length)) : 0,
     practiceTests: tests.length,
@@ -269,24 +277,22 @@ export function examReadiness(m: MemberSummary) {
   return v.length ? Math.round(v.reduce((n, [x]) => n + x, 0) / v.length) : null;
 }
 
-/** Placement readiness of one student, 0–100. */
-export function placementReadiness(m: MemberSummary) {
-  const iv = m.interviews ? m.interviewAvg : 0;
-  const code = Math.min(100, m.codingSolved * 10);
-  const proj = Math.min(100, m.projects * 34);
-  const resume = m.resumeDone ? 100 : 0;
-  const learn = Math.min(100, m.modulesDone * 5);
-  return Math.round(iv * 0.35 + code * 0.2 + proj * 0.2 + resume * 0.15 + learn * 0.1);
-}
-export const PLACEMENT_PARTS = ["Interviews", "Coding", "Projects", "Resume"] as const;
-export function placementParts(m: MemberSummary): Record<(typeof PLACEMENT_PARTS)[number], number> {
+export const PLACEMENT_PARTS = ["Aptitude", "Interviews", "Coding", "Projects", "Resume"] as const;
+export type PlacementPart = (typeof PLACEMENT_PARTS)[number];
+const WEIGHT: Record<PlacementPart, number> = { Aptitude: 0.2, Interviews: 0.3, Coding: 0.2, Projects: 0.15, Resume: 0.15 };
+/** The same 0–100 readiness for the student's own page and the college dashboard. */
+export const readinessFromParts = (p: Record<PlacementPart, number>) => Math.round(PLACEMENT_PARTS.reduce((n, k) => n + p[k] * WEIGHT[k], 0));
+export function placementParts(m: MemberSummary): Record<PlacementPart, number> {
   return {
+    Aptitude: m.aptitudeAvg ?? 0,
     Interviews: m.interviews ? m.interviewAvg : 0,
     Coding: Math.min(100, m.codingSolved * 10),
     Projects: Math.min(100, m.projects * 34),
-    Resume: m.resumeDone ? 100 : 0,
+    Resume: m.resumeScore ?? (m.resumeDone ? 100 : 0),
   };
 }
+/** Placement readiness of one student, 0–100. */
+export const placementReadiness = (m: MemberSummary) => readinessFromParts(placementParts(m));
 
 export function readinessOf(m: MemberSummary, type: CollegeType) {
   return type === "school" ? examReadiness(m) : placementReadiness(m);
@@ -408,6 +414,7 @@ export function sampleMembers(type: CollegeType): MemberSummary[] {
       codingSolved: type === "degree" ? Math.floor(skill * rnd() * 14) : 0,
       projects: type === "degree" ? Math.floor(skill * 3.5) : 0,
       resumeDone: type === "degree" ? rnd() < skill : false,
+      ...(type === "degree" ? { aptitudeAvg: Math.round(25 + skill * 60 * (0.7 + rnd() * 0.3)), resumeScore: Math.round(Math.min(100, skill * 110 * rnd() + 12) / 12.5) * 12.5 } : {}),
       modulesDone: Math.floor(rnd() * 20),
       practiceAvg: Math.round(skill * 90),
       practiceTests: Math.floor(rnd() * 8),

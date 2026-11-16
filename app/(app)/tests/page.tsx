@@ -12,8 +12,9 @@ import { PageHeader } from "@/components/free/parts";
 import { PremiumBadge, PremiumGate } from "@/components/premium/premium-gate";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, ArrowRightIcon, BarChartIcon, BookIcon, BulbIcon, CheckIcon, ClockIcon, CompassIcon, FileIcon, FlagIcon, GridIcon, LayersIcon, OpenBookIcon, PlayIcon, PlusIcon, RefreshIcon, TargetIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, ArrowRightIcon, BarChartIcon, BookIcon, BulbIcon, CheckIcon, ClockIcon, CompassIcon, FileIcon, FlagIcon, GridIcon, LayersIcon, OpenBookIcon, PlayIcon, PlusIcon, RefreshIcon, ShieldIcon, TargetIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Card, Label } from "@/components/ui/primitives";
+import { BREACH_TEXT, enterFullscreen, MAX_WARNINGS, ProctorWarning, STRICT_SHELL, StrictDock, useProctor, type Breach } from "@/components/interview/proctor";
 import { AssistantError } from "@/lib/assistant";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
@@ -174,6 +175,10 @@ function Tests() {
   const [result, setResult] = useState<TestRecord | null>(null);
   const [filter, setFilter] = useState<"all" | "wrong" | "skipped">("all");
   const done = useRef(false);
+  const [strict, setStrict] = useState(true);
+  const [breaches, setBreaches] = useState<Breach[] | null>(null);
+  // strict mode: 3 warnings, then the test is submitted as it stands and closed
+  const proctor = useProctor(strict && phase === "live", (log) => submit(false, log));
 
   // countdown
   useEffect(() => {
@@ -201,6 +206,8 @@ function Tests() {
     const tps = (o?.topics ?? topics).trim();
     if (!sub) return setError("Write the subject for your test.");
     setError("");
+    // full screen needs the click itself, so ask before anything waits
+    if (strict) enterFullscreen();
     setSubject(sub);
     setTopics(tps);
     setPhase("preparing");
@@ -220,13 +227,16 @@ function Tests() {
       setPhase("live");
     } catch (e) {
       setError(e instanceof AssistantError ? e.message : "Couldn’t prepare the test. Try again.");
+      proctor.stop();
       setPhase("setup");
     }
   };
 
-  function submit(timedOut = false) {
+  function submit(timedOut = false, ended?: Breach[]) {
     if (done.current) return;
     done.current = true;
+    if (!ended) proctor.stop();
+    setBreaches(ended ?? null);
     const byTopic: TestRecord["byTopic"] = {};
     let score = 0;
     qs.forEach((q, k) => {
@@ -248,6 +258,7 @@ function Tests() {
       used: Math.min(limit, limit - left),
       byTopic,
       review: { questions: qs, answers },
+      ...(ended ? { ended: true } : {}),
     };
     actions.patch({ tests: addTest(history, rec) });
     setResult(rec);
@@ -281,7 +292,9 @@ function Tests() {
     const answered = answers.filter((a) => a !== null).length;
     const low = left <= 60;
     return (
-      <div className="px-6 py-7 lg:px-8">
+      <div className={cn("px-6 py-7 lg:px-8", strict && STRICT_SHELL)}>
+        {strict && <StrictDock left={proctor.left} onBreach={proctor.report} />}
+        <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} what="test" />
         <div className="mx-auto grid max-w-[1100px] gap-5 lg:grid-cols-[1fr_280px]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -397,6 +410,15 @@ function Tests() {
           <button type="button" onClick={() => setPhase("setup")} className="flex items-center gap-1.5 text-[13px] text-white/55 hover:text-white">
             <ArrowLeftIcon size={14} /> Practice Arena
           </button>
+          {breaches && (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-rose-400/25 bg-rose-500/[0.06] p-4">
+              <XIcon size={16} className="mt-0.5 shrink-0 text-rose-300" />
+              <div className="text-[13px] leading-relaxed text-white/75">
+                <p><b className="text-white">Strict mode closed this test after {MAX_WARNINGS} warnings.</b> It was submitted as it stood and can’t be reopened.</p>
+                <ul className="mt-1.5 list-disc pl-4 text-white/60">{breaches.map((b, k) => <li key={k}>{BREACH_TEXT[b]}</li>)}</ul>
+              </div>
+            </div>
+          )}
           <PageHeader title="Your test result" sub={`${result.subject}${result.topics ? ` (${result.topics})` : ""} · ${LEVEL_LABEL[result.level]} · ${new Date(result.at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`} actions={<PremiumBadge />} />
           <Card glow className="mt-6 grid gap-6 p-6 sm:grid-cols-[auto_1fr] sm:items-center sm:p-8">
             <Ring value={p} size={128} />
@@ -874,6 +896,16 @@ function Tests() {
                 </div>
               </div>
               <p className="mt-3 flex items-center gap-1.5 text-[12.5px] text-white/55"><ClockIcon size={13} /> {Math.round((count * SECONDS_PER_Q[level]) / 60)} minutes · single correct answer · no negative marking</p>
+              <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3.5">
+                <ShieldIcon size={15} className="mt-0.5 text-white/50" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium text-white">Strict mode</span>
+                  <span className="mt-0.5 block text-[12px] text-white/50">Full screen, no other tabs, and the camera checks you look at the screen and are alone. {MAX_WARNINGS} warnings, then the test closes and can’t be reopened. The camera stays on your device.</span>
+                </span>
+                <button type="button" role="switch" aria-checked={strict} aria-label="Strict mode" onClick={() => setStrict(!strict)} className={cn("relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition", strict ? "bg-cyan-400" : "bg-white/15")}>
+                  <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />
+                </button>
+              </label>
               {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
               <button type="button" onClick={() => { setSetupOpen(false); void start(); }} disabled={!subject.trim()} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:opacity-50">
                 <PlayIcon size={15} /> Start Mock Test <ArrowRightIcon size={14} />

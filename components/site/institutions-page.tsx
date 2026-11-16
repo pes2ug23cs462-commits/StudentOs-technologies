@@ -29,7 +29,7 @@ const FOR: { title: string; who: string; icon: FancyIconName; tone: FancyTone; p
     who: "BCom, BCA, BSc, BE / BTech, MBA, MCA",
     icon: "rocket",
     tone: "cyan",
-    points: ["Placement readiness: interviews, coding, projects, resume", "Post campus drives with eligibility rules", "Send test and interview links only to shortlisted students", "Track rounds, offers and who is placed"],
+    points: ["Placement readiness: aptitude, interviews, coding, projects, resume", "Post campus drives with eligibility rules", "Send test and interview links only to shortlisted students", "Track rounds, offers and who is placed"],
   },
 ];
 

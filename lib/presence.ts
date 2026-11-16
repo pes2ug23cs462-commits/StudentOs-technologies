@@ -33,7 +33,7 @@ function load(): Promise<Landmarker> {
       return mp.FaceLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
         runningMode: "VIDEO",
-        numFaces: 1,
+        numFaces: 2,
         outputFaceBlendshapes: true,
       });
     })();
@@ -66,8 +66,8 @@ export async function watchPresence(
   video: HTMLVideoElement,
   now: () => number,
   onEvent: (e: PresenceEvent) => void,
-  /** strict mode: called once per look-away as soon as it lasts `secs` */
-  warn?: { secs: number; on: (kind: "away" | "out") => void },
+  /** strict mode: called once per look-away (or a second face) as soon as it lasts `secs` */
+  warn?: { secs: number; on: (kind: "away" | "out" | "people") => void },
 ) {
   let lm: Landmarker;
   try {
@@ -79,6 +79,9 @@ export async function watchPresence(
   let state: "on" | "away" | "out" = "on";
   let since = now();
   let warned = false;
+  // a second face on camera (someone helping): checked on its own, it can overlap a look-away
+  let twoSince: number | null = null;
+  let twoWarned = false;
   const flush = (next: "on" | "away" | "out") => {
     if (next === state) return;
     const secs = now() - since;
@@ -99,6 +102,16 @@ export async function watchPresence(
     try {
       const r = lm.detectForVideo(video, performance.now());
       const face = r.faceLandmarks[0];
+      if (r.faceLandmarks.length > 1) {
+        twoSince ??= now();
+        if (warn && !twoWarned && now() - twoSince >= Math.min(2, warn.secs)) {
+          twoWarned = true;
+          warn.on("people");
+        }
+      } else {
+        twoSince = null;
+        twoWarned = false;
+      }
       samples++;
       const next = !face ? "out" : facing(face, r.faceBlendshapes?.[0]?.categories) ? "on" : "away";
       if (next === "on") onScreen++;

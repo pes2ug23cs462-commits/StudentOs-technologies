@@ -48,6 +48,7 @@ import type { CollegeLink, StaffLink } from "./college";
 import type { ExamPrepState } from "./exam-prep";
 import type { CodingState } from "./coding/types";
 import type { TestRecord } from "./tests";
+import type { AptitudeState } from "./aptitude";
 import { TODAY, addDays, uid, weekStart } from "./utils";
 
 /* ------------------------------------------------------------------
@@ -105,6 +106,8 @@ export interface AppState {
   staffOf?: StaffLink;
   /** asked to be told when Placement opportunities opens (ms) */
   placementNotify?: number;
+  /** Placement prep: aptitude practice and mock results (newest first) */
+  aptitude?: AptitudeState;
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";

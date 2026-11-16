@@ -47,7 +47,7 @@ export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
     items: [
       { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
       { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
-      { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"], badge: "SOON" },
+      { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"], badge: "NEW" },
     ],
   },
 ];

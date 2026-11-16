@@ -28,6 +28,7 @@ import {
   loadMembers,
   loadStaff,
   needHelp,
+  PLACEMENT_PARTS,
   placementParts,
   placementReadiness,
   readinessGrid,
@@ -485,7 +486,7 @@ function Overview({ college, members, joinUrl, go }: { college: College; members
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Kpi label="Students sharing" value={members.length} sub="agreed to share progress" />
         <Kpi label="Active this week" value={active} sub={`${Math.round((active / members.length) * 100)}% of students`} tone="text-emerald-300" />
-        <Kpi label={type === "school" ? "Average exam readiness" : "Average placement readiness"} value={readyAll == null ? "—" : `${readyAll}%`} sub={type === "school" ? "from chapter tests" : "interviews, coding, projects, resume"} />
+        <Kpi label={type === "school" ? "Average exam readiness" : "Average placement readiness"} value={readyAll == null ? "—" : `${readyAll}%`} sub={type === "school" ? "from chapter tests" : "aptitude, interviews, coding, projects, resume"} />
         <Kpi label="Need help" value={help.length} sub="below 50% readiness" tone="text-rose-300" />
       </div>
 
@@ -514,7 +515,7 @@ function Overview({ college, members, joinUrl, go }: { college: College; members
             </Panel>
           ) : (
             <Panel title="What’s holding students back">
-              {(["Interviews", "Coding", "Projects", "Resume"] as const).map((p) => {
+              {PLACEMENT_PARTS.map((p) => {
                 const v = avg(members.map((m) => placementParts(m)[p]));
                 return (
                   <div key={p} className="flex items-center justify-between py-1.5">
@@ -590,7 +591,7 @@ function Sections({ members, type }: { members: MemberSummary[]; type: CollegeTy
         const rows =
           type === "school"
             ? subjects.slice(0, 5).map((sub) => [sub, avg(ms.flatMap((m) => Object.entries(m.chapters).filter(([k]) => k.replace(/^1[01]:/, "").startsWith(sub + "/")).map(([, [v]]) => v)))] as const)
-            : (["Interviews", "Coding", "Projects", "Resume"] as const).map((p) => [p, avg(ms.map((m) => placementParts(m)[p]))] as const);
+            : PLACEMENT_PARTS.map((p) => [p, avg(ms.map((m) => placementParts(m)[p]))] as const);
         const weakest = type === "school" ? chapterStats(ms).filter((c) => c.tested >= 2).sort((a, b) => a.avg - b.avg)[0] : null;
         return (
           <Tilt key={s}>
@@ -681,7 +682,7 @@ function Chapters({ members }: { members: MemberSummary[] }) {
 
 function Placement({ members }: { members: MemberSummary[] }) {
   if (!members.length) return <Empty />;
-  const parts = ["Interviews", "Coding", "Projects", "Resume"] as const;
+  const parts = PLACEMENT_PARTS;
   const ready = members.filter((m) => placementReadiness(m) >= 65).length;
   return (
     <div className="space-y-5">
