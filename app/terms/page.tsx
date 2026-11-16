@@ -26,8 +26,9 @@ const sections = [
     title: "What StudentOS is",
     body: (
       <P>
-        StudentOS is a study planner for students. It builds study plans and schedules, suggests video courses and popular videos (from YouTube) based on your profile, tracks your progress, offers an AI Assistant, revision quizzes, a resume
-        creator and StudentOS certificates. We keep improving it, so features may change, be added or be removed.
+        StudentOS helps students prepare for exams and placements, and helps colleges and companies run campus placements. For students it offers study plans, courses and popular videos (from YouTube), an AI Assistant with notes, aptitude practice,
+        mock tests and AI mock interviews, a resume creator, a placement readiness score and StudentOS certificates. For colleges it offers a console to see the progress students choose to share and to run campus drives. For companies it offers a
+        portal to see applicants from partner colleges and run rounds: online tests, an AI technical interview and live video interviews. We keep improving it, so features may change, be added or be removed.
       </P>
     ),
   },
@@ -66,7 +67,7 @@ const sections = [
         <UL>
           <li>break the law, or upload content you don’t have the right to share;</li>
           <li>upload anything harmful, hateful, sexual, or that invades someone’s privacy;</li>
-          <li>cheat on quizzes (for example by sharing answers or using scripts), fake watch time, or try to get certificates you didn’t earn;</li>
+          <li>cheat on quizzes, tests or interviews: for example by sharing answers, using scripts or AI tools during a strict round, or letting someone else answer for you; or fake watch time, or try to get certificates you didn’t earn;</li>
           <li>misuse the AI Assistant to create harmful content or to get around its limits;</li>
           <li>try to break into, overload, copy or scrape StudentOS, or other students’ data;</li>
           <li>download, copy or re-upload YouTube videos shown in StudentOS.</li>
@@ -81,7 +82,7 @@ const sections = [
     body: (
       <P>
         Videos in StudentOS are played from YouTube using YouTube API Services. They belong to their creators, not to StudentOS. By watching them you agree to the <A href="https://www.youtube.com/t/terms">YouTube Terms of Service</A>. We choose videos
-        automatically by views and likes; we don’t create or check every video, and a video may be removed by YouTube at any time. If a video stops working, StudentOS picks another one for that module.
+        automatically: those that match the topic, then the most viewed. We don’t create or check every video, and a video may be removed by YouTube at any time. If a video stops working, StudentOS picks another one for that module.
       </P>
     ),
   },
@@ -90,9 +91,48 @@ const sections = [
     title: "AI features",
     body: (
       <P>
-        The AI Assistant, study plans, course suggestions and quizzes are made by AI. They can be wrong, out of date or incomplete. Check important information (exam dates, syllabus, tax or legal rules, career decisions) with your college or an official
-        source. AI answers are not professional advice.
+        The AI Assistant, notes, study plans, course suggestions, quizzes, mock interview feedback and AI interview reports are made by AI. They can be wrong, out of date or incomplete. Check important information (exam dates, syllabus, tax or legal
+        rules, career decisions) with your college or an official source. AI answers are not professional advice. An AI interview report is there to help a company review answers; it should not be the only reason for a hiring decision.
       </P>
+    ),
+  },
+  {
+    id: "strict",
+    title: "Strict mode in tests and interviews",
+    body: (
+      <>
+        <P>Some mock tests, mock interviews, and company tests and interviews run in strict mode. While a strict round is open:</P>
+        <UL>
+          <li>it runs full screen; leaving full screen or switching to another tab or window counts as a warning;</li>
+          <li>your camera checks that you look at the screen, stay in view and are alone, and, in spoken interviews, that the voice heard is yours; your microphone checks for talking in silent tests;</li>
+          <li>after 3 warnings, the next one ends the round, and what you answered until then is kept;</li>
+          <li>a company test or interview can be taken once.</li>
+        </UL>
+        <P>
+          The checks run on your own device and can be wrong, for example in poor light. Warnings are shown with your result: to you in practice rounds, and to the college and company in a drive’s rounds. If you think a warning was wrong, tell your
+          placement cell or write to {CONTACT_EMAIL}.
+        </P>
+      </>
+    ),
+  },
+  {
+    id: "placements",
+    title: "Colleges, companies and campus drives",
+    body: (
+      <>
+        <P>
+          A college account opens after StudentOS approves it. Students join a college with its code and choose whether to share their progress. A college runs its own drives; StudentOS may also bring drives from partner companies, which a college
+          approves before its students see them.
+        </P>
+        <P>
+          StudentOS is a platform, not an employer or a placement agency. Shortlists, results and offers are decided by the college and the company, not by StudentOS. We don’t promise that any student will be shortlisted, selected or hired, or that a
+          company will make or keep an offer. Offer letters and their terms are between the student and the company.
+        </P>
+        <P>
+          Colleges and companies may use what students share with them only to run their placements and hiring, and must keep it confidential. Questions in a company’s test are the company’s responsibility. A student who shares an interview
+          experience lets their college show it to its students after the placement cell checks it; the placement cell may hide any experience.
+        </P>
+      </>
     ),
   },
   {
@@ -160,7 +200,7 @@ export default function TermsPage() {
     <LegalPage
       title="Terms and Conditions"
       other={{ href: "/privacy", label: "Privacy Policy" }}
-      intro={<P>The rules for using StudentOS, in plain words. <B>Short version:</B> use it honestly to learn, keep your account safe, and remember that AI answers and YouTube videos can be wrong.</P>}
+      intro={<P>The rules for using StudentOS, in plain words. <B>Short version:</B> use it honestly to learn and in placement rounds, keep your account safe, and remember that AI answers and YouTube videos can be wrong and that colleges and companies, not StudentOS, decide shortlists and offers.</P>}
       sections={sections}
     />
   );

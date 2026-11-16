@@ -113,8 +113,8 @@ export function SiteFooter() {
               <LogoMark size={28} />
               <Wordmark className="text-[17px]" />
             </Link>
-            <p className="mt-3 max-w-[300px] text-[13px] leading-relaxed text-white/55">An AI study companion that turns goals and free time into a plan you can keep.</p>
-            <p className="mt-4 text-[11.5px] font-semibold tracking-[0.18em] text-accent">LEARN · PLAN · BUILD · GROW</p>
+            <p className="mt-3 max-w-[300px] text-[13px] leading-relaxed text-white/55">Placement prep for students, campus drives for colleges, and tests and interviews for companies, in one place.</p>
+            <p className="mt-4 text-[11.5px] font-semibold tracking-[0.18em] text-accent">PREPARE · PRACTISE · GET PLACED</p>
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {COLUMNS.map((c) => (
@@ -136,7 +136,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-6 text-[12px] text-white/45">
           <span>© {new Date().getFullYear()} StudentOS</span>
-          <span>Made for students who’d rather be studying than planning.</span>
+          <span>Made in Kolar for students, placement cells and recruiters.</span>
         </div>
       </div>
     </footer>

@@ -45,10 +45,23 @@ const sections = [
             <B>Study materials:</B> when you upload a PDF, Word, PowerPoint, text file or photo, we keep only the text taken from it, not the file itself.
           </li>
           <li>
+            <B>Placements:</B> your branch, CGPA, backlogs and batch, the drives you apply to (with your resume and your StudentOS mock interview and coding scores), your round and offer status, and interview experiences you choose to share.
+          </li>
+          <li>
+            <B>Tests and interviews:</B> your answers and scores in practice and company tests (including code you submit), your answers in AI interviews (spoken answers are turned into text), the AI’s report, and the strict-mode warnings
+            during a round. In a live interview, the recruiter’s score and notes.
+          </li>
+          <li>
+            <B>Notifications:</B> if you turn on phone or laptop notifications, a device token from Firebase Cloud Messaging.
+          </li>
+          <li>
+            <B>Careers applicants</B> (people applying to work at StudentOS): name, email, phone, college, resume link, the answers in our AI interview and its report.
+          </li>
+          <li>
             <B>Technical data:</B> basic data your browser sends to any website (such as IP address and browser type), which our hosting and Firebase use to deliver and protect the service.
           </li>
         </UL>
-        <P>We do not collect your phone number, Aadhaar or other ID numbers, or payment details on the Free plan. We do not use advertising or tracking cookies.</P>
+        <P>We do not collect students’ phone numbers (only careers applicants give one), Aadhaar or other ID numbers, or payment details on the Free plan. We do not use advertising or tracking cookies.</P>
       </>
     ),
   },
@@ -61,6 +74,7 @@ const sections = [
         <li>To build your study plan, suggest courses and videos that fit your profile and assessment, and track your progress.</li>
         <li>To answer you in the AI Assistant, make revision quizzes from your materials, and write course quizzes.</li>
         <li>To issue certificates and let others verify them when you share them.</li>
+        <li>To run campus placements: show your shared progress to your college, send your application to the college and company of a drive, run tests and interviews, and tell you about new drives, links and results by email, notification and the in-app bell.</li>
         <li>To keep StudentOS secure, prevent misuse (for example, daily AI limits), and fix problems.</li>
       </UL>
     ),
@@ -82,10 +96,19 @@ const sections = [
             <B>YouTube (Google)</B>, see the next section.
           </li>
           <li>
+            <B>Resend</B> sends our emails (your email address, name and the message). <B>Firebase Cloud Messaging</B> delivers phone and laptop notifications if you turn them on.
+          </li>
+          <li>
+            <B>Your browser’s speech service</B>: when you tap Speak in an interview, your browser turns your voice into text (in Chrome this is done by Google).
+          </li>
+          <li>
             <B>Our hosting provider</B> serves the website.
           </li>
         </UL>
-        <P>Some of these providers may process data on servers outside India. We may also disclose data if the law requires it.</P>
+        <P>
+          The camera face model and the Python runner for coding are downloaded from public CDNs (jsDelivr and Google); no personal data is sent to them. Some of these providers may process data on servers outside India. We may also disclose data if
+          the law requires it.
+        </P>
       </>
     ),
   },
@@ -108,6 +131,45 @@ const sections = [
     ),
   },
   {
+    id: "camera",
+    title: "Camera, microphone and live interviews",
+    body: (
+      <UL>
+        <li>
+          <B>Strict mode:</B> the camera and microphone checks run in your browser, on your device. We keep only the result, such as “looked away” or “a second person”, never a photo, video or sound.
+        </li>
+        <li>
+          <B>Mock interview recordings</B> you choose to save stay on your device and are never uploaded.
+        </li>
+        <li>
+          <B>Live interviews:</B> video and sound go directly between your browser and the recruiter’s (peer to peer). Nothing is recorded by StudentOS. To connect, both browsers exchange network details (including IP addresses) through StudentOS and
+          Google’s public STUN servers, so the other side can see your IP address.
+        </li>
+      </UL>
+    ),
+  },
+  {
+    id: "colleges",
+    title: "Your college and companies",
+    body: (
+      <UL>
+        <li>
+          <B>Your college</B> sees a summary only if you join it and agree to share: your name, class or section, test and practice scores, course progress, activity, placement readiness, and (for degree colleges) your email for drive
+          updates. Never your chats, notes or phone. Stop sharing any time and the summary is deleted.
+        </li>
+        <li>
+          <B>When you apply to a drive,</B> your college’s placement cell sees your application, and for a drive StudentOS brings, the company sees it too: your name, email, branch, CGPA, backlogs, batch, resume and your StudentOS scores.
+        </li>
+        <li>
+          <B>Company tests and interviews:</B> the company and your college’s placement cell see your score, the strict-mode warnings and, for the company, your answers, code and the AI’s report. You see that you submitted, not the score.
+        </li>
+        <li>
+          <B>Interview experiences</B> you share are seen by your placement cell, and after it checks them by students of your college, with your branch and batch (your name only if you choose).
+        </li>
+      </UL>
+    ),
+  },
+  {
     id: "public",
     title: "What is public",
     body: (
@@ -121,7 +183,7 @@ const sections = [
         <li>
           <B>Shared chats:</B> if you share an AI chat, anyone with the link can read that copy. You can stop sharing at any time, which deletes the copy.
         </li>
-        <li>Everything else in your account is visible only to you.</li>
+        <li>Nothing else in your account is public. Apart from what you share with your college and companies (above), it is visible only to you.</li>
       </UL>
     ),
   },
@@ -130,7 +192,14 @@ const sections = [
     title: "Storage and retention",
     body: (
       <>
-        <P>We keep your data while your account is open. YouTube data is refreshed or deleted within 30 days as described above. In your browser we store small preferences such as your theme and whether locked chats are unlocked in this tab.</P>
+        <P>
+          We keep your data while your account is open. YouTube data is refreshed or deleted within 30 days as described above. In your browser we store small preferences such as your theme and whether locked chats are unlocked in this tab, and
+          your answers during a test so a refresh doesn’t lose them.
+        </P>
+        <P>
+          Applications, test and interview results you submitted in a drive are part of that college’s and company’s hiring records, so they are kept for that drive even if you stop sharing. Email us and we will delete them unless the law requires
+          us to keep them.
+        </P>
         <P>
           When you delete your account (Settings → Account &amp; privacy → Delete account), we delete your profile and app data, saved chats, study materials, shared chat links, your review and your public certificate records. Copies kept by our service providers
           for backup or security may take up to 30 days to disappear.
@@ -174,8 +243,8 @@ const sections = [
     title: "Security",
     body: (
       <P>
-        Data is sent over HTTPS and stored with Google Firebase. Database rules let each student read and write only their own data. Chat lock PINs are stored only as a salted hash. No system is perfectly secure; if a breach affects your data, we will
-        tell you and the authorities as the law requires.
+        Data is sent over HTTPS and stored with Google Firebase. Database rules let each student read and write only their own data; a college’s staff can read only what its students share with it, and companies and test answers are reached only
+        through our server, which checks who is asking. Chat lock PINs are stored only as a salted hash. No system is perfectly secure; if a breach affects your data, we will tell you and the authorities as the law requires.
       </P>
     ),
   },
