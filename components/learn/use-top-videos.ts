@@ -19,7 +19,7 @@ export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "one
     const hit = memo.get(key);
     if (hit) return setState({ loading: false, ...hit });
     try {
-      const saved = sessionStorage.getItem(`studentos:yt:${key}`);
+      const saved = sessionStorage.getItem(`studentos:yt2:${key}`);
       if (saved) {
         const v = JSON.parse(saved);
         memo.set(key, v);
@@ -37,7 +37,7 @@ export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "one
         if (v.available) {
           memo.set(key, v);
           try {
-            sessionStorage.setItem(`studentos:yt:${key}`, JSON.stringify(v));
+            sessionStorage.setItem(`studentos:yt2:${key}`, JSON.stringify(v));
           } catch {
             /* ignore */
           }

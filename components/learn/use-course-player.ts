@@ -25,7 +25,10 @@ export function useCoursePlayer(course: Course | undefined) {
   // Most viewed videos for this module’s topic (empty when no YouTube API key is set).
   const top = useTopVideos(activeModule?.topic);
   const best = top.videos[0];
-  const video = mp.yt
+  // A video kept from an older, looser search is dropped if the student has barely started it
+  // and it is no longer among the videos for this topic (so a wrong video doesn't stick).
+  const stale = !!mp.yt && top.videos.length > 0 && !mp.done && !(mp.lessonsDone?.length) && (mp.t ?? 0) < 60 && !top.videos.some((v) => `v:${v.id}` === mp.yt);
+  const video = mp.yt && !stale
     ? { key: mp.yt, title: mp.ytTitle ?? "", channel: mp.ytChannel ?? "", secs: mp.secs || mp.d || 0 }
     : best
       ? { key: `v:${best.id}`, title: best.title, channel: best.channel, secs: best.seconds }
@@ -59,7 +62,9 @@ export function useCoursePlayer(course: Course | undefined) {
   const stats = courseStats(course, learning);
   const cp = stats.progress;
   // keep the same video and lesson split once the student has started
-  const lockVideo = { yt: mp.yt ?? video?.key, ytTitle: mp.ytTitle ?? video?.title, ytChannel: mp.ytChannel ?? video?.channel, secs: mp.secs || video?.secs || 0, ytAt: mp.ytAt ?? Date.now() };
+  const lockVideo = stale
+    ? { yt: video?.key, ytTitle: video?.title, ytChannel: video?.channel, secs: video?.secs || 0, ytAt: Date.now() }
+    : { yt: mp.yt ?? video?.key, ytTitle: mp.ytTitle ?? video?.title, ytChannel: mp.ytChannel ?? video?.channel, secs: mp.secs || video?.secs || 0, ytAt: mp.ytAt ?? Date.now() };
 
   const goLesson = (i: number) => {
     setLessonOverride(i);
