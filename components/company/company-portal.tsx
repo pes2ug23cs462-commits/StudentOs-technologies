@@ -9,16 +9,18 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useResumePrint } from "@/components/resume/resume-print";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
+import { VideoIcon, ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Textarea, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
 import { fallbackResume } from "@/lib/resume-snapshot";
 import { partnerApi, partnerErrorText, type Applicant, type CompanyDrive, type TestSummary, type Whoami } from "@/lib/partner";
 import { TestCard, TestCell } from "@/components/company/company-test";
+import { IvCard, IvCell, IvReportDrawer } from "@/components/company/company-iv";
+import type { IvSummary } from "@/lib/partner";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[]; test?: TestSummary | null };
+type Detail = { drive: { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; company: string }; applicants: Applicant[]; test?: TestSummary | null; iv?: IvSummary | null };
 type Op = "advance" | "select" | "reject" | "link" | "offer";
 
 const stage = (a: Applicant, rounds: string[]) => (a.status === "applied" ? "New" : a.status === "selected" ? (a.offer ? "Offer sent" : "Selected") : a.status === "rejected" ? "Not selected" : rounds[a.round] ?? `Round ${a.round + 1}`);
@@ -35,6 +37,19 @@ function Score({ v, ok, big }: { v?: number; ok?: boolean; big?: boolean }) {
     <span className="inline-flex items-baseline gap-1.5" title={ok ? "Verified by StudentOS" : "Not verified: this score couldn’t be checked"}>
       <span className={cn("font-semibold tabular-nums", big && "text-[22px] font-bold", ok ? scoreTone(v) : "text-white/40 line-through decoration-white/25")}>{v}</span>
       {ok ? <span className="rounded bg-emerald-400/12 px-1 text-[10px] font-semibold text-emerald-300">✓ Verified</span> : <span className="text-[10.5px] text-white/40">not verified</span>}
+    </span>
+  );
+}
+
+/** Live interview: when, a Join button around that time, then the recruiter's verdict. */
+function LiveCell({ pid, r }: { pid: string; r: Applicant["live"] }) {
+  if (!r) return <span className="text-white/35">—</span>;
+  const when = new Date(r.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const soon = Date.now() > r.at - 15 * 60_000 && Date.now() < r.at + (r.minutes + 60) * 60_000;
+  return (
+    <span className="inline-flex flex-col">
+      {r.feedback ? <span className="font-semibold tabular-nums">{r.feedback.score}<span className="text-[11px] font-normal text-white/45">/10</span> <span className="text-[11.5px] font-medium text-cyan-200">{r.feedback.verdict}</span></span> : <span className="text-[12px] text-white/70">{when}</span>}
+      <Link href={`/company/live?d=${pid}&r=${r.room}`} className={cn("text-[11.5px]", soon ? "font-semibold text-emerald-300" : "text-accent")}>{soon ? "Join now →" : r.feedback ? "Open" : "Join link"}</Link>
     </span>
   );
 }
@@ -190,10 +205,12 @@ function Applicants({ pid }: { pid: string }) {
   const [minIv, setMinIv] = useState(0);
   const [tell, setTell] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [modal, setModal] = useState<null | "link" | "offer">(null);
+  const [modal, setModal] = useState<null | "link" | "offer" | "live">(null);
   const [link, setLink] = useState({ title: "", url: "", when: "" });
   const [offer, setOffer] = useState({ ctc: "", joining: "", url: "", note: "" });
   const [person, setPerson] = useState<Applicant | null>(null);
+  const [report, setReport] = useState<Applicant | null>(null);
+  const [slot, setSlot] = useState({ start: "", minutes: 30 });
   const resumes = useResumePrint();
 
   const load = () =>
@@ -242,6 +259,26 @@ function Applicants({ pid }: { pid: string }) {
   };
 
   if (!data) return <div className="h-[420px] animate-pulse rounded-2xl bg-white/[0.04]" />;
+  const hasLive = data.applicants.some((a) => a.live);
+  const schedule = async () => {
+    const t0 = new Date(slot.start).getTime();
+    if (!slot.start || !Number.isFinite(t0) || t0 < Date.now() - 3600_000) return actions.toast("Pick the date and time of the first interview.");
+    const picks = data.applicants.filter((a) => picked.has(key(a)));
+    setBusy(true);
+    try {
+      // back to back: each student gets the next slot
+      const items = picks.map((a, i) => ({ cid: a.cid, uid: a.uid, at: t0 + i * slot.minutes * 60_000, minutes: slot.minutes }));
+      const r = await partnerApi<{ changed: number; told: { people: number } }>("company-live-schedule", { pid, items });
+      actions.toast(`${r.changed} live interview${r.changed === 1 ? "" : "s"} scheduled · students told.`);
+      setPicked(new Set());
+      setModal(null);
+      await load();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
   const tabs: [string, string, number][] = [
     ["all", "All", data.applicants.length],
     ["new", "New", count((a) => a.status === "applied")],
@@ -275,7 +312,10 @@ function Applicants({ pid }: { pid: string }) {
         ))}
       </div>
 
-      <TestCard pid={pid} rounds={rounds} summary={data.test ?? null} onSaved={() => void load()} />
+      <div className="grid gap-4 xl:grid-cols-2">
+        <TestCard pid={pid} rounds={rounds} summary={data.test ?? null} onSaved={() => void load()} />
+        <IvCard pid={pid} rounds={rounds} summary={data.iv ?? null} onSaved={() => void load()} />
+      </div>
 
       <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
@@ -305,6 +345,7 @@ function Applicants({ pid }: { pid: string }) {
             <span className="mr-1 text-[12.5px]">{picked.size} picked</span>
             <Button size="sm" variant="primary" loading={busy} onClick={() => void run("advance")}>Move to next round</Button>
             <Button size="sm" icon={<SendIcon size={13} />} disabled={busy} onClick={() => setModal("link")}>Send test / interview link</Button>
+            <Button size="sm" icon={<VideoIcon size={13} />} disabled={busy} onClick={() => setModal("live")}>Schedule live interview</Button>
             <Button size="sm" icon={<CheckIcon size={13} />} disabled={busy} onClick={() => void run("select")}>Mark selected</Button>
             <Button size="sm" icon={<TrophyIcon size={13} />} disabled={busy} onClick={() => setModal("offer")}>Send offer</Button>
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} disabled={busy} onClick={() => void run("reject")}>Not selected</Button>
@@ -327,6 +368,8 @@ function Applicants({ pid }: { pid: string }) {
                   <th className="pb-2 font-medium">Mock interview</th>
                   <th className="pb-2 font-medium">Coding round</th>
                   {data.test && <th className="pb-2 font-medium">Test</th>}
+                  {data.iv && <th className="pb-2 font-medium">AI interview</th>}
+                  {hasLive && <th className="pb-2 font-medium">Live interview</th>}
                   <th className="pb-2 font-medium">Stage</th>
                   <th className="pb-2 font-medium"><span className="sr-only">Resume</span></th>
                 </tr>
@@ -341,6 +384,8 @@ function Applicants({ pid }: { pid: string }) {
                     <td className="py-2.5"><Score v={a.scores?.interview} ok={a.scores?.interviewVerified} /></td>
                     <td className="py-2.5"><Score v={a.scores?.coding} ok={a.scores?.codingVerified} /></td>
                     {data.test && <td className="py-2.5"><TestCell r={a.test} /></td>}
+                    {data.iv && <td className="py-2.5"><IvCell r={a.iv} onOpen={() => setReport(a)} /></td>}
+                    {hasLive && <td className="py-2.5"><LiveCell pid={pid} r={a.live} /></td>}
                     <td className="py-2.5"><span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.status === "selected" ? "bg-emerald-400/12 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/45" : "bg-white/[0.06] text-white/75")}>{stage(a, rounds)}{a.decision ? ` · ${a.decision}` : ""}</span></td>
                     <td className="py-2.5 text-right"><button type="button" onClick={() => resumes.print([cvOf(a)])} title={`Download ${a.name}’s resume`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button></td>
                   </tr>
@@ -358,8 +403,19 @@ function Applicants({ pid }: { pid: string }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setModal(null)} aria-hidden />
           <div role="dialog" aria-label={modal === "link" ? "Send a link" : "Send an offer"} className="relative w-full max-w-[460px] rounded-2xl border border-white/10 bg-[#121118] p-6">
-            <h2 className="text-[17px] font-semibold">{modal === "link" ? `Send a link to ${picked.size}` : `Offer for ${picked.size}`}</h2>
-            {modal === "link" ? (
+            <h2 className="text-[17px] font-semibold">{modal === "link" ? `Send a link to ${picked.size}` : modal === "live" ? `Live interviews for ${picked.size}` : `Offer for ${picked.size}`}</h2>
+            {modal === "live" ? (
+              <div className="mt-4 space-y-3">
+                <div><Label htmlFor="ls">First interview at</Label><Input id="ls" type="datetime-local" value={slot.start} onChange={(e) => setSlot({ ...slot, start: e.target.value })} /></div>
+                <div>
+                  <Label htmlFor="lm">Minutes each</Label>
+                  <select id="lm" value={slot.minutes} onChange={(e) => setSlot({ ...slot, minutes: Number(e.target.value) })} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white">
+                    {[15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} minutes</option>)}
+                  </select>
+                </div>
+                <p className="text-[12px] text-white/50">Slots go back to back{slot.start ? `, ${new Date(slot.start).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })} to ${new Date(new Date(slot.start).getTime() + picked.size * slot.minutes * 60_000).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}. Each student gets their time and a join link by email and notification. The call runs inside StudentOS: open Join from this list at the time.</p>
+              </div>
+            ) : modal === "link" ? (
               <div className="mt-4 space-y-3">
                 <div><Label htmlFor="lt">Title</Label><Input id="lt" value={link.title} onChange={(e) => setLink({ ...link, title: e.target.value })} placeholder="Online assessment" /></div>
                 <div><Label htmlFor="lu">Link</Label><Input id="lu" value={link.url} onChange={(e) => setLink({ ...link, url: e.target.value })} placeholder="https://…" /></div>
@@ -379,6 +435,7 @@ function Applicants({ pid }: { pid: string }) {
                 variant="primary"
                 loading={busy}
                 onClick={() => {
+                  if (modal === "live") return void schedule();
                   if (modal === "link") {
                     if (!link.title.trim() || !/^https?:\/\//.test(link.url.trim())) return actions.toast("Add a title and a link starting with https://");
                     void run("link", { link });
@@ -389,7 +446,7 @@ function Applicants({ pid }: { pid: string }) {
                   }
                 }}
               >
-                {modal === "link" ? "Send link" : "Send offer"}
+                {modal === "link" ? "Send link" : modal === "live" ? "Schedule" : "Send offer"}
               </Button>
             </div>
           </div>
@@ -397,6 +454,7 @@ function Applicants({ pid }: { pid: string }) {
       )}
 
       {resumes.node}
+      {report && <IvReportDrawer pid={pid} a={report} onClose={() => setReport(null)} />}
       {person && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/50" onClick={() => setPerson(null)} aria-hidden />

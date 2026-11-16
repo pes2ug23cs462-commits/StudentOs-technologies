@@ -17,6 +17,7 @@ import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 import { mailHtml, sendMails } from "@/lib/server/mail";
 import { PROBLEMS } from "@/lib/coding/problems";
+import { cleanIv, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide } from "@/lib/server/company-rounds";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
@@ -157,6 +158,11 @@ const shuffled = (n: number) => {
   return a;
 };
 const GRACE_MS = 90_000;
+const para = (v: unknown, max = 3000) => String(v ?? "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, max);
+const ivResultOf = (x: IvAttempt) =>
+  x.done ? { overall: x.report?.overall ?? null, verdict: x.report?.verdict ?? "", warnings: x.warnings ?? [], ended: !!x.ended, at: x.doneAt ?? 0 } : { started: true as const, at: x.startedAt, index: x.answers.length, total: x.questions.length };
+const liveResultOf = (m: LiveMeta) => ({ room: m.room, at: m.at, minutes: m.minutes, feedback: m.feedback ?? null });
+const roomId = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
 
 const EVENT_OF: Record<string, NotifyEv> = { advance: "advance", select: "selected", reject: "rejected", link: "link", offer: "offer" };
 
@@ -313,7 +319,100 @@ export async function POST(req: Request) {
       if (!p || p.statuses?.[cid] !== "approved") return NextResponse.json({ test: null, results: {} });
       const [t, attempts] = await Promise.all([adminGet(`partnerDrives/${pid}/tests/main`) as Promise<Test | null>, adminList(`partnerDrives/${pid}/attempts`, 2000).catch(() => [])]);
       const mineOnly = attempts.map(({ data }) => data as Attempt).filter((x) => x.cid === cid);
-      return NextResponse.json({ test: t ? summaryOf(t) : null, results: Object.fromEntries(mineOnly.map((x) => [x.uid, resultOf(x)])) });
+      const [ivAtts, lives] = await Promise.all([adminList(`partnerDrives/${pid}/ivAttempts`, 2000).catch(() => []), adminList(`partnerDrives/${pid}/live`, 2000).catch(() => [])]);
+      return NextResponse.json({
+        test: t ? summaryOf(t) : null,
+        results: Object.fromEntries(mineOnly.map((x) => [x.uid, resultOf(x)])),
+        iv: Object.fromEntries(ivAtts.map(({ data }) => data as IvAttempt).filter((x) => x.cid === cid).map((x) => [x.uid, ivResultOf(x)])),
+        live: Object.fromEntries(lives.map(({ data }) => data as LiveMeta).filter((x) => x.cid === cid).map((x) => [x.uid, liveResultOf(x)])),
+      });
+    }
+
+    /* ---------------- a student takes a company's AI technical interview ---------------- */
+    if (action.startsWith("student-iv-")) {
+      const cid = id(b.cid), pid = id(b.pid);
+      if (!cid || !pid) return bad("bad-request");
+      const [p, a, iv] = await Promise.all([
+        adminGet(`partnerDrives/${pid}`) as Promise<PDrive | null>,
+        adminGet(`colleges/${cid}/drives/${pid}/apps/${me.uid}`) as Promise<App | null>,
+        adminGet(`partnerDrives/${pid}/aiInterview/main`) as Promise<IvSetup | null>,
+      ]);
+      if (!p || p.statuses?.[cid] !== "approved" || !a || !iv) return NextResponse.json({ iv: null });
+      const inRound = a.status === "in-process" && Number(a.round) === iv.round;
+      const key = `partnerDrives/${pid}/ivAttempts/${cid}_${me.uid}`;
+      const at = (await adminGet(key)) as IvAttempt | null;
+      const info = { title: iv.title, count: iv.count, company: p.company, role: p.role };
+      const view = (x: IvAttempt) => ({ index: x.answers.length, total: x.questions.length, question: x.answers.length < x.questions.length ? x.questions[x.answers.length] : "", done: x.done });
+      if (action === "student-iv-info") {
+        if (!inRound && !at) return NextResponse.json({ iv: null });
+        return NextResponse.json({ iv: info, open: iv.open, attempt: at ? { done: at.done, index: at.answers.length, total: at.questions.length } : null });
+      }
+      if (!inRound) return bad("not-allowed", 403);
+      if (action === "student-iv-start") {
+        if (at?.done) return bad("done", 409);
+        if (at) return NextResponse.json({ iv: info, ...view(at) });
+        if (!iv.open) return bad("closed", 409);
+        const questions = await ivQuestions(iv, p.role, p.company);
+        const x: IvAttempt = { uid: me.uid, cid, name: str(a.name, 60), round: iv.round, questions, answers: [], startedAt: Date.now(), done: false };
+        await adminSet(key, x as unknown as Record<string, unknown>);
+        return NextResponse.json({ iv: info, ...view(x) });
+      }
+      if (!at) return bad("not-started", 409);
+      if (at.done) return bad("done", 409);
+      if (action === "student-iv-answer") {
+        const i = Number(b.index);
+        if (i === at.answers.length && i < at.questions.length) {
+          at.answers.push({ a: para(b.answer, 2500), secs: Math.min(3600, Math.max(0, Math.round(Number(b.secs) || 0))) });
+          await adminSet(key, at as unknown as Record<string, unknown>);
+        }
+        return NextResponse.json(view(at));
+      }
+      if (action === "student-iv-finish") {
+        const ended = b.ended === true;
+        if (!ended && at.answers.length < at.questions.length) return bad("not-started", 409);
+        at.done = true;
+        at.doneAt = Date.now();
+        at.ended = ended;
+        at.warnings = (Array.isArray(b.warnings) ? b.warnings : []).map((w) => str(w, 12)).filter((w) => BREACHES.includes(w)).slice(0, 10);
+        await adminSet(key, at as unknown as Record<string, unknown>);
+        try {
+          at.report = await ivReport(at, p.role, iv.focus);
+          await adminSet(key, at as unknown as Record<string, unknown>);
+        } catch {
+          /* the company can ask for the report again */
+        }
+        const ivs = { ...((a.ivs ?? {}) as Record<string, unknown>), [String(iv.round)]: { done: true, at: at.doneAt } };
+        await adminMerge(`colleges/${cid}/drives/${pid}/apps/${me.uid}`, { ivs });
+        return NextResponse.json({ done: true });
+      }
+      return bad("action");
+    }
+
+    /* ---------------- a live interview: signalling for the 1:1 call ---------------- */
+    if (action === "live-signal") {
+      const pid = id(b.pid), room = /^[a-f0-9]{24}$/.test(str(b.room)) ? str(b.room) : "";
+      if (!pid || !room) return bad("bad-request");
+      const [p, meta] = await Promise.all([adminGet(`partnerDrives/${pid}`) as Promise<PDrive | null>, adminGet(`partnerDrives/${pid}/live/${room}`) as Promise<LiveMeta | null>]);
+      if (!p || !meta) return bad("no-drive", 404);
+      // the recruiter of this drive's company is the host; the student it was booked for is the guest
+      const staff = await adminGet(`companyStaff/${me.uid}`);
+      const side = staff && str(staff.coid, 80) === p.companyId ? "host" : me.uid === meta.uid ? "guest" : "";
+      if (!side) return bad("not-allowed", 403);
+      const mine = `partnerDrives/${pid}/live/${room}/sig/${side}`;
+      if (b.put && typeof b.put === "object") {
+        const put = b.put as Record<string, unknown>;
+        const sdp = (put.sdp ?? null) as Record<string, unknown> | null;
+        const doc: LiveSide = {
+          sdp: sdp && typeof sdp.sdp === "string" && sdp.sdp.length < 20000 ? { type: str(sdp.type, 10), sdp: String(sdp.sdp), v: Number(sdp.v) || 0 } : null,
+          cands: (Array.isArray(put.cands) ? put.cands : []).slice(0, 60).filter((c) => JSON.stringify(c).length < 800),
+          need: Number(put.need) || 0,
+          warnings: side === "guest" ? (Array.isArray(put.warnings) ? put.warnings : []).map((w) => str(w, 12)).filter((w) => BREACHES.includes(w)).slice(0, 30) : [],
+          at: Date.now(),
+        };
+        await adminSet(mine, doc as unknown as Record<string, unknown>);
+      }
+      const other = (await adminGet(`partnerDrives/${pid}/live/${room}/sig/${side === "host" ? "guest" : "host"}`)) as LiveSide | null;
+      return NextResponse.json({ side, meta: { at: meta.at, minutes: meta.minutes, name: meta.name, company: p.company, role: p.role, feedback: side === "host" ? meta.feedback ?? null : null }, other });
     }
 
     /* ---------------- a student takes a company's online test ---------------- */
@@ -418,6 +517,14 @@ export async function POST(req: Request) {
           adminList(`partnerDrives/${p.pid}/attempts`, 2000).catch(() => []),
         ]);
         const result = Object.fromEntries(attempts.map(({ data }) => [`${(data as Attempt).cid}/${(data as Attempt).uid}`, resultOf(data as Attempt)]));
+        const [ivSetup, ivAtts, lives] = await Promise.all([
+          adminGet(`partnerDrives/${p.pid}/aiInterview/main`) as Promise<IvSetup | null>,
+          adminList(`partnerDrives/${p.pid}/ivAttempts`, 2000).catch(() => []),
+          adminList(`partnerDrives/${p.pid}/live`, 2000).catch(() => []),
+        ]);
+        const ivBy = Object.fromEntries(ivAtts.map(({ data }) => [`${(data as IvAttempt).cid}/${(data as IvAttempt).uid}`, ivResultOf(data as IvAttempt)]));
+        const liveBy: Record<string, ReturnType<typeof liveResultOf>[]> = {};
+        for (const { data } of lives) (liveBy[`${(data as LiveMeta).cid}/${(data as LiveMeta).uid}`] ??= []).push(liveResultOf(data as LiveMeta));
         const per = await Promise.all(
           approved.map(async (cid) => {
             const [college, apps] = await Promise.all([adminGet(`colleges/${cid}`), adminList(`colleges/${cid}/drives/${p.pid}/apps`, 1000).catch(() => [])]);
@@ -441,6 +548,8 @@ export async function POST(req: Request) {
               decision: str(a.decision, 10),
               appliedAt: Number(a.appliedAt) || 0,
               test: result[`${cid}/${str(a.uid, 128)}`] ?? null,
+              iv: ivBy[`${cid}/${str(a.uid, 128)}`] ?? null,
+              live: (liveBy[`${cid}/${str(a.uid, 128)}`] ?? []).sort((x, y) => y.at - x.at)[0] ?? null,
             }));
           }),
         );
@@ -448,6 +557,7 @@ export async function POST(req: Request) {
           drive: { pid: p.pid, role: p.role, kind: p.kind, ctc: p.ctc, deadline: p.deadline, rounds: p.rounds, company: p.company },
           applicants: per.flat(),
           test: test ? summaryOf(test) : null,
+          iv: ivSetup ? { round: ivSetup.round, title: ivSetup.title, count: ivSetup.count, open: ivSetup.open, focus: ivSetup.focus } : null,
         });
       }
       if (action === "company-test-get") {
@@ -469,6 +579,72 @@ export async function POST(req: Request) {
         }
         await adminSet(`partnerDrives/${p.pid}/tests/main`, t);
         return NextResponse.json({ ok: true, count: t.questions.length });
+      }
+      if (action === "company-iv-get") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        return NextResponse.json({ iv: await adminGet(`partnerDrives/${p.pid}/aiInterview/main`) });
+      }
+      if (action === "company-iv-save") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        const iv = cleanIv((b.iv ?? {}) as Record<string, unknown>, Math.max(1, p.rounds.length));
+        await adminSet(`partnerDrives/${p.pid}/aiInterview/main`, iv as unknown as Record<string, unknown>);
+        return NextResponse.json({ ok: true });
+      }
+      if (action === "company-iv-report") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        const key = `partnerDrives/${p.pid}/ivAttempts/${id(b.cid)}_${id(b.uid)}`;
+        const x = (await adminGet(key)) as IvAttempt | null;
+        if (!x) return bad("no-drive", 404);
+        // the report failed the first time: make it now
+        if (x.done && !x.report && b.retry === true) {
+          const iv = (await adminGet(`partnerDrives/${p.pid}/aiInterview/main`)) as IvSetup | null;
+          x.report = await ivReport(x, p.role, iv?.focus ?? "");
+          await adminSet(key, x as unknown as Record<string, unknown>);
+        }
+        return NextResponse.json({ attempt: x });
+      }
+      if (action === "company-live-schedule") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60).map((x) => x as Record<string, unknown>);
+        const byCollege: Record<string, string[]> = {};
+        let n = 0;
+        for (const it of items) {
+          const cid = id(it.cid), uid = id(it.uid), at = Number(it.at) || 0, minutes = num(it.minutes, 10, 120) || 30;
+          if (!cid || !uid || p.statuses?.[cid] !== "approved" || at < Date.now() - 3600_000) continue;
+          const path = `colleges/${cid}/drives/${p.pid}/apps/${uid}`;
+          const a = (await adminGet(path)) as App | null;
+          if (!a) continue;
+          const room = roomId();
+          const meta: LiveMeta = { room, cid, uid, name: str(a.name, 60), at, minutes, round: Number(a.round) || 0, feedback: null };
+          await adminSet(`partnerDrives/${p.pid}/live/${room}`, meta as unknown as Record<string, unknown>);
+          const when = new Date(at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+          // shows in the student's links, like any interview link, and tells them
+          const next = apply("link", a, p.rounds.length, { link: { title: `Live interview on StudentOS (${minutes} min)`, url: `${origin}/placement/live?d=${p.pid}&r=${room}`, when } });
+          if (!next) continue;
+          await adminSet(path, next);
+          (byCollege[cid] ??= []).push(uid);
+          n++;
+        }
+        let people = 0;
+        for (const [cid, uids] of Object.entries(byCollege)) {
+          const r = await notifyStudents(cid, p.pid, "link", uids, origin).catch(() => null);
+          if (r && !("error" in r)) people += r.people;
+        }
+        return NextResponse.json({ changed: n, told: { people } });
+      }
+      if (action === "company-live-feedback") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        const room = /^[a-f0-9]{24}$/.test(str(b.room)) ? str(b.room) : "";
+        const meta = room ? ((await adminGet(`partnerDrives/${p.pid}/live/${room}`)) as LiveMeta | null) : null;
+        if (!meta) return bad("no-drive", 404);
+        const verdict = ["Strong yes", "Yes", "Maybe", "No"].includes(str(b.verdict)) ? str(b.verdict) : "Maybe";
+        await adminMerge(`partnerDrives/${p.pid}/live/${room}`, { feedback: { score: num(b.score, 0, 10), verdict, notes: para(b.notes, 1500), at: Date.now() } });
+        return NextResponse.json({ ok: true });
       }
       if (action === "company-update") {
         const p = await mine(id(b.pid));

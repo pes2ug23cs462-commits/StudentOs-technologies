@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BellIcon, BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, MailIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
+import { MicIcon, BellIcon, BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, MailIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
 import { Input, Label } from "@/components/ui/primitives";
 import { BRANCHES, currentLinks, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
 import { disablePush, enablePush, pushState, type PushState } from "@/lib/notify";
@@ -15,7 +15,7 @@ import { useStore } from "@/lib/store";
 import { collegeInfo } from "@/lib/college";
 import { CollegeLogo } from "@/components/college/college-logo";
 import { cn } from "@/lib/utils";
-import { partnerApi, type StudentTestInfo } from "@/lib/partner";
+import { partnerApi, type StudentIvInfo, type StudentTestInfo } from "@/lib/partner";
 
 /** A company's online test on StudentOS, shown when the student is in its round. */
 function TestEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
@@ -37,6 +37,30 @@ function TestEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
         <span className="block text-[12px] text-white/55">{done ? "Submitted. The company will tell you the result." : `${[info.test.count ? `${info.test.count} questions` : "", info.test.coding ? `${info.test.coding} coding` : ""].filter(Boolean).join(" + ")} · ${info.test.minutes} min · strict mode${info.open || info.attempt ? "" : " · opens soon"}`}</span>
       </span>
       {!done && <span className="text-[12.5px] font-medium text-amber-200">{info.attempt ? "Continue →" : info.open ? "Start →" : "View →"}</span>}
+    </Link>
+  );
+}
+
+/** A company's AI technical interview on StudentOS, shown when the student is in its round. */
+function IvEntry({ cid, d, a }: { cid: string; d: Drive; a: Application }) {
+  const [info, setInfo] = useState<StudentIvInfo | null>(null);
+  const taken = Object.values(a.ivs ?? {}).some((t) => t.done);
+  useEffect(() => {
+    if (!d.partner || a.status !== "in-process") return;
+    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid: d.id })
+      .then(setInfo)
+      .catch(() => setInfo(null));
+  }, [cid, d.id, d.partner, a.status, a.round]);
+  if (!info?.iv) return null;
+  const done = info.attempt?.done || taken;
+  return (
+    <Link href={`/placement/ai-interview?c=${cid}&d=${d.id}`} className={cn("mt-3 flex items-center gap-3 rounded-xl border px-4 py-3 transition", done ? "border-white/10 bg-white/[0.02]" : "border-violet-400/35 bg-violet-400/[0.07] hover:border-violet-300/60")}>
+      <MicIcon size={16} className={done ? "text-white/45" : "text-violet-300"} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13.5px] font-semibold text-white">{info.iv.title} · AI interviewer</span>
+        <span className="block text-[12px] text-white/55">{done ? "Done. The company will tell you the result." : `${info.iv.count} questions · speak or type · strict mode${info.open || info.attempt ? "" : " · opens soon"}`}</span>
+      </span>
+      {!done && <span className="text-[12.5px] font-medium text-violet-200">{info.attempt ? "Continue →" : info.open ? "Start →" : "View →"}</span>}
     </Link>
   );
 }
@@ -349,6 +373,7 @@ export function CampusDrives() {
                 </div>
                 <Steps a={a} d={d} />
                 <TestEntry cid={link.cid} d={d} a={a} />
+                <IvEntry cid={link.cid} d={d} a={a} />
                 {a.status !== "rejected" && !a.offer && (
                   <Link href={`/placement/prep/${d.id}`} className="mt-4 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 transition hover:border-accent/60">
                     <span className="min-w-0 flex-1"><span className="block text-[13.5px] font-semibold text-white">Prepare for {d.company}</span><span className="block text-[12px] text-white/55">Rounds, a 7-day plan and what {d.company} asked your seniors</span></span>
