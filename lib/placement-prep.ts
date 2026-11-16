@@ -6,7 +6,8 @@ import { readinessFromParts, type PlacementPart } from "@/lib/college";
 import { resumeCheck } from "@/lib/resume-check";
 export { resumeCheck, type ResumeCheck } from "@/lib/resume-check";
 import type { AppState } from "@/lib/store";
-import { findCourses, trustedCourses } from "@/lib/assistant-study";
+import { findCourses, topicCourse } from "@/lib/assistant-study";
+import type { Course } from "@/lib/learn";
 
 /* ---------- readiness ---------- */
 
@@ -57,7 +58,8 @@ export type GapCourse = {
   area: string;
   /** why we think so, e.g. "40% in your mock tests" */
   why: string;
-  course: { title: string; by: string; href: string; external: boolean } | null;
+  /** `make`: a StudentOS course made for the topic, added to the student's courses when opened */
+  course: { title: string; by: string; href: string; external: boolean; make?: Course } | null;
   practice: { label: string; href: string };
 };
 
@@ -67,8 +69,8 @@ export function gapCourses(state: AppState): GapCourse[] {
   const pick = (topic: string): GapCourse["course"] => {
     const c = findCourses(topic, own)[0];
     if (c) return { title: c.title, by: "StudentOS", href: `/learn/${c.id}`, external: false };
-    const t = trustedCourses(topic)[0];
-    return t ? { title: t.title, by: t.by, href: t.url, external: true } : null;
+    const m = topicCourse(topic);
+    return { title: m.title, by: "StudentOS", href: `/learn/${m.id}`, external: false, make: m };
   };
   const out: GapCourse[] = [];
   // mock tests: topics under 60% (at least 2 questions asked)

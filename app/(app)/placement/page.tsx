@@ -14,6 +14,7 @@ import { TOPIC, type TopicId } from "@/lib/aptitude";
 import { PLACEMENT_PARTS, type PlacementPart } from "@/lib/college";
 import { COMPANIES, gapCourses, myReadiness, resumeCheck, weekPlan, type Company } from "@/lib/placement-prep";
 import { useStore } from "@/lib/store";
+import { useOpenTopicCourse } from "@/components/chat/study-card";
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "aptitude" | "companies" | "drives";
@@ -80,6 +81,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   const plan = useMemo(() => weekPlan(state), [state]);
   const resume = useMemo(() => resumeCheck(state), [state]);
   const gaps = useMemo(() => gapCourses(state), [state]);
+  const openCourse = useOpenTopicCourse();
   const R = 52, C = 2 * Math.PI * R;
   return (
     <div className="space-y-5">
@@ -148,12 +150,18 @@ function Overview({ go }: { go: (t: Tab) => void }) {
                 {g.course ? (
                   <a
                     href={g.course.href}
+                    onClick={(e) => {
+                      const m = g.course?.make;
+                      if (!m) return;
+                      e.preventDefault();
+                      openCourse(m);
+                    }}
                     {...(g.course.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="mt-3 flex items-start gap-2.5 rounded-lg border border-accent/25 bg-accent/[0.06] p-3 transition hover:border-accent/50"
+                    className="mt-3 flex items-start gap-2.5 rounded-lg border border-accent/25 bg-accent/[0.06] p-3 text-left transition hover:border-accent/50"
                   >
                     <OpenBookIcon size={15} className="mt-0.5 shrink-0 text-accent" />
                     <span className="min-w-0">
-                      <span className="block text-[10.5px] font-semibold tracking-wide text-accent uppercase">{g.course.external ? `Free · ${g.course.by} ↗` : "Course on StudentOS"}</span>
+                      <span className="block text-[10.5px] font-semibold tracking-wide text-accent uppercase">{g.course.external ? `Free · ${g.course.by} ↗` : g.course.make ? "Course on StudentOS · made for this topic" : "Course on StudentOS"}</span>
                       <span className="block text-[13px] font-medium text-white">{g.course.title}</span>
                     </span>
                   </a>

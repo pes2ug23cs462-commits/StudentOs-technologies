@@ -4,18 +4,37 @@
    download as PDF or Word, and practice. */
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import { ArrowRightIcon, BookIcon, CheckIcon, DownloadIcon, FileIcon, OpenBookIcon, SparkleIcon, TargetIcon } from "@/components/ui/icons";
 import { AssistantError } from "@/lib/assistant";
-import { findCourses, notesBlocks, practiceFor, trustedCourses, type Study } from "@/lib/assistant-study";
+import { findCourses, notesBlocks, practiceFor, topicCourse, trustedCourses, type Study } from "@/lib/assistant-study";
+import { emptyLearning, type Course } from "@/lib/learn";
 import { downloadDocx, downloadPdf } from "@/lib/doc-export";
 import { firstRevision, makeNotes, MAX_NOTES, type NoteSet, type NotesReply } from "@/lib/notes";
 import { useStore } from "@/lib/store";
 import { cn, uid } from "@/lib/utils";
 
+/** Opens a course made for a topic: adds it to the student's courses first if it isn't there. */
+export function useOpenTopicCourse() {
+  const router = useRouter();
+  const { state, actions } = useStore();
+  return useCallback(
+    (c: Course) => {
+      const l = state.learning ?? emptyLearning();
+      if (!(l.catalog ?? []).some((x) => x.id === c.id)) actions.patch({ learning: { ...l, catalog: [...(l.catalog ?? []), c] } });
+      router.push(`/learn/${c.id}`);
+    },
+    [state.learning, actions, router],
+  );
+}
+
 export function StudyCard({ s }: { s: Study }) {
   const { state, actions } = useStore();
+  const openCourse = useOpenTopicCourse();
   const own = useMemo(() => findCourses(s.topic, state.learning?.catalog ?? []), [s.topic, state.learning?.catalog]);
+  // no StudentOS course on this topic yet: offer one made for it
+  const made = useMemo(() => (own.length ? null : topicCourse(s.topic, s.level)), [own.length, s.topic, s.level]);
   const outside = useMemo(() => trustedCourses(s.topic), [s.topic]);
   const practice = useMemo(() => practiceFor(s.topic), [s.topic]);
   const [notes, setNotes] = useState<NotesReply | null>(null);
@@ -117,6 +136,13 @@ export function StudyCard({ s }: { s: Study }) {
                   <span className="mt-0.5 line-clamp-2 block text-[12px] text-white/50">{c.blurb}</span>
                 </Link>
               ))}
+              {made && (
+                <button type="button" onClick={() => openCourse(made)} className="group rounded-xl border border-accent/30 bg-accent/[0.05] p-3 text-left transition hover:border-accent/60">
+                  <span className="text-[10.5px] font-semibold text-cyan-300">ON STUDENTOS · {made.modules.length} lessons · certificate</span>
+                  <span className="mt-1 block text-[13.5px] font-medium text-white group-hover:text-accent">{made.title}</span>
+                  <span className="mt-0.5 line-clamp-2 block text-[12px] text-white/50">The most viewed lessons on this topic, played inside StudentOS, with a quiz.</span>
+                </button>
+              )}
               {outside.map((c) => (
                 <a key={c.url + c.title} href={c.url} target="_blank" rel="noopener noreferrer" className="group rounded-xl border border-white/[0.07] p-3 transition hover:border-accent/40">
                   <span className="text-[10.5px] font-semibold text-white/45">FREE · {c.by.toUpperCase()} ↗</span>

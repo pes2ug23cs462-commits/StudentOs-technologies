@@ -30,24 +30,53 @@ export function parseStudy(reply: string): { text: string; study: Study[] } {
   return { text: text.replace(/\n{3,}/g, "\n\n").trim(), study };
 }
 
-const words = (s: string) => s.toLowerCase().split(/[^a-z0-9+#]+/).filter((w) => w.length > 1 && !["and", "the", "for", "of", "in", "to", "with", "basics", "intro", "introduction"].includes(w));
-const hits = (q: string[], text: string) => {
-  const t = text.toLowerCase();
-  return q.filter((w) => t.includes(w)).length;
-};
+const STOP = ["and", "the", "for", "of", "in", "to", "with", "basics", "basic", "intro", "introduction", "course", "full", "learn", "learning", "complete", "beginner", "beginners", "my", "on", "about", "notes", "want", "how"];
+const stem = (w: string) => (w.length > 4 ? w.replace(/(ies|es|s)$/, "") : w);
+/** Whole words only (so "java" never matches "javascript", "oop" never matches "loops"). */
+const words = (s: string) => [...new Set(s.toLowerCase().split(/[^a-z0-9+#]+/).filter((w) => w.length > 1 && !STOP.includes(w)).map(stem))];
 
-/** StudentOS courses about the topic: the student's own suggested ones first, then built-in ones. */
+/** StudentOS courses about the topic: the student's own suggested ones first, then built-in ones.
+    A course must contain most of the topic's words; ones with the topic in their title come first. */
 export function findCourses(topic: string, own: Course[] = []): Course[] {
   const q = words(topic);
   if (!q.length) return [];
+  const need = q.length <= 2 ? q.length : Math.ceil(q.length * 0.6);
   const seen = new Set<string>();
-  return [...own, ...COURSES]
+  const scored = [...own, ...COURSES]
     .filter((c) => !seen.has(c.id) && seen.add(c.id))
-    .map((c) => ({ c, n: hits(q, `${c.title} ${c.blurb} ${c.skills.join(" ")} ${c.modules.map((m) => m.title).join(" ")}`) }))
-    .filter((x) => x.n >= Math.min(q.length, 2))
-    .sort((a, b) => b.n - a.n)
-    .slice(0, 3)
-    .map((x) => x.c);
+    .map((c) => {
+      const title = new Set(words(c.title));
+      const all = new Set(words(`${c.title} ${c.blurb} ${c.skills.join(" ")} ${c.modules.map((m) => `${m.title} ${m.topic}`).join(" ")}`));
+      return { c, n: q.filter((w) => all.has(w)).length, t: q.filter((w) => title.has(w)).length };
+    })
+    .filter((x) => x.n >= need)
+    .sort((a, b) => b.t - a.t || b.n - a.n);
+  // when some courses have the topic in their title, only those
+  const best = scored.some((x) => x.t > 0) ? scored.filter((x) => x.t > 0) : scored;
+  return best.slice(0, 2).map((x) => x.c);
+}
+
+/** A StudentOS course made for any topic: each module plays the most viewed YouTube lesson for it,
+    inside StudentOS, with the quiz and certificate like every course. Same id as a goal on that topic. */
+export function topicCourse(topic: string, level: Study["level"] = "beginner"): Course {
+  const subject = topic.replace(/\s+/g, " ").trim().slice(0, 60);
+  const id = `ai-${subject.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "topic"}`;
+  const parts = [
+    { title: `${subject}: full course`, topic: `${subject} full course ${level === "beginner" ? "for beginners" : ""}`.trim(), about: `The most viewed complete lesson on ${subject}.` },
+    { title: "Important concepts with examples", topic: `${subject} important concepts explained with examples`, about: `The key ideas of ${subject}, explained with worked examples.` },
+    { title: "One-shot revision", topic: `${subject} one shot revision`, about: `Revise ${subject} quickly before a test or interview.` },
+  ];
+  return {
+    id,
+    title: subject,
+    blurb: `Made on StudentOS for ${subject}: 3 lessons, a quiz and a certificate.`,
+    why: "You asked to learn this.",
+    areas: [],
+    skills: [],
+    level,
+    modules: parts.map((p, i) => ({ id: `m${i + 1}`, title: p.title, yt: "", topic: p.topic.slice(0, 90), channel: "", length: "", about: p.about })),
+    quiz: [],
+  };
 }
 
 /** Well-known free courses, checked by hand. Matched by keywords; nothing here is made up by the AI. */
