@@ -44,18 +44,24 @@ function load(): Promise<Landmarker> {
   return loading;
 }
 
-/** Is the face turned to the screen? Head turn from the landmarks, sideways gaze from the blendshapes.
-    Looking down is fine: in a coding round that is the keyboard. */
-function facing(points: Point[], shapes: Category[] | undefined) {
+/** Head turn (yaw, 0.5 = straight) and tilt (pitch) from the landmarks. */
+function pose(points: Point[]) {
   const nose = points[1], left = points[234], right = points[454], top = points[10], chin = points[152];
-  if (!nose || !left || !right || !top || !chin) return false;
-  const yaw = (nose.x - left.x) / Math.max(1e-6, right.x - left.x);
-  const pitch = (nose.y - top.y) / Math.max(1e-6, chin.y - top.y);
-  if (yaw < 0.3 || yaw > 0.7 || pitch < 0.3) return false;
+  if (!nose || !left || !right || !top || !chin) return null;
+  return { yaw: (nose.x - left.x) / Math.max(1e-6, right.x - left.x), pitch: (nose.y - top.y) / Math.max(1e-6, chin.y - top.y) };
+}
+/** Is the face turned to the screen? Measured against how this student sat at the start
+    (a camera off to one side, or a laptop low on the desk, is their "straight").
+    Looking down is fine: in a coding round that is the keyboard. */
+function facing(points: Point[], shapes: Category[] | undefined, base: { yaw: number; pitch: number }) {
+  const p = pose(points);
+  if (!p) return false;
+  if (Math.abs(p.yaw - base.yaw) > 0.24 || p.pitch < base.pitch - 0.16) return false;
   const s = (n: string) => shapes?.find((c) => c.categoryName === n)?.score ?? 0;
   const side = Math.max(s("eyeLookOutLeft") + s("eyeLookInRight"), s("eyeLookOutRight") + s("eyeLookInLeft")) / 2;
-  return side < 0.6;
+  return side < 0.75;
 }
+const median = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 
 /**
  * Watches the video and reports long look-aways as they end.
@@ -83,6 +89,9 @@ export async function watchPresence(
   // between the inner lips relative to face height; talking makes both go up and down
   const mouthHist: { t: number; jaw: number; gap: number }[] = [];
   let lastFaceAt = 0;
+  // the student's own "straight ahead", learned from the first couple of seconds with a face
+  const seen: { yaw: number; pitch: number }[] = [];
+  let base = { yaw: 0.5, pitch: 0.45 };
   // a second face on camera (someone helping): checked on its own, it can overlap a look-away
   let twoSince: number | null = null;
   let twoWarned = false;
@@ -126,8 +135,16 @@ export async function watchPresence(
         mouthHist.push({ t, jaw, gap });
         while (mouthHist.length && t - mouthHist[0].t > 1200) mouthHist.shift();
       }
+      if (face && seen.length < 15) {
+        const p = pose(face);
+        if (p) {
+          seen.push(p);
+          if (seen.length === 15) base = { yaw: Math.min(0.68, Math.max(0.32, median(seen.map((x) => x.yaw)))), pitch: Math.min(0.55, Math.max(0.3, median(seen.map((x) => x.pitch)))) };
+        }
+      }
       samples++;
-      const next = !face ? "out" : facing(face, r.faceBlendshapes?.[0]?.categories) ? "on" : "away";
+      // still learning where "straight" is: count it as on screen
+      const next = !face ? "out" : seen.length < 15 || facing(face, r.faceBlendshapes?.[0]?.categories, base) ? "on" : "away";
       if (next === "on") onScreen++;
       flush(next);
       if (warn && state !== "on" && !warned && now() - since >= warn.secs) {

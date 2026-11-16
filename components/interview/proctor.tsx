@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
-export const LOOK_SECS = 3;
+export const LOOK_SECS = 4;
 
 export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice";
 export const BREACH_TEXT: Record<Breach, string> = {
@@ -238,9 +238,9 @@ export function StrictDock({ left, onBreach, listen = true }: { left: number; on
 }
 
 /** Thresholds for the voice check (see useVoiceMatch). */
-const STILL_LIPS = 0.045; // mouth() below this = lips not moving
+const STILL_LIPS = 0.08; // mouth() below this = lips not moving (talking moves it 0.15+; face-tracking jitter stays under)
 const VOICE_WINDOW = 40; // last 4 s (10 checks a second)
-const VOICE_STILL = 22; // ~2.2 s of voice with still lips in that window
+const VOICE_STILL = 15; // ~1.5 s of voice with still lips in that window
 const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops speaking
 
 /**
@@ -251,6 +251,8 @@ const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops sp
  */
 function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMismatch: () => void) {
   const [mic, setMic] = useState<"off" | "on" | "blocked">("off");
+  /** what the check hears right now, shown on the camera so a student (or tester) can see it working */
+  const [hear, setHear] = useState<"quiet" | "you" | "other" | "paused">("quiet");
   const cb = useRef(onMismatch);
   cb.current = onMismatch;
   const mouthRef = useRef(mouth);
@@ -267,11 +269,13 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
       return;
     }
     navigator.mediaDevices
-      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false } })
+      // noise suppression off here: it can remove a second voice farther from the mic
+      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false } })
       .then((st) => {
         stream = st;
         if (dead) return st.getTracks().forEach((t) => t.stop());
         ctx = new AudioContext();
+        void ctx.resume().catch(() => {});
         const an = ctx.createAnalyser();
         an.fftSize = 1024;
         ctx.createMediaStreamSource(st).connect(an);
@@ -279,7 +283,13 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
         const bins = new Uint8Array(an.frequencyBinCount);
         const hz = ctx.sampleRate / an.fftSize;
         const lo = Math.floor(300 / hz), hi = Math.ceil(3400 / hz);
-        let floor = 0, n = 0, armed = true, quiet = 0;
+        let floor = 0, n = 0, armed = true, quiet = 0, shown = "";
+        const say = (h: "quiet" | "you" | "other" | "paused") => {
+          if (h !== shown) {
+            shown = h;
+            setHear(h);
+          }
+        };
         const recent: number[] = []; // 1 = voice with still lips, 0 = anything else
         timer = window.setInterval(() => {
           an.getByteFrequencyData(bins);
@@ -288,15 +298,18 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
           const level = sum / (hi - lo + 1);
           n++;
           floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
-          const voice = n > 20 && level > Math.max(floor * 1.8, floor + 18);
+          const voice = n > 20 && level > Math.max(floor * 1.5, floor + 10);
           const muted = pausedRef.current || Date.now() - pausedAt.current < ECHO_MS;
           if (muted) {
             recent.length = 0;
+            say("paused");
             return;
           }
           const m = mouthRef.current();
+          const still = voice && m >= 0 && m < STILL_LIPS;
+          say(!voice ? "quiet" : still ? "other" : "you");
           // no face: "out of the camera" already covers it
-          recent.push(voice && m >= 0 && m < STILL_LIPS ? 1 : 0);
+          recent.push(still ? 1 : 0);
           if (recent.length > VOICE_WINDOW) recent.shift();
           quiet = voice ? 0 : quiet + 1;
           if (!armed && quiet >= 30) armed = true;
@@ -315,7 +328,7 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
       stream?.getTracks().forEach((t) => t.stop());
     };
   }, [on]);
-  return mic;
+  return { mic, hear };
 }
 
 /** Camera self-view that reports looking away, leaving the frame, or a second person.
@@ -327,7 +340,7 @@ export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach)
   const cb = useRef(onBreach);
   cb.current = onBreach;
   const watcher = useRef<{ mouth: () => number } | null>(null);
-  const mic = useVoiceMatch(!!voice && watching, () => watcher.current?.mouth() ?? -1, voice?.paused ?? false, () => cb.current("voice"));
+  const { mic, hear } = useVoiceMatch(!!voice && watching, () => watcher.current?.mouth() ?? -1, voice?.paused ?? false, () => cb.current("voice"));
   useEffect(() => {
     let dead = false;
     let stream: MediaStream | null = null;
@@ -365,7 +378,7 @@ export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach)
       </span>
       {voice && watching && (
         <span className="absolute top-2 left-2 rounded-md bg-black/55 px-2 py-1 text-[10.5px] text-white/80 backdrop-blur">
-          {mic === "on" ? "Voice check on: only you answer" : mic === "blocked" ? "Mic blocked: voice check off" : "Starting voice check…"}
+          {mic === "blocked" ? "Mic blocked: voice check off" : mic !== "on" ? "Starting voice check…" : hear === "paused" ? "Voice check: interviewer speaking" : hear === "you" ? "Voice check: you’re speaking ✓" : hear === "other" ? "Voice check: lips not moving ⚠" : "Voice check on: only you answer"}
         </span>
       )}
     </div>

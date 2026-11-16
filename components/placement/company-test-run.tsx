@@ -203,7 +203,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
   const res = cq ? ran[cq.id] : undefined;
   return (
     <div className={cn(STRICT_SHELL, "px-5 py-5 lg:px-8")}>
-      <div className={cn("mx-auto pr-0 lg:pr-[230px]", cq ? "max-w-[1180px]" : "max-w-[920px]")}>
+      <div className={cn("mx-auto pr-0 lg:pr-[230px]", cq ? "max-w-none" : "max-w-[920px]")}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[12px] text-white/50">{info.test.company} · {info.test.title}</p>
@@ -235,8 +235,9 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
         )}
 
         {cq && work[cq.id] && (
-          <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.15fr]">
-            <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          // coding uses the whole screen, like a coding platform: problem on the left, editor on the right
+          <div className="mt-4 grid gap-4 lg:h-[calc(100vh-150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+            <div className="overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
               <p className="text-[12px] font-semibold text-white/45">Coding {at - nQ + 1} of {run.coding.length} · {cq.level}</p>
               <p className="mt-1 text-[17px] font-semibold text-white">{cq.title}</p>
               <p className="mt-3 text-[13.5px] leading-relaxed whitespace-pre-wrap text-white/80">{cq.statement}</p>
@@ -249,7 +250,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
               </div>
               <p className="mt-3 text-[11.5px] text-white/40">Your code is also checked on hidden tests when you submit.</p>
             </div>
-            <div className="flex min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
+            <div className="flex min-h-[460px] min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 lg:min-h-0">
               <div className="flex items-center gap-2">
                 <select
                   value={work[cq.id].lang}
@@ -267,7 +268,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
                 <span className="flex-1" />
                 <Button size="sm" loading={res === "running"} onClick={() => void tryExamples(cq)}>Run examples</Button>
               </div>
-              <CodeEditor value={work[cq.id].code} lang={work[cq.id].lang} onChange={(v) => setCode(cq.id, { ...work[cq.id], code: v })} className="mt-3 min-h-[300px] flex-1" label={`Code for ${cq.title}`} />
+              <CodeEditor value={work[cq.id].code} lang={work[cq.id].lang} onChange={(v) => setCode(cq.id, { ...work[cq.id], code: v })} className="mt-3 min-h-[260px] flex-1 rounded-lg bg-black/30" label={`Code for ${cq.title}`} />
               {res && res !== "running" && (
                 <div className="mt-3 rounded-lg bg-black/35 p-2.5 text-[12px]">
                   {res.status !== "ok" ? (
