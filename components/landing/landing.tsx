@@ -41,7 +41,7 @@ const RING: { icon: FancyIconName; label: string; tone: FancyTone }[] = [
 const STEPS: { n: string; icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
   { n: "1", icon: "resume", tone: "indigo", title: "Tell us about you", text: "Your course, year, interests and goals, plus a 5-minute skill check." },
   { n: "2", icon: "plan", tone: "violet", title: "Get your plan and courses", text: "A study plan around your timetable and courses that match your background." },
-  { n: "3", icon: "certificate", tone: "amber", title: "Learn, track, get certified", text: "Watch lessons inside StudentOS, see real progress and earn certificates." },
+  { n: "3", icon: "certificate", tone: "amber", title: "Practise and get placed", text: "Aptitude, mock interviews and your resume, then apply to your college’s drives when you are ready." },
 ];
 
 const FREE: { text: string; icon: FancyIconName; tone: FancyTone }[] = [
@@ -54,6 +54,7 @@ const FREE: { text: string; icon: FancyIconName; tone: FancyTone }[] = [
 ];
 
 const FAQ: FaqItem[] = [
+  { q: "Can my college run placement drives on StudentOS?", a: "Yes. The placement cell posts the companies visiting campus, students apply in the app, and shortlists, test links and results reach students there instead of over email. Colleges can start with a pilot." },
   { q: "Is StudentOS free?", a: "Yes. The Free plan includes the study planner, personalised courses, the AI assistant (with a daily limit), 2 certificates and more. Premium features will be optional." },
   { q: "Is it only for engineering students?", a: "No. Courses and plans are made from your own degree, interests and assessment, so a B.Com, BBA, B.Sc or B.A. student gets courses for their field, not programming." },
   { q: "Where do the videos come from?", a: "From YouTube. For every topic we pick the most viewed and liked long-form lessons, and they play inside StudentOS with YouTube’s official player." },
@@ -163,7 +164,7 @@ function HeroStage() {
 function Hero() {
   const cta = usePrimaryCta();
   const ref = usePointerVars<HTMLElement>();
-  const words = ["Learn.", "Plan.", "Build.", "Grow."];
+  const words = ["Prepare smart.", "Get placed."];
   return (
     <section ref={ref} className="relative overflow-hidden pt-16">
       <div className="pointer-events-none absolute inset-0">
@@ -175,7 +176,7 @@ function Hero() {
         <div>
           <Link href="#free" className="hero-in group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pr-3 pl-1 text-[12px] text-white/70 backdrop-blur transition hover:border-accent/40" style={d(0)}>
             <span className="rounded-full bg-accent px-2 py-0.5 text-[10.5px] font-semibold text-black">Free</span>
-            For every degree, every student
+            For students · Colleges run their drives here
             <ArrowRightIcon size={12} className="transition group-hover:translate-x-0.5" />
           </Link>
           <h1 className="mt-6 text-[52px] leading-[1] font-bold tracking-[-0.03em] sm:text-[74px]">
@@ -184,12 +185,12 @@ function Hero() {
                 <span className="hero-in mr-3 inline-block" style={d(0.1 + i * 0.12)}>
                   <span className={i === 1 ? "land-shine" : ""}>{w}</span>
                 </span>
-                {i === 1 && <br />}
+                {i === 0 && <br />}
               </span>
             ))}
           </h1>
           <p className="hero-in mt-6 max-w-[520px] text-[17px] leading-relaxed text-white/62" style={d(0.6)}>
-            The AI study companion that turns your goals and free time into a plan you can keep, with courses made for your degree and certificates you can prove.
+            Aptitude, mock interviews, resume and a study plan for your degree, all in one place. When your college runs its campus drives on StudentOS, you see every drive and how ready you are for it.
           </p>
           <div className="hero-in mt-8 flex flex-wrap gap-3" style={d(0.75)}>
             <Link href={cta.href} className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-accent px-6 text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.35)] transition hover:-translate-y-0.5">
@@ -370,7 +371,7 @@ function Story() {
     <section id="story" className="relative mx-auto max-w-[1200px] scroll-mt-16 px-5 py-24">
       <div className="reveal mx-auto max-w-[680px] text-center">
         <Eyebrow>See it in action</Eyebrow>
-        <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">One app for everything you study</h2>
+        <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">From first lesson to first offer</h2>
       </div>
       <div className="mt-16 grid gap-12 lg:grid-cols-[1.15fr_1fr]">
         {/* sticky 3D screen */}
@@ -653,9 +654,9 @@ export function Landing() {
             <Image src="/studentos-mark.png" alt="" width={192} height={192} className="h-full w-full object-contain [animation:hero-glow_4s_ease-in-out_infinite]" />
           </div>
           <h2 className="mt-6 text-[36px] font-semibold tracking-tight sm:text-[48px]">
-            Start studying with a <span className="land-shine">plan</span> today
+            Start preparing for <span className="land-shine">placements</span> today
           </h2>
-          <p className="mx-auto mt-3 max-w-[520px] text-[15px] text-white/60">Create your free account, answer a few questions, and get your plan and courses in minutes.</p>
+          <p className="mx-auto mt-3 max-w-[520px] text-[15px] text-white/60">Create your free account, answer a few questions, and see how placement-ready you are in minutes.</p>
           <Link href={cta.href} className="group relative mt-8 inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-accent px-7 text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.35)] transition hover:-translate-y-0.5">
             <span className="absolute inset-y-0 -left-1/2 w-1/2 skew-x-[-20deg] bg-white/45 [animation:hero-scan_3.5s_ease-in-out_infinite]" />
             <span className="relative">{cta.label}</span> <ArrowRightIcon size={15} className="relative" />

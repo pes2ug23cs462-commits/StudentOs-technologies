@@ -33,21 +33,21 @@ export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
     ],
   },
   {
-    title: "Study",
+    title: "Placement",
+    items: [
+      { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"], badge: "NEW" },
+      { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/code", "/premium"], badge: "PRO" },
+      { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
+      { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
+    ],
+  },
+  {
+    title: "Prepare",
     items: [
       { href: "/study-plan", label: "Study Plan", Icon: PlanIcon, match: ["/study-plan", "/plan", "/session"] },
       { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule", "/timeline"] },
       { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals", "/notes"] },
       { href: "/exam-prep", label: "Exam Prep", Icon: OpenBookIcon, match: ["/exam-prep"], badge: "NEW" },
-      { href: "/tests", label: "Practice Arena", Icon: TargetIcon, match: ["/tests", "/interview", "/code", "/premium"], badge: "PRO" },
-    ],
-  },
-  {
-    title: "Career",
-    items: [
-      { href: "/projects", label: "Projects & Experience", Icon: FolderIcon, match: ["/projects"] },
-      { href: "/resume", label: "Resume Creator", Icon: FileIcon, match: ["/resume"] },
-      { href: "/placement", label: "Placement", Icon: BriefcaseIcon, match: ["/placement"], badge: "NEW" },
     ],
   },
 ];
