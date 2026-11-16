@@ -12,7 +12,7 @@ import { PracticeHeader } from "@/components/practice/practice-header";
 import { PremiumBadge, PremiumGate } from "@/components/premium/premium-gate";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { Button } from "@/components/ui/button";
-import { ArrowRightIcon, BotIcon, BriefcaseIcon, BulbIcon, CheckIcon, VideoIcon, ChevronDownIcon, ChevronRightIcon, ClockIcon, CodeIcon, LaptopIcon, LayersIcon, MicIcon, PlayIcon, RefreshIcon, RepeatIcon, SparkleIcon, StopIcon, UsersIcon, VolumeIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, BotIcon, BriefcaseIcon, BulbIcon, CheckIcon, ShieldIcon, VideoIcon, ChevronDownIcon, ChevronRightIcon, ClockIcon, CodeIcon, LaptopIcon, LayersIcon, MicIcon, PlayIcon, RefreshIcon, RepeatIcon, SparkleIcon, StopIcon, UsersIcon, VolumeIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { AssistantError } from "@/lib/assistant";
 import { KIND_LABEL, LANG_LABEL, LEVEL_LABEL, RUBRIC_LABEL, STYLE_LABEL, codeEvaluate, type PracticeItem, type InterviewLang, type InterviewStyle, MAX_SAVED, interviewStats, evaluate, makeQuestions, suggestRoles, type Feedback, type InterviewKind, type InterviewLevel, type InterviewRecord, type Question } from "@/lib/interview";
@@ -23,6 +23,7 @@ import { stopSpeaking } from "@/lib/tts";
 import { createTalker, hasHindiVoice, type Talker } from "@/lib/talker";
 import { VOICE_LANGS, startRecording, transcribe, type Recorder } from "@/lib/voice";
 import { Interviewer, MicBars } from "@/components/interview/interviewer";
+import { BREACH_TEXT, enterFullscreen, MAX_WARNINGS, ProctorBadge, ProctorWarning, SelfView, useProctor, type Breach } from "@/components/interview/proctor";
 import { CodingRound, type RoundResult } from "@/components/interview/coding-round";
 import { CodingReport } from "@/components/interview/coding-report";
 import { PROBLEMS } from "@/lib/coding/problems";
@@ -31,7 +32,7 @@ import { wantsCoding } from "@/lib/coding/use-coding";
 import { LANG_LABEL as CODE_LANG_LABEL, type Lang, type Level, type Problem } from "@/lib/coding/types";
 import type { StudySession } from "@/lib/types";
 
-type Phase = "setup" | "preparing" | "live" | "scoring" | "result" | "coding" | "coding-scoring";
+type Phase = "setup" | "preparing" | "live" | "scoring" | "result" | "coding" | "coding-scoring" | "ended";
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -135,6 +136,16 @@ export default function InterviewPage() {
   const [roundKey, setRoundKey] = useState(0);
   const [cameraOn, setCameraOn] = useState(false);
   const [recordOn, setRecordOn] = useState(false);
+  const [strict, setStrict] = useState(true);
+  const [endLog, setEndLog] = useState<Breach[]>([]);
+  const proctor = useProctor(strict && (phase === "live" || phase === "coding"), (log) => {
+    rec?.cancel();
+    setRec(null);
+    talker?.stop();
+    setSpeaking(false);
+    setEndLog(log);
+    setPhase("ended");
+  });
   const voice = readAloud && handsFree;
   const setVoice = (on: boolean) => {
     setReadAloud(on);
@@ -217,6 +228,8 @@ export default function InterviewPage() {
     setError("");
     checking?.getTracks().forEach((t) => t.stop());
     setChecking(null);
+    // full screen needs the click itself, so ask before anything waits
+    if (strict) enterFullscreen();
     if (kind === "coding") {
       const want = CODE_LEVEL[level] ?? "Easy";
       const done = new Set(history.map((h) => h.coding?.problemId).filter(Boolean));
@@ -239,11 +252,13 @@ export default function InterviewPage() {
       setPhase("live");
     } catch (e) {
       setError(e instanceof AssistantError ? e.message : "Couldn’t prepare questions. Try again.");
+      proctor.stop();
       setPhase("setup");
     }
   };
 
   const finishCoding = async (r: RoundResult) => {
+    proctor.stop();
     if (!problem) return;
     setPhase("coding-scoring");
     try {
@@ -351,6 +366,7 @@ export default function InterviewPage() {
   };
 
   const finish = async (final: string[]) => {
+    proctor.stop();
     rec?.cancel();
     setRec(null);
     quiet();
@@ -407,6 +423,7 @@ export default function InterviewPage() {
         </div>
       );
     return (
+      <div className={cn(strict && "fixed inset-0 z-[60] overflow-auto bg-[#08070d] lg:[&>div:first-child]:!mb-0 lg:[&>div:first-child]:!h-dvh")}>
       <CodingRound
         key={roundKey}
         problem={problem}
@@ -418,11 +435,39 @@ export default function InterviewPage() {
         voice={voice}
         style={style}
         talker={talker}
-        camera={cameraOn}
+        camera={cameraOn || strict}
         record={recordOn}
-        onQuit={() => setPhase("setup")}
+        onBreach={strict ? proctor.report : undefined}
+        onQuit={() => { proctor.stop(); setPhase("setup"); }}
         onEnd={(r) => void finishCoding(r)}
       />
+      {strict && (
+        <div className="fixed right-4 bottom-4 z-40 rounded-lg bg-[#0b0b0d]/90 backdrop-blur">
+          <ProctorBadge left={proctor.left} />
+        </div>
+      )}
+      <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} />
+      </div>
+    );
+  }
+
+  /* ---------- ended by strict mode ---------- */
+  if (phase === "ended") {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-rose-500/15 text-rose-300"><XIcon size={26} /></span>
+        <p className="mt-4 text-[20px] font-semibold text-white">Interview ended</p>
+        <p className="mt-2 max-w-[440px] text-[13.5px] leading-relaxed text-white/60">Strict mode ended the interview after {MAX_WARNINGS} warnings. It wasn’t scored or saved. In a real interview, stay on the screen and keep your eyes on the camera.</p>
+        <ol className="mt-5 w-full max-w-[400px] space-y-1.5 text-left">
+          {endLog.map((b, k) => (
+            <li key={k} className="flex items-center gap-3 rounded-lg border border-white/[0.07] px-3 py-2 text-[12.5px] text-white/70">
+              <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold", k < MAX_WARNINGS ? "bg-amber-400/15 text-amber-200" : "bg-rose-500/20 text-rose-300")}>{k + 1}</span>
+              {BREACH_TEXT[b]}
+            </li>
+          ))}
+        </ol>
+        <Button className="mt-6" variant="primary" onClick={() => setPhase("setup")}>Try again</Button>
+      </div>
     );
   }
 
@@ -432,7 +477,7 @@ export default function InterviewPage() {
     const words = (answers[i] ?? "").trim().split(/\s+/).filter(Boolean).length;
     const status = phase === "scoring" ? "scoring" : speaking ? "asking" : hearing ? "writing" : rec ? "listening" : "waiting";
     return (
-      <div className="px-6 py-6 lg:px-8">
+      <div className={cn("px-6 py-6 lg:px-8", strict && "fixed inset-0 z-[60] overflow-auto bg-ink")}>
         {/* top bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -446,6 +491,7 @@ export default function InterviewPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {strict && <ProctorBadge left={proctor.left} />}
             <span className="text-[13px] text-white/60 tabular-nums">{fmt(total)}</span>
             <button type="button" disabled={phase === "scoring"} onClick={() => window.confirm("End the interview now? Unanswered questions count as skipped.") && finish(answers)} className="h-9 rounded-lg border border-rose-400/40 px-3.5 text-[12.5px] font-medium text-rose-300 transition hover:bg-rose-500/10 disabled:opacity-40">
               End interview
@@ -458,6 +504,7 @@ export default function InterviewPage() {
             {/* video */}
             <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(124,58,237,0.6)]">
               <Interviewer talker={talker} listening={status === "listening"} />
+              <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} />
               <div className="absolute top-3 left-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 backdrop-blur">
                 <span className={cn("h-2 w-2 rounded-full", speaking ? "bg-violet-400" : "bg-white/30")} />
                 <span className="text-[12.5px] font-medium text-white">{INTERVIEWER} · AI interviewer</span>
@@ -554,6 +601,7 @@ export default function InterviewPage() {
 
           {/* side */}
           <div className="space-y-4">
+            {strict && <SelfView onBreach={proctor.report} />}
             <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
               <p className="text-[13.5px] font-semibold text-white">This answer</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -865,6 +913,12 @@ export default function InterviewPage() {
                     <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", voice ? "left-[18px]" : "left-0.5")} />
                   </button>
                 </label>
+                <label className="flex cursor-pointer items-center gap-2" title="Full screen, no other tabs, camera checks you look at the screen. 3 warnings, then the interview ends.">
+                  <ShieldIcon size={14} className="text-white/45" /> Strict mode
+                  <button type="button" role="switch" aria-checked={strict} aria-label="Strict mode" onClick={() => setStrict(!strict)} className={cn("relative h-5 w-9 rounded-full transition", strict ? "bg-cyan-400" : "bg-white/15")}>
+                    <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                </label>
                 {kind === "coding" &&
                   ([
                     { on: cameraOn, set: setCameraOn, label: "Camera on", Icon: VideoIcon },
@@ -914,6 +968,7 @@ export default function InterviewPage() {
                 </button>
                 <p className="min-w-[200px] flex-1 text-[11.5px] leading-snug text-white/45">
                   {kind === "coding" ? `One ${CODE_LEVEL[level]} problem, ${codeMin} minutes · ` : `${count} questions · `}{kind === "coding" ? `${voice ? `${INTERVIEWER} talks to you; tap the mic to answer and think out loud.` : "Type your answers to Asha."}${cameraOn || recordOn ? " Camera and recording stay on this device — nothing is uploaded." : ""}` : voice ? `${INTERVIEWER} asks out loud and the mic turns on by itself.` : "You read the questions and type or speak your answers."} Your voice is only used to write down your answer.
+                  {strict && ` Strict mode: full screen, no other tabs, and the camera checks you look at the screen. ${MAX_WARNINGS} warnings, then the interview ends. The camera stays on this device.`}
                 </p>
               </div>
             </Card>

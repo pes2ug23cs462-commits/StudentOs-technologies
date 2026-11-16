@@ -15,6 +15,7 @@ import { runCode, show } from "@/lib/coding/runner";
 import { LANG_LABEL, type Lang, type Problem, type RunResult } from "@/lib/coding/types";
 import { codeChat, codeFollowups, type ChatLine, type InterviewLang, type InterviewStyle, type RoundEvent } from "@/lib/interview";
 import { watchPresence, type PresenceSummary } from "@/lib/presence";
+import { LOOK_SECS } from "@/components/interview/proctor";
 import type { Talker } from "@/lib/talker";
 import { cn } from "@/lib/utils";
 import { startRecording, transcribe, type Recorder } from "@/lib/voice";
@@ -59,6 +60,7 @@ export function CodingRound({
   talker,
   camera,
   record,
+  onBreach,
   onEnd,
   onQuit,
 }: {
@@ -75,6 +77,8 @@ export function CodingRound({
   camera: boolean;
   /** record the round's audio, kept on this device only */
   record: boolean;
+  /** strict mode: told when the student looks away or leaves the frame for a few seconds */
+  onBreach?: (kind: "away" | "out") => void;
   onEnd: (r: RoundResult) => void;
   onQuit: () => void;
 }) {
@@ -110,6 +114,8 @@ export function CodingRound({
   const recStart = useRef(0);
   const [cam, setCam] = useState<"off" | "starting" | "on" | "blocked">(camera ? "starting" : "off");
   const [watching, setWatching] = useState(false);
+  const breachRef = useRef(onBreach);
+  breachRef.current = onBreach;
   const [recording, setRecording] = useState(false);
 
   const evRef = useRef<RoundEvent[]>([]);
@@ -151,6 +157,7 @@ export function CodingRound({
           setCam("on");
           const w = await watchPresence(video.current, now, (e) =>
             addEvent({ t: e.startedAt, ok: false, text: e.kind === "away" ? `Looked away from the screen for ${e.secs} sec` : `Out of the camera frame for ${e.secs} sec` }),
+            onBreach ? { secs: LOOK_SECS, on: (k) => breachRef.current?.(k) } : undefined,
           );
           if (dead) return void w?.stop();
           watcher.current = w;

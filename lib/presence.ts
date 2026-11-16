@@ -62,7 +62,13 @@ function facing(points: Point[], shapes: Category[] | undefined) {
  * `now()` gives the round's clock in seconds, so events line up with the rest of the round.
  * Resolves to null when the face model can't load (the self-view still works).
  */
-export async function watchPresence(video: HTMLVideoElement, now: () => number, onEvent: (e: PresenceEvent) => void) {
+export async function watchPresence(
+  video: HTMLVideoElement,
+  now: () => number,
+  onEvent: (e: PresenceEvent) => void,
+  /** strict mode: called once per look-away as soon as it lasts `secs` */
+  warn?: { secs: number; on: (kind: "away" | "out") => void },
+) {
   let lm: Landmarker;
   try {
     lm = await load();
@@ -72,6 +78,7 @@ export async function watchPresence(video: HTMLVideoElement, now: () => number, 
   let samples = 0, onScreen = 0, away = 0, out = 0;
   let state: "on" | "away" | "out" = "on";
   let since = now();
+  let warned = false;
   const flush = (next: "on" | "away" | "out") => {
     if (next === state) return;
     const secs = now() - since;
@@ -85,6 +92,7 @@ export async function watchPresence(video: HTMLVideoElement, now: () => number, 
     }
     state = next;
     since = now();
+    warned = false;
   };
   const timer = setInterval(() => {
     if (video.readyState < 2 || !video.videoWidth) return;
@@ -95,6 +103,10 @@ export async function watchPresence(video: HTMLVideoElement, now: () => number, 
       const next = !face ? "out" : facing(face, r.faceBlendshapes?.[0]?.categories) ? "on" : "away";
       if (next === "on") onScreen++;
       flush(next);
+      if (warn && state !== "on" && !warned && now() - since >= warn.secs) {
+        warned = true;
+        warn.on(state);
+      }
     } catch {
       /* a skipped frame is fine */
     }
