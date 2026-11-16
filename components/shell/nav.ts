@@ -98,7 +98,7 @@ export function crumbsFor(pathname: string): Crumb[] {
     const hit = g.items.find((i) => isActive(pathname, i.match));
     if (!hit) continue;
     const out: Crumb[] = [];
-    if (g.title) out.push({ label: g.title, href: g.items[0].href });
+    if (g.title && g.title !== hit.label) out.push({ label: g.title, href: g.items[0].href });
     out.push({ label: hit.label, href: hit.href });
     if (pathname !== hit.href) {
       const sub = SUB.find((x) => (x.path.endsWith("/") ? pathname.startsWith(x.path) : pathname === x.path || pathname.startsWith(x.path + "/")));

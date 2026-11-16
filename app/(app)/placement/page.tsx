@@ -8,11 +8,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 import { Aptitude } from "@/components/placement/aptitude";
 import { CampusDrives, JoinForDrives } from "@/components/placement/campus-drives";
-import { ArrowRightIcon, BriefcaseIcon, BuildingIcon, CheckIcon, CodeIcon, FileIcon, FolderIcon, MicIcon, TargetIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, BriefcaseIcon, BuildingIcon, CheckIcon, CodeIcon, FileIcon, FolderIcon, MicIcon, OpenBookIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { TOPIC, type TopicId } from "@/lib/aptitude";
 import { PLACEMENT_PARTS, type PlacementPart } from "@/lib/college";
-import { COMPANIES, myReadiness, resumeCheck, weekPlan, type Company } from "@/lib/placement-prep";
+import { COMPANIES, gapCourses, myReadiness, resumeCheck, weekPlan, type Company } from "@/lib/placement-prep";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,7 @@ const PART_LINK: Record<PlacementPart, { href: string; Icon: typeof TargetIcon; 
   Coding: { href: "/code", Icon: CodeIcon, hint: "Coding problems solved (10 = full marks)" },
   Projects: { href: "/projects", Icon: FolderIcon, hint: "Projects added (3 = full marks)" },
   Resume: { href: "/resume", Icon: FileIcon, hint: "Resume checklist below" },
+  Courses: { href: "/learn", Icon: OpenBookIcon, hint: "Course modules finished (10 = full marks)" },
 };
 const tone = (v: number) => (v >= 70 ? "bg-emerald-400" : v >= 40 ? "bg-amber-300" : "bg-rose-400");
 
@@ -78,6 +79,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   const { parts, overall } = useMemo(() => myReadiness(state), [state]);
   const plan = useMemo(() => weekPlan(state), [state]);
   const resume = useMemo(() => resumeCheck(state), [state]);
+  const gaps = useMemo(() => gapCourses(state), [state]);
   const R = 52, C = 2 * Math.PI * R;
   return (
     <div className="space-y-5">
@@ -112,7 +114,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
               })}
             </ul>
           </div>
-          <p className="mt-4 text-[12px] text-white/45">{state.college ? "Your college sees this same score if you share progress with them." : "Aptitude 20%, interviews 30%, coding 20%, projects 15%, resume 15%."}</p>
+          <p className="mt-4 text-[12px] text-white/45">{state.college ? "Your college sees this same score if you share progress with them." : "Aptitude 20%, interviews 25%, coding 20%, resume 15%, projects 10%, courses 10%."}</p>
         </Card>
 
         <Card className="p-6">
@@ -131,6 +133,39 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           </ol>
         </Card>
       </div>
+
+      {gaps.length > 0 && (
+        <Card className="p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-[14px] font-semibold text-white">Courses for your weak areas</p>
+            <p className="text-[12px] text-white/45">Finishing course modules also adds to your readiness.</p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {gaps.map((g) => (
+              <div key={g.area} className="flex flex-col rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+                <p className="text-[11px] font-semibold tracking-wide text-rose-300 uppercase">Weak · {g.why}</p>
+                <p className="mt-1 text-[14px] font-semibold text-white">{g.area}</p>
+                {g.course ? (
+                  <a
+                    href={g.course.href}
+                    {...(g.course.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="mt-3 flex items-start gap-2.5 rounded-lg border border-accent/25 bg-accent/[0.06] p-3 transition hover:border-accent/50"
+                  >
+                    <OpenBookIcon size={15} className="mt-0.5 shrink-0 text-accent" />
+                    <span className="min-w-0">
+                      <span className="block text-[10.5px] font-semibold tracking-wide text-accent uppercase">{g.course.external ? `Free · ${g.course.by} ↗` : "Course on StudentOS"}</span>
+                      <span className="block text-[13px] font-medium text-white">{g.course.title}</span>
+                    </span>
+                  </a>
+                ) : (
+                  <Link href="/learn" className="mt-3 rounded-lg border border-white/10 p-3 text-[13px] text-white/75 hover:border-white/25">Find a course in Learning →</Link>
+                )}
+                <Link href={g.practice.href} className="mt-auto pt-3 text-[12.5px] font-medium text-accent hover:underline">{g.practice.label} →</Link>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.15fr]">
         <Card className="p-6">

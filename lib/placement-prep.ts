@@ -6,6 +6,7 @@ import { readinessFromParts, type PlacementPart } from "@/lib/college";
 import { resumeCheck } from "@/lib/resume-check";
 export { resumeCheck, type ResumeCheck } from "@/lib/resume-check";
 import type { AppState } from "@/lib/store";
+import { findCourses, trustedCourses } from "@/lib/assistant-study";
 
 /* ---------- readiness ---------- */
 
@@ -17,6 +18,7 @@ export function myReadiness(state: AppState) {
     Interviews: iv.length ? Math.round(iv.slice(0, 5).reduce((n, i) => n + i.feedback.overall, 0) / Math.min(5, iv.length)) : 0,
     Projects: Math.min(100, (state.entries ?? []).filter((e) => e.kind === "project").length * 34),
     Resume: resumeCheck(state).score,
+    Courses: Math.min(100, Object.values(state.learning?.modules ?? {}).filter((m) => m.done).length * 10),
   };
   return { parts, overall: readinessFromParts(parts) };
 }
@@ -40,8 +42,67 @@ export function weekPlan(state: AppState): PlanTask[] {
     Interviews: [{ part: "Interviews", text: "Do one mock interview in strict mode", href: "/interview" }],
     Projects: [{ part: "Projects", text: "Add a project you built, with what it does and the tools you used", href: "/projects" }],
     Resume: [{ part: "Resume", text: resume ? `Resume: ${resume.text.charAt(0).toLowerCase()}${resume.text.slice(1)}` : "Tailor your resume to your next drive", href: "/resume" }],
+    Courses: [(() => {
+      const gap = gapCourses(state)[0];
+      return gap?.course ? { part: "Courses" as const, text: `Finish one module of ${gap.course.title}`, href: gap.course.href } : { part: "Courses" as const, text: "Finish one module of a course in Learning", href: "/learn" };
+    })()],
   };
   return order.slice(0, 3).flatMap((p) => make[p]).slice(0, 5);
+}
+
+/* ---------- courses for weak areas ---------- */
+
+export type GapCourse = {
+  /** what is weak, e.g. "DBMS · Normalisation" */
+  area: string;
+  /** why we think so, e.g. "40% in your mock tests" */
+  why: string;
+  course: { title: string; by: string; href: string; external: boolean } | null;
+  practice: { label: string; href: string };
+};
+
+/** Up to 3 weak areas, each with one course to fix it: topics from mock tests first, then weak readiness parts. */
+export function gapCourses(state: AppState): GapCourse[] {
+  const own = state.learning?.catalog ?? [];
+  const pick = (topic: string): GapCourse["course"] => {
+    const c = findCourses(topic, own)[0];
+    if (c) return { title: c.title, by: "StudentOS", href: `/learn/${c.id}`, external: false };
+    const t = trustedCourses(topic)[0];
+    return t ? { title: t.title, by: t.by, href: t.url, external: true } : null;
+  };
+  const out: GapCourse[] = [];
+  // mock tests: topics under 60% (at least 2 questions asked)
+  const seen: Record<string, { subject: string; topic: string; right: number; total: number }> = {};
+  for (const t of (state.tests ?? []).slice(0, 15)) {
+    for (const [topic, v] of Object.entries(t.byTopic ?? {})) {
+      const k = `${t.subject}|${topic}`;
+      const o = (seen[k] ??= { subject: t.subject, topic, right: 0, total: 0 });
+      o.right += v.right;
+      o.total += v.total;
+    }
+  }
+  Object.values(seen)
+    .filter((o) => o.total >= 2 && o.right / o.total < 0.6)
+    .sort((a, b) => a.right / a.total - b.right / b.total)
+    .slice(0, 2)
+    .forEach((o) => {
+      const name = o.topic && o.topic !== o.subject ? `${o.subject} · ${o.topic}` : o.subject;
+      out.push({ area: name, why: `${Math.round((o.right / o.total) * 100)}% in your mock tests`, course: pick(`${o.subject} ${o.topic}`), practice: { label: "Retest this topic", href: `/tests?subject=${encodeURIComponent(o.subject)}` } });
+    });
+  // readiness parts that a course helps with
+  const { parts } = myReadiness(state);
+  const PART_TOPIC: Partial<Record<PlacementPart, { topic: string; area: string; practice: { label: string; href: string } }>> = {
+    Coding: { topic: "data structures algorithms programming", area: "Coding · data structures", practice: { label: "Coding problems", href: "/code" } },
+    Projects: { topic: "web development javascript", area: "Projects · build one", practice: { label: "Add a project", href: "/projects" } },
+  };
+  (["Coding", "Projects"] as const)
+    .filter((p) => parts[p] < 50)
+    .sort((a, b) => parts[a] - parts[b])
+    .forEach((p) => {
+      const m = PART_TOPIC[p]!;
+      out.push({ area: m.area, why: `${p} is ${parts[p]}/100 in your readiness`, course: pick(m.topic), practice: m.practice });
+    });
+  return out.slice(0, 3);
 }
 
 /* ---------- companies ---------- */

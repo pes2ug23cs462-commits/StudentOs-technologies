@@ -277,9 +277,9 @@ export function examReadiness(m: MemberSummary) {
   return v.length ? Math.round(v.reduce((n, [x]) => n + x, 0) / v.length) : null;
 }
 
-export const PLACEMENT_PARTS = ["Aptitude", "Interviews", "Coding", "Projects", "Resume"] as const;
+export const PLACEMENT_PARTS = ["Aptitude", "Interviews", "Coding", "Projects", "Resume", "Courses"] as const;
 export type PlacementPart = (typeof PLACEMENT_PARTS)[number];
-const WEIGHT: Record<PlacementPart, number> = { Aptitude: 0.2, Interviews: 0.3, Coding: 0.2, Projects: 0.15, Resume: 0.15 };
+const WEIGHT: Record<PlacementPart, number> = { Aptitude: 0.2, Interviews: 0.25, Coding: 0.2, Projects: 0.1, Resume: 0.15, Courses: 0.1 };
 /** The same 0–100 readiness for the student's own page and the college dashboard. */
 export const readinessFromParts = (p: Record<PlacementPart, number>) => Math.round(PLACEMENT_PARTS.reduce((n, k) => n + p[k] * WEIGHT[k], 0));
 export function placementParts(m: MemberSummary): Record<PlacementPart, number> {
@@ -289,6 +289,7 @@ export function placementParts(m: MemberSummary): Record<PlacementPart, number> 
     Coding: Math.min(100, m.codingSolved * 10),
     Projects: Math.min(100, m.projects * 34),
     Resume: m.resumeScore ?? (m.resumeDone ? 100 : 0),
+    Courses: Math.min(100, m.modulesDone * 10),
   };
 }
 /** Placement readiness of one student, 0–100. */
