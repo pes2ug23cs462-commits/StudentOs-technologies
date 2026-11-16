@@ -16,6 +16,29 @@ const STYLE: Record<DocBlock["kind"], { font: string; size: number; gap: number;
   small: { font: "400", size: 20, gap: 8, color: "#6b6680" },
 };
 const FAMILY = "Inter, 'Noto Sans', 'Segoe UI', Arial, sans-serif";
+const VIOLET = "#7c3aed";
+
+/* The StudentOS mark, made small once (for the PDF header and the Word header). */
+type Logo = { img: HTMLCanvasElement; png: Uint8Array };
+let logoCache: Promise<Logo | null> | null = null;
+function loadLogo(): Promise<Logo | null> {
+  if (!logoCache)
+    logoCache = new Promise((done) => {
+      const im = new Image();
+      im.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 160;
+        c.getContext("2d")!.drawImage(im, 0, 0, 160, 160);
+        const bin = atob(c.toDataURL("image/png").split(",")[1]);
+        const png = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) png[i] = bin.charCodeAt(i);
+        done({ img: c, png });
+      };
+      im.onerror = () => done(null);
+      im.src = "/studentos-mark.png";
+    });
+  return logoCache;
+}
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, width: number) {
   const out: string[] = [];
@@ -33,6 +56,30 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number) {
   return out;
 }
 
+const TOP = 200; // content starts under the header
+function header(ctx: CanvasRenderingContext2D) {
+  const logo = brandLogo;
+  let x = M;
+  if (logo) {
+    ctx.drawImage(logo.img, M, 56, 60, 60);
+    x += 74;
+  }
+  ctx.textBaseline = "middle";
+  ctx.font = `700 34px ${FAMILY}`;
+  ctx.fillStyle = "#14121c";
+  ctx.fillText("Student", x, 87);
+  ctx.fillStyle = VIOLET;
+  ctx.fillText("OS", x + ctx.measureText("Student").width, 87);
+  ctx.font = `600 18px ${FAMILY}`;
+  ctx.fillStyle = "#8a85a0";
+  const tag = "AI STUDY NOTES";
+  ctx.fillText(tag, PW - M - ctx.measureText(tag).width, 87);
+  ctx.fillStyle = VIOLET;
+  ctx.fillRect(M, 140, PW - 2 * M, 3);
+  ctx.textBaseline = "top";
+}
+let brandLogo: Logo | null = null;
+
 function pages(blocks: DocBlock[], footer: string): HTMLCanvasElement[] {
   const list: HTMLCanvasElement[] = [];
   let c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, y = 0;
@@ -45,7 +92,8 @@ function pages(blocks: DocBlock[], footer: string): HTMLCanvasElement[] {
     ctx.fillRect(0, 0, PW, PH);
     ctx.textBaseline = "top";
     list.push(c);
-    y = M;
+    header(ctx);
+    y = TOP;
   };
   fresh();
   for (const b of blocks) {
@@ -67,7 +115,7 @@ function pages(blocks: DocBlock[], footer: string): HTMLCanvasElement[] {
       y += lh;
     });
     if (b.kind === "title") {
-      ctx!.fillStyle = "#7c3aed";
+      ctx!.fillStyle = VIOLET;
       ctx!.fillRect(M, y + 4, 90, 6);
       y += 16;
     }
@@ -75,6 +123,8 @@ function pages(blocks: DocBlock[], footer: string): HTMLCanvasElement[] {
   }
   list.forEach((p, k) => {
     const x = p.getContext("2d")!;
+    x.fillStyle = "#e6e1f5";
+    x.fillRect(M, PH - 96, PW - 2 * M, 2);
     x.font = `400 19px ${FAMILY}`;
     x.fillStyle = "#8a85a0";
     x.textBaseline = "alphabetic";
@@ -149,7 +199,7 @@ const crc32 = (b: Uint8Array) => {
   return (c ^ 0xffffffff) >>> 0;
 };
 /** A zip with no compression (stored), enough for a .docx. */
-function zip(files: { name: string; data: string }[]): Blob {
+function zip(files: { name: string; data: string | Uint8Array }[]): Blob {
   const parts: Uint8Array[] = [];
   const central: Uint8Array[] = [];
   let off = 0;
@@ -157,7 +207,7 @@ function zip(files: { name: string; data: string }[]): Blob {
   const u32 = (v: number) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
   for (const f of files) {
     const name = enc.encode(f.name);
-    const data = enc.encode(f.data);
+    const data = typeof f.data === "string" ? enc.encode(f.data) : f.data;
     const crc = crc32(data);
     const head = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)]);
     parts.push(head, name, data);
@@ -169,9 +219,9 @@ function zip(files: { name: string; data: string }[]): Blob {
   return new Blob([...parts, ...central, end] as BlobPart[], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 }
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-function docx(blocks: DocBlock[], footer: string): Blob {
-  const run = (t: string, o: { b?: boolean; sz?: number; color?: string } = {}) =>
-    `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${o.b ? "<w:b/>" : ""}${o.color ? `<w:color w:val="${o.color}"/>` : ""}<w:sz w:val="${o.sz ?? 22}"/></w:rPr><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
+function docx(blocks: DocBlock[], footer: string, logo: Logo | null): Blob {
+  const run = (t: string, o: { b?: boolean; sz?: number; color?: string; up?: number } = {}) =>
+    `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${o.b ? "<w:b/>" : ""}${o.color ? `<w:color w:val="${o.color}"/>` : ""}${o.up ? `<w:position w:val="${o.up}"/>` : ""}<w:sz w:val="${o.sz ?? 22}"/></w:rPr><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
   const para = (inner: string, after = 120, ind = 0) => `<w:p><w:pPr><w:spacing w:after="${after}"/>${ind ? `<w:ind w:left="${ind}" w:hanging="240"/>` : ""}</w:pPr>${inner}</w:p>`;
   const body = blocks
     .map((b) => {
@@ -185,12 +235,29 @@ function docx(blocks: DocBlock[], footer: string): Blob {
       }
     })
     .join("");
-  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}${para(run(footer, { sz: 16, color: "8A85A0" }))}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`;
-  return zip([
-    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>` },
-    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const DR = 'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+  const E = 411480; // logo size: 0.45 inch
+  const pic = logo
+    ? `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${E}" cy="${E}"/><wp:docPr id="1" name="StudentOS"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${E}" cy="${E}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>${run(" ")}`
+    : "";
+  const hdr = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr ${W} ${DR}><w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="12" w:space="6" w:color="7C3AED"/></w:pBdr><w:tabs><w:tab w:val="right" w:pos="9638"/></w:tabs><w:spacing w:after="240"/></w:pPr>${pic}${run("Student", { b: true, sz: 30, up: logo ? 18 : 0 })}${run("OS", { b: true, sz: 30, color: "7C3AED", up: logo ? 18 : 0 })}<w:r><w:tab/></w:r>${run("AI STUDY NOTES", { b: true, sz: 16, color: "8A85A0", up: logo ? 22 : 0 })}</w:p></w:hdr>`;
+  const ftr = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${W}><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="6" w:color="E6E1F5"/></w:pBdr><w:tabs><w:tab w:val="right" w:pos="9638"/></w:tabs></w:pPr>${run(footer, { sz: 16, color: "8A85A0" })}<w:r><w:tab/></w:r><w:r><w:rPr><w:color w:val="8A85A0"/><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:color w:val="8A85A0"/><w:sz w:val="16"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:rPr><w:color w:val="8A85A0"/><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r>${run("1", { sz: 16, color: "8A85A0" })}<w:r><w:rPr><w:color w:val="8A85A0"/><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>`;
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W}><w:body>${body}<w:sectPr><w:headerReference w:type="default" r:id="rHdr"/><w:footerReference w:type="default" r:id="rFtr"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  const files: { name: string; data: string | Uint8Array }[] = [
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>` },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="word/document.xml"/></Relationships>` },
     { name: "word/document.xml", data: doc },
-  ]);
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rHdr" Type="${REL}/header" Target="header1.xml"/><Relationship Id="rFtr" Type="${REL}/footer" Target="footer1.xml"/></Relationships>` },
+    { name: "word/header1.xml", data: hdr },
+    { name: "word/footer1.xml", data: ftr },
+  ];
+  if (logo) {
+    files.push({ name: "word/_rels/header1.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rLogo" Type="${REL}/image" Target="media/logo.png"/></Relationships>` });
+    files.push({ name: "word/media/logo.png", data: logo.png });
+  }
+  return zip(files);
 }
 
 /* ---------- download ---------- */
@@ -209,10 +276,11 @@ const fileName = (title: string) => (title.replace(/[^\w\- ]+/g, "").trim().repl
 
 export async function downloadPdf(title: string, blocks: DocBlock[], footer = "Made with StudentOS · student-os.in") {
   await document.fonts?.ready;
+  brandLogo = await loadLogo();
   save(pdf(pages(blocks, footer)), `${fileName(title)}.pdf`);
 }
-export function downloadDocx(title: string, blocks: DocBlock[], footer = "Made with StudentOS · student-os.in") {
-  save(docx(blocks, footer), `${fileName(title)}.docx`);
+export async function downloadDocx(title: string, blocks: DocBlock[], footer = "Made with StudentOS · student-os.in") {
+  save(docx(blocks, footer, await loadLogo()), `${fileName(title)}.docx`);
 }
 /** For tests: the files without downloading. */
-export const _make = { pdf: (b: DocBlock[]) => pdf(pages(b, "f")), docx: (b: DocBlock[]) => docx(b, "f") };
+export const _make = { pdf: (b: DocBlock[]) => pdf(pages(b, "f")), docx: (b: DocBlock[]) => docx(b, "f", null) };
