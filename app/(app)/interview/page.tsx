@@ -219,6 +219,18 @@ export default function InterviewPage() {
     };
   }, [phase, i, talker]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stopSpeaking(), []);
+  // opened from a drive's prep page: /interview?role=Software%20Engineer&kind=hr&company=HP
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const r = p.get("role")?.trim().slice(0, 80);
+    const k = p.get("kind");
+    const co = p.get("company")?.trim().slice(0, 60);
+    if (r) {
+      setRole(co ? `${r} at ${co}` : r);
+      setCustomRole(true);
+    }
+    if (k === "hr" || k === "technical" || k === "role" || k === "coding") setKind(k);
+  }, []);
 
   const profile = [state.setup?.academic.course, state.setup?.academic.field, state.setup?.academic.year, (state.setup?.skills.familiar ?? []).join(", ")].filter(Boolean).join(" · ");
 

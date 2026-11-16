@@ -30,7 +30,7 @@ const SECTIONS: Section[] = ["quant", "logical", "verbal"];
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`;
 const tone = (p: number) => (p >= 75 ? "text-emerald-300" : p >= 50 ? "text-amber-200" : "text-rose-300");
 
-export function Aptitude({ startTopic, startMock }: { startTopic?: TopicId | null; startMock?: boolean }) {
+export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { startTopic?: TopicId | null; startMock?: boolean; focus?: TopicId[]; focusFor?: string }) {
   const { state, actions } = useStore();
   const attempts = state.aptitude?.attempts ?? [];
   const stats = useMemo(() => topicStats(state.aptitude), [state.aptitude]);
@@ -46,7 +46,7 @@ export function Aptitude({ startTopic, startMock }: { startTopic?: TopicId | nul
   const begin = (kind: "topic" | "mock", topic?: TopicId) => {
     // full screen needs the click itself
     if (kind === "mock" && strict) enterFullscreen();
-    const qs = kind === "mock" ? mockSet() : topicSet(topic!, 10);
+    const qs = kind === "mock" ? mockSet(focus) : topicSet(topic!, 10);
     setDone(null);
     setRun({ kind, topic, qs, picks: qs.map(() => null), flags: qs.map(() => false), start: Date.now() });
     window.scrollTo(0, 0);
@@ -102,8 +102,8 @@ export function Aptitude({ startTopic, startMock }: { startTopic?: TopicId | nul
       <Card id="apt-mock" className="flex flex-wrap items-center gap-5 p-5">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/12 text-cyan-300"><ClockIcon size={22} /></span>
         <div className="min-w-[220px] flex-1">
-          <p className="text-[15px] font-semibold text-white">Full aptitude mock</p>
-          <p className="mt-0.5 text-[13px] text-white/55">30 questions in {MOCK_MINUTES} minutes: 12 quantitative, 10 logical, 8 verbal. The mix most service-company tests use.</p>
+          <p className="text-[15px] font-semibold text-white">{focusFor ? `Aptitude mock for ${focusFor}` : "Full aptitude mock"}</p>
+          <p className="mt-0.5 text-[13px] text-white/55">30 questions in {MOCK_MINUTES} minutes: 12 quantitative, 10 logical, 8 verbal.{focus.length ? ` More questions on what ${focusFor ?? "this company"} asked your seniors: ${focus.map((t) => TOPIC[t]?.name).filter(Boolean).join(", ")}.` : " The mix most service-company tests use."}</p>
         </div>
         <div className="flex items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-white/70" title={`Full screen, no other tabs, camera on. ${MAX_WARNINGS} warnings, then the mock closes.`}>

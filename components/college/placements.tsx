@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { Experiences } from "@/components/college/experiences";
 import { ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, PlusIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
 import type { College } from "@/lib/college";
@@ -191,6 +192,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
           </Tilt>
         ))}
       </div>
+      {!sample && <Experiences cid={college.id} canEdit={canEdit} />}
       {offered.some((o) => o.status === "pending") && (
         <div className="space-y-3">
           <h2 className="flex items-center gap-2 text-[15px] font-semibold text-white">

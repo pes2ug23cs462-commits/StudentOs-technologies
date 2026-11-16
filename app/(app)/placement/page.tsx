@@ -10,7 +10,7 @@ import { Aptitude } from "@/components/placement/aptitude";
 import { CampusDrives, JoinForDrives } from "@/components/placement/campus-drives";
 import { ArrowRightIcon, BriefcaseIcon, BuildingIcon, CheckIcon, CodeIcon, FileIcon, FolderIcon, MicIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
-import type { TopicId } from "@/lib/aptitude";
+import { TOPIC, type TopicId } from "@/lib/aptitude";
 import { PLACEMENT_PARTS, type PlacementPart } from "@/lib/college";
 import { COMPANIES, myReadiness, resumeCheck, weekPlan, type Company } from "@/lib/placement-prep";
 import { useStore } from "@/lib/store";
@@ -63,7 +63,7 @@ function Placement() {
       </div>
       <div key={tab} className="page-enter mt-6">
         {tab === "overview" && <Overview go={go} />}
-        {tab === "aptitude" && <Aptitude startTopic={(qs?.get("topic") as TopicId) || null} startMock={qs?.get("mock") === "1"} />}
+        {tab === "aptitude" && <Aptitude startTopic={(qs?.get("topic") as TopicId) || null} startMock={qs?.get("mock") === "1"} focus={(qs?.get("focus") ?? "").split(",").filter((t: string): t is TopicId => !!TOPIC[t as TopicId])} focusFor={qs?.get("for") || undefined} />}
         {tab === "companies" && <Companies />}
         {tab === "drives" && <Drives />}
       </div>

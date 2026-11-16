@@ -118,6 +118,21 @@ service cloud.firestore {
           allow delete: if isCollegeAdmin(cid);
         }
       }
+      // "Asked before": seniors share what a company asked; the admin or placement coordinator checks it;
+      // joined students read only checked ones (and their own)
+      match /experiences/{eid} {
+        allow read: if isStaff(cid)
+          || (request.auth != null && resource.data.uid == request.auth.uid)
+          || (request.auth != null && resource.data.status == "verified" && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(request.auth.uid)));
+        allow create: if request.auth != null && isLive(cid)
+          && exists(/databases/$(database)/documents/colleges/$(cid)/members/$(request.auth.uid))
+          && request.resource.data.uid == request.auth.uid && request.resource.data.status == "pending"
+          && request.resource.data.id == eid && request.resource.data.text is string && request.resource.data.text.size() <= 4000;
+        allow update: if isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"]
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "checkedBy", "checkedAt"]);
+        allow delete: if (request.auth != null && resource.data.uid == request.auth.uid)
+          || (isStaff(cid) && get(/databases/$(database)/documents/colleges/$(cid)/staff/$(request.auth.uid)).data.role in ["admin", "placement"]);
+      }
       // a student's shared summary: only they write it; staff read it; they or an admin delete it
       // joining needs the college's student join code, saved in the summary as `code`
       match /members/{uid} {

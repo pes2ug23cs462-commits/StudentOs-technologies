@@ -323,6 +323,12 @@ export function CampusDrives() {
                   <span className={cn("rounded-md px-2.5 py-1 text-[12px] font-medium", a.status === "selected" ? "bg-emerald-400/15 text-emerald-300" : a.status === "rejected" ? "bg-white/[0.06] text-white/50" : effective(a).status === "in-process" ? "bg-violet-400/15 text-violet-200" : "bg-cyan-400/10 text-cyan-200")}>{stageLabel(a, d)}</span>
                 </div>
                 <Steps a={a} d={d} />
+                {a.status !== "rejected" && !a.offer && (
+                  <Link href={`/placement/prep/${d.id}`} className="mt-4 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.06] px-4 py-3 transition hover:border-accent/60">
+                    <span className="min-w-0 flex-1"><span className="block text-[13.5px] font-semibold text-white">Prepare for {d.company}</span><span className="block text-[12px] text-white/55">Rounds, a 7-day plan and what {d.company} asked your seniors</span></span>
+                    <span className="text-[12.5px] font-medium text-accent">Open →</span>
+                  </Link>
+                )}
 
                 {currentLinks(a).length > 0 && (
                   <div className="mt-4 space-y-2">

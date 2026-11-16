@@ -395,10 +395,15 @@ function set(ids: TopicId[], n: number): Question[] {
 }
 /** Practice on one topic. */
 export const topicSet = (id: TopicId, n = 10) => set([id], n);
-/** A full mock: quantitative, logical and verbal in the usual mix, in section order. */
-export function mockSet(): Question[] {
-  const by = (s: Section) => TOPICS.filter((t) => t.section === s).map((t) => t.id);
-  return [...set(shuffle(by("quant")), 12), ...set(shuffle(by("logical")), 10), ...set(shuffle(by("verbal")), 8)];
+/** A full mock: quantitative, logical and verbal in the usual mix, in section order.
+    `focus` (topics a company asks most) come up about twice as often. */
+export function mockSet(focus: TopicId[] = []): Question[] {
+  const by = (s: Section) => {
+    const all = TOPICS.filter((t) => t.section === s).map((t) => t.id);
+    const f = focus.filter((id) => TOPIC[id]?.section === s);
+    return shuffle([...f, ...f, ...all]);
+  };
+  return [...set(by("quant"), 12), ...set(by("logical"), 10), ...set(by("verbal"), 8)];
 }
 export const MOCK_MINUTES = 30;
 
