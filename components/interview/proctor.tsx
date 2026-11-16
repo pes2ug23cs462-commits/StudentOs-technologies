@@ -14,22 +14,31 @@ export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 3;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out" | "people";
+export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
   away: "You looked away from the screen.",
   out: "You moved out of the camera.",
   people: "Someone else appeared on the camera.",
+  talk: "Talking was heard. Tests are taken in silence.",
 };
 /** Covers the app around a strict round, so only the round is on screen. */
 export const STRICT_SHELL = "fixed inset-0 z-[60] overflow-auto bg-ink";
 
+type KeyboardLock = { lock?: (keys?: string[]) => Promise<void>; unlock?: () => void };
+const keyboard = () => (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard;
 export function enterFullscreen() {
   const el = document.documentElement;
-  if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  if (!document.fullscreenElement && el.requestFullscreen)
+    el.requestFullscreen()
+      // Chrome and Edge: while locked, shortcuts like Ctrl+T, Ctrl+W and Ctrl+N stay in the page,
+      // and leaving full screen needs Esc held down
+      .then(() => keyboard()?.lock?.().catch(() => {}))
+      .catch(() => {});
 }
 function leaveFullscreen() {
+  keyboard()?.unlock?.();
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
 }
 
@@ -76,11 +85,33 @@ export function useProctor(on: boolean, onExit: (log: Breach[]) => void) {
     setWarn(null);
     const vis = () => document.visibilityState === "hidden" && report("tab");
     const fs = () => !document.fullscreenElement && report("fullscreen");
+    // nothing to copy out, paste in, print or save while the round runs
+    const block = (e: Event) => e.preventDefault();
+    const keys = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && ["c", "x", "v", "p", "s", "u", "f", "t", "n", "w", "r", "tab"].includes(k)) e.preventDefault();
+      if (k === "f12" || k === "printscreen" || (e.altKey && k === "tab")) e.preventDefault();
+    };
     document.addEventListener("visibilitychange", vis);
     document.addEventListener("fullscreenchange", fs);
+    document.addEventListener("contextmenu", block);
+    document.addEventListener("copy", block);
+    document.addEventListener("cut", block);
+    document.addEventListener("paste", block);
+    document.addEventListener("keydown", keys, true);
+    // closing or reloading the tab asks first
+    const leave = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", leave);
     return () => {
       document.removeEventListener("visibilitychange", vis);
       document.removeEventListener("fullscreenchange", fs);
+      document.removeEventListener("contextmenu", block);
+      document.removeEventListener("copy", block);
+      document.removeEventListener("cut", block);
+      document.removeEventListener("paste", block);
+      document.removeEventListener("keydown", keys, true);
+      window.removeEventListener("beforeunload", leave);
+      keyboard()?.unlock?.();
     };
   }, [on, report]);
 
@@ -128,11 +159,76 @@ export function ProctorBadge({ left }: { left: number }) {
   );
 }
 
-/** A small camera and the warnings left, pinned to a corner of a strict test. */
-export function StrictDock({ left, onBreach }: { left: number; onBreach: (b: Breach) => void }) {
+/**
+ * Listens for talking during a written test, on the device only (nothing is recorded or sent).
+ * About 3 seconds of voice inside 5 seconds, clearly louder than the room's own noise, counts once;
+ * then it waits for quiet before it can count again.
+ */
+function useTalkWatch(on: boolean, onTalk: () => void) {
+  const [mic, setMic] = useState<"off" | "on" | "blocked">("off");
+  const cb = useRef(onTalk);
+  cb.current = onTalk;
+  useEffect(() => {
+    if (!on) return;
+    let dead = false, stream: MediaStream | null = null, ctx: AudioContext | null = null, timer = 0;
+    if (!navigator.mediaDevices?.getUserMedia || typeof AudioContext === "undefined") {
+      setMic("blocked");
+      return;
+    }
+    navigator.mediaDevices
+      .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false } })
+      .then((st) => {
+        stream = st;
+        if (dead) return st.getTracks().forEach((t) => t.stop());
+        ctx = new AudioContext();
+        const an = ctx.createAnalyser();
+        an.fftSize = 1024;
+        ctx.createMediaStreamSource(st).connect(an);
+        setMic("on");
+        const bins = new Uint8Array(an.frequencyBinCount);
+        const hz = ctx.sampleRate / an.fftSize;
+        const lo = Math.floor(300 / hz), hi = Math.ceil(3400 / hz);
+        let floor = 0, n = 0;
+        const recent: boolean[] = [];
+        let armed = true, quiet = 0;
+        // 10 checks a second: the voice band's level against the room's slowly learned noise floor
+        timer = window.setInterval(() => {
+          an.getByteFrequencyData(bins);
+          let sum = 0;
+          for (let i = lo; i <= hi; i++) sum += bins[i];
+          const level = sum / (hi - lo + 1);
+          n++;
+          floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
+          const voice = n > 20 && level > Math.max(floor * 1.8, floor + 18);
+          recent.push(voice);
+          if (recent.length > 50) recent.shift();
+          quiet = voice ? 0 : quiet + 1;
+          if (!armed && quiet >= 20) armed = true;
+          if (armed && recent.filter(Boolean).length >= 30) {
+            armed = false;
+            recent.length = 0;
+            cb.current();
+          }
+        }, 100);
+      })
+      .catch(() => setMic("blocked"));
+    return () => {
+      dead = true;
+      window.clearInterval(timer);
+      void ctx?.close().catch(() => {});
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, [on]);
+  return mic;
+}
+
+/** A small camera, the mic check and the warnings left, pinned to a corner of a strict test. */
+export function StrictDock({ left, onBreach, listen = true }: { left: number; onBreach: (b: Breach) => void; listen?: boolean }) {
+  const mic = useTalkWatch(listen, () => onBreach("talk"));
   return (
     <div className="fixed right-4 bottom-4 z-[70] w-[210px] space-y-2">
       <SelfView onBreach={onBreach} className="shadow-2xl" />
+      {listen && <p className="rounded-lg bg-[#0b0b0d]/90 px-2.5 py-1.5 text-[11px] text-white/70 backdrop-blur">{mic === "on" ? "Mic on: stay silent during the test" : mic === "blocked" ? "Mic blocked: allow it to keep strict mode fair" : "Starting mic…"}</p>}
       <div className="flex justify-end rounded-lg bg-[#0b0b0d]/90 backdrop-blur">
         <ProctorBadge left={left} />
       </div>
