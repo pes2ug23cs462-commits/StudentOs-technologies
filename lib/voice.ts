@@ -44,23 +44,24 @@ export async function startRecording(onDone: (audio: Blob) => void, opts: { paus
   if (opts.pause) {
     try {
       ctx = new AudioContext();
+      void ctx.resume().catch(() => {}); // started without a tap (hands-free): make sure it runs
       const an = ctx.createAnalyser();
       an.fftSize = 1024;
       ctx.createMediaStreamSource(stream).connect(an);
       const buf = new Float32Array(an.fftSize);
-      let floor = 0.01, loud = 0, quietSince = 0, spoke = false;
-      const t0 = Date.now();
+      // the room's noise: the quietest level heard lately, rising slowly (so speaking at once doesn't fool it)
+      let floor = 0, loud = 0, quietSince = 0, spoke = false;
       watch = window.setInterval(() => {
         an.getFloatTimeDomainData(buf);
         let sum = 0;
         for (const v of buf) sum += v * v;
         const rms = Math.sqrt(sum / buf.length);
-        if (Date.now() - t0 < 600) floor = Math.max(floor, rms * 1.2); // the room's noise, first moment
-        const talking = rms > Math.max(0.015, floor * 2.2);
+        floor = !floor ? rms : rms < floor ? rms : floor * 1.002;
+        const talking = rms > Math.max(0.01, floor * 3);
         if (talking) {
           loud += 50;
           quietSince = 0;
-          if (loud > 350) spoke = true;
+          if (loud > 300) spoke = true;
         } else {
           loud = Math.max(0, loud - 25);
           if (!quietSince) quietSince = Date.now();

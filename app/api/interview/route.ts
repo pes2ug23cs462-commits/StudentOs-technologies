@@ -167,7 +167,7 @@ ${code || "(empty)"}
 Conversation so far:
 ${hist || "(none)"}
 
-${hint ? "The candidate asked for a hint. Give ONE small hint that moves them forward (a question or a nudge), never the full solution or code." : stage === "intro" ? "Respond to the candidate's approach in 1–2 short sentences: acknowledge it, point out anything important they missed (complexity, edge cases) as a question, then tell them to go ahead and code it." : "Respond to the candidate's last message like a real interviewer in 1–2 short sentences. Ask a short probing question if useful. Never write the solution or code for them."}
+${hint ? "The candidate asked for a hint. Give ONE small hint that moves them forward (a question or a nudge), never the full solution or code." : stage === "intro" ? "Respond to the candidate's approach in 1–2 short sentences: acknowledge it, point out anything important they missed (complexity, edge cases) as a question, then tell them to go ahead and code it." : "Respond to the candidate's last message like a real interviewer in 1–2 short sentences. If they ask what the problem means, explain it with a small example. If they explain their thinking, react to it and, if something is unclear or risky (a complexity claim, an edge case, why they chose something), ask one short question about exactly that. If they ask for the answer or the code, say kindly that you can't in an interview and nudge them with a question instead. Never write the solution or code for them."}
 ${speak} Keep it under 240 characters so it can be read aloud. Reply with JSON only: {"reply":"..."}`;
         for (let i = 0; i < 2; i++) {
           const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 400, temperature: 0.6 });

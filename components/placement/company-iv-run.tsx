@@ -183,6 +183,34 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
     }
   };
 
+  // speak to Asha: what they say goes to her when they stop
+  const [askListening, setAskListening] = useState(false);
+  const askRec = useRef<Rec | null>(null);
+  const askMic = () => {
+    if (askListening) return askRec.current?.stop();
+    const W = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+    const R = W.SpeechRecognition ?? W.webkitSpeechRecognition;
+    if (!R) return;
+    rec.current?.stop();
+    talker?.stop();
+    setSpeaking(false);
+    const r = new R();
+    r.lang = "en-IN";
+    r.continuous = false;
+    r.interimResults = false;
+    let said = "";
+    r.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) said += e.results[i][0].transcript + " ";
+      setAskText(said.trim());
+    };
+    r.onend = () => {
+      setAskListening(false);
+      if (said.trim()) void askAsha(said.trim());
+    };
+    askRec.current = r;
+    setAskListening(true);
+    r.start();
+  };
   const askAsha = async (message: string) => {
     if (!message.trim() || busy) return;
     rec.current?.stop();
@@ -299,7 +327,12 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
                   ))}
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); void askAsha(askText); }} className="mt-2 flex gap-2">
-                  <input value={askText} onChange={(e) => setAskText(e.target.value)} maxLength={300} placeholder="Or type your question for Asha…" className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-field px-3 text-[13px] text-white placeholder:text-white/35" />
+                  {canSpeak && (
+                    <button type="button" onClick={askMic} aria-label={askListening ? "Stop" : "Speak to Asha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[12.5px]", askListening ? "border-rose-400/60 bg-rose-500/15 text-rose-200" : "border-white/15 text-white/80 hover:border-violet-400/50")}>
+                      <MicIcon size={14} /> {askListening ? "Stop" : "Speak"}
+                    </button>
+                  )}
+                  <input value={askText} onChange={(e) => setAskText(e.target.value)} maxLength={300} placeholder={canSpeak ? "Speak or type your question for Asha…" : "Type your question for Asha…"} className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-field px-3 text-[13px] text-white placeholder:text-white/35" />
                   <Button size="sm" type="submit" loading={busy === "ask"} disabled={!askText.trim()}>Ask</Button>
                 </form>
                 {reply && <p className="mt-2.5 rounded-lg bg-[#0b0a14] px-3 py-2 text-[13px] leading-relaxed text-white/85"><b className="text-violet-200">Asha:</b> {reply}</p>}

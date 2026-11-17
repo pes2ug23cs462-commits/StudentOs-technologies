@@ -38,6 +38,7 @@ const LINES = {
     fail: (p: number, n: number) => `${p} of ${n} tests pass. Look at the failing case and try again.`,
     done: "That’s all from me. Thanks! Press End interview to see your feedback.",
     nudge: "Go ahead and code it. Run it on the examples when you’re ready.",
+    checkIn: "How’s it going? Talk me through what you’re doing right now.",
   },
   hi: {
     hello: (t: string) => `नमस्ते, मैं आशा हूँ। आज का problem है ${t}। पहले इसे ध्यान से पढ़िए। Code लिखने से पहले बताइए, आपका approach क्या है और उसकी time complexity क्या होगी?`,
@@ -45,6 +46,7 @@ const LINES = {
     fail: (p: number, n: number) => `${n} में से ${p} tests pass हुए। Fail वाला case देखिए और फिर try कीजिए।`,
     done: "मेरी तरफ़ से बस इतना ही। धन्यवाद! Feedback देखने के लिए End interview दबाइए।",
     nudge: "ठीक है, अब code लिखिए। तैयार हों तो examples पर Run कीजिए।",
+    checkIn: "कैसा चल रहा है? अभी आप क्या कर रहे हैं, थोड़ा बताइए।",
   },
 };
 
@@ -130,9 +132,13 @@ export function CodingRound({
     setChat((c) => [...c, { who: "asha", text, t: now() }]);
     if (!voice || !talker) return;
     setAsha("speaking");
-    await talker.say(text);
+    const r = await talker.say(text);
     setAsha("idle");
+    // a real conversation: when Asha asks something, the mic turns on and she hears the answer when they pause
+    if (r === "done" && /[?？।]\s*$/.test(text.trim()) && !ended.current) micRef.current(true);
   };
+  const micRef = useRef<(auto?: boolean) => void>(() => {});
+  const lastCheck = useRef(0);
 
   // clock
   useEffect(() => {
@@ -304,30 +310,51 @@ export function CodingRound({
     }
   };
 
-  const mic = async () => {
+  const mic = async (auto = false) => {
     if (rec) {
       rec.stop();
       setRec(null);
       return;
     }
+    if (auto && (hearing || ended.current)) return;
     try {
       talker?.stop();
+      // with voice on, it stops by itself when they pause, so Asha can answer like a person
       const r = await startRecording(async (audio) => {
+        setRec(null);
         setHearing(true);
         try {
           const text = await transcribe(audio, ilang === "hi" ? "hi-IN" : "en-IN");
-          if (text) await send(text);
+          if (text.trim()) await send(text);
         } catch {
-          setChat((c) => [...c, { who: "asha", text: "I couldn’t hear that clearly. Try again or type it.", t: now() }]);
+          if (!auto) setChat((c) => [...c, { who: "asha", text: "I couldn’t hear that clearly. Try again or type it.", t: now() }]);
         } finally {
           setHearing(false);
         }
-      });
+      }, { pause: voice ? 1800 : undefined });
       setRec(r);
     } catch {
-      setChat((c) => [...c, { who: "asha", text: "Your microphone isn’t available. You can type instead.", t: now() }]);
+      if (!auto) setChat((c) => [...c, { who: "asha", text: "Your microphone isn’t available. You can type instead.", t: now() }]);
     }
   };
+  micRef.current = (auto = false) => {
+    if (!rec && !hearing) void mic(auto);
+  };
+  // like a real interviewer: after a long quiet stretch of coding, Asha checks in
+  const live = useRef({ stage, asha, busy: false, checkIn: () => {} });
+  live.current = { stage, asha, busy: !!rec || hearing, checkIn: () => void say(L.checkIn) };
+  useEffect(() => {
+    if (!voice) return;
+    const t = setInterval(() => {
+      const x = live.current;
+      if (ended.current || x.stage !== "problem" || x.asha !== "idle" || x.busy) return;
+      if (now() - Math.max(lastTalk.current, lastCheck.current) >= 150) {
+        lastCheck.current = now();
+        x.checkIn();
+      }
+    }, 15000);
+    return () => clearInterval(t);
+  }, [voice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const end = async () => {
     if (ended.current) return;
