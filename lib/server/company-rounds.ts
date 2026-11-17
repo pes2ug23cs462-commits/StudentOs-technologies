@@ -147,7 +147,7 @@ ${hr ? "Score each answer 0–10 for clarity, honesty, a real example where one 
 Reply with JSON only:
 {"overall":0-100,"verdict":"one of: Strong yes, Yes, Maybe, No","summary":"2 short sentences for the recruiter","strengths":["up to 3"],"concerns":["up to 3"],"items":[{"score":0-10,"note":"one short line"}]}`;
   for (let i = 0; i < 2; i++) {
-    const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 1500, temperature: 0.3 });
+    const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 1500, temperature: 0.3, strong: true });
     const j = json<{ overall?: unknown; verdict?: unknown; summary?: unknown; strengths?: unknown[]; concerns?: unknown[]; items?: { score?: unknown; note?: unknown }[] }>(text, "{");
     if (!j) continue;
     const overall = Math.round(Math.min(100, Math.max(0, Number(j.overall) || 0)));

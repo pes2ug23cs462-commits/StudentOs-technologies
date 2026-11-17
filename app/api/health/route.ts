@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/server/auth";
 import { adminConfigured, adminPing, adminPushCheck } from "@/lib/server/firestore-admin";
+import { allProviders } from "@/lib/server/ai";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -40,26 +41,36 @@ const missing = (name: string) => {
   throw new Error(`${name} is not set in .env.local (restart npm run dev after adding it)`);
 };
 
+const AI_LABEL: Record<string, string> = {
+  groq: "AI (Groq)",
+  cerebras: "AI backup (Cerebras)",
+  cloudflare: "AI backup (Cloudflare Workers AI)",
+  custom: "AI backup (custom provider)",
+  zai: "AI chat backup (Z.ai GLM)",
+  "groq-fast": "AI chat backup (Groq fast model)",
+};
+
 export async function GET(req: Request) {
   const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
 
   const groq = process.env.GROQ_API_KEY;
-  const cerebras = process.env.CEREBRAS_API_KEY;
+  const ai = allProviders();
   const yt = process.env.YOUTUBE_API_KEY;
   const stt = process.env.GROQ_STT_MODEL || "whisper-large-v3-turbo";
 
   const checks = await Promise.all([
     run("firebase", "Firebase login", async () => "Working · you are signed in"),
-    run("groq", "AI assistant (Groq)", async () =>
-      groq ? chatPing("https://api.groq.com/openai/v1/chat/completions", groq, process.env.GROQ_MODEL || "openai/gpt-oss-120b") : missing("GROQ_API_KEY"),
-    ),
-    run(
-      "cerebras",
-      "AI backup (Cerebras)",
-      async () => (cerebras ? chatPing("https://api.cerebras.ai/v1/chat/completions", cerebras, process.env.CEREBRAS_MODEL || "gpt-oss-120b") : missing("CEREBRAS_API_KEY")),
-      true,
-    ),
+    ...(ai.length
+      ? ai.map((p, i) =>
+          run(
+            `ai-${p.name}`,
+            `${i + 1}. ${AI_LABEL[p.name] ?? p.name}${p.strong ? " · scores" : " · chat only"}`,
+            () => chatPing(p.url, p.key, p.model),
+            i > 0,
+          ),
+        )
+      : [run("groq", "AI assistant (Groq)", async () => missing("GROQ_API_KEY"))]),
     run("voice", "Voice input (Whisper)", async () => {
       if (!groq) return missing("GROQ_API_KEY");
       const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${groq}` }, signal: timeout(), cache: "no-store" });
@@ -69,6 +80,12 @@ export async function GET(req: Request) {
       if (!j.data?.some((m) => m.id === stt)) throw new Error(`Model “${stt}” not found on Groq. Set GROQ_STT_MODEL.`);
       return `Ready · ${stt}`;
     }),
+    run(
+      "voice-backup",
+      "Voice input backup (Cloudflare Whisper)",
+      async () => (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_AI_TOKEN ? `Set · ${process.env.CLOUDFLARE_STT_MODEL || "@cf/openai/whisper-large-v3-turbo"}` : missing("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_AI_TOKEN")),
+      true,
+    ),
     run("reviews", "Auto-approve reviews (Firebase service account)", async () => `Working · project ${await adminPing()}`, true),
     run("youtube", "YouTube videos", async () => {
       if (!yt) return missing("YOUTUBE_API_KEY");

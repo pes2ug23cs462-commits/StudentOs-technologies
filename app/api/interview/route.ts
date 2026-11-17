@@ -223,7 +223,7 @@ Reply with JSON only:
 "practice":[{"title":"","detail":"one line","minutes":20,"problemId":"optional"}]}`;
       const ids = new Set(cands.map((c) => c.id));
       for (let i = 0; i < 2; i++) {
-        const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 2500, temperature: 0.3 });
+        const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 2500, temperature: 0.3, strong: true });
         const r = json<{ overall?: unknown; verdict?: unknown; summary?: unknown; rubric?: { key?: unknown; score?: unknown; note?: unknown }[]; moments?: { t?: unknown; ok?: unknown; text?: unknown; sub?: unknown }[]; practice?: { title?: unknown; detail?: unknown; minutes?: unknown; problemId?: unknown }[] }>(text, "{");
         if (!r || !Array.isArray(r.rubric)) continue;
         const pct = (v: unknown) => Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
@@ -260,7 +260,7 @@ Reply with JSON only:
 Write "verdict", "summary", "strengths", "tips", "good" and "improve" in simple Hindi (Devanagari) too.` : ""}
 "items" must have exactly ${items.length} entries in order.`;
       for (let i = 0; i < 2; i++) {
-        const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 3500, temperature: 0.3 });
+        const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 3500, temperature: 0.3, strong: true });
         const r = json<{ overall?: unknown; verdict?: unknown; summary?: unknown; strengths?: unknown[]; tips?: unknown[]; items?: { score?: unknown; good?: unknown; improve?: unknown; better?: unknown }[] }>(text, "{");
         if (!r || !Array.isArray(r.items) || r.items.length < items.length) continue;
         const out = {
