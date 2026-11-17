@@ -25,6 +25,12 @@ export type CareerRole = {
   questions?: number;
   /** what the AI interview should check, in the team’s words */
   ivFocus?: string;
+  /** an online test first (questions kept on the server in careerTests/{id}) */
+  test?: boolean;
+  /** an AI HR round after the AI interview */
+  hr?: boolean;
+  hrFocus?: string;
+  hrQuestions?: number;
 };
 
 export type CareersDoc = { open: boolean; roles: CareerRole[]; updatedAt: number };
@@ -55,6 +61,12 @@ export const DEFAULT_CAREERS: CareersDoc = { open: true, roles: DEFAULT_ROLES, u
 /* ---------- applications ---------- */
 export type CareerDecision = "" | "shortlisted" | "rejected" | "offer-sent" | "hired";
 export type CareerStage = "invited" | "in-progress" | "completed" | "missed";
+/** The rounds an applicant goes through, in order. "live" is a video call the team books. */
+export type CareerStep = "test" | "ai" | "hr" | "live";
+export const STEP_LABEL: Record<CareerStep, string> = { test: "Online test", ai: "AI interview", hr: "AI HR interview", live: "Live interview" };
+export type CareerTestResult = { correct: number; total: number; coding: { title: string; passed: number; total: number; lang: string }[]; warnings: string[]; ended: boolean; late: boolean; at: number };
+export type CareerIvRound = { questions: string[]; answers: { a: string; secs: number }[]; startedAt: number; done: boolean; doneAt?: number; report: CareerReport | null; warnings?: string[]; ended?: boolean };
+export type CareerLive = { room: string; at: number; minutes: number; feedback: { score: number; verdict: string; notes: string; at: number } | null };
 export type CareerReport = { overall: number; verdict: string; summary: string; strengths: string[]; concerns: string[]; items: { score: number; note: string }[] };
 export type CareerApp = {
   token: string;
@@ -81,8 +93,31 @@ export type CareerApp = {
   report: CareerReport | null;
   decision: CareerDecision;
   note: string;
+  /** the role's rounds when they applied (old applications: just the AI interview) */
+  steps?: CareerStep[];
+  /** the round open for them now; start/end/stage are about this round */
+  at?: CareerStep | "";
+  /** strict mode in the AI interview */
+  aiWarn?: string[];
+  aiEnded?: boolean;
+  /** the online test's result (the team sees it; the applicant doesn't) */
+  testResult?: CareerTestResult | null;
+  hr?: CareerIvRound | null;
+  live?: CareerLive | null;
 };
 export const DECISION_LABEL: Record<Exclude<CareerDecision, "">, string> = { shortlisted: "Shortlisted", rejected: "Not selected", "offer-sent": "Offer sent", hired: "Hired" };
+export const stepsOf = (a: Pick<CareerApp, "steps" | "ai">): CareerStep[] => a.steps ?? (a.ai ? ["ai"] : []);
+export const stepOf = (a: Pick<CareerApp, "at" | "ai">): CareerStep | "" => (a.at === undefined ? (a.ai ? "ai" : "") : a.at);
 /** "missed" is worked out from the time, so it is always current */
-export const stageOf = (a: Pick<CareerApp, "stage" | "end" | "ai">, now = Date.now()): CareerStage => (a.ai && a.stage !== "completed" && now > a.end ? "missed" : a.stage);
+export const stageOf = (a: Pick<CareerApp, "stage" | "end" | "ai" | "at">, now = Date.now()): CareerStage => {
+  const s = stepOf(a);
+  return s && s !== "live" && a.stage !== "completed" && now > a.end ? "missed" : a.stage;
+};
+/** the next round after the current one (live is always last, booked by the team) */
+export const nextStep = (a: Pick<CareerApp, "steps" | "ai" | "at">): CareerStep | null => {
+  const all: CareerStep[] = [...stepsOf(a), "live"];
+  const cur = stepOf(a);
+  const i = cur ? all.indexOf(cur) : -1;
+  return all[i + 1] ?? null;
+};
 export const fmtWhen = (ms: number) => new Date(ms).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });

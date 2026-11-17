@@ -15,7 +15,12 @@ const ICE: RTCIceServer[] = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun
 
 export type CallState = "starting" | "waiting" | "connecting" | "connected" | "lost" | "no-camera";
 
-export function useLiveCall(pid: string, room: string, opts: { warnings?: string[] } = {}) {
+/** `signal` sends the connection messages; by default to /api/partner (company drives). */
+export type Signal = (body: Record<string, unknown>) => Promise<LiveSignal>;
+
+export function useLiveCall(pid: string, room: string, opts: { warnings?: string[]; signal?: Signal } = {}) {
+  const sigRef = useRef<Signal>(opts.signal ?? ((body) => partnerApi<LiveSignal>("live-signal", body)));
+  if (opts.signal) sigRef.current = opts.signal;
   const [state, setState] = useState<CallState>("starting");
   const [info, setInfo] = useState<LiveSignal | null>(null);
   const [other, setOther] = useState<LiveSide | null>(null);
@@ -71,7 +76,7 @@ export function useLiveCall(pid: string, room: string, opts: { warnings?: string
           body.put = me.current;
           dirty.current = false;
         }
-        const r = await partnerApi<LiveSignal>("live-signal", body);
+        const r = await sigRef.current(body);
         if (dead) return;
         setInfo(r);
         setOther(r.other);
@@ -129,7 +134,7 @@ export function useLiveCall(pid: string, room: string, opts: { warnings?: string
         }
         const p = fresh();
         // first contact decides our side; the host makes the offer, the guest asks for one
-        const r = await partnerApi<LiveSignal>("live-signal", { pid, room });
+        const r = await sigRef.current({ pid, room });
         side.current = r.side;
         setInfo(r);
         if (r.side === "host") {

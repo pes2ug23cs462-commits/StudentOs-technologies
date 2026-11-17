@@ -1,18 +1,21 @@
 "use client";
 
 /* /partner → Careers, for the StudentOS team:
-   Roles        post, edit, pause and delete roles for /careers, with the AI interview
-                settings (on/off, how long to finish, or one fixed window, questions)
-   Applications everyone who applied, their AI interview report, contact buttons
-                (email, WhatsApp, call), and the team's decision. Offer letters are
-                written and sent by the team themselves. */
+   Roles        post, edit, pause and delete roles for /careers, with their rounds on
+                StudentOS: online test, AI interview, AI HR interview, live interview
+   Applications everyone who applied, each round's score, screening (score cut-off,
+                top N), moving people to the next round, booking live interviews,
+                contact buttons and the team's decision. Offer letters are written
+                and sent by the team themselves. */
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, Textarea } from "@/components/ui/primitives";
-import { CAREER_TEAMS, DECISION_LABEL, careersApi, careersErrorText, fmtWhen, loadCareers, stageOf, type CareerApp, type CareerDecision, type CareerRole, type CareerStage, type CareerTeam, type CareersDoc } from "@/lib/careers";
-import { partnerApi, partnerErrorText } from "@/lib/partner";
+import { CAREER_TEAMS, DECISION_LABEL, STEP_LABEL, careersApi, careersErrorText, fmtWhen, loadCareers, nextStep, stageOf, stepOf, stepsOf, type CareerApp, type CareerDecision, type CareerReport, type CareerRole, type CareerStage, type CareerStep, type CareerTeam, type CareersDoc } from "@/lib/careers";
+import { breachLabel } from "@/components/live/live-student";
+import { partnerApi, partnerErrorText, type CompanyTest } from "@/lib/partner";
+import { TestEditor } from "@/components/company/company-test";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +25,8 @@ const toLocal = (ms?: number) => (ms ? new Date(ms - new Date(ms).getTimezoneOff
 const fromLocal = (v: string) => (v ? new Date(v).getTime() : 0);
 const STAGE: Record<CareerStage, { label: string; cls: string }> = {
   invited: { label: "Link sent", cls: "bg-cyan-400/10 text-cyan-200" },
-  "in-progress": { label: "In interview", cls: "bg-violet-400/15 text-violet-200" },
-  completed: { label: "Interview done", cls: "bg-emerald-400/12 text-emerald-300" },
+  "in-progress": { label: "Taking it", cls: "bg-violet-400/15 text-violet-200" },
+  completed: { label: "Done", cls: "bg-emerald-400/12 text-emerald-300" },
   missed: { label: "Missed", cls: "bg-white/[0.06] text-white/50" },
 };
 const scoreCls = (v: number) => (v >= 75 ? "text-emerald-300" : v >= 55 ? "text-cyan-200" : "text-amber-300");
@@ -109,7 +112,7 @@ function Roles() {
                   <p className="text-[14.5px] font-semibold">{r.title}</p>
                   <p className="mt-0.5 text-[12px] text-white/50">
                     {[r.team, r.where, r.pay, r.length].join(" · ")} ·{" "}
-                    {r.ai === false ? "no AI interview" : r.windowEnd ? `AI interview ${fmtWhen(r.windowStart || Date.now())} – ${fmtWhen(r.windowEnd)}` : `AI interview within ${r.within || 3} day${(r.within || 3) === 1 ? "" : "s"}`}
+                    {[r.test && "Test", r.ai !== false && "AI interview", r.hr && "AI HR", "Live"].filter(Boolean).join(" → ")}{r.windowEnd ? ` · first round ${fmtWhen(r.windowStart || Date.now())} – ${fmtWhen(r.windowEnd)}` : ` · ${r.within || 3} day${(r.within || 3) === 1 ? "" : "s"} per round`}
                   </p>
                 </div>
                 <span className={cn("rounded-full px-2 py-0.5 text-[11px]", r.paused ? "bg-white/[0.06] text-white/50" : "bg-emerald-400/12 text-emerald-300")}>{r.paused ? "Paused" : "Live"}</span>
@@ -127,6 +130,21 @@ function Roles() {
   );
 }
 
+function RoundRow({ n, on, title, text, onToggle, children }: { n: number; on: boolean; title: string; text: string; onToggle: () => void; children?: React.ReactNode }) {
+  return (
+    <div className={cn("rounded-xl border p-3.5", on ? "border-violet-400/35 bg-white/[0.03]" : "border-white/[0.07] bg-white/[0.02]")}>
+      <div className="flex items-start gap-3">
+        <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold", on ? "bg-violet-500/30 text-violet-100" : "bg-white/[0.06] text-white/50")}>{n}</span>
+        <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold">{title}</p><p className="text-[12.5px] text-white/55">{text}</p></div>
+        <button type="button" role="switch" aria-checked={on} aria-label={`${title} on or off`} onClick={onToggle} className={cn("relative h-7 w-12 shrink-0 rounded-full transition", on ? "bg-emerald-500" : "bg-white/15")}>
+          <span className={cn("absolute top-1 h-5 w-5 rounded-full bg-[#ffffff] shadow transition-all", on ? "left-6" : "left-1")} />
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerRole; isNew: boolean; busy: boolean; onSave: (r: CareerRole) => void; onCancel: () => void }) {
   const [r, setR] = useState<CareerRole>({ ai: true, within: 3, questions: 6, ...initial });
   const [tags, setTags] = useState(initial.tags.join(", "));
@@ -134,6 +152,12 @@ function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerR
   const [wants, setWants] = useState(initial.wants.join("\n"));
   const [fixed, setFixed] = useState(!!initial.windowEnd);
   const winBad = fixed && (!r.windowEnd || r.windowEnd <= (r.windowStart || 0) || r.windowEnd < Date.now());
+  const [test, setTest] = useState<CompanyTest | null | undefined>(undefined);
+  const [testOpen, setTestOpen] = useState(false);
+  const loadTest = () => void careersApi<{ test: CompanyTest | null }>("test-get", { roleId: r.id }, true).then((x) => setTest(x.test)).catch(() => setTest(null));
+  useEffect(() => {
+    if (r.test && test === undefined) loadTest();
+  }, [r.test]); // eslint-disable-line react-hooks/exhaustive-deps
   const ok = r.title.trim().length > 2 && !winBad;
   const sel = "h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white";
   return (
@@ -156,48 +180,84 @@ function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerR
       </div>
 
       <div className="mt-6 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold">AI interview</p>
-            <p className="text-[12.5px] text-white/55">After applying, the applicant gets a link and must finish the interview in time. The team gets the report.</p>
+        <p className="text-[15px] font-semibold">Rounds on StudentOS</p>
+        <p className="text-[12.5px] text-white/55">All in strict mode (full screen, camera, voice and tab checks). The first round opens when they apply; you screen by score and move people on from Applications.</p>
+        <div className="mt-4 space-y-2.5">
+          <RoundRow n={1} on={!!r.test} title="Online test" text="MCQ from the aptitude bank or your own, plus coding problems. Scored for you." onToggle={() => setR({ ...r, test: !r.test })}>
+            {r.test && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <p className="flex-1 text-[12.5px] text-white/60">{test === undefined ? "Loading…" : test ? `${test.title}: ${test.questions.length} MCQ${test.coding?.length ? ` + ${test.coding.length} coding` : ""} · ${test.minutes} min` : "No questions yet. Applicants skip the test until you add them."}</p>
+                <Button size="sm" onClick={() => setTestOpen(true)}>{test ? "Edit questions" : "Add questions"}</Button>
+              </div>
+            )}
+          </RoundRow>
+          <RoundRow n={2} on={r.ai !== false} title="AI interview" text="Asha asks about them and the role; you get a score, a verdict and every answer." onToggle={() => setR({ ...r, ai: r.ai === false })}>
+            {r.ai !== false && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
+                <div>
+                  <Label htmlFor="wq">Questions</Label>
+                  <select id="wq" value={r.questions ?? 6} onChange={(e) => setR({ ...r, questions: Number(e.target.value) })} className={sel}>
+                    {[4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n} (~{n * 2 + 3} min)</option>)}
+                  </select>
+                </div>
+                <div><Label htmlFor="wf">What should the AI check? (optional)</Label><Input id="wf" value={r.ivFocus ?? ""} onChange={(e) => setR({ ...r, ivFocus: e.target.value })} placeholder="e.g. React basics, how they debug, if they can work 15 hours a week" /></div>
+              </div>
+            )}
+          </RoundRow>
+          <RoundRow n={3} on={!!r.hr} title="AI HR interview" text="About them, why StudentOS, teamwork and fit. Never personal questions." onToggle={() => setR({ ...r, hr: !r.hr })}>
+            {r.hr && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
+                <div>
+                  <Label htmlFor="hq">Questions</Label>
+                  <select id="hq" value={r.hrQuestions ?? 5} onChange={(e) => setR({ ...r, hrQuestions: Number(e.target.value) })} className={sel}>
+                    {[3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n} (~{n * 2 + 2} min)</option>)}
+                  </select>
+                </div>
+                <div><Label htmlFor="hf">What should HR check? (optional)</Label><Input id="hf" value={r.hrFocus ?? ""} onChange={(e) => setR({ ...r, hrFocus: e.target.value })} placeholder="e.g. time for 15 hours a week, ownership, communication" /></div>
+              </div>
+            )}
+          </RoundRow>
+          <div className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[12px] font-semibold text-white/60">4</span>
+            <div><p className="text-[14px] font-semibold">Live interview</p><p className="text-[12.5px] text-white/55">A video call with the people you pick, on StudentOS. Book slots from Applications.</p></div>
           </div>
-          <button type="button" role="switch" aria-checked={r.ai !== false} aria-label="AI interview on or off" onClick={() => setR({ ...r, ai: r.ai === false })} className={cn("relative h-7 w-12 rounded-full transition", r.ai !== false ? "bg-emerald-500" : "bg-white/15")}>
-            <span className={cn("absolute top-1 h-5 w-5 rounded-full bg-[#ffffff] shadow transition-all", r.ai !== false ? "left-6" : "left-1")} />
-          </button>
         </div>
-        {r.ai !== false && (
-          <div className="mt-4 space-y-4">
+
+        {(r.test || r.ai !== false || r.hr) && (
+          <div className="mt-5 space-y-3">
+            <p className="text-[13px] font-semibold">Time to finish each round</p>
             <div className="flex flex-wrap gap-2">
-              {([[false, "Within some days of applying"], [true, "Fixed date and time"]] as const).map(([v, l]) => (
+              {([[false, "Some days after it opens"], [true, "Fixed date for the first round"]] as const).map(([v, l]) => (
                 <button key={l} type="button" onClick={() => { setFixed(v); if (!v) setR({ ...r, windowStart: 0, windowEnd: 0 }); }} className={cn("h-9 rounded-lg border px-3.5 text-[13px] transition", fixed === v ? "border-violet-400/60 bg-[var(--color-plum)] text-white" : "border-white/10 text-white/60 hover:text-white")}>{l}</button>
               ))}
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {fixed ? (
+              {fixed && (
                 <>
                   <div><Label htmlFor="ws">Opens</Label><Input id="ws" type="datetime-local" value={toLocal(r.windowStart)} onChange={(e) => setR({ ...r, windowStart: fromLocal(e.target.value) })} /></div>
                   <div><Label htmlFor="we">Closes</Label><Input id="we" type="datetime-local" value={toLocal(r.windowEnd)} onChange={(e) => setR({ ...r, windowEnd: fromLocal(e.target.value) })} /></div>
                 </>
-              ) : (
-                <div>
-                  <Label htmlFor="wd">Finish within</Label>
-                  <select id="wd" value={r.within ?? 3} onChange={(e) => setR({ ...r, within: Number(e.target.value) })} className={sel}>
-                    {[1, 2, 3, 5, 7].map((d) => <option key={d} value={d}>{d} day{d === 1 ? "" : "s"}</option>)}
-                  </select>
-                </div>
               )}
               <div>
-                <Label htmlFor="wq">Questions</Label>
-                <select id="wq" value={r.questions ?? 6} onChange={(e) => setR({ ...r, questions: Number(e.target.value) })} className={sel}>
-                  {[4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n} questions (~{n * 2 + 3} min)</option>)}
+                <Label htmlFor="wd">{fixed ? "Later rounds: within" : "Finish within"}</Label>
+                <select id="wd" value={r.within ?? 3} onChange={(e) => setR({ ...r, within: Number(e.target.value) })} className={sel}>
+                  {[1, 2, 3, 5, 7].map((d) => <option key={d} value={d}>{d} day{d === 1 ? "" : "s"}</option>)}
                 </select>
               </div>
             </div>
             {winBad && <p className="text-[12.5px] text-rose-300">Pick when it opens and a later closing time that hasn’t passed.</p>}
-            <div><Label htmlFor="wf">What should the AI check? (optional)</Label><Input id="wf" value={r.ivFocus ?? ""} onChange={(e) => setR({ ...r, ivFocus: e.target.value })} placeholder="e.g. React basics, how they debug, if they can work 15 hours a week" /></div>
           </div>
         )}
       </div>
+      {testOpen && (
+        <TestEditor
+          pid=""
+          rounds={["Online test"]}
+          onClose={() => setTestOpen(false)}
+          onSaved={() => { setTestOpen(false); loadTest(); }}
+          io={{ get: () => careersApi<{ test: CompanyTest | null }>("test-get", { roleId: r.id }, true), save: (t) => careersApi<{ count: number }>("test-save", { roleId: r.id, test: t }, true), errorText: careersErrorText }}
+        />
+      )}
 
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="ghost" onClick={onCancel}>Cancel</Button>
@@ -208,12 +268,36 @@ function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerR
 }
 
 /* ================= applications ================= */
+type Metric = "test" | "ai" | "hr" | "live";
+const METRIC: Record<Metric, string> = { test: "Test score", ai: "AI interview", hr: "AI HR", live: "Live interview" };
+/** 0–100 for a round, or null when there's no score yet */
+const scoreOf = (a: CareerApp, m: Metric): number | null => {
+  if (m === "test") {
+    const t = a.testResult;
+    if (!t) return null;
+    const parts = t.total + t.coding.length;
+    return parts ? Math.round(((t.correct + t.coding.reduce((s, c) => s + c.passed / (c.total || 1), 0)) / parts) * 100) : null;
+  }
+  if (m === "ai") return a.report?.overall ?? null;
+  if (m === "hr") return a.hr?.report?.overall ?? null;
+  return a.live?.feedback ? a.live.feedback.score * 10 : null;
+};
+const ScoreCell = ({ v, warn }: { v: number | null; warn?: number }) =>
+  v === null ? <span className="text-white/30">—</span> : <span className={cn("font-semibold tabular-nums", scoreCls(v))}>{v}{warn ? <span className="ml-1 text-[11px] font-normal text-amber-300" title={`${warn} strict-mode warning${warn === 1 ? "" : "s"}`}>⚠{warn}</span> : null}</span>;
+
 function Apps({ openApp }: { openApp?: string | null }) {
   const { actions } = useStore();
   const [apps, setApps] = useState<CareerApp[] | null>(null);
   const [role, setRole] = useState("all");
+  const [round, setRound] = useState<"all" | CareerStep>("all");
   const [stage, setStage] = useState<"all" | CareerStage>("all");
   const [open, setOpen] = useState<string | null>(openApp ?? null);
+  const [metric, setMetric] = useState<Metric>("ai");
+  const [cut, setCut] = useState(0);
+  const [topN, setTopN] = useState(10);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState("");
+  const [booking, setBooking] = useState(false);
 
   const load = () =>
     careersApi<{ apps: CareerApp[] }>("apps", {}, true)
@@ -227,16 +311,47 @@ function Apps({ openApp }: { openApp?: string | null }) {
   if (!apps) return <div className="mt-5 h-64 animate-pulse rounded-2xl bg-white/[0.04]" />;
   const list = apps
     .filter((a) => role === "all" || a.role === role)
+    .filter((a) => round === "all" || stepOf(a) === round)
     .filter((a) => stage === "all" || stageOf(a) === stage)
-    .sort((x, y) => (stageOf(y) === "completed" ? 1 : 0) - (stageOf(x) === "completed" ? 1 : 0) || (y.report?.overall ?? -1) - (x.report?.overall ?? -1) || y.appliedAt - x.appliedAt);
+    .filter((a) => !cut || (scoreOf(a, metric) ?? -1) >= cut)
+    .sort((x, y) => (scoreOf(y, metric) ?? -1) - (scoreOf(x, metric) ?? -1) || y.appliedAt - x.appliedAt);
   const count = (s: CareerStage) => apps.filter((a) => stageOf(a) === s).length;
   const cur = apps.find((a) => a.token === open) ?? null;
   const put = (a: CareerApp) => setApps((xs) => (xs ?? []).map((x) => (x.token === a.token ? a : x)));
+  const picked = list.filter((a) => sel.has(a.token));
+  const toggle = (t: string) => setSel((s) => { const n = new Set(s); if (n.has(t)) n.delete(t); else n.add(t); return n; });
+
+  const advance = async (tokens: string[]) => {
+    setBusy("advance");
+    try {
+      const r = await careersApi<{ moved: number }>("app-advance", { tokens }, true);
+      actions.toast(r.moved ? `${r.moved} moved to the next round and emailed.` : "No one moved. People already in the live round are booked with “Book live interviews”.");
+      setSel(new Set());
+      await load();
+    } catch (e) {
+      actions.toast(careersErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
+  const reject = async (tokens: string[]) => {
+    setBusy("reject");
+    try {
+      for (const token of tokens) await careersApi("app-update", { token, decision: "rejected" }, true);
+      actions.toast(`${tokens.length} marked not selected.`);
+      setSel(new Set());
+      await load();
+    } catch (e) {
+      actions.toast(careersErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
 
   return (
     <div className="mt-5 space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[["Applied", apps.length], ["Interview done", count("completed")], ["Waiting", count("invited") + count("in-progress")], ["Shortlisted", apps.filter((a) => a.decision === "shortlisted").length]].map(([l, v]) => (
+        {[["Applied", apps.length], ["Round done", count("completed")], ["Waiting", count("invited") + count("in-progress")], ["Live booked", apps.filter((a) => a.live).length]].map(([l, v]) => (
           <div key={l as string} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
             <p className="text-[26px] leading-none font-semibold tabular-nums">{v}</p>
             <p className="mt-1.5 text-[12px] text-white/50">{l}</p>
@@ -250,22 +365,54 @@ function Apps({ openApp }: { openApp?: string | null }) {
               {k === "all" ? "All" : STAGE[k].label} <span className="text-white/40">{k === "all" ? apps.length : count(k)}</span>
             </button>
           ))}
-          <select value={role} onChange={(e) => setRole(e.target.value)} aria-label="Role" className="ml-auto h-8 rounded-lg border border-white/10 bg-field px-2 text-[12.5px] text-white">
+          <select value={round} onChange={(e) => setRound(e.target.value as "all" | CareerStep)} aria-label="Round" className="ml-auto h-8 rounded-lg border border-white/10 bg-field px-2 text-[12.5px] text-white">
+            <option value="all">All rounds</option>
+            {(Object.keys(STEP_LABEL) as CareerStep[]).map((k) => <option key={k} value={k}>In: {STEP_LABEL[k]}</option>)}
+          </select>
+          <select value={role} onChange={(e) => setRole(e.target.value)} aria-label="Role" className="h-8 rounded-lg border border-white/10 bg-field px-2 text-[12.5px] text-white">
             <option value="all">All roles</option>
             {roles.map((r) => <option key={r}>{r}</option>)}
           </select>
           <Button size="sm" variant="ghost" onClick={() => void load()}>Refresh</Button>
         </div>
+
+        {/* screening: sort by a round's score, keep those above a cut-off, pick the top N */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-[12.5px]">
+          <span className="font-semibold text-white">Screen by</span>
+          <select value={metric} onChange={(e) => setMetric(e.target.value as Metric)} aria-label="Screen by" className="h-8 rounded-lg border border-white/10 bg-field px-2 text-white">
+            {(Object.keys(METRIC) as Metric[]).map((m) => <option key={m} value={m}>{METRIC[m]}</option>)}
+          </select>
+          <span className="text-white/50">at least</span>
+          {[0, 50, 60, 70, 80].map((c) => (
+            <button key={c} type="button" onClick={() => setCut(c)} className={cn("h-8 rounded-lg border px-2.5", cut === c ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 text-white/60 hover:text-white")}>{c ? `${c}+` : "Any"}</button>
+          ))}
+          <span className="ml-auto text-white/50">Pick top</span>
+          <input type="number" min={1} max={300} value={topN} onChange={(e) => setTopN(Math.max(1, Number(e.target.value) || 1))} aria-label="How many" className="h-8 w-16 rounded-lg border border-white/10 bg-field px-2 text-white" />
+          <Button size="sm" onClick={() => setSel(new Set(list.filter((a) => scoreOf(a, metric) !== null).slice(0, topN).map((a) => a.token)))}>Pick</Button>
+        </div>
+        {picked.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/[0.06] p-3">
+            <p className="flex-1 text-[13px] text-white"><b>{picked.length}</b> selected</p>
+            <Button size="sm" variant="primary" loading={busy === "advance"} onClick={() => void advance(picked.map((a) => a.token))}>Move to next round</Button>
+            <Button size="sm" onClick={() => setBooking(true)}>Book live interviews</Button>
+            <Button size="sm" variant="ghost" loading={busy === "reject"} onClick={() => window.confirm(`Mark ${picked.length} as not selected?`) && void reject(picked.map((a) => a.token))}>Not selected</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>Clear</Button>
+          </div>
+        )}
+
         {list.length ? (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[840px] text-[13px]">
+            <table className="w-full min-w-[980px] text-[13px]">
               <thead>
                 <tr className="text-left text-[11.5px] text-white/45">
+                  <th className="w-8 pb-2"><input type="checkbox" aria-label="Select all" checked={list.length > 0 && list.every((a) => sel.has(a.token))} onChange={(e) => setSel(e.target.checked ? new Set(list.map((a) => a.token)) : new Set())} className="accent-[#a78bfa]" /></th>
                   <th className="pb-2 font-medium">Applicant</th>
                   <th className="pb-2 font-medium">Role</th>
-                  <th className="pb-2 font-medium">Applied</th>
-                  <th className="pb-2 font-medium">AI interview</th>
-                  <th className="pb-2 font-medium">Score</th>
+                  <th className="pb-2 font-medium">Now in</th>
+                  <th className="pb-2 font-medium">Test</th>
+                  <th className="pb-2 font-medium">AI</th>
+                  <th className="pb-2 font-medium">HR</th>
+                  <th className="pb-2 font-medium">Live</th>
                   <th className="pb-2 font-medium">Decision</th>
                   <th className="pb-2"><span className="sr-only">Resume</span></th>
                 </tr>
@@ -273,13 +420,17 @@ function Apps({ openApp }: { openApp?: string | null }) {
               <tbody>
                 {list.map((a) => {
                   const st = stageOf(a);
+                  const step = stepOf(a);
                   return (
-                    <tr key={a.token} onClick={() => setOpen(a.token)} className="cursor-pointer border-t border-white/[0.06] hover:bg-white/[0.02]">
+                    <tr key={a.token} onClick={() => setOpen(a.token)} className={cn("cursor-pointer border-t border-white/[0.06] hover:bg-white/[0.02]", sel.has(a.token) && "bg-accent/[0.05]")}>
+                      <td className="py-2.5" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${a.name}`} checked={sel.has(a.token)} onChange={() => toggle(a.token)} className="accent-[#a78bfa]" /></td>
                       <td className="py-2.5"><p className="font-medium text-white">{a.name}</p><p className="text-[11.5px] text-white/45">{a.college}</p></td>
                       <td className="py-2.5 text-white/70">{a.role}</td>
-                      <td className="py-2.5 text-white/60">{fmtWhen(a.appliedAt)}</td>
-                      <td className="py-2.5">{a.ai ? <span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", STAGE[st].cls)}>{STAGE[st].label}</span> : <span className="text-white/40">—</span>}</td>
-                      <td className="py-2.5">{a.report ? <span className={cn("font-semibold tabular-nums", scoreCls(a.report.overall))}>{a.report.overall} <span className="text-[11.5px] font-normal text-white/50">· {a.report.verdict}</span></span> : <span className="text-white/35">—</span>}</td>
+                      <td className="py-2.5">{step ? <span className="flex flex-col gap-0.5"><span className="text-[12px] text-white/80">{STEP_LABEL[step]}</span><span className={cn("w-fit rounded-md px-1.5 py-0.5 text-[10.5px]", STAGE[st].cls)}>{step === "live" ? (a.live?.feedback ? "Feedback in" : `${fmtWhen(a.live?.at ?? 0)}`) : STAGE[st].label}</span></span> : <span className="text-white/40">—</span>}</td>
+                      <td className="py-2.5"><ScoreCell v={scoreOf(a, "test")} warn={a.testResult?.warnings.length} /></td>
+                      <td className="py-2.5"><ScoreCell v={scoreOf(a, "ai")} warn={a.aiWarn?.length} /></td>
+                      <td className="py-2.5"><ScoreCell v={scoreOf(a, "hr")} warn={a.hr?.warnings?.length} /></td>
+                      <td className="py-2.5">{a.live?.feedback ? <span className={cn("font-semibold tabular-nums", scoreCls(a.live.feedback.score * 10))}>{a.live.feedback.score}/10</span> : a.live ? <a href={`/partner/live?t=${a.token}`} onClick={(e) => e.stopPropagation()} className="text-[12px] text-accent hover:underline">Join</a> : <span className="text-white/30">—</span>}</td>
                       <td className="py-2.5">{a.decision ? <span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.decision === "rejected" ? "bg-white/[0.06] text-white/50" : "bg-emerald-400/12 text-emerald-300")}>{DECISION_LABEL[a.decision]}</span> : <span className="text-white/35">New</span>}</td>
                       <td className="py-2.5 text-right">{a.resume && <a href={a.resume} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</a>}</td>
                     </tr>
@@ -292,21 +443,128 @@ function Apps({ openApp }: { openApp?: string | null }) {
           <p className="mt-8 mb-6 text-center text-[13px] text-white/45">{apps.length ? "No one matches these filters." : "No applications yet. Share /careers to get some."}</p>
         )}
       </section>
-      {cur && <AppDrawer a={cur} onClose={() => setOpen(null)} onChange={put} onDelete={() => { setApps((xs) => (xs ?? []).filter((x) => x.token !== cur.token)); setOpen(null); }} />}
+      {cur && <AppDrawer a={cur} onClose={() => setOpen(null)} onChange={put} onAdvance={() => void advance([cur.token])} onDelete={() => { setApps((xs) => (xs ?? []).filter((x) => x.token !== cur.token)); setOpen(null); }} />}
+      {booking && <BookLive people={picked} onClose={() => setBooking(false)} onDone={() => { setBooking(false); setSel(new Set()); void load(); }} />}
     </div>
   );
 }
 
-function AppDrawer({ a, onClose, onChange, onDelete }: { a: CareerApp; onClose: () => void; onChange: (a: CareerApp) => void; onDelete: () => void }) {
+/** Back-to-back live interview slots for the selected people. */
+function BookLive({ people, onClose, onDone }: { people: CareerApp[]; onClose: () => void; onDone: () => void }) {
+  const { actions } = useStore();
+  const [start, setStart] = useState(() => toLocal(Math.ceil((Date.now() + 86400000) / 1800000) * 1800000));
+  const [minutes, setMinutes] = useState(30);
+  const [gap, setGap] = useState(5);
+  const [busy, setBusy] = useState(false);
+  const t0 = fromLocal(start);
+  const slots = people.map((p, i) => ({ p, at: t0 + i * (minutes + gap) * 60000 }));
+  const book = async () => {
+    setBusy(true);
+    try {
+      const r = await careersApi<{ changed: number }>("live-schedule", { items: slots.map((x) => ({ token: x.p.token, at: x.at, minutes })) }, true);
+      actions.toast(`${r.changed} live interview${r.changed === 1 ? "" : "s"} booked. Each person got an email with the time and link.`);
+      onDone();
+    } catch (e) {
+      actions.toast(careersErrorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[#000000]/60" onClick={onClose} aria-hidden />
+      <div role="dialog" aria-label="Book live interviews" className="relative w-full max-w-[560px] rounded-2xl border border-white/10 bg-[#121118] p-6">
+        <h2 className="text-[18px] font-semibold">Book live interviews</h2>
+        <p className="mt-1 text-[12.5px] text-white/55">One after another. Each person gets an email with their time and the link to join on StudentOS.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div><Label htmlFor="ls">First slot</Label><Input id="ls" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} /></div>
+          <div>
+            <Label htmlFor="lm">Each</Label>
+            <select id="lm" value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white">
+              {[15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} min</option>)}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="lg">Gap</Label>
+            <select id="lg" value={gap} onChange={(e) => setGap(Number(e.target.value))} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white">
+              {[0, 5, 10, 15].map((m) => <option key={m} value={m}>{m} min</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="mt-4 max-h-[240px] space-y-1.5 overflow-y-auto">
+          {slots.map(({ p, at }) => (
+            <div key={p.token} className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2 text-[13px]"><span>{p.name}</span><span className="text-white/60 tabular-nums">{t0 ? fmtWhen(at) : "—"}</span></div>
+          ))}
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" loading={busy} disabled={!t0 || t0 < Date.now()} onClick={() => void book()}>Book {people.length} and email them</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QA({ questions, answers, items }: { questions: string[]; answers: { a: string; secs: number }[]; items?: { score: number; note: string }[] }) {
+  return (
+    <div className="mt-3 space-y-2.5">
+      {questions.map((q, i) =>
+        answers[i] ? (
+          <div key={i} className="rounded-xl border border-white/[0.07] p-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[13px] font-medium text-white">{i + 1}. {q}</p>
+              {items?.[i] && <span className={cn("shrink-0 text-[13px] font-semibold tabular-nums", scoreCls(items[i].score * 10))}>{items[i].score}/10</span>}
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed whitespace-pre-line text-white/70">{answers[i].a}</p>
+            <p className="mt-2 text-[11.5px] text-white/40">{Math.round(answers[i].secs / 60)} min{items?.[i]?.note ? ` · ${items[i].note}` : ""}</p>
+          </div>
+        ) : null,
+      )}
+    </div>
+  );
+}
+
+function Report({ r }: { r: CareerReport }) {
+  return (
+    <>
+      <div className="mt-3 flex items-end gap-3">
+        <p className={cn("text-[40px] leading-none font-bold tabular-nums", scoreCls(r.overall))}>{r.overall}</p>
+        <p className="pb-1 text-[13px] text-white/60">/ 100 · <b className="text-white">{r.verdict}</b></p>
+      </div>
+      <p className="mt-3 text-[13.5px] leading-relaxed text-white/75">{r.summary}</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><p className="text-[11.5px] font-semibold text-emerald-300 uppercase">Strengths</p>{r.strengths.map((x) => <p key={x} className="mt-1 text-[12.5px] text-white/70">+ {x}</p>)}</div>
+        <div><p className="text-[11.5px] font-semibold text-amber-300 uppercase">Concerns</p>{r.concerns.map((x) => <p key={x} className="mt-1 text-[12.5px] text-white/70">– {x}</p>)}</div>
+      </div>
+    </>
+  );
+}
+
+const Warns = ({ list, ended }: { list?: string[]; ended?: boolean }) =>
+  list?.length || ended ? <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] text-amber-200">Strict mode: {list?.length ? list.map(breachLabel).join(", ") : "no warnings"}{ended ? " · ended after too many warnings" : ""}</p> : <p className="mt-3 text-[12px] text-emerald-300/80">Strict mode: no warnings</p>;
+
+function Box({ title, badge, children }: { title: string; badge?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center justify-between gap-2"><p className="text-[14px] font-semibold">{title}</p>{badge}</div>
+      {children}
+    </div>
+  );
+}
+
+function AppDrawer({ a, onClose, onChange, onDelete, onAdvance }: { a: CareerApp; onClose: () => void; onChange: (a: CareerApp) => void; onDelete: () => void; onAdvance: () => void }) {
   const { actions } = useStore();
   const [busy, setBusy] = useState("");
   const [note, setNote] = useState(a.note);
   const st = stageOf(a);
+  const step = stepOf(a);
+  const steps = stepsOf(a);
+  const nxt = nextStep(a);
   const phone = a.phone.replace(/\D/g, "");
   const wa = `https://wa.me/${phone.length === 10 ? `91${phone}` : phone}?text=${encodeURIComponent(`Hi ${a.name.split(" ")[0]}, this is the StudentOS team about your application for ${a.role}.`)}`;
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/careers/interview/${a.token}`;
   const run = async (action: string, body: Record<string, unknown>, msg: string) => {
-    setBusy(action + String(body.decision ?? ""));
+    setBusy(action + String(body.decision ?? body.kind ?? ""));
     try {
       const r = await careersApi<{ app?: CareerApp }>(action, { token: a.token, ...body }, true);
       if (r.app) onChange(r.app);
@@ -318,10 +576,12 @@ function AppDrawer({ a, onClose, onChange, onDelete }: { a: CareerApp; onClose: 
     }
   };
   const urls = a.links.match(/https?:\/\/\S+/g) ?? [];
+  const t = a.testResult;
+  const badge = (s: CareerStep) => (step === s ? <span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", STAGE[st].cls)}>Now · {STAGE[st].label}</span> : null);
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-[#000000]/50" onClick={onClose} aria-hidden />
-      <aside role="dialog" aria-label={a.name} className="relative h-full w-full max-w-[560px] overflow-y-auto border-l border-white/10 bg-[#121118] p-6">
+      <aside role="dialog" aria-label={a.name} className="relative h-full w-full max-w-[600px] overflow-y-auto border-l border-white/10 bg-[#121118] p-6">
         <button type="button" onClick={onClose} aria-label="Close" className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full text-white/55 hover:bg-white/[0.06] hover:text-white"><XIcon size={16} /></button>
         <p className="text-[12px] font-semibold tracking-[0.14em] text-accent uppercase">{a.role}</p>
         <h2 className="mt-1 text-[24px] font-semibold">{a.name}</h2>
@@ -340,60 +600,71 @@ function AppDrawer({ a, onClose, onChange, onDelete }: { a: CareerApp; onClose: 
           {a.why && <p className="whitespace-pre-line text-white/70"><span className="text-white/40">Why StudentOS:</span> {a.why}</p>}
         </div>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[14px] font-semibold">AI interview</p>
-            {a.ai && <span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", STAGE[st].cls)}>{STAGE[st].label}</span>}
+        {/* where they are now, and moving them on */}
+        <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/[0.05] p-4">
+          <p className="text-[13px] text-white/80">{step ? <>Now in <b className="text-white">{STEP_LABEL[step]}</b> · {step === "live" ? (a.live ? fmtWhen(a.live.at) : "") : `${STAGE[st].label} · window ${fmtWhen(a.start)} – ${fmtWhen(a.end)}`}</> : "No rounds on StudentOS for this role."}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {nxt && nxt !== "live" && <Button size="sm" variant="primary" onClick={onAdvance}>Move to {STEP_LABEL[nxt]}</Button>}
+            {step && step !== "live" && st !== "completed" && <Button size="sm" loading={busy === "app-update"} onClick={() => void run("app-update", { extendDays: 2 }, "2 more days given.")}>Give 2 more days</Button>}
+            {step && <Button size="sm" variant="ghost" onClick={() => void navigator.clipboard.writeText(link).then(() => actions.toast("Their link copied. Send it on WhatsApp or email."))}>Copy their link</Button>}
           </div>
-          {!a.ai ? (
-            <p className="mt-2 text-[13px] text-white/55">This role has no AI interview.</p>
-          ) : st === "completed" ? (
-            a.report ? (
-              <>
-                <div className="mt-3 flex items-end gap-3">
-                  <p className={cn("text-[40px] leading-none font-bold tabular-nums", scoreCls(a.report.overall))}>{a.report.overall}</p>
-                  <p className="pb-1 text-[13px] text-white/60">/ 100 · <b className="text-white">{a.report.verdict}</b></p>
-                </div>
-                <p className="mt-3 text-[13.5px] leading-relaxed text-white/75">{a.report.summary}</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div><p className="text-[11.5px] font-semibold text-emerald-300 uppercase">Strengths</p>{a.report.strengths.map((x) => <p key={x} className="mt-1 text-[12.5px] text-white/70">+ {x}</p>)}</div>
-                  <div><p className="text-[11.5px] font-semibold text-amber-300 uppercase">Concerns</p>{a.report.concerns.map((x) => <p key={x} className="mt-1 text-[12.5px] text-white/70">– {x}</p>)}</div>
-                </div>
-              </>
-            ) : (
-              <div className="mt-2 flex items-center gap-3">
-                <p className="flex-1 text-[13px] text-white/55">Answers are in, but the report couldn’t be made.</p>
-                <Button size="sm" loading={busy === "app-evaluate"} onClick={() => void run("app-evaluate", {}, "Report ready.")}>Make report</Button>
-              </div>
-            )
-          ) : (
-            <>
-              <p className="mt-2 text-[13px] text-white/60">Window: {fmtWhen(a.start)} – {fmtWhen(a.end)} (IST){st === "in-progress" ? ` · answered ${a.answers.length} of ${a.questions.length}` : ""}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button size="sm" variant="ghost" onClick={() => void navigator.clipboard.writeText(link).then(() => actions.toast("Interview link copied. Send it on WhatsApp or email."))}>Copy interview link</Button>
-                <Button size="sm" loading={busy === "app-update"} onClick={() => void run("app-update", { extendDays: 2 }, "2 more days given.")}>Give 2 more days</Button>
-              </div>
-            </>
-          )}
-          {(a.flags.tabs > 0 || a.flags.pastes > 0) && <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] text-amber-200">Left the tab {a.flags.tabs}× · pasted {a.flags.pastes}× during the interview.</p>}
+          {nxt === "live" && <p className="mt-2 text-[12px] text-white/50">Next is the live interview: select them in the list and use “Book live interviews”.</p>}
         </div>
 
-        {a.answers.length > 0 && (
-          <div className="mt-5 space-y-3">
-            <p className="text-[14px] font-semibold">Questions and answers</p>
-            {a.questions.map((q, i) =>
-              a.answers[i] ? (
-                <div key={i} className="rounded-xl border border-white/[0.07] p-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-[13px] font-medium text-white">{i + 1}. {q}</p>
-                    {a.report?.items[i] && <span className={cn("shrink-0 text-[13px] font-semibold tabular-nums", scoreCls(a.report.items[i].score * 10))}>{a.report.items[i].score}/10</span>}
-                  </div>
-                  <p className="mt-2 text-[13px] leading-relaxed whitespace-pre-line text-white/70">{a.answers[i].a}</p>
-                  <p className="mt-2 text-[11.5px] text-white/40">{Math.round(a.answers[i].secs / 60)} min{a.report?.items[i]?.note ? ` · ${a.report.items[i].note}` : ""}</p>
+        {steps.includes("test") && (
+          <Box title="Online test" badge={badge("test")}>
+            {t ? (
+              <>
+                <div className="mt-3 flex items-end gap-3">
+                  <p className={cn("text-[36px] leading-none font-bold tabular-nums", scoreCls(scoreOf(a, "test") ?? 0))}>{scoreOf(a, "test")}</p>
+                  <p className="pb-1 text-[13px] text-white/60">/ 100 · MCQ {t.correct}/{t.total}{t.late ? " · submitted late" : ""}</p>
                 </div>
-              ) : null,
-            )}
-          </div>
+                {t.coding.length > 0 && <div className="mt-2 space-y-1">{t.coding.map((c) => <p key={c.title} className="text-[12.5px] text-white/70">{"</>"} {c.title}: <b className={c.passed === c.total ? "text-emerald-300" : "text-amber-200"}>{c.passed}/{c.total}</b> tests · {c.lang}</p>)}</div>}
+                <Warns list={t.warnings} ended={t.ended} />
+              </>
+            ) : <p className="mt-2 text-[13px] text-white/55">Not taken yet.</p>}
+          </Box>
+        )}
+
+        {steps.includes("ai") && (
+          <Box title="AI interview" badge={badge("ai")}>
+            {a.completedAt ? (
+              a.report ? <Report r={a.report} /> : (
+                <div className="mt-2 flex items-center gap-3">
+                  <p className="flex-1 text-[13px] text-white/55">Answers are in, but the report couldn’t be made.</p>
+                  <Button size="sm" loading={busy === "app-evaluateai"} onClick={() => void run("app-evaluate", { kind: "ai" }, "Report ready.")}>Make report</Button>
+                </div>
+              )
+            ) : <p className="mt-2 text-[13px] text-white/55">{a.questions.length ? `Answered ${a.answers.length} of ${a.questions.length} so far.` : "Not started yet."}</p>}
+            {(a.completedAt || a.aiWarn) && <Warns list={a.aiWarn} ended={a.aiEnded} />}
+            {(a.flags.tabs > 0 || a.flags.pastes > 0) && <p className="mt-2 rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] text-amber-200">Left the tab {a.flags.tabs}× · pasted {a.flags.pastes}×.</p>}
+            {a.answers.length > 0 && <QA questions={a.questions} answers={a.answers} items={a.report?.items} />}
+          </Box>
+        )}
+
+        {steps.includes("hr") && (
+          <Box title="AI HR interview" badge={badge("hr")}>
+            {a.hr?.done ? (
+              a.hr.report ? <Report r={a.hr.report} /> : (
+                <div className="mt-2 flex items-center gap-3">
+                  <p className="flex-1 text-[13px] text-white/55">Answers are in, but the report couldn’t be made.</p>
+                  <Button size="sm" loading={busy === "app-evaluatehr"} onClick={() => void run("app-evaluate", { kind: "hr" }, "Report ready.")}>Make report</Button>
+                </div>
+              )
+            ) : <p className="mt-2 text-[13px] text-white/55">{a.hr ? `Answered ${a.hr.answers.length} of ${a.hr.questions.length} so far.` : "Not started yet."}</p>}
+            {a.hr?.done && <Warns list={a.hr.warnings} ended={a.hr.ended} />}
+            {a.hr && a.hr.answers.length > 0 && <QA questions={a.hr.questions} answers={a.hr.answers} items={a.hr.report?.items} />}
+          </Box>
+        )}
+
+        {a.live && (
+          <Box title="Live interview" badge={badge("live")}>
+            <p className="mt-2 text-[13px] text-white/65">{fmtWhen(a.live.at)} (IST) · {a.live.minutes} min</p>
+            {a.live.feedback ? (
+              <p className="mt-2 text-[13px] text-white/75"><b className={scoreCls(a.live.feedback.score * 10)}>{a.live.feedback.score}/10</b> · {a.live.feedback.verdict}{a.live.feedback.notes ? ` · ${a.live.feedback.notes}` : ""}</p>
+            ) : null}
+            <a href={`/partner/live?t=${a.token}`} className="mt-3 inline-flex h-9 items-center rounded-lg bg-accent px-4 text-[13px] font-semibold text-black">{a.live.feedback ? "Open the call page" : "Join the call"}</a>
+          </Box>
         )}
 
         <div className="mt-6">

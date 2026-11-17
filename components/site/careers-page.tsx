@@ -2,7 +2,7 @@
 
 /* Careers (/careers). Roles, how hiring works and an application form.
    Roles come from lib/careers (the team posts them in /partner → Careers).
-   Applying saves the application on StudentOS and gives the AI interview link. */
+   Applying saves the application on StudentOS and gives the link to their rounds. */
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +12,7 @@ import { Glass, TiltCard, delay as d, usePointerVars } from "@/components/site/m
 import { HR_EMAIL, SiteShell } from "@/components/site/site-shell";
 import { ArrowRightIcon, CheckIcon, MailIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
-import { CAREER_TEAMS, DEFAULT_CAREERS, careersApi, careersErrorText, fmtWhen, loadCareers, type CareerRole, type CareerTeam, type CareersDoc } from "@/lib/careers";
+import { CAREER_TEAMS, DEFAULT_CAREERS, careersApi, careersErrorText, fmtWhen, loadCareers, STEP_LABEL, type CareerRole, type CareerStep, type CareerTeam, type CareersDoc } from "@/lib/careers";
 import { cn } from "@/lib/utils";
 
 
@@ -47,8 +47,8 @@ const look = (r: CareerRole) => (/\b(ai|ml)\b/i.test(r.title) ? { icon: "bot" as
 
 const STEPS: { icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
   { icon: "mail", tone: "violet", title: "Apply", text: "Fill the short form. It takes 2 minutes." },
-  { icon: "bot", tone: "cyan", title: "AI interview", text: "A short interview with our AI, in the time window you get. Type or speak." },
-  { icon: "chat", tone: "emerald", title: "Team review", text: "Our team reads your answers and the AI’s notes, and calls if it’s a fit." },
+  { icon: "bot", tone: "cyan", title: "Test and AI interviews", text: "Depending on the role: an online test, an AI interview and an AI HR round, on StudentOS." },
+  { icon: "chat", tone: "emerald", title: "Live interview", text: "If you’re shortlisted, a video call with our team, here on StudentOS." },
   { icon: "rocket", tone: "amber", title: "Offer", text: "We send your offer letter, you meet the team and start." },
 ];
 
@@ -57,7 +57,7 @@ const FAQ: { q: string; a: string }[] = [
   { q: "Is it paid?", a: "These internships are unpaid right now. Each role card says so; we’ll update it when that changes." },
   { q: "Is it remote?", a: "Yes. Work is planned around your classes and exams." },
   { q: "How long does it last?", a: "Three months to start with." },
-  { q: "How does the AI interview work?", a: "After you apply you get a link. Open it within your time window, then answer 5–8 questions by typing or speaking. It takes about 15 minutes. People on our team make the final decision, not the AI." },
+  { q: "How do the rounds work?", a: "After you apply you get one private link. Your first round (an online test or an AI interview, depending on the role) opens there. Each round runs in strict mode: full screen, camera and mic on, no other tabs. If you’re through, we email you and the next round opens on the same link. People on our team make the final decision, not the AI." },
   { q: "I don’t see my role.", a: "Apply anyway with “Other” and tell us what you’d like to work on." },
 ];
 
@@ -203,7 +203,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [done, setDone] = useState<{ token: string; start: number; end: number; ai: boolean; again?: boolean } | null>(null);
+  const [done, setDone] = useState<{ token: string; start: number; end: number; ai: boolean; steps?: CareerStep[]; again?: boolean } | null>(null);
   const missing = f.name.trim().length < 2 || !/^\S+@\S+\.\S+$/.test(f.email.trim()) || f.phone.replace(/\D/g, "").length < 10 || f.college.trim().length < 2 || !/^https?:\/\/\S+\.\S+/.test(f.resume.trim());
   const field = "mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-[14px] text-white outline-none placeholder:text-white/35 focus:border-violet-400/60";
   const role = roles.find((r) => r.id === f.roleId);
@@ -213,7 +213,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
     if (missing) return;
     setBusy(true);
     try {
-      setDone(await careersApi<{ token: string; start: number; end: number; ai: boolean; again?: boolean }>("apply", f));
+      setDone(await careersApi<{ token: string; start: number; end: number; ai: boolean; steps?: CareerStep[]; again?: boolean }>("apply", f));
     } catch (e) {
       setErr(careersErrorText(e));
     } finally {
@@ -221,6 +221,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
     }
   };
   const link = done ? `${typeof window !== "undefined" ? window.location.origin : ""}/careers/interview/${done.token}` : "";
+  const firstStep = done?.steps?.[0] ?? (done?.ai ? "ai" : undefined);
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-[#000000]/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
@@ -230,16 +231,16 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
           <div className="py-2 text-center">
             <div className="mx-auto w-fit"><FancyIcon name="check" tone="emerald" size={64} /></div>
             <h3 className="mt-4 text-[22px] font-semibold text-white">{done.again ? "You’ve already applied" : "Application sent!"}</h3>
-            {done.ai ? (
+            {firstStep ? (
               <>
-                <p className="mx-auto mt-2 max-w-[380px] text-[14px] leading-relaxed text-white/65">Next is a short <b className="text-white">AI interview</b> (about 15 minutes). Type or speak your answers.</p>
+                <p className="mx-auto mt-2 max-w-[380px] text-[14px] leading-relaxed text-white/65">Next is your <b className="text-white">{STEP_LABEL[firstStep].toLowerCase()}</b>, on StudentOS in strict mode (camera and mic on).</p>
                 <div className="mt-5 rounded-2xl border border-violet-400/30 bg-violet-500/10 p-4 text-left">
                   <p className="text-[12px] font-semibold tracking-wide text-violet-200 uppercase">Finish it between</p>
                   <p className="mt-1 text-[15px] font-semibold text-white">{fmtWhen(done.start)} – {fmtWhen(done.end)} <span className="text-[12px] font-normal text-white/50">IST</span></p>
                   <p className="mt-2 text-[12px] text-white/55">We also emailed you this link. Keep it private.</p>
                 </div>
                 <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-                  <a href={link} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff]">{Date.now() >= done.start ? "Start interview now" : "Open my interview page"} <ArrowRightIcon size={15} /></a>
+                  <a href={link} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff]">{Date.now() >= done.start ? "Start now" : "Open my page"} <ArrowRightIcon size={15} /></a>
                   <button type="button" onClick={() => void navigator.clipboard?.writeText(link)} className="h-12 rounded-xl border border-white/15 px-4 text-[13.5px] font-medium text-white/80 hover:text-white">Copy link</button>
                 </div>
               </>
@@ -253,7 +254,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
               <FancyIcon name="mail" tone="violet" size={42} />
               <div>
                 <h3 className="text-[19px] font-semibold text-white">Apply to StudentOS</h3>
-                <p className="text-[12.5px] text-white/55">{role?.ai !== false && role ? "Takes 2 minutes. Then a short AI interview." : "Takes 2 minutes."}</p>
+                <p className="text-[12.5px] text-white/55">{role && (role.test || role.ai !== false || role.hr) ? `Takes 2 minutes. Then ${[role.test && "an online test", role.ai !== false && "an AI interview", role.hr && "an AI HR round"].filter(Boolean).join(", ")}.` : "Takes 2 minutes."}</p>
               </div>
             </div>
             <div className="mt-5 space-y-3.5">

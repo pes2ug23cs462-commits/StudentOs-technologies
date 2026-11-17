@@ -1,23 +1,37 @@
 "use client";
 
-/* /careers/interview/[token]: the AI interview for a StudentOS applicant.
-   No login: the link token is the key. Asha reads each question aloud (device
-   voice), the applicant types or speaks the answer. The server keeps the
-   questions and answers, so a refresh carries on where it stopped. When the last
-   answer is in, the AI writes a report and the team is emailed. */
+/* /careers/interview/[token]: an applicant's rounds for a StudentOS role.
+   No login: the link token is the key. A role can have an online test, the AI
+   interview, an AI HR interview and a live video interview with the team; all run
+   in strict mode (full screen, camera, voice and tab checks). The first round opens
+   when they apply; the team moves people on and emails them. Scores stay with the team. */
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Interviewer } from "@/components/interview/interviewer";
+import { useCallback, useEffect, useState } from "react";
 import { FancyIcon } from "@/components/site/fancy-icon";
-import { ArrowRightIcon, MicIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CheckIcon } from "@/components/ui/icons";
 import { LogoMark, Wordmark } from "@/components/ui/primitives";
-import { careersApi, careersErrorText, fmtWhen, type CareerStage } from "@/lib/careers";
-import { createTalker, type Talker } from "@/lib/talker";
+import { TestRun, type TestIO } from "@/components/placement/company-test-run";
+import { IvRun, type IvIO } from "@/components/placement/company-iv-run";
+import { LiveStudent } from "@/components/live/live-student";
+import { careersApi, careersErrorText, fmtWhen, STEP_LABEL, type CareerStage, type CareerStep } from "@/lib/careers";
+import type { IvView, LiveSignal, StudentIvInfo, StudentTestInfo } from "@/lib/partner";
 import { cn } from "@/lib/utils";
 
-type View = { name: string; role: string; start: number; end: number; ai: boolean; stage: CareerStage; total: number; index: number; question: string };
-type Rec = { start: () => void; stop: () => void; onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onend: (() => void) | null; continuous: boolean; interimResults: boolean; lang: string };
+type Round = { index: number; total: number; done: boolean } | null;
+type View = {
+  name: string;
+  role: string;
+  steps: CareerStep[];
+  at: CareerStep | "";
+  stage: CareerStage;
+  start: number;
+  end: number;
+  test: { title: string; minutes: number; count: number; coding: number; done: boolean } | null;
+  ai: Round;
+  hr: Round;
+  live: { at: number; minutes: number } | null;
+};
 
 const left = (ms: number) => {
   if (ms <= 0) return "0 min";
@@ -49,219 +63,152 @@ function Note({ icon, tone, title, text, children }: { icon: "check" | "bolt" | 
   );
 }
 
+const ABOUT: Record<CareerStep, string> = {
+  test: "Questions with options, and maybe a coding problem. Timed.",
+  ai: "Asha, our AI interviewer, asks about you and the role. About 15 minutes. Speak or type.",
+  hr: "About you, why StudentOS, and how you work with others. About 10 minutes.",
+  live: "A video call with our team, here on StudentOS.",
+};
+
 export function CareerInterview({ token }: { token: string }) {
   const [v, setV] = useState<View | null>(null);
   const [err, setErr] = useState("");
-  const [busy, setBusy] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [agree, setAgree] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [qAt, setQAt] = useState(Date.now());
-  const [listening, setListening] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
-  const flags = useRef({ tabs: 0, pastes: 0 });
-  const rec = useRef<Rec | null>(null);
-  const talker = useMemo<Talker | null>(() => (typeof window === "undefined" ? null : createTalker({ lang: "en" })), []);
-  const canSpeak = typeof window !== "undefined" && !!((window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition);
+  const [mode, setMode] = useState<CareerStep | null>(null);
+  const [agree, setAgree] = useState(false);
 
-  const call = useCallback(
-    async (action: string, extra: Record<string, unknown> = {}) => {
-      setErr("");
-      try {
-        const r = await careersApi<View>(action, { token, ...extra });
+  const load = useCallback(() => {
+    careersApi<View>("interview-get", { token })
+      .then((r) => {
         setV(r);
-        return r;
-      } catch (e) {
-        setErr(careersErrorText(e));
-        return null;
-      }
-    },
-    [token],
-  );
-
+        setErr("");
+      })
+      .catch((e) => setErr(careersErrorText(e)));
+  }, [token]);
   useEffect(() => {
-    void call("interview-get");
+    load();
     const t = setInterval(() => setNow(Date.now()), 15000);
     return () => clearInterval(t);
-  }, [call]);
+  }, [load]);
 
-  // a 1-second clock for the answer timer while the interview runs
-  useEffect(() => {
-    if (v?.stage !== "in-progress") return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [v?.stage]);
-
-  // leaving the tab during the interview is counted and shown to the team
-  useEffect(() => {
-    if (v?.stage !== "in-progress") return;
-    const onHide = () => document.visibilityState === "hidden" && (flags.current.tabs += 1);
-    document.addEventListener("visibilitychange", onHide);
-    return () => document.removeEventListener("visibilitychange", onHide);
-  }, [v?.stage]);
-
-  // read each new question aloud
-  useEffect(() => {
-    if (v?.stage !== "in-progress" || !v.question || !talker) return;
-    setQAt(Date.now());
-    setSpeaking(true);
-    void talker.say(v.question).finally(() => setSpeaking(false));
-    return () => talker.stop();
-  }, [v?.stage, v?.question, talker]);
-
-  useEffect(() => () => talker?.dispose(), [talker]);
-
-  const mic = () => {
-    if (listening) return rec.current?.stop();
-    const W = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
-    const R = W.SpeechRecognition ?? W.webkitSpeechRecognition;
-    if (!R) return;
-    talker?.stop();
-    const r = new R();
-    r.lang = "en-IN";
-    r.continuous = true;
-    r.interimResults = false;
-    const base = answer ? `${answer.trim()} ` : "";
-    let said = "";
-    r.onresult = (e) => {
-      for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) said += e.results[i][0].transcript + " ";
-      setAnswer(base + said.trim());
-    };
-    r.onend = () => setListening(false);
-    rec.current = r;
-    setListening(true);
-    r.start();
-  };
-
-  const next = async () => {
-    if (!v || answer.trim().length < 2) return;
-    rec.current?.stop();
-    talker?.stop();
-    setBusy("next");
-    const r = await call("interview-answer", { index: v.index, answer, secs: Math.round((Date.now() - qAt) / 1000), flags: flags.current });
-    setBusy("");
-    if (!r) return;
-    setAnswer("");
-    if (r.index >= r.total) {
-      setBusy("finish");
-      await call("interview-finish");
-      setBusy("");
-    }
-  };
+  const back = { label: "Back to my rounds", onClick: () => { setMode(null); load(); } };
+  const call = <T,>(action: string, body: Record<string, unknown> = {}) => careersApi<T>(action, { token, ...body });
 
   if (!v)
-    return (
-      <Frame>
-        {err ? <Note icon="target" tone="amber" title="Can’t open this interview" text={err} /> : <div className="mx-auto mt-[12vh] h-64 max-w-[520px] animate-pulse rounded-3xl bg-white/[0.04]" />}
-      </Frame>
-    );
+    return <Frame>{err ? <Note icon="target" tone="amber" title="Can’t open this page" text={err} /> : <div className="mx-auto mt-[12vh] h-64 max-w-[520px] animate-pulse rounded-3xl bg-white/[0.04]" />}</Frame>;
 
-  if (!v.ai) return <Frame><Note icon="mail" tone="violet" title={`Thanks, ${v.name.split(" ")[0]}!`} text={`This role has no AI interview. Our team will read your application for ${v.role} and contact you.`} /></Frame>;
-  if (busy === "finish" || (v.stage === "in-progress" && v.index >= v.total && v.total > 0))
-    return (
-      <Frame>
-        <Note icon="bolt" tone="violet" title="Sending your answers…" text="The AI is writing notes for our team. This takes about half a minute; please keep this page open.">
-          {err && (
-            <>
-              <p className="mt-4 text-[13px] text-rose-300">{err}</p>
-              <button type="button" onClick={() => void call("interview-finish")} className="mt-3 h-11 rounded-xl bg-accent px-5 text-[14px] font-semibold text-black">Try again</button>
-            </>
-          )}
-        </Note>
-      </Frame>
-    );
-  if (v.stage === "completed") return <Frame><Note icon="check" tone="emerald" title="Interview done. Thank you!" text={`Your answers for ${v.role} are with the StudentOS team. If it’s a fit, we’ll call or email you. You can close this page.`} /></Frame>;
-  if (v.stage === "missed") return <Frame><Note icon="target" tone="amber" title="This interview has closed" text={`The window ended ${fmtWhen(v.end)} (IST). If something went wrong, reply to the email we sent you and the team can open it again.`} /></Frame>;
-  if (now < v.start)
-    return (
-      <Frame>
-        <Note icon="bolt" tone="cyan" title="Your interview opens soon" text={`Hi ${v.name.split(" ")[0]}, your AI interview for ${v.role} opens ${fmtWhen(v.start)} and closes ${fmtWhen(v.end)} (IST).`}>
-          <p className="mt-5 text-[13px] text-white/55">Opens in <b className="text-white">{left(v.start - now)}</b>. Come back to this same link.</p>
-        </Note>
-      </Frame>
-    );
+  /* ----- a round in progress: the shared strict-mode screens ----- */
+  if (mode === "test") {
+    const io: TestIO = {
+      info: () => call<StudentTestInfo>("test-info"),
+      start: () => call("test-start"),
+      submit: (body) => call("test-submit", body),
+      errorText: careersErrorText,
+      back,
+      next: "team sees your score and emails you if you’re through to the next round.",
+      none: "Your online test isn’t open right now.",
+      storeKey: `studentos:ctest:${token}`,
+    };
+    return <Frame><TestRun io={io} /></Frame>;
+  }
+  if (mode === "ai" || mode === "hr") {
+    const kind = mode;
+    const io: IvIO = {
+      info: () => call<StudentIvInfo>("iv-info", { kind }),
+      start: () => call<IvView>("iv-start", { kind }),
+      answer: (body) => call<IvView>("iv-answer", { kind, ...body }),
+      finish: (body) => call("iv-finish", { kind, ...body }),
+      errorText: careersErrorText,
+      back,
+      next: "team reads your answers and emails you if you’re through to the next round.",
+      none: "This interview isn’t open for you right now.",
+      key: `${token}:${kind}`,
+    };
+    return <Frame><IvRun io={io} kind={kind === "hr" ? "hr" : "technical"} /></Frame>;
+  }
+  if (mode === "live" && v.live) return <Frame><LiveStudent pid="careers" room={token} other="the StudentOS team" signal={(body) => call<LiveSignal>("live-signal", { put: body.put })} /></Frame>;
 
-  if (v.stage === "invited")
-    return (
-      <Frame>
-        <div className="mx-auto mt-[4vh] max-w-[620px] rounded-3xl border border-white/10 bg-[#121118] p-7 sm:p-9">
-          <p className="text-[12px] font-semibold tracking-[0.14em] text-accent uppercase">AI interview · {v.role}</p>
-          <h1 className="mt-2 text-[28px] leading-tight font-semibold">Hi {v.name.split(" ")[0]}, ready when you are</h1>
-          <p className="mt-2 text-[14.5px] text-white/60">Asha, our AI interviewer, will ask you a few questions about you and the role. It takes about 15 minutes.</p>
-          <ul className="mt-6 space-y-3 text-[14px] text-white/80">
-            {[
-              "Find a quiet place. Type your answers, or tap the mic and speak (Chrome works best).",
-              "Answer each question in your own words, 1–2 minutes each. There’s no going back.",
-              "Stay on this tab. Leaving it or pasting answers is noted for the team.",
-              `Finish before ${fmtWhen(v.end)} (IST) · ${left(v.end - now)} left.`,
-            ].map((x) => (
-              <li key={x} className="flex gap-3"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" /> {x}</li>
-            ))}
-          </ul>
-          <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-[13.5px] text-white/80">
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[#a78bfa]" />
-            I’ll answer on my own, without help from other people or AI tools.
-          </label>
-          {err && <p className="mt-3 text-[13px] text-rose-300">{err}</p>}
-          <button
-            type="button"
-            disabled={!agree || !!busy}
-            onClick={async () => {
-              setBusy("start");
-              await call("interview-start");
-              setBusy("");
-            }}
-            className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition disabled:opacity-50"
-          >
-            {busy === "start" ? "Preparing your questions…" : "Start interview"} {!busy && <ArrowRightIcon size={15} />}
-          </button>
-        </div>
-      </Frame>
-    );
+  /* ----- the hub ----- */
+  const first = v.name.split(" ")[0];
+  if (!v.steps.length) return <Frame><Note icon="mail" tone="violet" title={`Thanks, ${first}!`} text={`Our team will read your application for ${v.role} and contact you.`} /></Frame>;
 
-  // in progress
-  const secs = Math.max(0, Math.round((now - qAt) / 1000));
+  const all: CareerStep[] = [...v.steps, ...(v.live ? (["live"] as const) : [])];
+  const doneOf = (s: CareerStep) => (s === "test" ? !!v.test?.done : s === "ai" ? !!v.ai?.done : s === "hr" ? !!v.hr?.done : v.at === "live" && v.stage === "completed");
+  const cur = v.at;
+  const curDone = cur ? doneOf(cur) : false;
+  const missed = v.stage === "missed" && !curDone;
+  const liveOpen = cur === "live" && v.live && now >= v.live.at - 15 * 60_000 && now <= v.live.at + v.live.minutes * 60_000 + 30 * 60_000;
+  const open = cur && cur !== "live" && !curDone && !missed && now >= v.start;
+  const started = v.stage === "in-progress";
+
   return (
     <Frame>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[12px] font-semibold tracking-[0.14em] text-accent uppercase">AI interview · {v.role}</p>
-          <p className="mt-1 text-[13px] text-white/55">Question {v.index + 1} of {v.total} · closes in {left(v.end - now)}</p>
-        </div>
-        <div className="flex gap-1.5">
-          {Array.from({ length: v.total }, (_, i) => (
-            <span key={i} className={cn("h-1.5 w-7 rounded-full", i < v.index ? "bg-emerald-400" : i === v.index ? "bg-violet-400" : "bg-white/10")} />
-          ))}
-        </div>
-      </div>
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0b0a14]">
-          <Interviewer talker={talker} listening={listening} />
-          <span className="absolute bottom-3 left-3 rounded-lg bg-[#000000]/55 px-2.5 py-1 text-[12px] text-[#ffffff]">Asha · {speaking ? "asking" : listening ? "listening" : "waiting for your answer"}</span>
-        </div>
-        <div className="flex flex-col rounded-3xl border border-white/10 bg-[#121118] p-5 sm:p-6">
-          <p className="text-[18px] leading-snug font-semibold">{v.question}</p>
-          <button type="button" onClick={() => talker && void talker.say(v.question)} className="mt-2 w-fit text-[12.5px] text-accent hover:underline">Hear it again</button>
-          <textarea
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            onPaste={() => (flags.current.pastes += 1)}
-            rows={8}
-            placeholder={canSpeak ? "Type your answer, or tap the mic and speak…" : "Type your answer…"}
-            className="mt-4 min-h-[180px] w-full flex-1 resize-none rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:border-violet-400/60"
-          />
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {canSpeak && (
-              <button type="button" onClick={mic} className={cn("flex h-12 items-center gap-2 rounded-xl border px-4 text-[14px] font-medium transition", listening ? "border-rose-400/60 bg-rose-500/15 text-rose-200" : "border-white/15 text-white/80 hover:text-white")}>
-                <MicIcon size={16} /> {listening ? "Stop" : "Speak"}
+      <div className="mx-auto mt-[3vh] max-w-[640px]">
+        <p className="text-[12px] font-semibold tracking-[0.14em] text-accent uppercase">{v.role}</p>
+        <h1 className="mt-2 text-[28px] leading-tight font-semibold">Hi {first}, here are your rounds</h1>
+        <p className="mt-2 text-[14px] text-white/60">Each round runs here on StudentOS. Our team reviews it and emails you if you’re through to the next one.</p>
+
+        <ol className="mt-6 space-y-2.5">
+          {all.map((s, i) => {
+            const done = doneOf(s);
+            const isCur = s === cur;
+            const status = done ? "Done" : isCur ? (missed ? "Missed" : s === "live" ? "Booked" : now < v.start ? "Opens soon" : "Open now") : all.indexOf(cur as CareerStep) > i ? "Skipped" : "If you’re shortlisted";
+            return (
+              <li key={s} className={cn("flex items-center gap-3 rounded-2xl border p-4", isCur && !done ? "border-violet-400/50 bg-violet-500/[0.08]" : "border-white/[0.08] bg-[#121118]")}>
+                <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold", done ? "bg-emerald-400/15 text-emerald-300" : isCur ? "bg-violet-500/25 text-violet-100" : "bg-white/[0.06] text-white/45")}>{done ? <CheckIcon size={15} /> : i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold">{STEP_LABEL[s]}</p>
+                  <p className="text-[12.5px] text-white/55">{ABOUT[s]}</p>
+                </div>
+                <span className={cn("shrink-0 rounded-md px-2 py-0.5 text-[11.5px] font-medium", done ? "bg-emerald-400/12 text-emerald-300" : isCur && !missed ? "bg-violet-400/15 text-violet-100" : missed && isCur ? "bg-amber-400/12 text-amber-200" : "bg-white/[0.05] text-white/45")}>{status}</span>
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="mt-6 rounded-3xl border border-white/10 bg-[#121118] p-6">
+          {cur === "live" && v.live ? (
+            <>
+              <p className="text-[16px] font-semibold">Live interview with the StudentOS team</p>
+              <p className="mt-1 text-[14px] text-white/65">{fmtWhen(v.live.at)} (IST) · {v.live.minutes} minutes. Use Chrome or Edge, with your camera and mic on, alone in a quiet place.</p>
+              {v.stage === "completed" ? (
+                <p className="mt-4 text-[13.5px] text-emerald-300">Done. Thank you! We’ll email you about the result.</p>
+              ) : liveOpen ? (
+                <button type="button" onClick={() => setMode("live")} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff]">Join the interview <ArrowRightIcon size={15} /></button>
+              ) : (
+                <p className="mt-4 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">{now < v.live.at ? `The Join button shows 15 minutes before. Starts in ${left(v.live.at - now)}.` : "This slot has passed. Reply to our email if you missed it."}</p>
+              )}
+            </>
+          ) : curDone || !cur ? (
+            <>
+              <p className="text-[16px] font-semibold">{cur ? `${STEP_LABEL[cur]} done. Thank you!` : "Thank you!"}</p>
+              <p className="mt-1 text-[14px] text-white/65">Our team is reviewing it. If you’re through to the next round, we’ll email you and it will open here. You can close this page.</p>
+            </>
+          ) : missed ? (
+            <>
+              <p className="text-[16px] font-semibold">This round has closed</p>
+              <p className="mt-1 text-[14px] text-white/65">The window ended {fmtWhen(v.end)} (IST). If something went wrong, reply to the email we sent you and the team can open it again.</p>
+            </>
+          ) : !open ? (
+            <>
+              <p className="text-[16px] font-semibold">Your {STEP_LABEL[cur].toLowerCase()} opens soon</p>
+              <p className="mt-1 text-[14px] text-white/65">It opens {fmtWhen(v.start)} and closes {fmtWhen(v.end)} (IST). Opens in <b className="text-white">{left(v.start - now)}</b>. Come back to this same link.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[16px] font-semibold">Next: {STEP_LABEL[cur]}</p>
+              <p className="mt-1 text-[14px] text-white/65">Finish before {fmtWhen(v.end)} (IST) · {left(v.end - now)} left. It runs in strict mode: full screen, camera and mic on, no other tabs.</p>
+              {!started && (
+                <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-[13.5px] text-white/80">
+                  <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[#a78bfa]" />
+                  I’ll do this on my own, without help from other people or AI tools.
+                </label>
+              )}
+              <button type="button" disabled={!started && !agree} onClick={() => setMode(cur)} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition disabled:opacity-50">
+                {started ? "Continue" : "Get ready"} <ArrowRightIcon size={15} />
               </button>
-            )}
-            <span className={cn("text-[12.5px] tabular-nums", secs > 150 ? "text-amber-300" : "text-white/45")}>{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")} {secs > 150 && "· try to wrap up"}</span>
-            <button type="button" disabled={answer.trim().length < 2 || !!busy} onClick={() => void next()} className="ml-auto flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 text-[14.5px] font-semibold text-[#ffffff] disabled:opacity-50">
-              {busy === "next" ? "Saving…" : v.index + 1 >= v.total ? "Finish" : "Next question"} {!busy && <ArrowRightIcon size={15} />}
-            </button>
-          </div>
-          {err && <p className="mt-3 text-[13px] text-rose-300">{err}</p>}
+            </>
+          )}
         </div>
       </div>
     </Frame>

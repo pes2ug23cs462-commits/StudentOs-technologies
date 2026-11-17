@@ -148,7 +148,7 @@ export function PartnerConsole() {
       <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight">{tab === "careers" ? "Careers" : tab === "colleges" ? "Colleges" : "Placement partner"}</h1>
-          <p className="mt-1 text-[14px] text-white/55">{tab === "careers" ? "Roles on /careers, applications and AI interview reports." : tab === "colleges" ? "Every new college waits here until the team approves it. Students can only join live colleges." : "Bring companies to partner colleges. Each college approves a drive before its students see it."}</p>
+          <p className="mt-1 text-[14px] text-white/55">{tab === "careers" ? "Roles on /careers, and every applicant’s rounds: test, AI interviews and live interviews." : tab === "colleges" ? "Every new college waits here until the team approves it. Students can only join live colleges." : "Bring companies to partner colleges. Each college approves a drive before its students see it."}</p>
         </div>
         <div className="flex rounded-xl border border-white/10 p-1">
           {([["drives", "Partner drives"], ["colleges", "Colleges"], ["careers", "Careers"]] as const).map(([k, l]) => (

@@ -16,7 +16,7 @@ import { adminConfigured, adminProblem, adminCreate, adminDelete, adminGet, admi
 import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 import { mailHtml, sendMails } from "@/lib/server/mail";
-import { PROBLEMS } from "@/lib/coding/problems";
+import { BREACHES, problem, same, shuffled, type CodeResult, type TestQ } from "@/lib/server/test-check";
 import { cleanIv, ivAttemptKey, ivDoc, ivKindOf, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide } from "@/lib/server/company-rounds";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -115,29 +115,15 @@ function apply(op: string, a: App, rounds: number, p: Record<string, unknown>): 
    partnerDrives/{pid}/tests/main          the test, with the answers (server only)
    partnerDrives/{pid}/attempts/{cid}_{uid} one student's attempt and score (server only)
    The student's application gets only { tests: { [round]: { done, at } } }, never the score. */
-type TestQ = { q: string; options: string[]; answer: number };
 /** `coding`: ids of StudentOS coding problems (lib/coding/problems.ts); their hidden expected outputs stay here */
 type Test = { round: number; title: string; minutes: number; open: boolean; questions: TestQ[]; coding?: string[]; updatedAt: number };
-type CodeResult = { id: string; title: string; passed: number; total: number; lang: string; code: string };
 type Attempt = { uid: string; cid: string; round: number; order: number[]; startedAt: number; endsAt: number; done: boolean; submittedAt?: number; answers?: number[]; correct?: number; total?: number; coding?: CodeResult[]; warnings?: string[]; ended?: boolean; late?: boolean };
-const problem = (pid: string) => PROBLEMS.find((p) => p.id === pid);
-/** Same comparison as the coding runner: numbers within 1e-6, arrays and objects by value. */
-function same(a: unknown, b: unknown): boolean {
-  if (typeof a === "number" && typeof b === "number") return a === b || Math.abs(a - b) < 1e-6;
-  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => same(x, b[i]));
-  if (a && b && typeof a === "object" && typeof b === "object") {
-    const ka = Object.keys(a as object), kb = Object.keys(b as object);
-    return ka.length === kb.length && ka.every((k) => same((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
-  }
-  return a === b;
-}
 /** What the company and the college see of an attempt. */
 const resultOf = (x: Attempt) =>
   x.done
     ? { correct: Number(x.correct) || 0, total: Number(x.total) || 0, coding: (x.coding ?? []).map((c) => ({ title: c.title, passed: c.passed, total: c.total, lang: c.lang })), warnings: x.warnings ?? [], ended: !!x.ended, late: !!x.late, at: Number(x.submittedAt) || 0 }
     : { started: true as const, at: Number(x.startedAt) || 0 };
 const summaryOf = (t: Test) => ({ round: t.round, title: t.title, minutes: t.minutes, open: t.open, count: t.questions.length, coding: (t.coding ?? []).length });
-const BREACHES = ["tab", "fullscreen", "away", "out", "people", "talk", "voice"];
 function cleanTest(t: Record<string, unknown>, rounds: number): Test | null {
   const qs = (Array.isArray(t.questions) ? t.questions : []).slice(0, 100).map((x) => {
     const q = (x ?? {}) as Record<string, unknown>;
@@ -149,14 +135,6 @@ function cleanTest(t: Record<string, unknown>, rounds: number): Test | null {
   if (!qs.length && !coding.length) return null;
   return { round: Math.max(0, Math.min(rounds - 1, Math.floor(Number(t.round) || 0))), title: str(t.title, 80) || "Online test", minutes: num(t.minutes, 5, 180) || 30, open: t.open === true, questions: qs, coding, updatedAt: Date.now() };
 }
-const shuffled = (n: number) => {
-  const a = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i--) {
-    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 const GRACE_MS = 90_000;
 const para = (v: unknown, max = 3000) => String(v ?? "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, max);
 const ivResultOf = (x: IvAttempt) =>
@@ -223,6 +201,10 @@ export async function POST(req: Request) {
           windowEnd: Number(x.windowEnd) > Number(x.windowStart) ? Number(x.windowEnd) : 0,
           questions: Math.min(10, Math.max(3, Number(x.questions) || 6)),
           ivFocus: str(x.ivFocus, 300),
+          test: x.test === true,
+          hr: x.hr === true,
+          hrFocus: str(x.hrFocus, 300),
+          hrQuestions: Math.min(10, Math.max(3, Number(x.hrQuestions) || 5)),
         })).filter((x) => x.title);
         await adminSet("site/careers", { open: b.open !== false, roles, updatedAt: Date.now() });
         return NextResponse.json({ ok: true, roles: roles.length });

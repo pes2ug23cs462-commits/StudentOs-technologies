@@ -1,14 +1,22 @@
-/* POST /api/careers — careers applications and the AI interview.
+/* POST /api/careers — careers applications and their rounds.
+
+   A role can have: an online test (MCQ + coding), the AI interview, an AI HR
+   interview, and a live video interview the team books. All in strict mode. The
+   first round opens when they apply; the team screens by score and moves people on.
 
    Anyone (no login):
-     apply {roleId, name, email, phone, college, links, why}   → {token, start, end, ai}
-   The candidate, with the link token (careerApps/{token}):
-     interview-get {token}                                      → what to show
-     interview-start {token}                                    → writes the questions once, returns the first
-     interview-answer {token, index, answer, secs, flags}       → next question, or done
-     interview-finish {token}                                   → AI report, team is emailed
+     apply {roleId, name, email, phone, college, links, why}   → {token, start, end, ai, steps}
+   The applicant, with the link token (careerApps/{token}):
+     interview-get {token}                                      → the hub: their rounds and what's open
+     test-info | test-start | test-submit {answers, code, warnings, ended}
+     iv-info | iv-start | iv-answer {index, answer, secs} | iv-finish {warnings, ended}   (kind: "ai" | "hr")
+     live-signal {token, put?}                                  → the guest side of the live call
    StudentOS team only (STUDENTOS_TEAM_EMAILS, verified email):
-     apps | app-update {token, decision?, note?, extendDays?} | app-delete {token} | app-evaluate {token}
+     apps | app-update {token, decision?, note?, extendDays?} | app-delete {token} | app-evaluate {token, kind?}
+     app-advance {tokens}            move to the next round and email them
+     live-schedule {items: [{token, at, minutes}]} | live-feedback {token, score, verdict, notes}
+     live-signal {token, host: true} the team's side of the call
+     test-get {roleId} | test-save {roleId, test}
 
    Applications are only read and written here, with the service account; the
    Firestore rules keep careerApps closed to the browser. AI runs at most twice per
@@ -17,8 +25,10 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { DEFAULT_ROLES, fmtWhen, stageOf, type CareerApp, type CareerReport, type CareerRole } from "@/lib/careers-data";
+import { DEFAULT_ROLES, STEP_LABEL, fmtWhen, nextStep, stageOf, stepOf, stepsOf, type CareerApp, type CareerReport, type CareerRole, type CareerStep } from "@/lib/careers-data";
 import { chat } from "@/lib/server/ai";
+import { ivQuestions, ivReport, type IvSetup, type LiveSide } from "@/lib/server/company-rounds";
+import { cleanQuestions, cleanWarnings, codingForPage, scoreTest, shuffled, type TestQ } from "@/lib/server/test-check";
 import { verifyIdUser } from "@/lib/server/auth";
 import { adminConfigured, adminDelete, adminGet, adminIncrement, adminList, adminSet } from "@/lib/server/firestore-admin";
 import { mailHtml, sendMails } from "@/lib/server/mail";
@@ -28,7 +38,12 @@ export const maxDuration = 60;
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const para = (v: unknown, max = 3000) => String(v ?? "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, max);
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
-const GRACE = 15 * 60 * 1000; // a started interview may finish up to 15 minutes after the window
+const GRACE = 15 * 60 * 1000; // a started round may finish up to 15 minutes after the window
+const TEST_GRACE = 90_000;
+type CareerTest = { title: string; minutes: number; questions: TestQ[]; coding: string[]; updatedAt: number };
+/** the test's run, kept on the application (server only): shuffled order, clock, given answers */
+type TestRun = { order: number[]; startedAt: number; endsAt: number; done: boolean; answers?: number[]; code?: { id: string; lang: string; code: string; passed: number; total: number }[] };
+const roomId = () => randomBytes(12).toString("hex");
 const teamEmails = () => (process.env.STUDENTOS_TEAM_EMAILS ?? "").toLowerCase().split(/[,;\s"']+/).filter(Boolean);
 
 function json<T>(raw: string, open: "{" | "["): T | null {
@@ -57,12 +72,29 @@ async function getApp(token: unknown): Promise<CareerApp | null> {
 }
 const save = (a: CareerApp) => adminSet(`careerApps/${a.token}`, a as unknown as Record<string, unknown>);
 
-/** what the candidate's page needs, nothing about the team's decision */
-function view(a: CareerApp) {
+/** what the applicant's page needs: their rounds and what's open, never scores or the team's decision */
+function view(a: CareerApp & { testRun?: TestRun }, t: CareerTest | null) {
   const stage = stageOf(a);
-  const i = a.answers.length;
-  return { name: a.name, role: a.role, start: a.start, end: a.end, ai: a.ai, stage, total: a.questions.length || 0, index: i, question: stage === "in-progress" && i < a.questions.length ? a.questions[i] : "" };
+  const at = stepOf(a);
+  const ivOf = (r: { questions: string[]; answers: unknown[]; done: boolean } | null | undefined) => (r ? { index: r.answers.length, total: r.questions.length, done: r.done } : null);
+  return {
+    name: a.name,
+    role: a.role,
+    steps: stepsOf(a),
+    at,
+    stage,
+    start: a.start,
+    end: a.end,
+    test: t ? { title: t.title, minutes: t.minutes, count: t.questions.length, coding: t.coding.length, done: !!a.testRun?.done } : null,
+    ai: a.questions.length ? { index: a.answers.length, total: a.questions.length, done: !!a.completedAt } : null,
+    hr: ivOf(a.hr),
+    live: a.live ? { at: a.live.at, minutes: a.live.minutes } : null,
+    // the old interview page fields, so a link opened mid-deploy still works
+    ai_on: a.ai,
+  };
 }
+const inWindow = (a: CareerApp, step: CareerStep, started: boolean, now = Date.now()) => stepOf(a) === step && now >= a.start && now <= a.end + (started ? GRACE : 0);
+const careerTest = async (roleId: string) => (await adminGet(`careerTests/${roleId}`)) as CareerTest | null;
 
 async function questionsFor(a: CareerApp, r: CareerRole | undefined, n: number): Promise<string[]> {
   const prompt = `You interview applicants for an internship at StudentOS, an Indian ed-tech startup (an AI study and placement app for students).
@@ -111,23 +143,45 @@ Reply with JSON only:
   throw new Error("busy");
 }
 
-async function tellTeam(a: CareerApp, origin: string, kind: "applied" | "done") {
+async function tellTeam(a: CareerApp, origin: string, kind: "applied" | "done", step: CareerStep = "ai", score = "") {
   const to = teamEmails();
   if (!to.length) return;
   const url = `${origin}/partner?tab=careers&app=${a.token}`;
   const lines =
     kind === "applied"
-      ? [`${a.name} applied for ${a.role}.`, `${a.college} · ${a.email} · ${a.phone}`, `Resume: ${a.resume}`, a.ai ? `AI interview window: ${fmtWhen(a.start)} – ${fmtWhen(a.end)}.` : "No AI interview for this role."]
-      : [`${a.name} finished the AI interview for ${a.role}.`, a.report ? `Score ${a.report.overall}/100 · ${a.report.verdict}. ${a.report.summary}` : "The report couldn’t be made yet; open the application to try again.", a.flags.tabs || a.flags.pastes ? `Left the tab ${a.flags.tabs}× · pasted ${a.flags.pastes}×.` : ""];
+      ? [`${a.name} applied for ${a.role}.`, `${a.college} · ${a.email} · ${a.phone}`, `Resume: ${a.resume}`, stepOf(a) ? `${STEP_LABEL[stepOf(a) as CareerStep]} window: ${fmtWhen(a.start)} – ${fmtWhen(a.end)}.` : "No rounds on StudentOS for this role."]
+      : [`${a.name} finished the ${STEP_LABEL[step]} for ${a.role}.`, score || "The report couldn’t be made yet; open the application to try again."];
   await sendMails(
     to.map((m) => ({
       to: m,
-      subject: kind === "applied" ? `New application: ${a.role} · ${a.name}` : `AI interview done: ${a.name} · ${a.report ? `${a.report.overall}/100` : "report pending"}`,
+      subject: kind === "applied" ? `New application: ${a.role} · ${a.name}` : `${STEP_LABEL[step]} done: ${a.name}`,
       text: `${lines.filter(Boolean).join("\n")}\n\nOpen: ${url}`,
-      html: mailHtml({ brand: "StudentOS · Careers", heading: kind === "applied" ? "New application" : "AI interview finished", lines: lines.filter(Boolean), button: "Open the application", url, foot: "You get this because you’re on the StudentOS team." }),
+      html: mailHtml({ brand: "StudentOS · Careers", heading: kind === "applied" ? "New application" : `${STEP_LABEL[step]} finished`, lines: lines.filter(Boolean), button: "Open the application", url, foot: "You get this because you’re on the StudentOS team." }),
       replyTo: a.email,
     })),
   );
+}
+
+/** Tells the applicant a round is open for them, with their link. */
+async function tellApplicant(a: CareerApp, origin: string, step: CareerStep, first: boolean) {
+  const link = `${origin}/careers/interview/${a.token}`;
+  const what: Record<CareerStep, string> = {
+    test: "an online test (questions and maybe coding), in strict mode: full screen, camera and mic on",
+    ai: "a short AI interview (about 15 minutes), in strict mode: full screen, camera and mic on",
+    hr: "a short AI HR interview: about you, why StudentOS, and how you work with others",
+    live: "a live video interview with our team, on StudentOS",
+  };
+  const when = step === "live" && a.live ? `On ${fmtWhen(a.live.at)} (IST), ${a.live.minutes} minutes. Open the link a few minutes early.` : `Open it between ${fmtWhen(a.start)} and ${fmtWhen(a.end)} (IST).`;
+  const lines = [first ? `Hi ${a.name}, thanks for applying for ${a.role}.` : `Hi ${a.name}, good news: you’re through to the next round for ${a.role}.`, `Next is ${what[step]}.`, when];
+  await sendMails([
+    {
+      to: a.email,
+      subject: first ? `Your StudentOS ${STEP_LABEL[step]}: ${a.role}` : `Next round: ${STEP_LABEL[step]} · ${a.role}`,
+      text: `${lines.join("\n")}\n${link}\n\nThe StudentOS team`,
+      html: mailHtml({ brand: "StudentOS · Careers", heading: first ? `Your ${STEP_LABEL[step]} is ready` : `Next round: ${STEP_LABEL[step]}`, lines, button: step === "live" ? "Open my interview page" : `Start my ${STEP_LABEL[step].toLowerCase()}`, url: link, foot: "You get this because you applied on StudentOS careers. Keep this link private. Questions? Reply to this email." }),
+      replyTo: "hr@student-os.in",
+    },
+  ]);
 }
 
 export async function POST(req: Request) {
@@ -148,87 +202,180 @@ export async function POST(req: Request) {
       const role = site.roles.find((r) => r.id === str(b.roleId, 80) && !r.paused);
       const other = str(b.roleId, 80) === "other";
       if (!site.open || (!role && !other)) return bad("closed");
-      // already applied for this role: give the same link again
       // one application per email and role: a small index doc instead of reading every application
       const dkey = `careerDedupe/${createHash("sha256").update(`${f.email}|${role?.id ?? "other"}`).digest("hex").slice(0, 32)}`;
       const seen = await adminGet(dkey);
       const prev = seen?.token ? await getApp(seen.token) : null;
-      if (prev && stageOf(prev) !== "missed") return NextResponse.json({ token: prev.token, start: prev.start, end: prev.end, ai: prev.ai, again: true });
+      if (prev && stageOf(prev) !== "missed") return NextResponse.json({ token: prev.token, start: prev.start, end: prev.end, ai: prev.ai, steps: stepsOf(prev), again: true });
       const now = Date.now();
       const ai = !!role && role.ai !== false;
+      // the role's rounds; a test only counts if the team has written one
+      const test = role?.test ? await careerTest(role.id) : null;
+      const steps: CareerStep[] = role ? [...(test && (test.questions.length || test.coding.length) ? (["test"] as const) : []), ...(ai ? (["ai"] as const) : []), ...(role.hr ? (["hr"] as const) : [])] : [];
       const fixed = role?.windowEnd && role.windowEnd > now;
       if (role?.windowEnd && !fixed) return bad("closed");
       const start = fixed ? Math.max(now, role!.windowStart || now) : now;
       const end = fixed ? role!.windowEnd! : now + (role?.within || 3) * 86400000;
-      const a: CareerApp = { token: randomBytes(12).toString("hex"), ...f, roleId: role?.id ?? "other", role: role?.title ?? "Other", appliedAt: now, start, end, ai, stage: "invited", questions: [], answers: [], flags: { tabs: 0, pastes: 0 }, report: null, decision: "", note: "" };
+      const a: CareerApp = { token: randomBytes(12).toString("hex"), ...f, roleId: role?.id ?? "other", role: role?.title ?? "Other", appliedAt: now, start, end, ai, stage: "invited", questions: [], answers: [], flags: { tabs: 0, pastes: 0 }, report: null, decision: "", note: "", steps, at: steps[0] ?? "" };
       await save(a);
       await adminSet(dkey, { token: a.token, at: now });
-      const link = `${origin}/careers/interview/${a.token}`;
       await Promise.all([
-        sendMails([
-          {
-            to: a.email,
-            subject: ai ? `Your StudentOS AI interview: ${a.role}` : `We got your application: ${a.role}`,
-            text: ai ? `Hi ${a.name},\n\nThanks for applying for ${a.role} at StudentOS. Your next step is a short AI interview (about 15 minutes).\nOpen it between ${fmtWhen(start)} and ${fmtWhen(end)} (IST):\n${link}\n\nThe StudentOS team` : `Hi ${a.name},\n\nThanks for applying for ${a.role} at StudentOS. Our team will read your application and get back to you.\n\nThe StudentOS team`,
-            html: mailHtml({ brand: "StudentOS · Careers", heading: ai ? "Your AI interview is ready" : "We got your application", lines: ai ? [`Hi ${a.name}, thanks for applying for ${a.role}.`, "Your next step is a short AI interview, about 15 minutes. Type or speak your answers.", `Open it between ${fmtWhen(start)} and ${fmtWhen(end)} (IST).`] : [`Hi ${a.name}, thanks for applying for ${a.role}.`, "Our team will read your application and get back to you."], button: ai ? "Start my interview" : "See StudentOS careers", url: ai ? link : `${origin}/careers`, foot: "You get this because you applied on StudentOS careers. Keep this link private. Questions? Reply to this email." }),
-            replyTo: "hr@student-os.in",
-          },
-        ]),
+        steps[0]
+          ? tellApplicant(a, origin, steps[0], true)
+          : sendMails([
+              {
+                to: a.email,
+                subject: `We got your application: ${a.role}`,
+                text: `Hi ${a.name},\n\nThanks for applying for ${a.role} at StudentOS. Our team will read your application and get back to you.\n\nThe StudentOS team`,
+                html: mailHtml({ brand: "StudentOS · Careers", heading: "We got your application", lines: [`Hi ${a.name}, thanks for applying for ${a.role}.`, "Our team will read your application and get back to you."], button: "See StudentOS careers", url: `${origin}/careers`, foot: "You get this because you applied on StudentOS careers. Questions? Reply to this email." }),
+                replyTo: "hr@student-os.in",
+              },
+            ]),
         tellTeam(a, origin, "applied"),
       ]);
-      return NextResponse.json({ token: a.token, start, end, ai });
+      return NextResponse.json({ token: a.token, start, end, ai, steps });
     }
 
-    /* ---------------- interview (link token) ---------------- */
-    if (action.startsWith("interview-")) {
+    /* ---------------- the live call: both sides ---------------- */
+    if (action === "live-signal") {
       const a = await getApp(b.token);
-      if (!a) return bad("not-found", 404);
-      if (action === "interview-get") return NextResponse.json(view(a));
-      const now = Date.now();
-      if (!a.ai) return bad("not-found", 404);
-      if (a.stage === "completed" && action !== "interview-finish") return bad("done", 409);
-      if (now < a.start) return bad("not-yet", 409);
-      const late = a.stage === "in-progress" ? now > a.end + GRACE : now > a.end;
-      if (late && action !== "interview-finish") return bad("over", 409);
+      if (!a?.live) return bad("not-found", 404);
+      let side: "host" | "guest" = "guest";
+      if (b.host === true) {
+        const me = await verifyIdUser(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
+        if (!(me?.verified && me.email && teamEmails().includes(me.email))) return bad("not-allowed", 403);
+        side = "host";
+      } else if (stepOf(a) !== "live") return bad("not-found", 404);
+      const base = `careerApps/${a.token}/sig`;
+      if (b.put && typeof b.put === "object") {
+        const put = b.put as Record<string, unknown>;
+        const sdp = (put.sdp ?? null) as Record<string, unknown> | null;
+        const doc: LiveSide = {
+          sdp: sdp && typeof sdp.sdp === "string" && sdp.sdp.length < 20000 ? { type: str(sdp.type, 10), sdp: String(sdp.sdp), v: Number(sdp.v) || 0 } : null,
+          cands: (Array.isArray(put.cands) ? put.cands : []).slice(0, 60).filter((c) => JSON.stringify(c).length < 800),
+          need: Number(put.need) || 0,
+          warnings: side === "guest" ? cleanWarnings(put.warnings, 30) : [],
+          at: Date.now(),
+        };
+        await adminSet(`${base}/${side}`, doc as unknown as Record<string, unknown>);
+      }
+      const other = (await adminGet(`${base}/${side === "host" ? "guest" : "host"}`)) as LiveSide | null;
+      return NextResponse.json({ side, meta: { at: a.live.at, minutes: a.live.minutes, name: a.name, company: "StudentOS", role: a.role, feedback: side === "host" ? a.live.feedback ?? null : null }, other });
+    }
 
-      if (action === "interview-start") {
-        if (!a.questions.length) {
-          const site = await roles();
-          const r = site.roles.find((x) => x.id === a.roleId);
-          a.questions = await questionsFor(a, r, r?.questions || 6);
+    /* ---------------- the applicant's rounds (link token) ---------------- */
+    if (action === "interview-get" || (action.startsWith("test-") && action !== "test-get" && action !== "test-save") || action.startsWith("iv-")) {
+      const a = (await getApp(b.token)) as (CareerApp & { testRun?: TestRun }) | null;
+      if (!a) return bad("not-found", 404);
+      const now = Date.now();
+      const steps = stepsOf(a);
+      const t = steps.includes("test") ? await careerTest(a.roleId) : null;
+      if (action === "interview-get") return NextResponse.json(view(a, t));
+
+      /* ----- online test ----- */
+      if (action.startsWith("test-")) {
+        if (!t) return NextResponse.json({ test: null });
+        const run = a.testRun;
+        const info = { title: t.title, minutes: t.minutes, count: t.questions.length, coding: t.coding.length, company: "StudentOS", role: a.role };
+        const open = inWindow(a, "test", false, now);
+        if (action === "test-info") {
+          if (stepOf(a) !== "test" && !run) return NextResponse.json({ test: null });
+          return NextResponse.json({ test: info, open, attempt: run ? { done: run.done, endsAt: run.endsAt } : null });
         }
-        if (a.stage === "invited") {
-          a.stage = "in-progress";
+        if (stepOf(a) !== "test") return bad("not-allowed", 403);
+        if (action === "test-start") {
+          if (run?.done) return bad("done", 409);
+          let r = run;
+          if (!r) {
+            if (!open) return bad(now < a.start ? "not-yet" : "over", 409);
+            r = { order: shuffled(t.questions.length), startedAt: now, endsAt: now + t.minutes * 60_000, done: false };
+            a.testRun = r;
+            a.stage = "in-progress";
+            await save(a);
+          }
+          const questions = r.order.map((i) => t.questions[i]).filter(Boolean).map((q) => ({ q: q.q, options: q.options }));
+          return NextResponse.json({ test: info, questions, coding: codingForPage(t.coding), endsAt: r.endsAt, now });
+        }
+        if (action === "test-submit") {
+          if (!run) return bad("not-found", 409);
+          if (run.done) return bad("done", 409);
+          const { given, correct, coding } = scoreTest(t.questions, run.order, b.answers, b.code, t.coding);
+          a.testRun = { ...run, done: true, answers: given, code: coding.map((c) => ({ id: c.id, lang: c.lang, code: c.code, passed: c.passed, total: c.total })) };
+          a.testResult = { correct, total: run.order.length, coding: coding.map((c) => ({ title: c.title, passed: c.passed, total: c.total, lang: c.lang })), warnings: cleanWarnings(b.warnings), ended: b.ended === true, late: now > run.endsAt + TEST_GRACE, at: now };
+          a.stage = "completed";
+          await save(a);
+          const pct = (correct + coding.reduce((s, c) => s + c.passed / (c.total || 1), 0)) / ((run.order.length + coding.length) || 1);
+          await tellTeam(a, origin, "done", "test", `Score ${Math.round(pct * 100)}% · MCQ ${correct}/${run.order.length}${coding.length ? ` · coding ${coding.map((c) => `${c.passed}/${c.total}`).join(", ")}` : ""}${a.testResult.warnings.length ? ` · ${a.testResult.warnings.length} strict-mode warnings` : ""}.`);
+          return NextResponse.json({ ok: true });
+        }
+        return bad("action");
+      }
+
+      /* ----- AI interview ("ai") and AI HR interview ("hr") ----- */
+      const kind: "ai" | "hr" = b.kind === "hr" ? "hr" : "ai";
+      if (!steps.includes(kind)) return NextResponse.json({ iv: null });
+      const site = await roles();
+      const role = site.roles.find((x) => x.id === a.roleId);
+      const count = kind === "hr" ? role?.hrQuestions || 5 : role?.questions || 6;
+      const info = { kind: kind === "hr" ? "hr" : "technical", title: kind === "hr" ? "AI HR interview" : "AI interview", count, company: "StudentOS", role: a.role };
+      const r = kind === "hr" ? a.hr ?? null : a.questions.length ? { questions: a.questions, answers: a.answers, startedAt: a.startedAt ?? a.appliedAt, done: !!a.completedAt } : null;
+      const ivView = (x: { questions: string[]; answers: unknown[]; done: boolean }) => ({ index: x.answers.length, total: x.questions.length, question: x.answers.length < x.questions.length ? x.questions[x.answers.length] : "", done: x.done });
+      if (action === "iv-info") {
+        if (stepOf(a) !== kind && !r) return NextResponse.json({ iv: null });
+        return NextResponse.json({ iv: info, open: inWindow(a, kind, !!r, now), attempt: r ? { done: r.done, index: r.answers.length, total: r.questions.length } : null });
+      }
+      if (stepOf(a) !== kind) return bad("not-allowed", 403);
+      if (r?.done) return bad("done", 409);
+      if (!inWindow(a, kind, !!r, now)) return bad(now < a.start ? "not-yet" : "over", 409);
+      if (action === "iv-start") {
+        if (r) return NextResponse.json({ iv: info, ...ivView(r) });
+        let questions: string[];
+        if (kind === "hr") {
+          const setup: IvSetup = { kind: "hr", round: 0, title: "AI HR interview", focus: role?.hrFocus ?? "", questions: [], count, open: true, updatedAt: now };
+          questions = await ivQuestions(setup, `${a.role} (internship)`, "StudentOS, an Indian ed-tech startup");
+          a.hr = { questions, answers: [], startedAt: now, done: false, report: null };
+        } else {
+          questions = await questionsFor(a, role, count);
+          a.questions = questions;
           a.startedAt = now;
         }
+        a.stage = "in-progress";
         await save(a);
-        return NextResponse.json(view(a));
+        return NextResponse.json({ iv: info, index: 0, total: questions.length, question: questions[0], done: false });
       }
-      if (action === "interview-answer") {
-        if (a.stage !== "in-progress") return bad("not-found", 409);
+      if (!r) return bad("not-found", 409);
+      if (action === "iv-answer") {
         const i = Number(b.index);
-        if (i !== a.answers.length || i >= a.questions.length) return NextResponse.json(view(a)); // a double click: just send the current state
-        a.answers.push({ a: para(b.answer, 2500), secs: Math.min(3600, Math.max(0, Math.round(Number(b.secs) || 0))) });
-        const fl = (b.flags ?? {}) as Record<string, unknown>;
-        a.flags = { tabs: Math.min(999, Math.max(a.flags.tabs, Number(fl.tabs) || 0)), pastes: Math.min(999, Math.max(a.flags.pastes, Number(fl.pastes) || 0)) };
-        await save(a);
-        return NextResponse.json(view(a));
+        if (i === r.answers.length && i < r.questions.length) {
+          const ans = { a: para(b.answer, 2500), secs: Math.min(3600, Math.max(0, Math.round(Number(b.secs) || 0))) };
+          if (kind === "hr") a.hr!.answers.push(ans);
+          else a.answers.push(ans);
+          await save(a);
+        }
+        return NextResponse.json(ivView(kind === "hr" ? { ...a.hr!, done: false } : { questions: a.questions, answers: a.answers, done: false }));
       }
-      if (action === "interview-finish") {
-        if (a.stage === "completed") return NextResponse.json(view(a));
-        if (a.stage !== "in-progress" || a.answers.length < a.questions.length) return bad("not-found", 409);
+      if (action === "iv-finish") {
+        const ended = b.ended === true;
+        if (!ended && r.answers.length < r.questions.length) return bad("not-found", 409);
+        const warnings = cleanWarnings(b.warnings);
         a.stage = "completed";
-        a.completedAt = now;
+        if (kind === "hr") a.hr = { ...a.hr!, done: true, doneAt: now, warnings, ended };
+        else {
+          a.completedAt = now;
+          a.aiWarn = warnings;
+          a.aiEnded = ended;
+        }
         await save(a);
         try {
-          const site = await roles();
-          a.report = await report(a, site.roles.find((x) => x.id === a.roleId));
+          if (kind === "hr") a.hr!.report = await ivReport({ uid: "", cid: "", name: a.name, kind: "hr", round: 0, questions: a.hr!.questions, answers: a.hr!.answers, startedAt: a.hr!.startedAt, done: true }, `${a.role} (internship)`, role?.hrFocus ?? "");
+          else a.report = await report(a, role);
           await save(a);
         } catch {
-          /* the team can run the report again from the dashboard */
+          /* the team can make the report again from the dashboard */
         }
-        await tellTeam(a, origin, "done");
-        return NextResponse.json(view(a));
+        const rep = kind === "hr" ? a.hr!.report : a.report;
+        await tellTeam(a, origin, "done", kind, rep ? `Score ${rep.overall}/100 · ${rep.verdict}. ${rep.summary}${warnings.length ? ` · ${warnings.length} strict-mode warnings` : ""}${ended ? " · ended by strict mode" : ""}` : "");
+        return NextResponse.json({ done: true });
       }
       return bad("action");
     }
@@ -239,26 +386,92 @@ export async function POST(req: Request) {
     if (!(me.verified && me.email && teamEmails().includes(me.email))) return bad("not-allowed", 403);
 
     if (action === "apps") {
-      const list = (await adminList("careerApps", 2000)).map((x) => x.data as unknown as CareerApp).sort((x, y) => y.appliedAt - x.appliedAt);
+      const list = (await adminList("careerApps", 2000)).map((x) => x.data as unknown as CareerApp & { testRun?: unknown }).map(({ testRun: _, ...x }) => x).sort((x, y) => y.appliedAt - x.appliedAt);
       return NextResponse.json({ apps: list });
+    }
+    if (action === "test-get") {
+      const rid = str(b.roleId, 80);
+      return NextResponse.json({ test: rid ? await careerTest(rid) : null });
+    }
+    if (action === "test-save") {
+      const rid = str(b.roleId, 80);
+      const t = (b.test ?? {}) as Record<string, unknown>;
+      const { questions, coding } = cleanQuestions(t);
+      if (!rid || (!questions.length && !coding.length)) return bad("bad-form");
+      const doc: CareerTest = { title: str(t.title, 80) || "Online test", minutes: Math.max(5, Math.min(180, Number(t.minutes) || 30)), questions, coding, updatedAt: Date.now() };
+      await adminSet(`careerTests/${rid}`, doc as unknown as Record<string, unknown>);
+      return NextResponse.json({ count: questions.length, coding: coding.length });
+    }
+    if (action === "app-advance") {
+      const tokens = (Array.isArray(b.tokens) ? b.tokens : []).slice(0, 300);
+      const site = await roles();
+      let moved = 0;
+      for (const tk of tokens) {
+        const a = await getApp(tk);
+        if (!a) continue;
+        const next = nextStep(a);
+        if (!next || next === "live") continue; // live is booked with a time
+        const role = site.roles.find((x) => x.id === a.roleId);
+        const now = Date.now();
+        a.at = next;
+        a.stage = "invited";
+        a.start = now;
+        a.end = now + (role?.within || 3) * 86400000;
+        await save(a);
+        await tellApplicant(a, origin, next, false).catch(() => {});
+        moved++;
+      }
+      return NextResponse.json({ moved });
+    }
+    if (action === "live-schedule") {
+      const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60).map((x) => x as Record<string, unknown>);
+      let n = 0;
+      for (const it of items) {
+        const a = await getApp(it.token);
+        const at = Number(it.at) || 0;
+        if (!a || at < Date.now() - 3600_000) continue;
+        a.live = { room: roomId(), at, minutes: Math.max(10, Math.min(120, Number(it.minutes) || 30)), feedback: null };
+        a.at = "live";
+        a.stage = "invited";
+        a.start = at - 15 * 60_000;
+        a.end = at + a.live.minutes * 60_000;
+        await save(a);
+        await tellApplicant(a, origin, "live", false).catch(() => {});
+        n++;
+      }
+      return NextResponse.json({ changed: n });
     }
     const a = await getApp(b.token);
     if (!a) return bad("not-found", 404);
+    if (action === "live-feedback") {
+      if (!a.live) return bad("not-found", 404);
+      const verdict = ["Strong yes", "Yes", "Maybe", "No"].includes(str(b.verdict)) ? str(b.verdict) : "Maybe";
+      a.live = { ...a.live, feedback: { score: Math.max(0, Math.min(10, Number(b.score) || 0)), verdict, notes: para(b.notes, 1500), at: Date.now() } };
+      a.stage = "completed";
+      await save(a);
+      return NextResponse.json({ app: a });
+    }
     if (action === "app-update") {
       if (typeof b.decision === "string" && ["", "shortlisted", "rejected", "offer-sent", "hired"].includes(b.decision)) a.decision = b.decision as CareerApp["decision"];
       if (typeof b.note === "string") a.note = para(b.note, 1500);
       const days = Math.min(14, Math.max(0, Number(b.extendDays) || 0));
       if (days) {
         a.end = Math.max(a.end, Date.now()) + days * 86400000;
-        if (a.stage === "missed") a.stage = a.answers.length ? "in-progress" : "invited";
+        if (a.stage === "missed") a.stage = "invited";
       }
       await save(a);
       return NextResponse.json({ app: a });
     }
     if (action === "app-evaluate") {
-      if (a.stage !== "completed") return bad("not-found", 409);
       const site = await roles();
-      a.report = await report(a, site.roles.find((x) => x.id === a.roleId));
+      const role = site.roles.find((x) => x.id === a.roleId);
+      if (b.kind === "hr") {
+        if (!a.hr?.done) return bad("not-found", 409);
+        a.hr.report = await ivReport({ uid: "", cid: "", name: a.name, kind: "hr", round: 0, questions: a.hr.questions, answers: a.hr.answers, startedAt: a.hr.startedAt, done: true }, `${a.role} (internship)`, role?.hrFocus ?? "");
+      } else {
+        if (!a.completedAt) return bad("not-found", 409);
+        a.report = await report(a, role);
+      }
       await save(a);
       return NextResponse.json({ app: a });
     }

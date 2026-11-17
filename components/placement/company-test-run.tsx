@@ -22,12 +22,45 @@ type CodeQ = { id: string; title: string; level: Level; statement: string; const
 type Run = { questions: Q[]; coding: CodeQ[]; endsAt: number; skew: number };
 type CodeWork = { lang: Lang; code: string };
 
+/** Where the test talks to: a company drive (/api/partner) or a StudentOS careers application (/api/careers). */
+export type TestIO = {
+  info: () => Promise<StudentTestInfo>;
+  start: () => Promise<{ questions: Q[]; coding?: CodeQ[]; endsAt: number; now: number }>;
+  submit: (body: { answers: number[]; code: unknown[]; warnings: Breach[]; ended: boolean }) => Promise<unknown>;
+  errorText: (e: unknown) => string;
+  /** where "back" goes when it's done or there's nothing to take */
+  back: { label: string; href?: string; onClick?: () => void };
+  /** after submitting: who sees the score and how they hear next */
+  next: string;
+  /** shown when there's no test for them */
+  none: string;
+  storeKey: string;
+};
+
+function Back({ back, className }: { back: TestIO["back"]; className: string }) {
+  return back.href ? <Link href={back.href} className={className}>{back.label}</Link> : <button type="button" onClick={back.onClick} className={className}>{back.label}</button>;
+}
+
+export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
+  const io: TestIO = {
+    info: () => partnerApi<StudentTestInfo>("student-test-info", { cid, pid }),
+    start: () => partnerApi("student-test-start", { cid, pid }),
+    submit: (body) => partnerApi("student-test-submit", { cid, pid, ...body }),
+    errorText: partnerErrorText,
+    back: { label: "Back to my applications", href: "/placement?tab=drives" },
+    next: "sees your score and tells you about the next round here.",
+    none: "The test opens for students the company moves to its test round.",
+    storeKey: `studentos:test:${cid}:${pid}`,
+  };
+  return <TestRun io={io} />;
+}
+
 const mmss = (ms: number) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
+export function TestRun({ io }: { io: TestIO }) {
   const { actions } = useStore();
   const [info, setInfo] = useState<StudentTestInfo | null>(null);
   const [run, setRun] = useState<Run | null>(null);
@@ -39,17 +72,20 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<null | { ended: boolean; warnings: Breach[] }>(null);
   const [err, setErr] = useState("");
-  const store = `studentos:test:${cid}:${pid}`;
+  const store = io.storeKey;
+  const ioRef = useRef(io);
+  ioRef.current = io;
   const sent = useRef(false);
 
   useEffect(() => {
-    partnerApi<StudentTestInfo>("student-test-info", { cid, pid })
+    ioRef.current
+      .info()
       .then((r) => {
         setInfo(r);
         if (r.attempt?.done) setDone({ ended: false, warnings: [] });
       })
-      .catch((e) => setErr(partnerErrorText(e)));
-  }, [cid, pid]);
+      .catch((e) => setErr(ioRef.current.errorText(e)));
+  }, [store]);
 
   const submit = useCallback(
     async (warnings: Breach[], ended: boolean) => {
@@ -64,7 +100,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
           const r = await runCode(w.lang, w.code, c.fn[w.lang], c.inputs.map((args) => ({ args, expected: null })));
           code.push({ id: c.id, lang: w.lang, code: w.code, outputs: r.status === "ok" ? r.cases.map((x) => (x.error ? null : (x.got ?? null))) : [] });
         }
-        await partnerApi("student-test-submit", { cid, pid, answers: picks, code, warnings, ended });
+        await ioRef.current.submit({ answers: picks, code, warnings, ended });
         try {
           localStorage.removeItem(store);
           localStorage.removeItem(store + ":code");
@@ -73,12 +109,12 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
         setRun(null);
       } catch (e) {
         sent.current = false;
-        actions.toast(partnerErrorText(e));
+        actions.toast(ioRef.current.errorText(e));
       } finally {
         setBusy(false);
       }
     },
-    [run, picks, work, cid, pid, store, actions],
+    [run, picks, work, store, actions],
   );
   const submitRef = useRef(submit);
   submitRef.current = submit;
@@ -104,7 +140,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
     enterFullscreen();
     setBusy(true);
     try {
-      const r = await partnerApi<{ questions: Q[]; coding?: CodeQ[]; endsAt: number; now: number }>("student-test-start", { cid, pid });
+      const r = await io.start();
       let saved: number[] = [];
       let savedCode: Record<string, CodeWork> = {};
       try {
@@ -117,7 +153,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
       setRun({ questions: r.questions, coding, endsAt: r.endsAt, skew: r.now - Date.now() });
       setAt(0);
     } catch (e) {
-      actions.toast(partnerErrorText(e));
+      actions.toast(io.errorText(e));
     } finally {
       setBusy(false);
     }
@@ -154,9 +190,9 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
         </span>
         <h1 className="mt-4 text-[22px] font-semibold text-white">{done.ended ? "Test ended" : "Test submitted"}</h1>
         <p className="mt-2 text-[13.5px] text-white/60">
-          {done.ended ? `The test closed after ${MAX_WARNINGS} warnings and was submitted as it stood.` : "Your answers are in."} {info.test?.company ?? "The company"} sees your score and tells you about the next round here.
+          {done.ended ? `The test closed after ${MAX_WARNINGS} warnings and was submitted as it stood.` : "Your answers are in."} {info.test?.company ?? "The company"} {io.next}
         </p>
-        <Link href="/placement?tab=drives" className="mt-6 inline-flex h-10 items-center rounded-xl bg-accent px-5 text-[13.5px] font-semibold text-black">Back to my applications</Link>
+        <Back back={io.back} className="mt-6 inline-flex h-10 items-center rounded-xl bg-accent px-5 text-[13.5px] font-semibold text-black" />
       </div>
     );
 
@@ -164,8 +200,8 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
     return (
       <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
         <p className="text-[15px] font-semibold text-white">No test for you right now</p>
-        <p className="mt-2 text-[13px] text-white/55">The test opens for students the company moves to its test round.</p>
-        <Link href="/placement?tab=drives" className="mt-5 inline-block text-[13px] text-accent hover:underline">Back to my applications</Link>
+        <p className="mt-2 text-[13px] text-white/55">{io.none}</p>
+        <Back back={io.back} className="mt-5 inline-block text-[13px] text-accent hover:underline" />
       </div>
     );
 
@@ -187,7 +223,7 @@ export function CompanyTestRun({ cid, pid }: { cid: string; pid: string }) {
           <p className="mt-2 text-[11.5px] text-white/45">Camera and mic are checked on this device only. Nothing is recorded or uploaded.</p>
         </div>
         {!info.open && !resuming ? (
-          <p className="mt-5 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">Not open yet. {info.test.company} opens it at the test time. Come back here then.</p>
+          <p className="mt-5 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">Not open right now. {info.test.company} opens it at the test time. Come back here then.</p>
         ) : (
           <Button variant="primary" className="mt-5 w-full" loading={busy} onClick={() => void start()}>{resuming ? "Continue the test" : "Start the test"}</Button>
         )}

@@ -18,8 +18,43 @@ import { cn } from "@/lib/utils";
 
 type Rec = { start: () => void; stop: () => void; onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onend: (() => void) | null; continuous: boolean; interimResults: boolean; lang: string };
 
+/** Where the interview talks to: a company drive (/api/partner) or a StudentOS careers application (/api/careers). */
+export type IvIO = {
+  info: () => Promise<StudentIvInfo>;
+  start: () => Promise<IvView>;
+  answer: (body: { index: number; answer: string; secs: number }) => Promise<IvView>;
+  finish: (body: { warnings: Breach[]; ended: boolean }) => Promise<unknown>;
+  errorText: (e: unknown) => string;
+  back: { label: string; href?: string; onClick?: () => void };
+  /** after finishing: who reviews it and how they hear next */
+  next: string;
+  none: string;
+  key: string;
+};
+
+function Back({ back, className }: { back: IvIO["back"]; className: string }) {
+  return back.href ? <Link href={back.href} className={className}>{back.label}</Link> : <button type="button" onClick={back.onClick} className={className}>{back.label}</button>;
+}
+
 export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pid: string; kind?: IvKind }) {
+  const io: IvIO = {
+    info: () => partnerApi<StudentIvInfo>("student-iv-info", { cid, pid, kind }),
+    start: () => partnerApi<IvView>("student-iv-start", { cid, pid, kind }),
+    answer: (body) => partnerApi<IvView>("student-iv-answer", { cid, pid, kind, ...body }),
+    finish: (body) => partnerApi("student-iv-finish", { cid, pid, kind, ...body }),
+    errorText: partnerErrorText,
+    back: { label: "Back to my applications", href: "/placement?tab=drives" },
+    next: "reviews them and tells you about the next round here.",
+    none: "It opens for students the company moves to its interview round.",
+    key: `${cid}:${pid}:${kind}`,
+  };
+  return <IvRun io={io} kind={kind} />;
+}
+
+export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
   const { actions } = useStore();
+  const ioRef = useRef(io);
+  ioRef.current = io;
   const [info, setInfo] = useState<StudentIvInfo | null>(null);
   const [v, setV] = useState<IvView | null>(null);
   const [answer, setAnswer] = useState("");
@@ -36,13 +71,14 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
   const canSpeak = typeof window !== "undefined" && !!((window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition);
 
   useEffect(() => {
-    partnerApi<StudentIvInfo>("student-iv-info", { cid, pid, kind })
+    ioRef.current
+      .info()
       .then((r) => {
         setInfo(r);
         if (r.attempt?.done) setDone({ ended: false });
       })
-      .catch((e) => setErr(partnerErrorText(e)));
-  }, [cid, pid, kind]);
+      .catch((e) => setErr(ioRef.current.errorText(e)));
+  }, [io.key]);
   useEffect(() => () => talker?.dispose(), [talker]);
 
   const finish = useCallback(
@@ -53,17 +89,17 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
       talker?.stop();
       setBusy("finish");
       try {
-        await partnerApi("student-iv-finish", { cid, pid, kind, warnings, ended });
+        await ioRef.current.finish({ warnings, ended });
         setDone({ ended });
         setV(null);
       } catch (e) {
         finishing.current = false;
-        actions.toast(partnerErrorText(e));
+        actions.toast(ioRef.current.errorText(e));
       } finally {
         setBusy("");
       }
     },
-    [cid, pid, kind, talker, actions],
+    [talker, actions],
   );
   const finishRef = useRef(finish);
   finishRef.current = finish;
@@ -89,10 +125,10 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
     enterFullscreen();
     setBusy("start");
     try {
-      const r = await partnerApi<IvView & { iv: unknown }>("student-iv-start", { cid, pid, kind });
+      const r = await io.start();
       setV(r);
     } catch (e) {
-      actions.toast(partnerErrorText(e));
+      actions.toast(io.errorText(e));
     } finally {
       setBusy("");
     }
@@ -125,14 +161,14 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
     talker?.stop();
     setBusy("next");
     try {
-      const r = await partnerApi<IvView>("student-iv-answer", { cid, pid, kind, index: v.index, answer, secs: Math.round((Date.now() - qAt) / 1000) });
+      const r = await io.answer({ index: v.index, answer, secs: Math.round((Date.now() - qAt) / 1000) });
       setAnswer("");
       if (r.index >= r.total) {
         proctor.stop();
         await finish(proctor.log, false);
       } else setV(r);
     } catch (e) {
-      actions.toast(partnerErrorText(e));
+      actions.toast(io.errorText(e));
     } finally {
       setBusy((b) => (b === "next" ? "" : b));
     }
@@ -157,8 +193,8 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
       <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
         <span className={cn("mx-auto flex h-14 w-14 items-center justify-center rounded-full", done.ended ? "bg-rose-500/15 text-rose-300" : "bg-emerald-400/15 text-emerald-300")}>{done.ended ? <AlertCircleIcon size={24} /> : <CheckIcon size={24} />}</span>
         <h1 className="mt-4 text-[22px] font-semibold text-white">{done.ended ? "Interview ended" : "Interview done"}</h1>
-        <p className="mt-2 text-[13.5px] text-white/60">{done.ended ? `It closed after ${MAX_WARNINGS} warnings, with the answers you had given.` : "Thank you. Your answers are in."} {info.iv?.company ?? "The company"} reviews them and tells you about the next round here.</p>
-        <Link href="/placement?tab=drives" className="mt-6 inline-flex h-10 items-center rounded-xl bg-accent px-5 text-[13.5px] font-semibold text-black">Back to my applications</Link>
+        <p className="mt-2 text-[13.5px] text-white/60">{done.ended ? `It closed after ${MAX_WARNINGS} warnings, with the answers you had given.` : "Thank you. Your answers are in."} {info.iv?.company ?? "The company"} {io.next}</p>
+        <Back back={io.back} className="mt-6 inline-flex h-10 items-center rounded-xl bg-accent px-5 text-[13.5px] font-semibold text-black" />
       </div>
     );
 
@@ -166,8 +202,8 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
     return (
       <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
         <p className="text-[15px] font-semibold text-white">No AI interview for you right now</p>
-        <p className="mt-2 text-[13px] text-white/55">It opens for students the company moves to its interview round.</p>
-        <Link href="/placement?tab=drives" className="mt-5 inline-block text-[13px] text-accent hover:underline">Back to my applications</Link>
+        <p className="mt-2 text-[13px] text-white/55">{io.none}</p>
+        <Back back={io.back} className="mt-5 inline-block text-[13px] text-accent hover:underline" />
       </div>
     );
 
@@ -189,7 +225,7 @@ export function CompanyIvRun({ cid, pid, kind = "technical" }: { cid: string; pi
           <p className="mt-2 text-[11.5px] text-white/45">Camera and mic are checked on this device only. Your spoken answers are turned into text for the company; no audio or video is saved.</p>
         </div>
         {!info.open && !resuming ? (
-          <p className="mt-5 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">Not open yet. {info.iv.company} opens it at the interview time. Come back here then.</p>
+          <p className="mt-5 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">Not open right now. {info.iv.company} opens it at the interview time. Come back here then.</p>
         ) : (
           <Button variant="primary" className="mt-5 w-full" loading={busy === "start"} onClick={() => void start()}>{busy === "start" ? "Preparing your questions…" : resuming ? "Continue the interview" : "Start the interview"}</Button>
         )}

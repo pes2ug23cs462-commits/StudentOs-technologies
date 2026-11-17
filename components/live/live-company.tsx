@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ArrowLeftIcon } from "@/components/ui/icons";
 import { Label, LogoMark, Textarea, Wordmark } from "@/components/ui/primitives";
-import { CallStage, useLiveCall } from "@/components/live/live-call";
+import { CallStage, useLiveCall, type Signal } from "@/components/live/live-call";
 import { breachLabel } from "@/components/live/live-student";
 import { partnerApi, partnerErrorText } from "@/lib/partner";
 import { useStore } from "@/lib/store";
@@ -32,12 +32,13 @@ export function LiveCompany({ pid, room }: { pid: string; room: string }) {
         </div>
       </div>
     );
-  return <Room pid={pid} room={room} />;
+  return <LiveRoom pid={pid} room={room} />;
 }
 
-function Room({ pid, room }: { pid: string; room: string }) {
+/** The host's call screen. `signal`/`saveFeedback`/`back` default to a company drive. */
+export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/company", label: "Applicants" }, note = "Only your company sees this. The student’s college sees the score and verdict." }: { pid: string; room: string; signal?: Signal; saveFeedback?: (fb: { score: number; verdict: string; notes: string }) => Promise<unknown>; back?: { href: string; label: string }; note?: string }) {
   const { actions } = useStore();
-  const call = useLiveCall(pid, room);
+  const call = useLiveCall(pid, room, { signal });
   const m = call.info?.meta;
   const warns = call.other?.warnings ?? [];
   const [fb, setFb] = useState({ score: 6, verdict: "Maybe", notes: "" });
@@ -52,7 +53,7 @@ function Room({ pid, room }: { pid: string; room: string }) {
   const save = async () => {
     setBusy(true);
     try {
-      await partnerApi("company-live-feedback", { pid, room, ...fb });
+      await (saveFeedback ? saveFeedback(fb) : partnerApi("company-live-feedback", { pid, room, ...fb }));
       actions.toast("Feedback saved. It shows in the applicants list.");
     } catch (e) {
       actions.toast(partnerErrorText(e));
@@ -63,7 +64,7 @@ function Room({ pid, room }: { pid: string; room: string }) {
   return (
     <div className="flex min-h-screen flex-col bg-ink p-4 text-white lg:h-screen lg:p-5">
       <div className="mb-3 flex items-center gap-3">
-        <Link href="/company" className="flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><ArrowLeftIcon size={13} /> Applicants</Link>
+        <Link href={back.href} className="flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white"><ArrowLeftIcon size={13} /> {back.label}</Link>
         <span className="flex items-center gap-2"><LogoMark size={20} /><Wordmark className="text-[14px]" /></span>
         <span className="ml-auto text-[12.5px] text-white/50">{m ? `${m.role} · ${new Date(m.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · ${m.minutes} min` : ""}</span>
       </div>
@@ -91,7 +92,7 @@ function Room({ pid, room }: { pid: string; room: string }) {
             </div>
             <div className="mt-3"><Label htmlFor="fn">Notes</Label><Textarea id="fn" rows={5} value={fb.notes} onChange={(e) => setFb({ ...fb, notes: e.target.value })} placeholder="What went well, what didn’t, next step" /></div>
             <Button variant="primary" className="mt-3 w-full" loading={busy} onClick={() => void save()}>Save feedback</Button>
-            <p className="mt-2 text-[11.5px] text-white/40">Only your company sees this. The student’s college sees the score and verdict.</p>
+            <p className="mt-2 text-[11.5px] text-white/40">{note}</p>
           </div>
         </aside>
       </div>

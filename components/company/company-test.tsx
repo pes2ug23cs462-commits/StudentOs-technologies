@@ -69,7 +69,15 @@ export function TestCard({ pid, rounds, summary, onSaved }: { pid: string; round
   );
 }
 
-function TestEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: string[]; onClose: () => void; onSaved: () => void }) {
+/** Where the editor loads and saves the test: a company drive by default, or a StudentOS careers role. */
+export type TestEditorIO = { get: () => Promise<{ test: CompanyTest | null }>; save: (test: CompanyTest) => Promise<{ count: number }>; errorText: (e: unknown) => string };
+
+export function TestEditor({ pid, rounds, onClose, onSaved, io }: { pid: string; rounds: string[]; onClose: () => void; onSaved: () => void; io?: TestEditorIO }) {
+  const api: TestEditorIO = io ?? {
+    get: () => partnerApi<{ test: CompanyTest | null }>("company-test-get", { pid }),
+    save: (test) => partnerApi<{ count: number }>("company-test-save", { pid, test }),
+    errorText: partnerErrorText,
+  };
   const { actions } = useStore();
   const [t, setT] = useState<CompanyTest | null>(null);
   const [busy, setBusy] = useState(false);
@@ -82,10 +90,11 @@ function TestEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: st
   const coding = t?.coding ?? [];
   const toggleCode = (id: string) => setT((x) => x && { ...x, coding: coding.includes(id) ? coding.filter((c) => c !== id) : [...coding, id].slice(0, 3) });
   useEffect(() => {
-    partnerApi<{ test: CompanyTest | null }>("company-test-get", { pid })
-      .then((r) => setT(r.test ?? { round: Math.max(0, rounds.findIndex((r) => /test|assess|aptitude|online/i.test(r))), title: "Online assessment", minutes: 30, open: false, questions: [] }))
+    api
+      .get()
+      .then((r) => setT(r.test ? { ...r.test, round: r.test.round ?? 0, open: r.test.open ?? false } : { round: Math.max(0, rounds.findIndex((r) => /test|assess|aptitude|online/i.test(r))), title: "Online assessment", minutes: 30, open: false, questions: [] }))
       .catch((e) => {
-        actions.toast(partnerErrorText(e));
+        actions.toast(api.errorText(e));
         onClose();
       });
   }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,18 +113,18 @@ function TestEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: st
         const options = q.options.filter(Boolean);
         return { q: q.q.trim(), options, answer: options.indexOf(right) };
       });
-      const r = await partnerApi<{ count: number }>("company-test-save", { pid, test: { ...t, questions: clean } });
+      const r = await api.save({ ...t, questions: clean });
       actions.toast(`Test saved: ${r.count} MCQ${(t.coding ?? []).length ? ` + ${(t.coding ?? []).length} coding` : ""}.`);
       onSaved();
     } catch (e) {
-      actions.toast(partnerErrorText(e));
+      actions.toast(api.errorText(e));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[70] flex justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-label="Online test" className="relative flex h-full w-full max-w-[720px] flex-col border-l border-white/10 bg-[#121118]">
         <header className="flex items-center gap-3 border-b border-white/[0.07] px-6 py-4">
@@ -126,15 +135,15 @@ function TestEditor({ pid, rounds, onClose, onSaved }: { pid: string; rounds: st
           <div className="m-6 h-40 animate-pulse rounded-xl bg-white/[0.04]" />
         ) : (
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
-            <div className="grid gap-3 sm:grid-cols-[1fr_110px_1fr]">
+            <div className={cn("grid gap-3", rounds.length > 1 ? "sm:grid-cols-[1fr_110px_1fr]" : "sm:grid-cols-[1fr_110px]")}>
               <div><Label htmlFor="tt">Title</Label><Input id="tt" value={t.title} onChange={(e) => setT({ ...t, title: e.target.value })} /></div>
               <div><Label htmlFor="tm">Minutes</Label><Input id="tm" type="number" min={5} max={180} value={t.minutes} onChange={(e) => setT({ ...t, minutes: Number(e.target.value) || 0 })} /></div>
-              <div>
+              {rounds.length > 1 && <div>
                 <Label htmlFor="tr">For round</Label>
                 <select id="tr" value={t.round} onChange={(e) => setT({ ...t, round: Number(e.target.value) })} className="h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white">
                   {rounds.map((r, i) => <option key={i} value={i}>{r}</option>)}
                 </select>
-              </div>
+              </div>}
             </div>
 
             <div className="rounded-xl border border-accent/25 bg-accent/[0.05] p-4">
