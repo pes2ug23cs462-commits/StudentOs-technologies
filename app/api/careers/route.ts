@@ -25,6 +25,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
+import { slotState } from "@/lib/live-slot";
 import { DEFAULT_ROLES, STEP_LABEL, fmtWhen, nextStep, stageOf, stepOf, stepsOf, type CareerApp, type CareerReport, type CareerRole, type CareerStep } from "@/lib/careers-data";
 import { chat } from "@/lib/server/ai";
 import { ivQuestions, ivReport, type IvSetup, type LiveSide } from "@/lib/server/company-rounds";
@@ -171,7 +172,7 @@ async function tellApplicant(a: CareerApp, origin: string, step: CareerStep, fir
     hr: "a short AI HR interview: about you, why StudentOS, and how you work with others",
     live: "a live video interview with our team, on StudentOS",
   };
-  const when = step === "live" && a.live ? `On ${fmtWhen(a.live.at)} (IST), ${a.live.minutes} minutes. Open the link a few minutes early.` : `Open it between ${fmtWhen(a.start)} and ${fmtWhen(a.end)} (IST).`;
+  const when = step === "live" && a.live ? `On ${fmtWhen(a.live.at)} (IST), ${a.live.minutes} minutes. You can join only during this time, not before or after.` : `Open it between ${fmtWhen(a.start)} and ${fmtWhen(a.end)} (IST).`;
   const lines = [first ? `Hi ${a.name}, thanks for applying for ${a.role}.` : `Hi ${a.name}, good news: you’re through to the next round for ${a.role}.`, `Next is ${what[step]}.`, when];
   await sendMails([
     {
@@ -247,6 +248,10 @@ export async function POST(req: Request) {
         side = "host";
       } else if (stepOf(a) !== "live") return bad("not-found", 404);
       const base = `careerApps/${a.token}/sig`;
+      const metaOut = { at: a.live.at, minutes: a.live.minutes, name: a.name, company: "StudentOS", role: a.role, feedback: side === "host" ? a.live.feedback ?? null : null };
+      // the call only runs in the booked slot: not before it starts, not after it ends
+      const closed = slotState(a.live.at, a.live.minutes);
+      if (closed) return NextResponse.json({ side, meta: metaOut, other: null, closed, now: Date.now() });
       if (b.put && typeof b.put === "object") {
         const put = b.put as Record<string, unknown>;
         const sdp = (put.sdp ?? null) as Record<string, unknown> | null;
@@ -260,7 +265,7 @@ export async function POST(req: Request) {
         await adminSet(`${base}/${side}`, doc as unknown as Record<string, unknown>);
       }
       const other = (await adminGet(`${base}/${side === "host" ? "guest" : "host"}`)) as LiveSide | null;
-      return NextResponse.json({ side, meta: { at: a.live.at, minutes: a.live.minutes, name: a.name, company: "StudentOS", role: a.role, feedback: side === "host" ? a.live.feedback ?? null : null }, other });
+      return NextResponse.json({ side, meta: metaOut, other, now: Date.now() });
     }
 
     /* ---------------- the applicant's rounds (link token) ---------------- */

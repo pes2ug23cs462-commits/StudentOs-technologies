@@ -404,7 +404,7 @@ export function CampusDrives() {
                             <VideoIcon size={16} className="text-violet-300" />
                             <span className="min-w-0 flex-1">
                               <span className="block text-[13.5px] font-semibold text-white">{l.title}</span>
-                              <span className="block text-[12px] text-white/55">{l.when ? `${l.when} (IST) · ` : ""}camera and mic on · join 15 min early</span>
+                              <span className="block text-[12px] text-white/55">{l.when ? `${l.when} (IST) · ` : ""}join only at this time · camera and mic on</span>
                             </span>
                             <span className="text-[12.5px] font-medium text-violet-200">Join →</span>
                           </Link>

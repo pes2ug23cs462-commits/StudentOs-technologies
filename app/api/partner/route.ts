@@ -11,6 +11,7 @@
    colleges/{cid}/partner/{pid} (read by the college's staff). */
 
 import { NextResponse } from "next/server";
+import { slotState } from "@/lib/live-slot";
 import { verifyIdUser } from "@/lib/server/auth";
 import { adminConfigured, adminProblem, adminCreate, adminDelete, adminGet, adminList, adminMerge, adminSet } from "@/lib/server/firestore-admin";
 import { checkScore } from "@/lib/server/score-sign";
@@ -382,6 +383,10 @@ export async function POST(req: Request) {
       const staff = await adminGet(`companyStaff/${me.uid}`);
       const side = staff && str(staff.coid, 80) === p.companyId ? "host" : me.uid === meta.uid ? "guest" : "";
       if (!side) return bad("not-allowed", 403);
+      const metaOut = { at: meta.at, minutes: meta.minutes, name: meta.name, company: p.company, role: p.role, feedback: side === "host" ? meta.feedback ?? null : null };
+      // the call only runs in the booked slot: not before it starts, not after it ends
+      const closed = slotState(meta.at, meta.minutes);
+      if (closed) return NextResponse.json({ side, meta: metaOut, other: null, closed, now: Date.now() });
       const mine = `partnerDrives/${pid}/live/${room}/sig/${side}`;
       if (b.put && typeof b.put === "object") {
         const put = b.put as Record<string, unknown>;
@@ -396,7 +401,7 @@ export async function POST(req: Request) {
         await adminSet(mine, doc as unknown as Record<string, unknown>);
       }
       const other = (await adminGet(`partnerDrives/${pid}/live/${room}/sig/${side === "host" ? "guest" : "host"}`)) as LiveSide | null;
-      return NextResponse.json({ side, meta: { at: meta.at, minutes: meta.minutes, name: meta.name, company: p.company, role: p.role, feedback: side === "host" ? meta.feedback ?? null : null }, other });
+      return NextResponse.json({ side, meta: metaOut, other, now: Date.now() });
     }
 
     /* ---------------- a student takes a company's online test ---------------- */

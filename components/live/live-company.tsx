@@ -44,9 +44,13 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
   const [fb, setFb] = useState({ score: 6, verdict: "Maybe", notes: "" });
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
   useEffect(() => {
     if (!loaded && m) {
-      if (m.feedback) setFb({ score: m.feedback.score, verdict: m.feedback.verdict, notes: m.feedback.notes });
+      if (m.feedback) {
+        setFb({ score: m.feedback.score, verdict: m.feedback.verdict, notes: m.feedback.notes });
+        setSent(true);
+      }
       setLoaded(true);
     }
   }, [m, loaded]);
@@ -54,7 +58,8 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
     setBusy(true);
     try {
       await (saveFeedback ? saveFeedback(fb) : partnerApi("company-live-feedback", { pid, room, ...fb }));
-      actions.toast("Feedback saved. It shows in the applicants list.");
+      setSent(true);
+      actions.toast("Feedback submitted. It shows in the applicants list.");
     } catch (e) {
       actions.toast(partnerErrorText(e));
     } finally {
@@ -69,7 +74,7 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
         <span className="ml-auto text-[12.5px] text-white/50">{m ? `${m.role} · ${new Date(m.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · ${m.minutes} min` : ""}</span>
       </div>
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <CallStage call={call} otherName={m?.name ?? "the student"} className="min-h-[360px]" />
+        <CallStage call={call} otherName={m?.name ?? "the student"} className="min-h-[360px]" onEnd={() => window.confirm(`End the interview with ${m?.name ?? "the student"}? Then submit your feedback.`) && call.hangUp()} />
         <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto">
           <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
             <p className="text-[16px] font-semibold">{m?.name ?? "…"}</p>
@@ -79,8 +84,10 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
               {warns.length > 0 && <ul className="mt-1 list-disc pl-4 text-white/70">{warns.map((w, i) => <li key={i}>{breachLabel(w)}</li>)}</ul>}
             </div>
           </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
+          <div className={cn("rounded-2xl border bg-[#0f0f11] p-4", call.state === "ended" && !sent ? "border-accent/60 shadow-[0_0_40px_-16px_rgba(167,139,250,0.8)]" : "border-white/[0.08]")}>
             <p className="text-[14px] font-semibold">Your feedback</p>
+            {call.state === "ended" && !sent && <p className="mt-1 text-[12.5px] text-accent">Interview ended. Submit your feedback below.</p>}
+            {sent && <p className="mt-1 text-[12.5px] text-emerald-300">Submitted ✓ You can change it and submit again.</p>}
             <div className="mt-3">
               <Label htmlFor="fs">Score: {fb.score}/10</Label>
               <input id="fs" type="range" min={0} max={10} value={fb.score} onChange={(e) => setFb({ ...fb, score: Number(e.target.value) })} className="w-full accent-[#a78bfa]" />
@@ -90,8 +97,11 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
                 <button key={v} type="button" onClick={() => setFb({ ...fb, verdict: v })} className={cn("h-9 rounded-lg border text-[12.5px]", fb.verdict === v ? "border-accent bg-accent/15 text-white" : "border-white/10 text-white/65 hover:text-white")}>{v}</button>
               ))}
             </div>
-            <div className="mt-3"><Label htmlFor="fn">Notes</Label><Textarea id="fn" rows={5} value={fb.notes} onChange={(e) => setFb({ ...fb, notes: e.target.value })} placeholder="What went well, what didn’t, next step" /></div>
-            <Button variant="primary" className="mt-3 w-full" loading={busy} onClick={() => void save()}>Save feedback</Button>
+            <div className="mt-3"><Label htmlFor="fn">Notes</Label><Textarea id="fn" rows={4} value={fb.notes} onChange={(e) => setFb({ ...fb, notes: e.target.value })} placeholder="What went well, what didn’t, next step" /></div>
+            <div className="sticky bottom-0 -mx-4 mt-3 bg-[#0f0f11] px-4 pt-1 pb-1">
+              <Button variant="primary" className="w-full" loading={busy} onClick={() => void save()}>{sent ? "Submit again" : "Submit feedback"}</Button>
+              {sent && <Link href={back.href} className="mt-2 block text-center text-[12.5px] text-white/60 hover:text-white">Back to {back.label.toLowerCase()}</Link>}
+            </div>
             <p className="mt-2 text-[11.5px] text-white/40">{note}</p>
           </div>
         </aside>

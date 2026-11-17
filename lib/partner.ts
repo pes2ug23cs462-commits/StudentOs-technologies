@@ -96,4 +96,6 @@ export type StudentIvInfo = { iv: { kind?: IvKind; title: string; count: number;
 export type IvView = { index: number; total: number; question: string; done: boolean };
 export type LiveResult = { room: string; at: number; minutes: number; feedback: { score: number; verdict: string; notes: string; at: number } | null };
 export type LiveSide = { sdp?: { type: RTCSdpType; sdp: string; v: number } | null; cands?: RTCIceCandidateInit[]; need?: number; warnings?: string[]; at?: number };
-export type LiveSignal = { side: "host" | "guest"; meta: { at: number; minutes: number; name: string; company: string; role: string; feedback: LiveResult["feedback"] }; other: LiveSide | null };
+/** `closed`: outside the booked slot ("early" before it starts, "over" after it ends); nothing is exchanged then. `now` is the server clock. */
+export type LiveSignal = { side: "host" | "guest"; meta: { at: number; minutes: number; name: string; company: string; role: string; feedback: LiveResult["feedback"] }; other: LiveSide | null; closed?: "early" | "over"; now?: number };
+export { slotState } from "@/lib/live-slot";

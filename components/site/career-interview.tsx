@@ -137,7 +137,7 @@ export function CareerInterview({ token }: { token: string }) {
   const cur = v.at;
   const curDone = cur ? doneOf(cur) : false;
   const missed = v.stage === "missed" && !curDone;
-  const liveOpen = cur === "live" && v.live && now >= v.live.at - 15 * 60_000 && now <= v.live.at + v.live.minutes * 60_000 + 30 * 60_000;
+  const liveOpen = cur === "live" && v.live && now >= v.live.at && now <= v.live.at + v.live.minutes * 60_000;
   const open = cur && cur !== "live" && !curDone && !missed && now >= v.start;
   const started = v.stage === "in-progress";
 
@@ -170,13 +170,13 @@ export function CareerInterview({ token }: { token: string }) {
           {cur === "live" && v.live ? (
             <>
               <p className="text-[16px] font-semibold">Live interview with the StudentOS team</p>
-              <p className="mt-1 text-[14px] text-white/65">{fmtWhen(v.live.at)} (IST) · {v.live.minutes} minutes. Use Chrome or Edge, with your camera and mic on, alone in a quiet place.</p>
+              <p className="mt-1 text-[14px] text-white/65">{fmtWhen(v.live.at)} (IST) · {v.live.minutes} minutes. Join at the start time; the call ends when the time is over. Use Chrome or Edge, with your camera and mic on, alone in a quiet place.</p>
               {v.stage === "completed" ? (
                 <p className="mt-4 text-[13.5px] text-emerald-300">Done. Thank you! We’ll email you about the result.</p>
               ) : liveOpen ? (
                 <button type="button" onClick={() => setMode("live")} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff]">Join the interview <ArrowRightIcon size={15} /></button>
               ) : (
-                <p className="mt-4 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">{now < v.live.at ? `The Join button shows 15 minutes before. Starts in ${left(v.live.at - now)}.` : "This slot has passed. Reply to our email if you missed it."}</p>
+                <p className="mt-4 rounded-lg bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/65">{now < v.live.at ? `You can join only at the booked time, not before or after. The Join button turns on at the start time · in ${left(v.live.at - now)}.` : "This interview’s time is over. Reply to our email if you missed it."}</p>
               )}
             </>
           ) : curDone || !cur ? (
