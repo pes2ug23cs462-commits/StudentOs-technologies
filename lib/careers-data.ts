@@ -65,7 +65,10 @@ export type CareerStage = "invited" | "in-progress" | "completed" | "missed";
 export type CareerStep = "test" | "ai" | "hr" | "live";
 export const STEP_LABEL: Record<CareerStep, string> = { test: "Online test", ai: "AI interview", hr: "AI HR interview", live: "Live interview" };
 export type CareerTestResult = { correct: number; total: number; coding: { title: string; passed: number; total: number; lang: string }[]; warnings: string[]; ended: boolean; late: boolean; at: number };
-export type CareerIvRound = { questions: string[]; answers: { a: string; secs: number }[]; startedAt: number; done: boolean; doneAt?: number; report: CareerReport | null; warnings?: string[]; ended?: boolean };
+/** an answer, with the follow-up the AI interviewer may have asked on it */
+export type CareerAnswer = { a: string; secs: number; f?: { q: string; a: string } };
+export type CareerAsk = { i: number; m: string; r: string };
+export type CareerIvRound = { questions: string[]; answers: CareerAnswer[]; startedAt: number; done: boolean; doneAt?: number; report: CareerReport | null; warnings?: string[]; ended?: boolean; asks?: CareerAsk[] };
 export type CareerLive = { room: string; at: number; minutes: number; feedback: { score: number; verdict: string; notes: string; at: number } | null };
 export type CareerReport = { overall: number; verdict: string; summary: string; strengths: string[]; concerns: string[]; items: { score: number; note: string }[] };
 export type CareerApp = {
@@ -86,7 +89,7 @@ export type CareerApp = {
   ai: boolean;
   stage: CareerStage;
   questions: string[];
-  answers: { a: string; secs: number }[];
+  answers: CareerAnswer[];
   flags: { tabs: number; pastes: number };
   startedAt?: number;
   completedAt?: number;
@@ -100,6 +103,8 @@ export type CareerApp = {
   /** strict mode in the AI interview */
   aiWarn?: string[];
   aiEnded?: boolean;
+  /** what they asked the AI interviewer to clarify */
+  aiAsks?: CareerAsk[];
   /** the online test's result (the team sees it; the applicant doesn't) */
   testResult?: CareerTestResult | null;
   hr?: CareerIvRound | null;

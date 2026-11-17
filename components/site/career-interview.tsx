@@ -117,6 +117,7 @@ export function CareerInterview({ token }: { token: string }) {
       info: () => call<StudentIvInfo>("iv-info", { kind }),
       start: () => call<IvView>("iv-start", { kind }),
       answer: (body) => call<IvView>("iv-answer", { kind, ...body }),
+      ask: (body) => call<{ reply: string }>("iv-ask", { kind, ...body }),
       finish: (body) => call("iv-finish", { kind, ...body }),
       errorText: careersErrorText,
       back,

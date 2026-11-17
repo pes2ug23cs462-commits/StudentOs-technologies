@@ -91,9 +91,11 @@ export type IvSetup = { kind?: IvKind; round: number; title: string; focus: stri
 export type IvSummary = { round: number; title: string; count: number; open: boolean; focus: string };
 export type IvResult = { overall: number | null; verdict: string; warnings: string[]; ended: boolean; at: number } | { started: true; at: number; index: number; total: number };
 export type IvReport = { overall: number; verdict: string; summary: string; strengths: string[]; concerns: string[]; items: { score: number; note: string }[] };
-export type IvAttemptFull = { uid: string; cid: string; name: string; questions: string[]; answers: { a: string; secs: number }[]; done: boolean; report?: IvReport | null; warnings?: string[]; ended?: boolean };
+export type IvAnswer = { a: string; secs: number; f?: { q: string; a: string } };
+export type IvAttemptFull = { uid: string; cid: string; name: string; questions: string[]; answers: IvAnswer[]; done: boolean; report?: IvReport | null; warnings?: string[]; ended?: boolean; asks?: { i: number; m: string; r: string }[] };
 export type StudentIvInfo = { iv: { kind?: IvKind; title: string; count: number; company: string; role: string } | null; open?: boolean; attempt?: { done: boolean; index: number; total: number } | null };
-export type IvView = { index: number; total: number; question: string; done: boolean };
+/** `followup`: the interviewer asked a follow-up on the last answer; it's answered before the next question */
+export type IvView = { index: number; total: number; question: string; done: boolean; followup?: string };
 export type LiveResult = { room: string; at: number; minutes: number; feedback: { score: number; verdict: string; notes: string; at: number } | null };
 export type LiveSide = { sdp?: { type: RTCSdpType; sdp: string; v: number } | null; cands?: RTCIceCandidateInit[]; need?: number; warnings?: string[]; at?: number };
 /** `closed`: outside the booked slot ("early" before it starts, "over" after it ends); nothing is exchanged then. `now` is the server clock. */

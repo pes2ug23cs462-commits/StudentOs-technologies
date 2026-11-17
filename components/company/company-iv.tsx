@@ -213,10 +213,22 @@ export function IvReportDrawer({ pid, a, kind = "technical", onClose }: { pid: s
                     {rep?.items[i] && <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold tabular-nums", rep.items[i].score >= 7 ? "bg-emerald-400/15 text-emerald-300" : rep.items[i].score >= 4 ? "bg-amber-400/15 text-amber-200" : "bg-rose-500/15 text-rose-300")}>{rep.items[i].score}/10</span>}
                   </div>
                   <p className="mt-1.5 text-[13px] whitespace-pre-wrap text-white/75">{x.answers[i]?.a || <span className="text-white/35">No answer</span>}</p>
+                  {x.answers[i]?.f && (
+                    <div className="mt-2 border-l-2 border-violet-400/40 pl-3">
+                      <p className="text-[12.5px] font-medium text-violet-200">Follow-up: {x.answers[i].f!.q}</p>
+                      <p className="mt-1 text-[13px] whitespace-pre-wrap text-white/70">{x.answers[i].f!.a || <span className="text-white/35">No answer</span>}</p>
+                    </div>
+                  )}
                   {rep?.items[i]?.note && <p className="mt-1.5 text-[12px] text-white/50">{rep.items[i].note}</p>}
                 </div>
               ))}
             </div>
+            {x.asks?.length ? (
+              <div className="mt-4 rounded-xl border border-white/[0.07] p-3.5">
+                <p className="text-[12.5px] font-semibold text-white">Asked the interviewer ({x.asks.length})</p>
+                {x.asks.map((k, j) => <p key={j} className="mt-1.5 text-[12.5px] text-white/65">On Q{Math.min(k.i + 1, x.questions.length)}: “{k.m}” <span className="text-white/40">→ {k.r}</span></p>)}
+              </div>
+            ) : null}
           </>
         )}
       </aside>

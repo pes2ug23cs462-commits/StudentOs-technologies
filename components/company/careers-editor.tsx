@@ -505,7 +505,7 @@ function BookLive({ people, onClose, onDone }: { people: CareerApp[]; onClose: (
   );
 }
 
-function QA({ questions, answers, items }: { questions: string[]; answers: { a: string; secs: number }[]; items?: { score: number; note: string }[] }) {
+function QA({ questions, answers, items, asks }: { questions: string[]; answers: { a: string; secs: number; f?: { q: string; a: string } }[]; items?: { score: number; note: string }[]; asks?: { i: number; m: string; r: string }[] }) {
   return (
     <div className="mt-3 space-y-2.5">
       {questions.map((q, i) =>
@@ -516,10 +516,22 @@ function QA({ questions, answers, items }: { questions: string[]; answers: { a: 
               {items?.[i] && <span className={cn("shrink-0 text-[13px] font-semibold tabular-nums", scoreCls(items[i].score * 10))}>{items[i].score}/10</span>}
             </div>
             <p className="mt-2 text-[13px] leading-relaxed whitespace-pre-line text-white/70">{answers[i].a}</p>
+            {answers[i].f && (
+              <div className="mt-2 border-l-2 border-violet-400/40 pl-3">
+                <p className="text-[12.5px] font-medium text-violet-200">Follow-up: {answers[i].f!.q}</p>
+                <p className="mt-1 text-[13px] whitespace-pre-line text-white/70">{answers[i].f!.a || "No answer"}</p>
+              </div>
+            )}
             <p className="mt-2 text-[11.5px] text-white/40">{Math.round(answers[i].secs / 60)} min{items?.[i]?.note ? ` · ${items[i].note}` : ""}</p>
           </div>
         ) : null,
       )}
+      {asks?.length ? (
+        <div className="rounded-xl border border-white/[0.07] p-3.5">
+          <p className="text-[12.5px] font-semibold text-white">Asked the interviewer ({asks.length})</p>
+          {asks.map((k, j) => <p key={j} className="mt-1.5 text-[12.5px] text-white/65">On Q{Math.min(k.i + 1, questions.length)}: “{k.m}” <span className="text-white/40">→ {k.r}</span></p>)}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -638,7 +650,7 @@ function AppDrawer({ a, onClose, onChange, onDelete, onAdvance }: { a: CareerApp
             ) : <p className="mt-2 text-[13px] text-white/55">{a.questions.length ? `Answered ${a.answers.length} of ${a.questions.length} so far.` : "Not started yet."}</p>}
             {(a.completedAt || a.aiWarn) && <Warns list={a.aiWarn} ended={a.aiEnded} />}
             {(a.flags.tabs > 0 || a.flags.pastes > 0) && <p className="mt-2 rounded-lg bg-amber-400/10 px-3 py-2 text-[12px] text-amber-200">Left the tab {a.flags.tabs}× · pasted {a.flags.pastes}×.</p>}
-            {a.answers.length > 0 && <QA questions={a.questions} answers={a.answers} items={a.report?.items} />}
+            {a.answers.length > 0 && <QA questions={a.questions} answers={a.answers} items={a.report?.items} asks={a.aiAsks} />}
           </Box>
         )}
 
@@ -653,7 +665,7 @@ function AppDrawer({ a, onClose, onChange, onDelete, onAdvance }: { a: CareerApp
               )
             ) : <p className="mt-2 text-[13px] text-white/55">{a.hr ? `Answered ${a.hr.answers.length} of ${a.hr.questions.length} so far.` : "Not started yet."}</p>}
             {a.hr?.done && <Warns list={a.hr.warnings} ended={a.hr.ended} />}
-            {a.hr && a.hr.answers.length > 0 && <QA questions={a.hr.questions} answers={a.hr.answers} items={a.hr.report?.items} />}
+            {a.hr && a.hr.answers.length > 0 && <QA questions={a.hr.questions} answers={a.hr.answers} items={a.hr.report?.items} asks={a.hr.asks} />}
           </Box>
         )}
 

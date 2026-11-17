@@ -79,6 +79,21 @@ export async function makeQuestions(o: { role: string; kind: InterviewKind; leve
   return j.questions ?? [];
 }
 
+/** A two-way interview: one follow-up on a vague answer ("" if it's fine), and the interviewer's replies. */
+export async function followUp(o: { role: string; kind: InterviewKind; level: InterviewLevel; style?: InterviewStyle; lang?: InterviewLang; q: string; answer: string }) {
+  try {
+    const j = await postAi<{ followup?: string }>("/api/interview", { action: "talk", mode: "followup", ...o });
+    return j.followup ?? "";
+  } catch {
+    return ""; // never hold the interview up for a follow-up
+  }
+}
+export async function talkTo(o: { role: string; kind: InterviewKind; level: InterviewLevel; style?: InterviewStyle; lang?: InterviewLang; q: string; message: string; end?: boolean }) {
+  const { end, ...rest } = o;
+  const j = await postAi<{ reply?: string }>("/api/interview", { action: "talk", mode: end ? "end" : "ask", ...rest });
+  return j.reply ?? "";
+}
+
 export async function evaluate(o: { role: string; kind: InterviewKind; level: InterviewLevel; topics?: string; lang?: InterviewLang; style?: InterviewStyle; items: { q: string; a: string }[] }) {
   return postAi<Feedback>("/api/interview", { action: "evaluate", ...o });
 }

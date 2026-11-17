@@ -18,7 +18,7 @@ import { checkScore } from "@/lib/server/score-sign";
 import { notifyStudents, type NotifyEv } from "@/lib/server/notify-core";
 import { mailHtml, sendMails } from "@/lib/server/mail";
 import { BREACHES, problem, same, shuffled, type CodeResult, type TestQ } from "@/lib/server/test-check";
-import { cleanIv, ivAttemptKey, ivDoc, ivKindOf, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide } from "@/lib/server/company-rounds";
+import { cleanIv, ivAttemptKey, ivDoc, ivKindOf, ivQuestions, ivReport, type IvAttempt, type IvSetup, type LiveMeta, type LiveSide, ivTakeAnswer, ivTakeAsk, ivViewOf } from "@/lib/server/company-rounds";
 
 const str = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 const num = (v: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(v) || 0));
@@ -327,7 +327,7 @@ export async function POST(req: Request) {
       const key = ivAttemptKey(pid, cid, me.uid, kind);
       const at = (await adminGet(key)) as IvAttempt | null;
       const info = { kind, title: iv.title, count: iv.count, company: p.company, role: p.role };
-      const view = (x: IvAttempt) => ({ index: x.answers.length, total: x.questions.length, question: x.answers.length < x.questions.length ? x.questions[x.answers.length] : "", done: x.done });
+      const view = (x: IvAttempt) => ivViewOf(x, x.done);
       if (action === "student-iv-info") {
         if (!inRound && !at) return NextResponse.json({ iv: null });
         return NextResponse.json({ iv: info, open: iv.open, attempt: at ? { done: at.done, index: at.answers.length, total: at.questions.length } : null });
@@ -345,16 +345,17 @@ export async function POST(req: Request) {
       if (!at) return bad("not-started", 409);
       if (at.done) return bad("done", 409);
       if (action === "student-iv-answer") {
-        const i = Number(b.index);
-        if (i === at.answers.length && i < at.questions.length) {
-          at.answers.push({ a: para(b.answer, 2500), secs: Math.min(3600, Math.max(0, Math.round(Number(b.secs) || 0))) });
-          await adminSet(key, at as unknown as Record<string, unknown>);
-        }
+        if (await ivTakeAnswer(at, b, { role: p.role, hr: kind === "hr" })) await adminSet(key, at as unknown as Record<string, unknown>);
         return NextResponse.json(view(at));
+      }
+      if (action === "student-iv-ask") {
+        const reply = await ivTakeAsk(at, b, { role: p.role, hr: kind === "hr" });
+        if (reply) await adminSet(key, at as unknown as Record<string, unknown>);
+        return NextResponse.json({ reply });
       }
       if (action === "student-iv-finish") {
         const ended = b.ended === true;
-        if (!ended && at.answers.length < at.questions.length) return bad("not-started", 409);
+        if (!ended && (at.answers.length < at.questions.length || ivViewOf(at, false).followup)) return bad("not-started", 409);
         at.done = true;
         at.doneAt = Date.now();
         at.ended = ended;
