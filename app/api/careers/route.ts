@@ -195,11 +195,15 @@ export async function POST(req: Request) {
   try {
     /* ---------------- apply (public) ---------------- */
     if (action === "apply") {
-      const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "x";
-      const day = new Date().toISOString().slice(0, 10);
-      if ((await adminIncrement(`careerRate/${day}_${createHash("sha256").update(ip).digest("hex").slice(0, 16)}`, "n")) > 8) return bad("slow-down", 429);
       const f = { name: str(b.name, 80), email: str(b.email, 120).toLowerCase(), phone: str(b.phone, 20), college: str(b.college, 160), resume: str(b.resume, 500), links: str(b.links, 500), why: para(b.why, 1500) };
       if (f.name.length < 2 || !/^\S+@\S+\.\S+$/.test(f.email) || f.phone.replace(/\D/g, "").length < 10 || f.college.length < 2 || !/^https?:\/\/\S+\.\S+/.test(f.resume)) return bad("bad-form");
+      // spam limits: per person (email), plus a high cap per network, since a whole campus
+      // on one Wi-Fi shares one IP address
+      const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "x";
+      const day = new Date().toISOString().slice(0, 10);
+      const h = (v: string) => createHash("sha256").update(v).digest("hex").slice(0, 16);
+      if ((await adminIncrement(`careerRate/${day}_e${h(f.email)}`, "n")) > 5) return bad("slow-down", 429);
+      if ((await adminIncrement(`careerRate/${day}_${h(ip)}`, "n")) > 500) return bad("slow-down", 429);
       const site = await roles();
       const role = site.roles.find((r) => r.id === str(b.roleId, 80) && !r.paused);
       const other = str(b.roleId, 80) === "other";
