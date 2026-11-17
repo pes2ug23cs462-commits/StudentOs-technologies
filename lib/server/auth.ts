@@ -3,6 +3,8 @@
 
 
 const cache = new Map<string, { uid: string; until: number }>();
+/** uid → email verified (or Google sign-in). Filled by verifyIdToken, read by takeQuota. */
+const verifiedUid = new Map<string, boolean>();
 const people = new Map<string, { uid: string; email: string; verified: boolean; until: number }>();
 
 /** Like verifyIdToken, plus the account's email and whether it is verified. */
@@ -47,9 +49,12 @@ export async function verifyIdToken(token: string | null): Promise<string | null
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const j = (await res.json()) as { users?: { localId?: string }[] };
-    const uid = j.users?.[0]?.localId ?? null;
+    const j = (await res.json()) as { users?: { localId?: string; emailVerified?: boolean; providerUserInfo?: { providerId?: string }[] }[] };
+    const u = j.users?.[0];
+    const uid = u?.localId ?? null;
     if (uid) {
+      if (verifiedUid.size > 5000) verifiedUid.clear();
+      verifiedUid.set(uid, !!u?.emailVerified || (u?.providerUserInfo ?? []).some((p) => p.providerId === "google.com"));
       if (cache.size > 2000) cache.clear();
       cache.set(token, { uid, until: Date.now() + 5 * 60_000 });
     }
@@ -69,15 +74,20 @@ import { adminConfigured, adminIncrement } from "./firestore-admin";
 
 const usage = new Map<string, { minute: number[]; day: string; count: number }>();
 export const FREE_DAILY_MESSAGES = 60;
+/** Accounts whose email isn't verified yet get fewer AI messages, so nobody can make
+    many throwaway accounts to use up the shared AI limit. Google sign-ins count as verified. */
+export const UNVERIFIED_DAILY_MESSAGES = 15;
 
 export async function takeQuota(uid: string): Promise<{ ok: true; left: number } | { ok: false; reason: "minute" | "day" }> {
   const now = Date.now();
   const today = new Date().toISOString().slice(0, 10);
+  // unknown (not seen by verifyIdToken on this server) counts as verified, so nobody is wrongly cut off
+  const limit = verifiedUid.get(uid) === false ? UNVERIFIED_DAILY_MESSAGES : FREE_DAILY_MESSAGES;
   const u = usage.get(uid) ?? { minute: [], day: today, count: 0 };
   if (u.day !== today) Object.assign(u, { day: today, count: 0 });
   u.minute = u.minute.filter((t) => now - t < 60_000);
   if (u.minute.length >= 8) return { ok: false, reason: "minute" };
-  if (u.count >= FREE_DAILY_MESSAGES) return { ok: false, reason: "day" };
+  if (u.count >= limit) return { ok: false, reason: "day" };
   u.minute.push(now);
   u.count++;
   usage.set(uid, u);
@@ -89,6 +99,6 @@ export async function takeQuota(uid: string): Promise<{ ok: true; left: number }
       /* Firestore unreachable: keep the in-memory count */
     }
   }
-  if (count > FREE_DAILY_MESSAGES) return { ok: false, reason: "day" };
-  return { ok: true, left: FREE_DAILY_MESSAGES - count };
+  if (count > limit) return { ok: false, reason: "day" };
+  return { ok: true, left: limit - count };
 }

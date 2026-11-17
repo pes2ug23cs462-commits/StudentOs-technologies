@@ -22,7 +22,7 @@ const ICONS: { icon: FancyIconName; tone: FancyTone }[] = [
   { icon: "bulb", tone: "cyan" },
 ];
 
-const FREE = ["AI study plan and schedule", "Personalised video courses", "AI assistant (60 messages a day)", `${FREE_CERT_LIMIT} certificates`, "Study materials and revision quizzes", "Resume creator"];
+const FREE = ["AI study plan and schedule", "Personalised video courses", "AI assistant (60 messages a day, with a verified email)", `${FREE_CERT_LIMIT} certificates`, "Study materials and revision quizzes", "Resume creator"];
 
 export default function PremiumPage() {
   const { premium, loading } = usePremium();

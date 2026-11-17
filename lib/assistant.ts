@@ -35,6 +35,14 @@ const MESSAGES: Record<string, string> = {
       : "The assistant isn’t available right now. Please try again later.",
 };
 
+/** An email account that isn't verified gets 15 AI messages a day instead of 60. */
+const unverified = () => {
+  const u = auth.currentUser;
+  return !!u && !u.emailVerified && u.providerData.some((p: { providerId: string }) => p.providerId === "password");
+};
+const say = (code: string) =>
+  code === "daily-limit" && unverified() ? "You’ve used today’s 15 free messages. Verify your email (check your inbox for the link) to get 60 a day." : (MESSAGES[code] ?? MESSAGES.failed);
+
 export async function askAssistant(message: string, opts: { history?: ChatTurn[]; context?: string; tone?: string; files?: Attachment[] } = {}): Promise<string> {
   if (typeof navigator !== "undefined" && !navigator.onLine) throw new OfflineError();
   const token = await auth.currentUser?.getIdToken().catch(() => null);
@@ -56,7 +64,7 @@ export async function askAssistant(message: string, opts: { history?: ChatTurn[]
   }
   const j = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
   if (res.ok && j.reply) return j.reply;
-  throw new AssistantError(MESSAGES[j.error ?? "failed"] ?? MESSAGES.failed);
+  throw new AssistantError(say(j.error ?? "failed"));
 }
 
 export type PlanResult =
@@ -104,7 +112,7 @@ export async function postAi<T>(path: string, body: unknown): Promise<T> {
   }
   const j = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (res.ok) return j;
-  throw new AssistantError(j.error === "too-short" ? "There isn’t enough text in this file to make a quiz." : (MESSAGES[j.error ?? "failed"] ?? MESSAGES.failed));
+  throw new AssistantError(j.error === "too-short" ? "There isn’t enough text in this file to make a quiz." : say(j.error ?? "failed"));
 }
 
 /** Text from a photo of notes (vision AI). */

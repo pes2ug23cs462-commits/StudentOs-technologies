@@ -432,7 +432,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
     void update((a) => ({ ...a, status: "selected", offer: { ctc: offer.ctc.trim(), joining: offer.joining.trim(), url: offer.url.trim(), note: offer.note.trim(), at: Date.now() } }), `Offer added for ${picked.size} student${picked.size > 1 ? "s" : ""}`, "offer");
   };
   const csv = () => {
-    const rows = [["Name", "Branch", "Section", "CGPA", "Backlogs", "Batch", "Stage", "Offer", "Decision", "Email"], ...apps.map((a) => [a.name, a.branch, a.section, a.cgpa, a.backlogs, a.batch, stageLabel(a, drive), a.offer?.ctc ?? "", a.decision ?? "", a.email])];
+    const rows = [["Name", "Branch", "Section", "CGPA (student-entered)", "Backlogs (student-entered)", "Batch", "Stage", "Offer", "Decision", "Email"], ...apps.map((a) => [a.name, a.branch, a.section, a.cgpa, a.backlogs, a.batch, stageLabel(a, drive), a.offer?.ctc ?? "", a.decision ?? "", a.email])];
     const blob = new Blob(["﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     Object.assign(document.createElement("a"), { href: u, download: `${drive.company} ${drive.role} applicants.csv` }).click();
@@ -516,7 +516,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
                 <th className={cn("w-8 pb-2", !canEdit && "hidden")}><input type="checkbox" checked={picked.size > 0 && picked.size === list.length} onChange={toggleAll} className="accent-[#a78bfa]" aria-label="Pick all" /></th>
                 <th className="pb-2 font-medium">Student</th>
                 <th className="pb-2 font-medium">Branch</th>
-                <th className="pb-2 font-medium">CGPA</th>
+                <th className="pb-2 font-medium" title="Entered by the student. Check it against your own records.">CGPA*</th>
                 <th className="hidden pb-2 font-medium md:table-cell">Skills</th>
                 {showTest && <th className="pb-2 font-medium">{test!.test!.title}</th>}
                 {showIv && <th className="pb-2 font-medium">AI technical</th>}
@@ -561,6 +561,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
         ) : (
           <p className="py-10 text-center text-[13px] text-white/50">{apps.length ? "No one at this stage." : "No applications yet. Eligible students see this drive in their Placement page."}</p>
         )}
+        {list.length > 0 && <p className="mt-3 text-[11.5px] text-white/40">* CGPA, backlogs and branch are entered by the student. Check them against the college’s own records before the final list.</p>}
       </Card>
 
       {resumes.node}

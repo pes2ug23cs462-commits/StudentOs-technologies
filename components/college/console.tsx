@@ -787,6 +787,7 @@ function Students({ members, type }: { members: MemberSummary[]; type: CollegeTy
             ])}
           </tbody>
         </table>
+        <p className="mt-3 text-[11.5px] text-white/40">Readiness and counts come from each student’s own StudentOS app. Use them to spot who needs help, not as marks.</p>
       </Panel>
     </div>
   );

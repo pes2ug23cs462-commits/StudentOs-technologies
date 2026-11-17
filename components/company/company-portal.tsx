@@ -270,7 +270,7 @@ function Applicants({ pid }: { pid: string }) {
   };
   const csv = () => {
     if (!data) return;
-    const rows = [["Name", "College", "Branch", "CGPA", "Backlogs", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Test score", "Test warnings", "AI technical", "AI HR", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", a.test && "correct" in a.test ? `${a.test.correct}/${a.test.total}` : "", a.test && "correct" in a.test ? (a.test.ended ? "ended" : a.test.warnings.length) : "", ivScore(a.iv) >= 0 ? ivScore(a.iv) : "", ivScore(a.ivHr) >= 0 ? ivScore(a.ivHr) : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
+    const rows = [["Name", "College", "Branch", "CGPA (student-entered)", "Backlogs (student-entered)", "Batch", "Mock interview", "Interview verified", "Coding round", "Coding verified", "Test score", "Test warnings", "AI technical", "AI HR", "Stage", "Offer", "Decision", "Email"], ...data.applicants.map((a) => [a.name, a.college, a.branch, a.cgpa, a.backlogs, a.batch, a.scores?.interview ?? "", a.scores?.interview != null ? (a.scores.interviewVerified ? "Yes" : "No") : "", a.scores?.coding ?? "", a.scores?.coding != null ? (a.scores.codingVerified ? "Yes" : "No") : "", a.test && "correct" in a.test ? `${a.test.correct}/${a.test.total}` : "", a.test && "correct" in a.test ? (a.test.ended ? "ended" : a.test.warnings.length) : "", ivScore(a.iv) >= 0 ? ivScore(a.iv) : "", ivScore(a.ivHr) >= 0 ? ivScore(a.ivHr) : "", stage(a, rounds), a.offer?.ctc ?? "", a.decision, a.email])];
     const blob = new Blob(["﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     Object.assign(document.createElement("a"), { href: u, download: `${data.drive.company} ${data.drive.role} applicants.csv` }).click();
@@ -396,7 +396,7 @@ function Applicants({ pid }: { pid: string }) {
                   <th className="w-8 pb-2"><input type="checkbox" aria-label="Pick all" checked={picked.size > 0 && picked.size === list.length} onChange={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map(key)))} className="accent-[#a78bfa]" /></th>
                   <th className="pb-2 font-medium">Student</th>
                   <th className="pb-2 font-medium">College</th>
-                  <th className="pb-2 font-medium">Branch · CGPA</th>
+                  <th className="pb-2 font-medium" title="Entered by the student. Check it against your own records.">Branch · CGPA*</th>
                   <th className="pb-2 font-medium">Mock interview</th>
                   <th className="pb-2 font-medium">Coding round</th>
                   {data.test && <th className="pb-2 font-medium">Test</th>}
@@ -430,7 +430,7 @@ function Applicants({ pid }: { pid: string }) {
         ) : (
           <p className="mt-8 mb-6 text-center text-[13px] text-white/45">{data.applicants.length ? "No one matches these filters." : "No applicants yet. Students apply once their college approves the drive."}</p>
         )}
-        <p className="mt-3 text-[11.5px] text-white/35">Scores are the student’s best StudentOS mock interview and coding round when they applied. “✓ Verified” means StudentOS gave that score; filters and sorting use verified scores only.</p>
+        <p className="mt-3 text-[11.5px] text-white/35">Scores are the student’s best StudentOS mock interview and coding round when they applied. “✓ Verified” means StudentOS gave that score; filters and sorting use verified scores only. * Branch, CGPA and backlogs are entered by the student; the college can confirm them.</p>
       </section>
 
       {modal && (

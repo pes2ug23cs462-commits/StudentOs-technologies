@@ -51,7 +51,7 @@ const sections = [
         <P>The Free plan costs nothing and includes fair-use limits so the service stays available for every student. Currently:</P>
         <UL>
           <li>up to 2 StudentOS certificates;</li>
-          <li>up to 60 AI Assistant messages a day (and a few per minute);</li>
+          <li>up to 60 AI Assistant messages a day (and a few per minute), or 15 a day until you verify your email;</li>
           <li>up to 10 study materials.</li>
         </UL>
         <P>We may change these limits. Paid (Premium) features, if offered later, will have their own terms and prices shown before you pay.</P>
