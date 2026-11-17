@@ -33,7 +33,11 @@ function load(): Promise<Landmarker> {
       return mp.FaceLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
         runningMode: "VIDEO",
-        numFaces: 2,
+        // strict: find a second face even when it's small, half in view or in poor light
+        numFaces: 3,
+        minFaceDetectionConfidence: 0.3,
+        minFacePresenceConfidence: 0.3,
+        minTrackingConfidence: 0.3,
         outputFaceBlendshapes: true,
       });
     })();
@@ -92,8 +96,9 @@ export async function watchPresence(
   // the student's own "straight ahead", learned from the first couple of seconds with a face
   const seen: { yaw: number; pitch: number }[] = [];
   let base = { yaw: 0.5, pitch: 0.45 };
-  // a second face on camera (someone helping): checked on its own, it can overlap a look-away
-  let twoSince: number | null = null;
+  // a second face on camera (someone helping): checked on its own, it can overlap a look-away.
+  // Counted when it's in most of the last ~1.2 s (8 frames), so a brief flicker doesn't count
+  const two: boolean[] = [];
   let twoWarned = false;
   const flush = (next: "on" | "away" | "out") => {
     if (next === state) return;
@@ -115,16 +120,14 @@ export async function watchPresence(
     try {
       const r = lm.detectForVideo(video, performance.now());
       const face = r.faceLandmarks[0];
-      if (r.faceLandmarks.length > 1) {
-        twoSince ??= now();
-        if (warn && !twoWarned && now() - twoSince >= Math.min(2, warn.secs)) {
-          twoWarned = true;
-          warn.on("people");
-        }
-      } else {
-        twoSince = null;
-        twoWarned = false;
+      two.push(r.faceLandmarks.length > 1);
+      if (two.length > 8) two.shift();
+      const seenTwo = two.filter(Boolean).length;
+      if (warn && !twoWarned && seenTwo >= 5) {
+        twoWarned = true;
+        warn.on("people");
       }
+      if (twoWarned && seenTwo === 0 && two.length === 8) twoWarned = false; // gone again: can warn next time
       if (face) {
         const s = r.faceBlendshapes?.[0]?.categories;
         const jaw = s?.find((c) => c.categoryName === "jawOpen")?.score ?? 0;

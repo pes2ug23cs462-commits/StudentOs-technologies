@@ -21,8 +21,10 @@ export interface Recorder {
   cancel: () => void;
 }
 
-/** Starts recording from the mic. Calls onDone with the audio when stopped. */
-export async function startRecording(onDone: (audio: Blob) => void): Promise<Recorder> {
+/** Starts recording from the mic. Calls onDone with the audio when stopped.
+    `pause`: stop by itself once they've spoken and then stayed quiet this long (ms),
+    so a conversation can take turns like people do. */
+export async function startRecording(onDone: (audio: Blob) => void, opts: { pause?: number } = {}): Promise<Recorder> {
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") throw new Error("unsupported");
   const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported(t));
@@ -36,6 +38,47 @@ export async function startRecording(onDone: (audio: Blob) => void): Promise<Rec
   };
   rec.start();
   const limit = setTimeout(() => rec.state === "recording" && rec.stop(), MAX_RECORD_SECONDS * 1000);
+  // pause detection: a level meter on the mic; speech is ~1/3 s above the room's noise, a pause is quiet after it
+  let ctx: AudioContext | null = null;
+  let watch = 0;
+  if (opts.pause) {
+    try {
+      ctx = new AudioContext();
+      const an = ctx.createAnalyser();
+      an.fftSize = 1024;
+      ctx.createMediaStreamSource(stream).connect(an);
+      const buf = new Float32Array(an.fftSize);
+      let floor = 0.01, loud = 0, quietSince = 0, spoke = false;
+      const t0 = Date.now();
+      watch = window.setInterval(() => {
+        an.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (const v of buf) sum += v * v;
+        const rms = Math.sqrt(sum / buf.length);
+        if (Date.now() - t0 < 600) floor = Math.max(floor, rms * 1.2); // the room's noise, first moment
+        const talking = rms > Math.max(0.015, floor * 2.2);
+        if (talking) {
+          loud += 50;
+          quietSince = 0;
+          if (loud > 350) spoke = true;
+        } else {
+          loud = Math.max(0, loud - 25);
+          if (!quietSince) quietSince = Date.now();
+          if (spoke && Date.now() - quietSince > opts.pause!) {
+            window.clearInterval(watch);
+            if (rec.state === "recording") rec.stop();
+          }
+        }
+      }, 50);
+    } catch {
+      /* no pause detection: they press Done */
+    }
+  }
+  const off = () => {
+    window.clearInterval(watch);
+    void ctx?.close().catch(() => {});
+  };
+  rec.addEventListener("stop", off);
   return {
     stream,
     stop: () => {

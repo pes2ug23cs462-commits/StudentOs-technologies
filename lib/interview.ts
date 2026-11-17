@@ -88,6 +88,16 @@ export async function followUp(o: { role: string; kind: InterviewKind; level: In
     return ""; // never hold the interview up for a follow-up
   }
 }
+/** One live turn: the candidate just said something on this question; Asha clarifies, probes, nods along or wraps up. */
+export type TurnAct = "clarify" | "probe" | "continue" | "done";
+export async function turn(o: { role: string; kind: InterviewKind; level: InterviewLevel; style?: InterviewStyle; lang?: InterviewLang; q: string; thread: { who: "you" | "asha"; text: string }[]; probes: number }) {
+  try {
+    const j = await postAi<{ act?: TurnAct; say?: string }>("/api/interview", { action: "talk", mode: "turn", ...o });
+    return { act: j.act ?? "continue", say: j.say ?? "" };
+  } catch {
+    return { act: "continue" as TurnAct, say: "" }; // never hold the interview up
+  }
+}
 export async function talkTo(o: { role: string; kind: InterviewKind; level: InterviewLevel; style?: InterviewStyle; lang?: InterviewLang; q: string; message: string; end?: boolean }) {
   const { end, ...rest } = o;
   const j = await postAi<{ reply?: string }>("/api/interview", { action: "talk", mode: end ? "end" : "ask", ...rest });

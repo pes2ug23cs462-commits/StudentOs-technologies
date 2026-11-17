@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BotIcon, BriefcaseIcon, BulbIcon, CheckIcon, ShieldIcon, VideoIcon, ChevronDownIcon, ChevronRightIcon, ClockIcon, CodeIcon, LaptopIcon, LayersIcon, MicIcon, PlayIcon, RefreshIcon, RepeatIcon, SparkleIcon, StopIcon, UsersIcon, VolumeIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { AssistantError } from "@/lib/assistant";
-import { KIND_LABEL, LANG_LABEL, LEVEL_LABEL, RUBRIC_LABEL, STYLE_LABEL, codeEvaluate, type PracticeItem, type InterviewLang, type InterviewStyle, MAX_SAVED, interviewStats, evaluate, followUp, talkTo, makeQuestions, suggestRoles, type Feedback, type InterviewKind, type InterviewLevel, type InterviewRecord, type Question } from "@/lib/interview";
+import { KIND_LABEL, LANG_LABEL, LEVEL_LABEL, RUBRIC_LABEL, STYLE_LABEL, codeEvaluate, type PracticeItem, type InterviewLang, type InterviewStyle, MAX_SAVED, interviewStats, evaluate, talkTo, turn, type TurnAct, makeQuestions, suggestRoles, type Feedback, type InterviewKind, type InterviewLevel, type InterviewRecord, type Question } from "@/lib/interview";
 import { usePremium } from "@/lib/premium";
 import { useStore } from "@/lib/store";
 import { TODAY, addDays, addMinutes, cn, fmt as dfmt, uid } from "@/lib/utils";
@@ -138,17 +138,21 @@ export default function InterviewPage() {
   const [recordOn, setRecordOn] = useState(false);
   const [strict, setStrict] = useState(true);
   const [endLog, setEndLog] = useState<Breach[]>([]);
-  // a two-way interview: one follow-up on a vague answer (up to 2 per interview), questions to Asha, and "any questions for me?" at the end
-  const [fu, setFu] = useState<Record<number, { q: string; a: string }>>({});
-  const [onFu, setOnFu] = useState(false);
-  const onFuRef = useRef(false);
-  onFuRef.current = onFu;
+  // a real conversation: on each question the candidate speaks in turns; Asha clarifies (never answers),
+  // asks about anything unclear in what they said, nods along, or wraps up. "Any questions for me?" at the end.
+  type Line = { who: "you" | "asha"; text: string; act?: TurnAct };
+  const [threads, setThreads] = useState<Record<number, Line[]>>({});
+  const threadsRef = useRef(threads);
+  threadsRef.current = threads;
+  const iRef = useRef(0);
+  const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
   const [endChat, setEndChat] = useState(false);
-  const [askOpen, setAskOpen] = useState(false);
   const [askText, setAskText] = useState("");
   const [talk, setTalk] = useState<{ who: "you" | "asha"; text: string }[]>([]);
   const [asking, setAsking] = useState(false);
+  const nextRef = useRef<() => void>(() => {});
+  const threadEnd = useRef<HTMLDivElement>(null);
   const proctor = useProctor(strict && (phase === "live" || phase === "coding"), (log) => {
     rec?.cancel();
     setRec(null);
@@ -270,11 +274,11 @@ export default function InterviewPage() {
       if (!qs.length) throw new AssistantError("Couldn’t prepare questions. Try again.");
       setQuestions(qs);
       setAnswers(qs.map(() => ""));
-      setFu({});
-      setOnFu(false);
+      setThreads({});
+      iRef.current = 0;
+      setDraft("");
       setEndChat(false);
       setTalk([]);
-      setAskOpen(false);
       setI(0);
       setTotal(0);
       setPhase("live");
@@ -370,18 +374,21 @@ export default function InterviewPage() {
     }
     try {
       quiet();
+      // hands-free: the mic stops by itself when they pause, so Asha can react like a person
       const r = await startRecording(async (audio) => {
+        setRec(null);
         setHearing(true);
+        let text = "";
         try {
-          const text = await transcribe(audio, lang);
-          if (text && onFuRef.current) setFu((f) => ({ ...f, [i]: { ...f[i], a: f[i]?.a ? `${f[i].a} ${text}` : text } }));
-          else if (text) setAnswers((a) => a.map((x, k) => (k === i ? (x ? `${x} ${text}` : text) : x)));
+          text = await transcribe(audio, lang);
         } catch {
           actions.toast("Couldn’t understand the recording. Try again or type your answer.");
         } finally {
           setHearing(false);
         }
-      });
+        if (text.trim()) void heard(text.trim());
+        else if (handsFree && auto) micRef.current();
+      }, { pause: handsFree ? 1800 : undefined });
       setRec(r);
     } catch {
       // the automatic mic just switches itself off; a tap on the mic explains why
@@ -394,6 +401,35 @@ export default function InterviewPage() {
     if (!rec && !hearing) void mic(true);
   };
 
+  /** The candidate said (or typed) something on the current question: add it, and let Asha react. */
+  const heard = async (text: string) => {
+    const k = iRef.current;
+    const th: Line[] = [...(threadsRef.current[k] ?? []), { who: "you", text }];
+    setThreads((t) => ({ ...t, [k]: th }));
+    setAnswers((a) => a.map((x, j) => (j === k ? (x ? `${x} ${text}` : text) : x)));
+    setTimeout(() => threadEnd.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
+    setThinking(true);
+    const r = await turn({ role: role.trim(), kind, level, style, lang: ilang, q: questions[k]?.q ?? "", thread: th, probes: th.filter((x) => x.act === "probe").length });
+    setThinking(false);
+    if (iRef.current !== k) return; // they moved on meanwhile
+    if (r.say) {
+      setThreads((t) => ({ ...t, [k]: [...(t[k] ?? []), { who: "asha", text: r.say, act: r.act }] }));
+      setTimeout(() => threadEnd.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
+      await say(r.say);
+    }
+    if (iRef.current !== k) return;
+    if (r.act === "done") {
+      if (handsFree) setTimeout(() => iRef.current === k && nextRef.current(), 700);
+    } else if (handsFree) micRef.current();
+  };
+  const send = () => {
+    const t = draft.trim();
+    if (!t || thinking) return;
+    setDraft("");
+    quiet();
+    void heard(t);
+  };
+
   const finish = async (final: string[]) => {
     proctor.stop();
     rec?.cancel();
@@ -401,8 +437,11 @@ export default function InterviewPage() {
     quiet();
     setPhase("scoring");
     try {
-      // each answer with its follow-up, if Asha asked one
-      const full = questions.map((_, k) => (fu[k] ? `${final[k] ?? ""}\n\nFollow-up: ${fu[k].q}\n${fu[k].a || "(no answer)"}` : final[k] ?? ""));
+      // each answer as the conversation it was: what they said, with Asha's questions in between
+      const full = questions.map((_, k) => {
+        const th = threads[k] ?? [];
+        return th.some((x) => x.who === "asha") ? th.map((x) => `${x.who === "you" ? "Candidate" : "Asha"}: ${x.text}`).join("\n") : final[k] ?? "";
+      });
       const fb: Feedback = await evaluate({ role: role.trim(), kind, level, style, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang, items: questions.map((q, k) => ({ q: q.q, a: full[k] })) });
       const record: InterviewRecord = { id: uid("iv"), at: Date.now(), role: role.trim(), kind, level, questions, answers: full, feedback: fb, lang: ilang, style, ...(kind === "custom" && topics.trim() ? { topics: topics.trim() } : {}) };
       actions.patch({ interviews: [record, ...history].slice(0, MAX_SAVED) });
@@ -422,35 +461,23 @@ export default function InterviewPage() {
     setSpeaking(false);
     return r;
   };
-  const next = async (skip = false) => {
+  const next = async () => {
     quiet();
-    rec?.stop();
+    rec?.cancel();
     setRec(null);
-    setAskOpen(false);
-    setTalk([]);
-    // like a real interviewer, Asha may dig into a vague answer once (at most twice per interview)
-    if (!skip && !onFu && (answers[i] ?? "").trim() && Object.keys(fu).length < 2) {
-      setThinking(true);
-      const f = await followUp({ role: role.trim(), kind, level, style, lang: ilang, q: questions[i].q, answer: answers[i] });
-      setThinking(false);
-      if (f) {
-        setFu((x) => ({ ...x, [i]: { q: f, a: "" } }));
-        setOnFu(true);
-        setTimeout(() => box.current?.focus(), 50);
-        const r = await say(f);
-        if (r === "done" && handsFree) micRef.current();
-        return;
-      }
-    }
-    setOnFu(false);
+    setDraft("");
+    setThinking(false);
     if (i < questions.length - 1) {
+      iRef.current = i + 1;
       setI(i + 1);
       setTimeout(() => box.current?.focus(), 50);
     } else {
+      iRef.current = questions.length;
       setEndChat(true);
       void say(ilang === "hi" ? "मेरी तरफ से इतना ही। क्या आपका मेरे लिए कोई सवाल है?" : "That’s all from my side. Do you have any questions for me?");
     }
   };
+  nextRef.current = () => void next();
   const askAsha = async (message: string, end = false) => {
     if (!message.trim() || asking) return;
     quiet();
@@ -458,7 +485,7 @@ export default function InterviewPage() {
     setTalk((t) => [...t, { who: "you", text: message.trim() }]);
     setAskText("");
     try {
-      const reply = await talkTo({ role: role.trim(), kind, level, style, lang: ilang, q: onFu ? fu[i]?.q ?? "" : questions[i]?.q ?? "", message: message.trim(), end });
+      const reply = await talkTo({ role: role.trim(), kind, level, style, lang: ilang, q: questions[i]?.q ?? "", message: message.trim(), end });
       if (reply) {
         setTalk((t) => [...t, { who: "asha", text: reply }]);
         void say(reply);
@@ -624,7 +651,7 @@ export default function InterviewPage() {
                       <p className="flex items-center gap-2 text-[12.5px] font-medium text-accent"><BotIcon size={14} /> {INTERVIEWER} asks</p>
                       <p className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">That’s all from my side. Do you have any questions for me?</p>
                       <p className="mt-1 text-[12.5px] text-white/50">Real interviews end like this. Asking one good question (about the work, the team or growth) leaves a strong impression.</p>
-                      <TalkBox talk={talk} busy={asking} value={askText} onChange={setAskText} onSend={(m) => void askAsha(m, true)} chips={["What does a typical day look like in this role?", "How do freshers learn and grow here?", "What are the next steps after this interview?"]} placeholder="Ask Asha anything about the role…" />
+                      <TalkBox talk={talk} busy={asking} value={askText} onChange={setAskText} onSend={(m) => void askAsha(m, true)} lang={lang} onMic={() => { quiet(); rec?.stop(); setRec(null); }} chips={["What does a typical day look like in this role?", "How do freshers learn and grow here?", "What are the next steps after this interview?"]} placeholder="Ask Asha anything about the role…" />
                       <div className="mt-4 flex justify-end">
                         <Button variant="primary" onClick={() => void finish(answers)}>{talk.length ? "Finish & get score" : "No questions · get my score"} <ArrowRightIcon size={14} /></Button>
                       </div>
@@ -633,43 +660,59 @@ export default function InterviewPage() {
                   ) : (
                   <>
                   <p className="flex items-center gap-2 text-[12.5px] font-medium text-accent">
-                    <BotIcon size={14} /> {onFu ? `${INTERVIEWER} follows up` : `${INTERVIEWER} asks${q.focus ? ` · ${q.focus}` : ""}`}
+                    <BotIcon size={14} /> {INTERVIEWER} asks{q.focus ? ` · ${q.focus}` : ""}
                   </p>
-                  <p key={`${i}${onFu}`} className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">{onFu ? fu[i]?.q : q.q}</p>
-                  <button type="button" onClick={() => setAskOpen((x) => !x)} className="mt-2 text-[12.5px] text-accent hover:underline">{askOpen ? "Close" : `Ask ${INTERVIEWER} about the question`}</button>
-                  {askOpen && <TalkBox talk={talk} busy={asking} value={askText} onChange={setAskText} onSend={(m) => void askAsha(m)} chips={["Please repeat the question", "What do you mean by this?", "Can you give an example?"]} placeholder={`Or type your question for ${INTERVIEWER}…`} note={`${INTERVIEWER} explains the question; she won’t give the answer.`} />}
+                  <p key={i} className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">{q.q}</p>
+
+                  {/* the conversation on this question: what they said, and Asha's questions in between */}
+                  {(threads[i] ?? []).length > 0 && (
+                    <div className="mt-4 max-h-[300px] space-y-2 overflow-y-auto pr-1">
+                      {(threads[i] ?? []).map((x, k) => (
+                        <div key={k} className={cn("flex", x.who === "you" ? "justify-end" : "justify-start")}>
+                          <p className={cn("max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed", x.who === "you" ? "rounded-br-md bg-white/[0.07] text-white/85" : "rounded-bl-md border border-violet-400/30 bg-violet-500/[0.1] text-white")}>
+                            {x.who === "asha" && <b className="mr-1 text-violet-200">{INTERVIEWER}:</b>}{x.text}
+                          </p>
+                        </div>
+                      ))}
+                      <div ref={threadEnd} />
+                    </div>
+                  )}
 
                   <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
                     {status === "listening" ? (
                       <>
                         <MicBars stream={rec?.stream ?? null} />
-                        <p className="mt-1 text-center text-[12.5px] text-white/60">Listening… speak your answer, then press <b className="text-white">Done</b>.</p>
+                        <p className="mt-1 text-center text-[12.5px] text-white/60">{handsFree ? `Listening… just talk. When you pause, ${INTERVIEWER} answers.` : <>Listening… speak, then press <b className="text-white">Done</b>.</>}</p>
                       </>
                     ) : (
                       <p className="flex h-10 items-center justify-center gap-2 text-center text-[12.5px] text-white/55">
                         {status === "asking" && <>
                           <span className="flex h-3 items-end gap-[2px]" aria-hidden>{[0, 1, 2, 3, 4].map((k) => <span key={k} className="iv-eq w-[3px] rounded-full bg-violet-400" style={{ animationDelay: `${k * 0.1}s` }} />)}</span>
-                          {INTERVIEWER} is asking…
+                          {INTERVIEWER} is speaking…
                         </>}
-                        {status === "writing" && "Writing down your answer…"}
-                        {status === "waiting" && (thinking ? `${INTERVIEWER} is listening to your answer…` : answers[i] ? "Add more, or go to the next question." : "Press the mic to answer by voice, or type below.")}
+                        {status === "writing" && "Writing down what you said…"}
+                        {status === "waiting" && (thinking ? `${INTERVIEWER} is thinking…` : answers[i] ? "Say more, ask Asha something, or go to the next question." : "Talk to Asha: press the mic, or type below. You can also ask her to repeat or explain.")}
                       </p>
                     )}
                   </div>
 
-                  <textarea
-                    ref={box}
-                    value={onFu ? fu[i]?.a ?? "" : answers[i] ?? ""}
-                    onChange={(e) => (onFu ? setFu((f) => ({ ...f, [i]: { ...f[i], a: e.target.value } })) : setAnswer(e.target.value))}
-                    rows={4}
-                    placeholder="Your answer appears here. You can also type or edit it."
-                    className="mt-3 w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] p-4 text-[14.5px] leading-relaxed text-white placeholder:text-white/35 outline-none focus:border-accent"
-                  />
+                  <div className="mt-3 flex items-end gap-2">
+                    <textarea
+                      ref={box}
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                      rows={2}
+                      placeholder="Type to Asha… (Enter to send)"
+                      className="min-h-[52px] w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-[14.5px] leading-relaxed text-white placeholder:text-white/35 outline-none focus:border-accent"
+                    />
+                    <Button className="h-[52px] shrink-0" disabled={!draft.trim() || thinking} onClick={send}>Send</Button>
+                  </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => void mic()} disabled={hearing} className={cn("relative flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-semibold transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white hover:border-accent/50")}>
+                      <button type="button" onClick={() => void mic()} disabled={hearing || thinking} className={cn("relative flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-semibold transition disabled:opacity-50", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white hover:border-accent/50")}>
                         {rec ? <StopIcon size={14} /> : <MicIcon size={15} />}
-                        {hearing ? "Writing it down…" : rec ? "Done" : "Speak answer"}
+                        {hearing ? "Writing it down…" : rec ? "Done" : "Speak"}
                       </button>
                       <select value={lang} onChange={(e) => setLang(e.target.value)} className="h-10 rounded-xl border border-white/10 bg-[#121216] px-2 text-[12.5px] text-white/75 outline-none" aria-label="Language you speak in">
                         {VOICE_LANGS.map((l) => (
@@ -678,8 +721,8 @@ export default function InterviewPage() {
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" disabled={thinking} onClick={() => void next(true)}>Skip</Button>
-                      <Button variant="primary" loading={thinking} onClick={() => void next()} disabled={!(onFu ? fu[i]?.a ?? "" : answers[i] ?? "").trim() || !!rec || hearing}>
+                      <Button variant="ghost" size="sm" onClick={() => void next()}>Skip</Button>
+                      <Button variant="primary" onClick={() => void next()} disabled={!(answers[i] ?? "").trim() || !!rec || hearing}>
                         {i < questions.length - 1 ? "Next question" : "Finish"} <ArrowRightIcon size={14} />
                       </Button>
                     </div>
@@ -732,7 +775,7 @@ export default function InterviewPage() {
               <input type="checkbox" checked={handsFree} onChange={(e) => setHandsFree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#a78bfa]" />
               <span>
                 <span className="block text-[13px] font-medium text-white">Talk like a real interview</span>
-                <span className="mt-0.5 block text-[12px] text-white/50">After {INTERVIEWER} asks, the mic turns on by itself.</span>
+                <span className="mt-0.5 block text-[12px] text-white/50">{INTERVIEWER} listens, asks about anything unclear when you pause, and moves on when you’re done.</span>
               </span>
             </label>
 
@@ -1160,7 +1203,37 @@ export default function InterviewPage() {
 }
 
 /** A small chat with Asha: quick chips, a text box, and the replies (also spoken). */
-function TalkBox({ talk, busy, value, onChange, onSend, chips, placeholder, note }: { talk: { who: "you" | "asha"; text: string }[]; busy: boolean; value: string; onChange: (v: string) => void; onSend: (m: string) => void; chips: string[]; placeholder: string; note?: string }) {
+function TalkBox({ talk, busy, value, onChange, onSend, chips, placeholder, note, lang, onMic }: { talk: { who: "you" | "asha"; text: string }[]; busy: boolean; value: string; onChange: (v: string) => void; onSend: (m: string) => void; chips: string[]; placeholder: string; note?: string; lang: string; onMic?: () => void }) {
+  // speak to Asha: record, write it down, send
+  const [rec, setRec] = useState<Recorder | null>(null);
+  const [hearing, setHearing] = useState(false);
+  const talkMic = async () => {
+    if (rec) {
+      rec.stop();
+      setRec(null);
+      return;
+    }
+    onMic?.();
+    try {
+      const r = await startRecording(async (audio) => {
+        setHearing(true);
+        try {
+          const text = await transcribe(audio, lang);
+          if (text) onSend(text);
+        } catch {
+          /* couldn't hear it: they can type instead */
+        } finally {
+          setHearing(false);
+        }
+      });
+      setRec(r);
+    } catch {
+      /* no mic: typing still works */
+    }
+  };
+  const recRef = useRef<Recorder | null>(null);
+  recRef.current = rec;
+  useEffect(() => () => recRef.current?.cancel(), []); // only when the box closes
   return (
     <div className="mt-3 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-3">
       {talk.length > 0 && (
@@ -1178,6 +1251,9 @@ function TalkBox({ talk, busy, value, onChange, onSend, chips, placeholder, note
         ))}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); onSend(value); }} className="mt-2 flex gap-2">
+        <button type="button" onClick={() => void talkMic()} disabled={busy || hearing} title={rec ? "Done" : "Speak to Asha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white/80 hover:border-violet-400/50")}>
+          {rec ? <StopIcon size={13} /> : <MicIcon size={14} />} {hearing ? "Writing…" : rec ? "Done" : "Speak"}
+        </button>
         <input value={value} onChange={(e) => onChange(e.target.value)} maxLength={300} placeholder={placeholder} className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-[#121216] px-3 text-[13px] text-white outline-none placeholder:text-white/35 focus:border-accent" />
         <Button size="sm" type="submit" loading={busy} disabled={!value.trim()}>Ask</Button>
       </form>

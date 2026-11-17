@@ -162,7 +162,7 @@ export function ProctorBadge({ left }: { left: number }) {
 
 /**
  * Listens for talking during a written test, on the device only (nothing is recorded or sent).
- * About 3 seconds of voice inside 5 seconds, clearly louder than the room's own noise, counts once;
+ * About 2 seconds of voice inside 4 seconds, louder than the room's own noise, counts once;
  * then it waits for quiet before it can count again.
  */
 function useTalkWatch(on: boolean, onTalk: () => void) {
@@ -200,12 +200,13 @@ function useTalkWatch(on: boolean, onTalk: () => void) {
           const level = sum / (hi - lo + 1);
           n++;
           floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
-          const voice = n > 20 && level > Math.max(floor * 1.8, floor + 18);
+          // strict: quieter talking counts, and ~2 s of it inside 4 s is enough
+          const voice = n > 20 && level > Math.max(floor * 1.5, floor + 12);
           recent.push(voice);
-          if (recent.length > 50) recent.shift();
+          if (recent.length > 40) recent.shift();
           quiet = voice ? 0 : quiet + 1;
           if (!armed && quiet >= 20) armed = true;
-          if (armed && recent.filter(Boolean).length >= 30) {
+          if (armed && recent.filter(Boolean).length >= 20) {
             armed = false;
             recent.length = 0;
             cb.current();
@@ -239,8 +240,8 @@ export function StrictDock({ left, onBreach, listen = true }: { left: number; on
 
 /** Thresholds for the voice check (see useVoiceMatch). */
 const STILL_LIPS = 0.08; // mouth() below this = lips not moving (talking moves it 0.15+; face-tracking jitter stays under)
-const VOICE_WINDOW = 40; // last 4 s (10 checks a second)
-const VOICE_STILL = 15; // ~1.5 s of voice with still lips in that window
+const VOICE_WINDOW = 30; // last 3 s (10 checks a second)
+const VOICE_STILL = 9; // strict: ~0.9 s of voice with still lips in that window
 const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops speaking
 
 /**
@@ -298,7 +299,8 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
           const level = sum / (hi - lo + 1);
           n++;
           floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
-          const voice = n > 20 && level > Math.max(floor * 1.5, floor + 10);
+          // strict: a quieter voice counts too (someone whispering from the side)
+          const voice = n > 20 && level > Math.max(floor * 1.3, floor + 7);
           const muted = pausedRef.current || Date.now() - pausedAt.current < ECHO_MS;
           if (muted) {
             recent.length = 0;
@@ -312,7 +314,7 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
           recent.push(still ? 1 : 0);
           if (recent.length > VOICE_WINDOW) recent.shift();
           quiet = voice ? 0 : quiet + 1;
-          if (!armed && quiet >= 30) armed = true;
+          if (!armed && quiet >= 20) armed = true;
           if (armed && recent.reduce((a, b) => a + b, 0) >= VOICE_STILL) {
             armed = false;
             recent.length = 0;
