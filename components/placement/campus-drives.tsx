@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MicIcon, BellIcon, BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, MailIcon, PencilIcon, SendIcon, TrophyIcon } from "@/components/ui/icons";
+import { MicIcon, BellIcon, BriefcaseIcon, CheckIcon, ClockIcon, FileIcon, LockIcon, MailIcon, PencilIcon, SendIcon, TrophyIcon, VideoIcon } from "@/components/ui/icons";
 import { Input, Label } from "@/components/ui/primitives";
 import { BRANCHES, currentLinks, effective, closed, ineligible, loadDrives, myApp, newApplication, saveApp, stageLabel, type Application, type Drive, type PlacementProfile } from "@/lib/placement";
 import { disablePush, enablePush, pushState, type PushState } from "@/lib/notify";
@@ -63,6 +63,17 @@ function IvEntry({ cid, d, a, kind = "technical" }: { cid: string; d: Drive; a: 
       {!done && <span className="text-[12.5px] font-medium text-violet-200">{info.attempt ? "Continue →" : info.open ? "Start →" : "View →"}</span>}
     </Link>
   );
+}
+
+/** A StudentOS page (any of our domains) → its path, so it opens in this tab with the same login. */
+const OWN = /(^|\.)student-os\.in$|^(studentos|mystudentos|student-os-technologies)[\w-]*\.vercel\.app$|^localhost$/;
+function ownPath(url: string): string | null {
+  try {
+    const u = new URL(url, typeof window !== "undefined" ? window.location.origin : "https://student-os.in");
+    return OWN.test(u.hostname) || (typeof window !== "undefined" && u.host === window.location.host) ? u.pathname + u.search : null;
+  } catch {
+    return null;
+  }
 }
 
 const fmtDate = (s: string) => (s ? new Date(s + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
@@ -384,16 +395,31 @@ export function CampusDrives() {
 
                 {currentLinks(a).length > 0 && (
                   <div className="mt-4 space-y-2">
-                    {[...currentLinks(a)].reverse().map((l) => (
-                      <a key={l.at + l.title} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.05] px-4 py-3 hover:border-cyan-300/50">
-                        <SendIcon size={15} className="text-cyan-300" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[13.5px] font-medium text-white">{l.title}</span>
-                          <span className="block text-[12px] text-white/50">{l.when ? `${l.when} · ` : ""}sent {new Date(l.at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
-                        </span>
-                        <span className="text-[12.5px] text-cyan-300">Open →</span>
-                      </a>
-                    ))}
+                    {[...currentLinks(a)].reverse().map((l) => {
+                      const path = ownPath(l.url);
+                      // a live interview booked on StudentOS: open it here, in this tab (same login)
+                      if (path?.startsWith("/placement/live"))
+                        return (
+                          <Link key={l.at + l.title} href={path} className="flex items-center gap-3 rounded-xl border border-violet-400/40 bg-violet-400/[0.08] px-4 py-3 transition hover:border-violet-300/70">
+                            <VideoIcon size={16} className="text-violet-300" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-[13.5px] font-semibold text-white">{l.title}</span>
+                              <span className="block text-[12px] text-white/55">{l.when ? `${l.when} (IST) · ` : ""}camera and mic on · join 15 min early</span>
+                            </span>
+                            <span className="text-[12.5px] font-medium text-violet-200">Join →</span>
+                          </Link>
+                        );
+                      return (
+                        <a key={l.at + l.title} href={path ?? l.url} target={path ? undefined : "_blank"} rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-cyan-400/25 bg-cyan-400/[0.05] px-4 py-3 hover:border-cyan-300/50">
+                          <SendIcon size={15} className="text-cyan-300" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13.5px] font-medium text-white">{l.title}</span>
+                            <span className="block text-[12px] text-white/50">{l.when ? `${l.when} · ` : ""}sent {new Date(l.at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                          </span>
+                          <span className="text-[12.5px] text-cyan-300">Open →</span>
+                        </a>
+                      );
+                    })}
                   </div>
                 )}
 
