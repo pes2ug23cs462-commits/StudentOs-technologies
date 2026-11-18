@@ -96,7 +96,7 @@ function check(raw: unknown): AssistantAction | null {
       return { type: "add_event", kind, title, date, note: str(o.note, 200) };
     }
     case "download_doc": {
-      const title = str(o.title, 90) || "StudentOS notes";
+      const title = str(typeof o.title === "string" ? o.title.replace(/_/g, " ") : "", 90) || "StudentOS notes";
       return { type: "download_doc", title, format: o.format === "docx" || o.format === "word" ? "docx" : "pdf" };
     }
     case "open_page": {
@@ -253,8 +253,14 @@ export function replyToBlocks(title: string, reply: string): DocBlock[] {
   const body = reply.replace(/```[\s\S]*?```/g, "").split("\n");
   for (const raw of body) {
     const line = raw.trim();
-    if (!line || /^(-{3,}|\*{3,})$/.test(line)) continue;
-    if (/press (apply|download)|download (it|the pdf)|here('|’)s (your|the) (pdf|file)/i.test(line) && line.length < 90) continue;
+    if (!line || /^(-{3,}|\*{3,}|_{3,})$/.test(line)) continue;
+    if (/^\|/.test(line)) {
+      // a markdown table row: skip the |---|---| line, write cells side by side
+      if (/^\|[\s:|-]+\|?$/.test(line)) continue;
+      out.push({ kind: "p", text: line.replace(/^\||\|$/g, "").split("|").map((c) => plain(c)).join("   |   ") });
+      continue;
+    }
+    if (/(press|tap|click) (apply|download)|download (it|this|the)\b|as a (pdf|word)|here('|’)s (your|the) (pdf|file)/i.test(line) && line.length < 100) continue;
     const h = line.match(/^#{1,6}\s+(.*)$/);
     if (h) {
       if (plain(h[1]).toLowerCase() !== title.toLowerCase()) out.push({ kind: "h", text: plain(h[1]) });

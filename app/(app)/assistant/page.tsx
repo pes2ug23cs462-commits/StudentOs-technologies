@@ -342,7 +342,7 @@ export default function AssistantPage() {
                         </>
                       );
                     })()}
-                    {/move|reschedule/i.test(m.text) && next && (
+                    {/\b(reschedul\w*|move (it|my|the|this|a|your|that) (session|class|study))\b/i.test(m.text) && next && (
                       <div className="mt-3">
                         <Button size="sm" icon={<CalendarIcon size={13} />} onClick={() => setRescheduling(true)}>
                           Open reschedule options

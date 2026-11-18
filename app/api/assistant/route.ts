@@ -8,6 +8,7 @@ import { AiError, chat, type ChatMessage, type ContentPart } from "@/lib/server/
 import { takeQuota, verifyIdToken } from "@/lib/server/auth";
 import { ACTIONS_PROMPT } from "@/lib/assistant-actions";
 import { STUDY_PROMPT } from "@/lib/assistant-study";
+import { normalizeActionBlocks } from "@/lib/action-blocks";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -93,7 +94,7 @@ export async function POST(req: Request) {
     // a PDF / Word file / long explanation needs room for 2–3 pages
     const long = /\b(pdf|docx?|word file|document|handout|pages?|detail(ed)?|explain .{0,40}fully|pura|poora|vistar)\b/i.test(last.content);
     const { text } = await chat(messages, { vision: images.length > 0, maxTokens: long ? 3200 : 1200 });
-    return NextResponse.json({ reply: text, left: quota.left });
+    return NextResponse.json({ reply: normalizeActionBlocks(text), left: quota.left });
   } catch (e) {
     const code = e instanceof AiError ? e.code : "failed";
     return NextResponse.json({ error: code }, { status: code === "no-key" ? 503 : code === "busy" ? 429 : 502 });
