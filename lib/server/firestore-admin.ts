@@ -75,6 +75,13 @@ function account(): ServiceAccount | null {
 }
 
 export const adminConfigured = () => !!account();
+
+/** An OAuth token from the service account for another Google Cloud API (e.g. Text-to-Speech). */
+export async function googleToken(scope = "https://www.googleapis.com/auth/cloud-platform"): Promise<{ token: string; project: string } | null> {
+  const sa = account();
+  if (!sa) return null;
+  return { token: await accessToken(sa, scope), project: sa.project_id };
+}
 /** why the service account can’t be used (empty when it can) */
 export const adminProblem = () => (account() ? "" : problem);
 

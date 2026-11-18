@@ -2,14 +2,15 @@
 
 /* The AI interviewer's voice (a woman's voice), with a mouth level for lip sync.
 
-   English: the natural cloud voice (/api/tts, Premium). Every piece of the
+   English and Hindi: the natural cloud voice (/api/tts: Orpheus for Premium
+   English, Google's Indian voices for everyone else). Every piece of the
    question is fetched first, silence at the edges is trimmed, and the pieces
    are played back to back with Web Audio, so the voice doesn't stop and start.
    The mouth follows the real loudness of the audio.
 
-   Hindi, or if the cloud voice isn't available: the best female voice the
-   device has for that language (e.g. Microsoft Swara / Google हिन्दी), with the
-   mouth following the words being spoken. */
+   If the cloud voice isn't available: the best female voice the device has for
+   that language (e.g. Microsoft Swara / Google हिन्दी), with the mouth
+   following the words being spoken. */
 
 import { auth } from "@/lib/firebase";
 import type { VoiceId } from "@/lib/explainer";
@@ -56,28 +57,29 @@ export function pickVoice(voices: SpeechSynthesisVoice[], lang: TalkLang): Speec
   return [...list].sort((a, b) => score(b) - score(a))[0] ?? null;
 }
 
-/** Whether this device can speak Hindi at all. */
+/** Whether Hindi can be spoken here: by the cloud voice, or by the device. */
 export async function hasHindiVoice() {
+  if (await cloud("नमस्ते", "hannah", "hi")) return true;
   return !!pickVoice(await voicesReady(), "hi");
 }
 
 /* ---------- natural cloud voice ---------- */
 
 const cache = new Map<string, Promise<ArrayBuffer | null>>();
-let cloudOff = false;
+const cloudOff = new Set<TalkLang>();
 
-function cloud(text: string, voice: VoiceId): Promise<ArrayBuffer | null> {
-  const k = `${voice}|${text}`;
+function cloud(text: string, voice: VoiceId, lang: TalkLang = "en"): Promise<ArrayBuffer | null> {
+  const k = `${lang}|${voice}|${text}`;
   let p = cache.get(k);
   if (!p) {
     p = (async () => {
-      if (cloudOff) return null;
+      if (cloudOff.has(lang)) return null;
       try {
         const token = await auth.currentUser?.getIdToken().catch(() => null);
         if (!token) return null;
-        const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ text, voice }) });
+        const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ text, voice, lang }) });
         if (!res.ok || !res.headers.get("content-type")?.includes("audio")) {
-          if (res.status !== 429) cloudOff = true;
+          if (res.status !== 429) cloudOff.add(lang);
           return null;
         }
         return await res.arrayBuffer();
@@ -129,7 +131,7 @@ export function createTalker(opts: { voice?: VoiceId; lang?: TalkLang } = {}): T
   let buf: ReturnType<typeof newBuf> | null = null;
   let sources: AudioBufferSourceNode[] = [];
   let playingUntil = 0;
-  let mode: "natural" | "browser" = lang === "en" ? "natural" : "browser";
+  let mode: "natural" | "browser" = "natural";
   // browser-voice mouth: when the current word started and how long it is
   let browserSpeaking = false;
   let wordAt = 0;
@@ -148,7 +150,7 @@ export function createTalker(opts: { voice?: VoiceId; lang?: TalkLang } = {}): T
   };
 
   const naturalSay = async (parts: string[], my: number): Promise<SayResult | null> => {
-    const raw = await Promise.all(parts.map((p) => cloud(p, voice)));
+    const raw = await Promise.all(parts.map((p) => cloud(p, voice, lang)));
     if (my !== run) return "stopped";
     if (raw.some((r) => !r)) return null;
     let c: AudioContext;
@@ -237,14 +239,14 @@ export function createTalker(opts: { voice?: VoiceId; lang?: TalkLang } = {}): T
     stop,
     engine: () => mode,
     prefetch: (text) => {
-      if (lang === "en") chunks(text).forEach((c) => void cloud(c, voice));
+      if (!cloudOff.has(lang)) chunks(text).forEach((c) => void cloud(c, voice, lang));
     },
     async say(text) {
       stop();
       const my = run;
       const parts = chunks(text);
       if (!parts.length) return "done";
-      if (lang === "en" && !cloudOff) {
+      if (!cloudOff.has(lang)) {
         const r = await naturalSay(parts, my);
         if (r) {
           mode = "natural";
