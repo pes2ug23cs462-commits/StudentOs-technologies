@@ -5,10 +5,12 @@
 import { goalProgress } from "./goal-progress";
 import { isDue } from "./notes";
 import { testAnalytics } from "./tests";
-import { allCourses, courseStats, emptyLearning } from "./learn";
+import { allCourses, certCount, courseStats, emptyLearning } from "./learn";
 import { INTERESTS, LEVEL_INFO, studentLine } from "./setup";
 import type { AppState } from "./store";
 import { TODAY, addDays } from "./utils";
+
+const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 export function buildContext(state: AppState): string {
   const lines: string[] = [];
@@ -31,6 +33,25 @@ export function buildContext(state: AppState): string {
   lines.push(`Study preferences: ${state.prefs.hours} hours per week, ${state.prefs.sessionLength}-min sessions, prefers ${state.prefs.times.join("/") || "any time"}, rest day ${state.prefs.restDay}`);
   const ts = testAnalytics(state.tests ?? []);
   if (ts) lines.push(`Mock tests: ${ts.tests} taken, average ${ts.avg}%${ts.weak.length ? `, weak topics: ${ts.weak.map((w) => `${w.topic} (${w.acc}%)`).join(", ")}` : ""}`);
+  const recentTests = (state.tests ?? []).slice(0, 3);
+  if (recentTests.length) lines.push(`Latest mock tests: ${recentTests.map((t) => `${t.subject} ${t.score}/${t.total} on ${day(t.at)}`).join("; ")}`);
+  const ivs = state.interviews ?? [];
+  if (ivs.length) {
+    const avg = Math.round(ivs.reduce((n, x) => n + (x.feedback?.overall ?? 0), 0) / ivs.length);
+    lines.push(`Mock interviews: ${ivs.length} done, average ${avg}/100. Latest: ${ivs
+      .slice(0, 3)
+      .map((x) => `${x.role} (${x.kind}) ${x.feedback?.overall ?? "?"}/100 on ${day(x.at)}${x.feedback?.tips?.[0] ? `, tip: ${x.feedback.tips[0].slice(0, 90)}` : ""}`)
+      .join("; ")}`);
+  }
+  const solved = Object.keys(state.coding?.solved ?? {}).length;
+  if (solved) lines.push(`Coding practice: ${solved} problem${solved > 1 ? "s" : ""} solved`);
+  const certs = certCount(state.learning ?? emptyLearning());
+  if (certs) lines.push(`Certificates earned: ${certs}`);
+  if (state.notes?.length) lines.push(`AI notes saved: ${state.notes.slice(0, 8).map((n) => n.title).join("; ")}`);
+  if (state.college?.name) lines.push(`College on StudentOS: ${state.college.name}${state.college.section ? `, section ${state.college.section}` : ""}`);
+  const events = (state.timeline ?? []).filter((e) => !e.done && e.date >= TODAY).sort((x, y) => x.date.localeCompare(y.date));
+  if (events.length) lines.push(`Upcoming on their college timeline: ${events.slice(0, 8).map((e) => `${e.date} ${e.kind}: ${e.title}`).join("; ")}`);
+  else lines.push("Nothing upcoming on their college timeline (exams, deadlines).");
   const dueNotes = (state.notes ?? []).filter((n) => isDue(n));
   if (dueNotes.length) lines.push(`Notes due for revision today: ${dueNotes.map((n) => n.title).join(", ")}`);
 

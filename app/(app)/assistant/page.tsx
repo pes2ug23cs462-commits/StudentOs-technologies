@@ -185,6 +185,7 @@ export default function AssistantPage() {
       today: TODAY,
       resume: state.resume ?? starterResume(state),
       entries: state.entries ?? [],
+      timeline: state.timeline ?? [],
       addSession: actions.addSession,
       setPrefs: actions.setPrefs,
       patch: actions.patch,

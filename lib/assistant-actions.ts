@@ -9,7 +9,7 @@
    ```
    Once applied, the block is rewritten as ```action-applied so it shows as done. */
 
-import { ENTRY_KINDS, type Entry, type EntryKind, type ResumeData } from "./free";
+import { ENTRY_KINDS, type Entry, type EntryKind, type ResumeData, type TimelineEvent, type TimelineKind } from "./free";
 import type { RestDay, StudyPrefs, StudySession } from "./types";
 
 export type AssistantAction =
@@ -17,22 +17,36 @@ export type AssistantAction =
   | { type: "add_entry"; kind: EntryKind; title: string; org: string; start: string; end: string; description: string; skills: string[] }
   | { type: "add_resume_skills"; skills: string[] }
   | { type: "set_prefs"; restDay?: RestDay; sessionLength?: StudyPrefs["sessionLength"] }
+  | { type: "add_event"; kind: TimelineKind; title: string; date: string; note: string }
   | { type: "open_page"; page: string; label: string };
+
+const EVENT_KINDS: TimelineKind[] = ["exam", "internship", "hackathon", "placement", "milestone", "personal"];
 
 /** Pages the assistant may link to. */
 export const PAGES: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/assistant": "AI Assistant",
   "/study-plan": "Study Plan",
   "/schedule": "Schedule",
+  "/timeline": "College timeline",
   "/learn": "Learning",
   "/learn?tab=materials&m=notes": "AI Notes",
+  "/learn?tab=materials": "Study materials",
+  "/learn?tab=goals": "My goals",
+  "/learn?tab=videos": "Popular videos",
+  "/exam-prep": "Exam Prep",
+  "/placement": "Placement",
   "/projects": "Projects & Experience",
   "/resume": "Resume Creator",
   "/tests": "Practice Arena",
   "/interview": "Mock Interview",
   "/code": "Coding practice",
   "/certificates": "Certificates",
+  "/join": "My college",
+  "/premium": "Premium",
   "/settings": "Settings",
+  "/settings/profile": "Profile settings",
+  "/settings/account": "Plan & account",
 };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
@@ -71,6 +85,13 @@ function check(raw: unknown): AssistantAction | null {
       const len = Number(o.sessionLength);
       const sessionLength = len === 45 || len === 60 || len === 90 ? (len as StudyPrefs["sessionLength"]) : undefined;
       return restDay || sessionLength ? { type: "set_prefs", ...(restDay ? { restDay } : {}), ...(sessionLength ? { sessionLength } : {}) } : null;
+    }
+    case "add_event": {
+      const title = str(o.title, 90);
+      const date = str(o.date, 10);
+      if (!title || !isDate(date)) return null;
+      const kind = EVENT_KINDS.includes(o.kind as TimelineKind) ? (o.kind as TimelineKind) : "milestone";
+      return { type: "add_event", kind, title, date, note: str(o.note, 200) };
     }
     case "open_page": {
       const page = str(o.page, 60);
@@ -135,6 +156,8 @@ export function describe(a: AssistantAction): { title: string; where: string; li
         lines: [a.restDay ? `Rest day: ${a.restDay === "none" ? "no rest day" : a.restDay[0].toUpperCase() + a.restDay.slice(1)}` : "", a.sessionLength ? `Session length: ${a.sessionLength} min` : ""].filter(Boolean),
         button: "Save settings",
       };
+    case "add_event":
+      return { title: `Add to timeline: ${a.title}`, where: "College timeline", lines: [`${a.kind[0].toUpperCase() + a.kind.slice(1)} · ${fmtDate(a.date)}`, a.note].filter(Boolean), button: "Add to timeline" };
     case "open_page":
       return { title: `Open ${a.label}`, where: a.label, lines: [], button: "Open" };
   }
@@ -144,9 +167,10 @@ type Ctx = {
   today: string;
   resume: ResumeData;
   entries: Entry[];
+  timeline: TimelineEvent[];
   addSession: (s: StudySession) => void;
   setPrefs: (p: Partial<StudyPrefs>) => void;
-  patch: (p: { entries?: Entry[]; resume?: ResumeData }) => void;
+  patch: (p: { entries?: Entry[]; resume?: ResumeData; timeline?: TimelineEvent[] }) => void;
   go: (href: string) => void;
   id: (prefix: string) => string;
 };
@@ -191,6 +215,12 @@ export function applyAction(a: AssistantAction, c: Ctx): { ok: true; message: st
     case "set_prefs":
       c.setPrefs({ ...(a.restDay ? { restDay: a.restDay } : {}), ...(a.sessionLength ? { sessionLength: a.sessionLength } : {}) });
       return { ok: true, message: "Study settings saved." };
+    case "add_event": {
+      if (c.timeline.some((e) => e.date === a.date && e.title.toLowerCase() === a.title.toLowerCase())) return { ok: false, error: "That’s already on your timeline." };
+      const ev: TimelineEvent = { id: c.id("t"), kind: a.kind, title: a.title, date: a.date, note: a.note, done: false };
+      c.patch({ timeline: [...c.timeline, ev].sort((x, y) => x.date.localeCompare(y.date)) });
+      return { ok: true, message: `Added “${a.title}” on ${fmtDate(a.date)} to your timeline.` };
+    }
     case "open_page":
       c.go(a.page);
       return { ok: true, message: `Opening ${a.label}…` };
@@ -199,7 +229,7 @@ export function applyAction(a: AssistantAction, c: Ctx): { ok: true; message: st
 
 /** What the assistant is told it can do (added to its instructions on the server). */
 export const ACTIONS_PROMPT = `You can suggest changes to the student's StudentOS pages. You never change anything yourself: the student sees a card and presses Apply.
-Only suggest a change when the student asks you to add, change, open or plan something. Write your normal short reply first, then one block per change (at most 3), exactly like this:
+Whenever the student asks you to do something in the app (add, plan, schedule, remember, change, open, start), do it with a block instead of telling them where to click. Write your normal short reply first, then one block per change (at most 3), exactly like this:
 \`\`\`action
 {"type":"add_session","title":"Revise DBMS joins","date":"YYYY-MM-DD","start":"19:00","minutes":45}
 \`\`\`
@@ -208,5 +238,6 @@ Allowed types:
 - add_entry: kind (project | internship | hackathon | achievement | volunteering), title, org, start and end (YYYY-MM or ""), description (resume points, one per line), skills (list). Only with facts the student gave you.
 - add_resume_skills: skills (list). Only skills the student says they have.
 - set_prefs: restDay (sunday | saturday | none) and/or sessionLength (45 | 60 | 90).
-- open_page: page, one of ${Object.keys(PAGES).join(", ")}.
+- add_event: an exam, deadline or date to remember on their college timeline. kind (exam | internship | hackathon | placement | milestone | personal), title, date (YYYY-MM-DD), note (short, optional).
+- open_page: page, one of ${Object.keys(PAGES).join(", ")}. Use it whenever they ask to open, show or go to something, or when a page does what they want (e.g. mock interview → /interview, make notes → /learn?tab=materials&m=notes, coding practice → /code, placement drives → /placement).
 Never say a change is done; say "Press Apply to add it". Don't put blocks in answers that only explain something.`;

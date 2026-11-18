@@ -1,10 +1,12 @@
 "use client";
 
-/* ⌘K / Ctrl+K search: jump to any page, or ask the assistant straight away. */
+/* ⌘K / Ctrl+K search: jump to any page, or ask the assistant straight away.
+   Opening it adds a history step, so the phone's back button (or swipe back)
+   closes the search instead of leaving the page. */
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightIcon, SearchIcon, SparkleIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, SearchIcon, SparkleIcon, XIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { showExamPrep } from "@/lib/exam-prep";
 import { useStore } from "@/lib/store";
@@ -25,17 +27,24 @@ export function CommandMenu() {
   const input = useRef<HTMLInputElement>(null);
   const back = useRef<HTMLElement | null>(null);
 
+  /** Close the search. If it added a history step, going back removes it (and closes). */
+  const close = () => {
+    if ((window.history.state as { cmdMenu?: boolean } | null)?.cmdMenu) window.history.back();
+    else setOpen(false);
+  };
+
   useEffect(() => {
     const show = () => {
       back.current = document.activeElement as HTMLElement | null;
       setQ("");
       setSel(0);
       setOpen(true);
+      window.history.pushState({ ...(window.history.state ?? {}), cmdMenu: true }, "");
     };
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        if (open) setOpen(false);
+        if (open) close();
         else show();
       }
     };
@@ -52,10 +61,20 @@ export function CommandMenu() {
     else back.current?.focus?.();
   }, [open]);
 
+  // back button / swipe back while the search is open: just close it
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => setOpen(false);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [open]);
+
   const items = useMemo<Item[]>(() => {
     const go = (href: string) => () => {
       setOpen(false);
-      router.push(href);
+      // take the place of the search's own history step, so back returns to the page before
+      if ((window.history.state as { cmdMenu?: boolean } | null)?.cmdMenu) router.replace(href);
+      else router.push(href);
     };
     const pages: Item[] = [
       ...NAV_ALL.filter((n) => n.href !== "/exam-prep" || examPrep).map((n) => ({ key: n.href, label: n.label, hint: "Page", go: go(n.href) })),
@@ -72,7 +91,7 @@ export function CommandMenu() {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label="Search">
-      <div className="absolute inset-0 animate-fade-in bg-scrim/50 backdrop-blur-[2px]" onClick={() => setOpen(false)} aria-hidden />
+      <div className="absolute inset-0 animate-fade-in bg-scrim/50 backdrop-blur-[2px]" onClick={close} aria-hidden />
       <div className="relative w-full max-w-[560px] animate-fade-in overflow-hidden rounded-xl border border-white/10 bg-raised shadow-[0_24px_60px_-12px_rgb(0_0_0_/_0.6)]">
         <div className="flex items-center gap-2.5 border-b border-white/[0.07] px-4">
           <SearchIcon size={15} className="text-white/45" />
@@ -84,7 +103,7 @@ export function CommandMenu() {
               setSel(0);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
+              if (e.key === "Escape") close();
               else if (e.key === "ArrowDown") {
                 e.preventDefault();
                 setSel((s) => Math.min(items.length - 1, s + 1));
@@ -101,7 +120,11 @@ export function CommandMenu() {
             aria-activedescendant={items[pick] ? `cmd-${pick}` : undefined}
             className="h-12 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-white/35"
           />
-          <kbd className="rounded border border-white/12 px-1.5 py-0.5 text-[10.5px] text-white/45">Esc</kbd>
+          <kbd className="hidden rounded border border-white/12 px-1.5 py-0.5 text-[10.5px] text-white/45 sm:inline">Esc</kbd>
+          <button type="button" onClick={close} aria-label="Close search" className="-mr-2 flex h-9 items-center gap-1 rounded-lg px-2 text-[12.5px] text-white/70 hover:bg-white/10 sm:hidden">
+            <XIcon size={15} />
+            Close
+          </button>
         </div>
         <ul id="cmd-list" role="listbox" className="max-h-[50vh] overflow-y-auto p-1.5">
           {items.map((it, i) => (
@@ -129,7 +152,7 @@ export function CommandMenu() {
           ))}
           {!items.length && <li className="px-3 py-6 text-center text-[13px] text-white/45">Type to search</li>}
         </ul>
-        <div className="flex items-center gap-4 border-t border-white/[0.07] px-4 py-2 text-[11px] text-white/40">
+        <div className="hidden items-center gap-4 border-t border-white/[0.07] px-4 py-2 text-[11px] text-white/40 sm:flex">
           <span>↑↓ to move</span>
           <span>Enter to open</span>
           <span className="ml-auto">Type a question to ask the AI</span>

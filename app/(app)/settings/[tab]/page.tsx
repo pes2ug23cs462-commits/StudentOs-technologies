@@ -5,7 +5,8 @@ import { FancyIcon } from "@/components/site/fancy-icon";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
-import { photoFromFile } from "@/lib/photo";
+import { loadPhoto } from "@/lib/photo";
+import { PhotoCropper } from "@/components/settings/photo-cropper";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/drawer";
 import { BellIcon, ChatIcon, LockIcon, SlidersIcon, TrophyIcon, UserIcon, BuildingIcon } from "@/components/ui/icons";
@@ -91,6 +92,7 @@ function ProfileTab() {
   const [draft, setDraft] = useState<Profile>(state.profile);
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [cropping, setCropping] = useState<{ img: HTMLImageElement; done: () => void } | null>(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.profile);
   const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement>) => setDraft((d) => ({ ...d, [k]: e.target.value }));
   const fields: [keyof Profile, string][] = [
@@ -122,10 +124,7 @@ function ProfileTab() {
               if (!file) return;
               setPhotoBusy(true);
               try {
-                const photo = await photoFromFile(file);
-                actions.setProfile({ ...state.profile, photo });
-                setDraft((d) => ({ ...d, photo }));
-                actions.toast("Profile photo updated.");
+                setCropping(await loadPhoto(file));
               } catch (err) {
                 actions.toast(err instanceof Error ? err.message : "Couldn’t use that image.");
               } finally {
@@ -152,6 +151,22 @@ function ProfileTab() {
             </Button>
           </div>
         </div>
+        {cropping && (
+          <PhotoCropper
+            img={cropping.img}
+            onCancel={() => {
+              cropping.done();
+              setCropping(null);
+            }}
+            onDone={(photo) => {
+              cropping.done();
+              setCropping(null);
+              actions.setProfile({ ...state.profile, photo });
+              setDraft((d) => ({ ...d, photo }));
+              actions.toast("Profile photo updated.");
+            }}
+          />
+        )}
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {fields.map(([k, label]) => (
             <div key={k}>
