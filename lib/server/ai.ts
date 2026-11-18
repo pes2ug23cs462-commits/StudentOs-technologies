@@ -100,6 +100,21 @@ export class AiError extends Error {
   }
 }
 
+/* gpt-oss and GLM "think" before they answer, and that thinking counts against
+   max_tokens. With a short limit (a 200-token reply) the thinking used it all up and
+   the answer came back empty, so Asha went quiet. So: think briefly, and leave room. */
+const THINKS = /gpt-oss|glm/i;
+function requestBody(p: Provider, messages: ChatMessage[], maxTokens: number, temperature: number) {
+  const body: Record<string, unknown> = { model: p.model, messages, temperature, max_tokens: maxTokens };
+  if (THINKS.test(p.model)) {
+    body.max_tokens = maxTokens + 700;
+    // Groq and Cerebras take reasoning_effort for gpt-oss; Cloudflare gets the extra room only.
+    if (/gpt-oss/i.test(p.model) && (p.name.startsWith("groq") || p.name === "cerebras")) body.reasoning_effort = "low";
+    if (p.name === "zai") body.thinking = { type: "disabled" };
+  }
+  return body;
+}
+
 /** Sends the chat to the first provider that answers.
     strong: only gpt-oss-120b-class providers (use for scores and reports, so every
     student is judged by the same model). */
@@ -121,7 +136,7 @@ export async function chat(
       const res = await fetch(p.url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.key}` },
-        body: JSON.stringify({ model: p.model, messages, max_tokens: opts.maxTokens ?? 900, temperature: opts.temperature ?? 0.5 }),
+        body: JSON.stringify(requestBody(p, messages, opts.maxTokens ?? 900, opts.temperature ?? 0.5)),
         signal: AbortSignal.timeout(30_000),
         cache: "no-store",
       });
@@ -137,9 +152,10 @@ export async function chat(
         coolDown(p, [400, 401, 403, 404].includes(res.status) ? 10 * 60_000 : 30_000);
         continue;
       }
-      const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const j = (await res.json()) as { choices?: { message?: { content?: string | null }; finish_reason?: string }[] };
       const text = (j.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
       if (text) return { text, provider: p.name };
+      console.warn(`[ai] ${p.name} ${p.model} gave an empty answer (${j.choices?.[0]?.finish_reason ?? "?"})`);
     } catch (e) {
       coolDown(p, 30_000);
       console.error(`[ai] ${p.name} error`, e instanceof Error ? e.message : e);
