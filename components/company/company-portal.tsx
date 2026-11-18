@@ -5,6 +5,7 @@
    approved them, and runs the rounds: links, next round, selected, offer letters.
    Students are told by email, notification and the in-app bell. */
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useResumePrint } from "@/components/resume/resume-print";
@@ -122,7 +123,7 @@ export function CompanyPortal() {
   if (status === "signed-out")
     return (
       <Shell>
-        <div className="mx-auto mt-[12vh] max-w-[480px] rounded-3xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
+        <div className="mx-auto mt-[12vh] max-w-[480px] rounded-3xl border border-white/[0.08] bg-[#0d152a] p-8 text-center">
           <div className="flex justify-center"><LogoMark size={40} /></div>
           <h1 className="mt-5 text-[26px] font-semibold">StudentOS for companies</h1>
           <p className="mt-2 text-[14px] text-white/55">Hire freshers and interns from our partner colleges. Every applicant comes with their resume and StudentOS mock-interview scores.</p>
@@ -142,7 +143,7 @@ export function CompanyPortal() {
     <aside className="flex w-full flex-col gap-1 border-b border-white/[0.06] bg-[#0b0b0d] px-3 py-4 lg:min-h-screen lg:w-[240px] lg:border-r lg:border-b-0">
       <Brand />
       <div className="mt-4 mb-3 flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-2.5 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#ffffff] text-[15px] font-extrabold text-[#0b0a12]">{who.company.name.slice(0, 1)}</span>
+        <CompanyLogo name={who.company.name} website={who.company.website} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" letterClassName="border border-white/10 bg-[#ffffff] text-[15px] font-extrabold text-[#0b0a12]" />
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold">{who.company.name}</p>
           <p className="truncate text-[11.5px] text-white/45">Recruiter · {state.profile.name}</p>
@@ -153,7 +154,7 @@ export function CompanyPortal() {
         <div className="mx-2 h-16 animate-pulse rounded-lg bg-white/[0.04]" />
       ) : drives.length ? (
         drives.map((d) => (
-          <button key={d.pid} type="button" onClick={() => setOpen(d.pid)} className={cn("rounded-lg px-3 py-2 text-left text-[13px] transition", open === d.pid ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#a78bfa]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
+          <button key={d.pid} type="button" onClick={() => setOpen(d.pid)} className={cn("rounded-lg px-3 py-2 text-left text-[13px] transition", open === d.pid ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#fbbf24]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
             <span className="block truncate">{d.role}</span>
             <span className="block text-[11px] text-white/40">{d.colleges} college{d.colleges === 1 ? "" : "s"}</span>
           </button>
@@ -200,7 +201,7 @@ function Join({ name, onJoined }: { name: string; onJoined: () => void }) {
   };
   return (
     <Shell>
-      <div className="mx-auto mt-[12vh] max-w-[440px] rounded-3xl border border-white/[0.08] bg-[#0f0f11] p-8">
+      <div className="mx-auto mt-[12vh] max-w-[440px] rounded-3xl border border-white/[0.08] bg-[#0d152a] p-8">
         <Brand />
         <h1 className="mt-6 text-[22px] font-semibold">Join your company</h1>
         <p className="mt-1.5 text-[13px] text-white/55">Enter the company code StudentOS gave you. You’ll see your drives and applicants straight away.</p>
@@ -324,7 +325,7 @@ function Applicants({ pid }: { pid: string }) {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Applied", data.applicants.length], ["In rounds", count((a) => a.status === "in-process")], ["Selected", count((a) => a.status === "selected")], ["Offers accepted", count((a) => a.decision === "accepted")]].map(([l, v]) => (
-          <div key={l as string} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
+          <div key={l as string} className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4">
             <p className="text-[26px] leading-none font-semibold tabular-nums">{v}</p>
             <p className="mt-1.5 text-[12px] text-white/50">{l}</p>
           </div>
@@ -337,7 +338,7 @@ function Applicants({ pid }: { pid: string }) {
         <IvCard pid={pid} kind="hr" rounds={rounds} summary={data.ivHr ?? null} onSaved={() => void load()} />
       </div>
 
-      <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
+      <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
           {tabs.map(([k, l, n]) => (
             <button key={k} type="button" onClick={() => setTab(k)} className={cn("h-8 rounded-lg border px-3 text-[12.5px] transition", tab === k ? "border-accent/60 bg-[var(--color-plum)] text-white" : "border-white/10 text-white/60 hover:text-white")}>
@@ -383,7 +384,7 @@ function Applicants({ pid }: { pid: string }) {
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} disabled={busy} onClick={() => void run("reject")}>Not selected</Button>
             <Button size="sm" variant="ghost" icon={<FileIcon size={13} />} onClick={() => resumes.print((data?.applicants ?? []).filter((a) => picked.has(key(a))).map(cvOf))}>Resumes</Button>
             <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[12px] text-white/70">
-              <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#a78bfa]" /> Notify students
+              <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#fbbf24]" /> Notify students
             </label>
           </div>
         )}
@@ -393,7 +394,7 @@ function Applicants({ pid }: { pid: string }) {
             <table className="w-full min-w-[860px] text-[13px]">
               <thead>
                 <tr className="text-left text-[11.5px] text-white/45">
-                  <th className="w-8 pb-2"><input type="checkbox" aria-label="Pick all" checked={picked.size > 0 && picked.size === list.length} onChange={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map(key)))} className="accent-[#a78bfa]" /></th>
+                  <th className="w-8 pb-2"><input type="checkbox" aria-label="Pick all" checked={picked.size > 0 && picked.size === list.length} onChange={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map(key)))} className="accent-[#fbbf24]" /></th>
                   <th className="pb-2 font-medium">Student</th>
                   <th className="pb-2 font-medium">College</th>
                   <th className="pb-2 font-medium" title="Entered by the student. Check it against your own records.">Branch · CGPA*</th>
@@ -410,7 +411,7 @@ function Applicants({ pid }: { pid: string }) {
               <tbody>
                 {list.map((a) => (
                   <tr key={key(a)} className="border-t border-white/[0.06]">
-                    <td className="py-2.5"><input type="checkbox" aria-label={`Pick ${a.name}`} checked={picked.has(key(a))} onChange={() => setPicked((s) => { const n = new Set(s); if (n.has(key(a))) n.delete(key(a)); else n.add(key(a)); return n; })} className="accent-[#a78bfa]" /></td>
+                    <td className="py-2.5"><input type="checkbox" aria-label={`Pick ${a.name}`} checked={picked.has(key(a))} onChange={() => setPicked((s) => { const n = new Set(s); if (n.has(key(a))) n.delete(key(a)); else n.add(key(a)); return n; })} className="accent-[#fbbf24]" /></td>
                     <td className="py-2.5"><button type="button" onClick={() => setPerson(a)} className="font-medium text-white hover:text-accent">{a.name}</button></td>
                     <td className="py-2.5 text-white/65">{a.college}</td>
                     <td className="py-2.5 text-white/65">{a.branch} · {a.cgpa}{a.backlogs ? ` · ${a.backlogs} backlogs` : ""}</td>

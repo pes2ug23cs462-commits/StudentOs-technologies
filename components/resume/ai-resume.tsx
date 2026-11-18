@@ -61,7 +61,7 @@ export function AiResume({ r, entries, certs, profile, set }: { r: ResumeData; e
   if (loading) return <div className="h-[150px] animate-pulse rounded-2xl bg-white/[0.04]" />;
   if (!premium) {
     return (
-      <div className="rounded-2xl border border-violet-400/25 bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(34,211,238,0.04))] p-5">
+      <div className="rounded-2xl border border-violet-400/25 bg-[linear-gradient(135deg,rgba(217,119,6,0.16),rgba(34,211,238,0.04))] p-5">
         <p className="flex items-center gap-2 text-[15px] font-semibold text-white">
           <SparkleIcon size={15} className="text-violet-300" /> AI Resume Builder <PremiumBadge />
         </p>

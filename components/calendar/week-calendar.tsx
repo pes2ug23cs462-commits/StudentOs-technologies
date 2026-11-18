@@ -206,7 +206,7 @@ export function WeekCalendar({
 
               {/* now line */}
               {isToday && (
-                <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-accent shadow-[0_0_8px_rgba(139,92,246,0.7)]" style={{ top: y(`${NOW.getHours()}:${NOW.getMinutes()}`) }} />
+                <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-accent shadow-[0_0_8px_rgba(245,158,11,0.7)]" style={{ top: y(`${NOW.getHours()}:${NOW.getMinutes()}`) }} />
               )}
             </div>
           );

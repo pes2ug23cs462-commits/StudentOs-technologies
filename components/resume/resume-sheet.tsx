@@ -44,8 +44,8 @@ export function TemplateThumb({ kind }: { kind: ResumeData["template"] }) {
       )}
       {kind === "modern" && (
         <>
-          <rect width="18" height="7" fill="#6d28d9" />
-          {line(14, 10, 2, "#6d28d9")}
+          <rect width="18" height="7" fill="#b45309" />
+          {line(14, 10, 2, "#b45309")}
           {line(14, 13, 2)}
           {line(14, 16, 2)}
           {line(10, 19, 2)}
@@ -188,7 +188,7 @@ function ClassicSheet(props: SheetProps) {
 function ModernSheet(props: SheetProps) {
   const { r, certs, photo } = props;
   const { skills, contact, groups } = sheetData(props);
-  const V = "#6d28d9";
+  const V = "#b45309";
   const H = ({ children }: { children: ReactNode }) => (
     <h3 className="mt-6 mb-2.5 flex items-center gap-2 text-[12.5px] font-bold" style={{ color: V }}>
       <span className="h-3.5 w-1 rounded-full" style={{ background: V }} />
@@ -197,15 +197,15 @@ function ModernSheet(props: SheetProps) {
   );
   return (
     <article id="resume-print" className="mx-auto min-h-[1123px] w-[794px] bg-[#ffffff] text-[12px] leading-[1.55] shadow-[0_10px_40px_rgb(0_0_0/0.25)]" style={{ color: "#1f2937", fontFamily: "var(--font-inter), system-ui, sans-serif" }}>
-      <header className="flex items-center gap-5 px-12 py-9" style={{ background: "linear-gradient(120deg, #4c1d95, #6d28d9 55%, #7c3aed)", color: "#ffffff" }}>
+      <header className="flex items-center gap-5 px-12 py-9" style={{ background: "linear-gradient(120deg, #78350f, #b45309 55%, #d97706)", color: "#ffffff" }}>
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt="" className="h-[84px] w-[84px] rounded-2xl border-2 object-cover" style={{ borderColor: "#c4b5fd" }} />
+          <img src={photo} alt="" className="h-[84px] w-[84px] rounded-2xl border-2 object-cover" style={{ borderColor: "#fcd34d" }} />
         )}
         <div className="min-w-0">
           <h1 className="text-[30px] leading-tight font-extrabold tracking-tight">{r.name || "Your Name"}</h1>
           {r.headline && <p className="mt-0.5 text-[13px] font-medium" style={{ color: "#ddd6fe" }}>{r.headline}</p>}
-          {contact.length > 0 && <p className="mt-2 text-[11px]" style={{ color: "#ede9fe" }}>{contact.join("   ·   ")}</p>}
+          {contact.length > 0 && <p className="mt-2 text-[11px]" style={{ color: "#fef3c7" }}>{contact.join("   ·   ")}</p>}
         </div>
       </header>
       <div className="px-12 pt-2 pb-10">
@@ -241,7 +241,7 @@ function ModernSheet(props: SheetProps) {
               <H>Skills</H>
               <div className="flex flex-wrap gap-1.5">
                 {skills.map((s) => (
-                  <span key={s} className="rounded-full px-2.5 py-[2px] text-[10.5px] font-medium" style={{ background: "#ede9fe", color: "#5b21b6" }}>
+                  <span key={s} className="rounded-full px-2.5 py-[2px] text-[10.5px] font-medium" style={{ background: "#fef3c7", color: "#92400e" }}>
                     {s}
                   </span>
                 ))}
@@ -384,11 +384,11 @@ function ProfessionalSheet({ r, entries, certs, photo }: { r: ResumeData; entrie
       <aside className="w-[250px] shrink-0 px-7 pt-12 pb-10 text-[#e2e8f0]" style={{ background: NAVY }}>
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt="" className="h-[96px] w-[96px] rounded-full border-2 object-cover" style={{ borderColor: "#6366f1" }} />
+          <img src={photo} alt="" className="h-[96px] w-[96px] rounded-full border-2 object-cover" style={{ borderColor: "#fbbf24" }} />
         ) : (
         <div
           className="flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 text-[24px] font-semibold text-[#ffffff]"
-          style={{ borderColor: "#6366f1", background: "#1e2a6b", fontFamily: "var(--font-cert), var(--font-inter), sans-serif" }}
+          style={{ borderColor: "#fbbf24", background: "#1e2a6b", fontFamily: "var(--font-cert), var(--font-inter), sans-serif" }}
         >
           {initials}
         </div>

@@ -158,7 +158,7 @@ export function JoinCollege({ initialCode = "" }: { initialCode?: string }) {
             <Input id="sec" value={section} onChange={(e) => setSection(e.target.value)} placeholder={school ? "e.g. II PUC A" : "e.g. CSE 3rd year"} />
           </div>
           <label className="flex cursor-pointer items-start gap-3 text-[13px] text-white/75">
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#a78bfa]" />
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#fbbf24]" />
             <span>I agree to share this with {college.name}. I can stop any time.{school ? " If I’m under 18, my parent or guardian knows and agrees." : ""}</span>
           </label>
           <Button variant="primary" onClick={join} disabled={!agree || busy} loading={busy}>Share with my college</Button>

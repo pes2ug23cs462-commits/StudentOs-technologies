@@ -351,7 +351,7 @@ function AcceptedPanel({ total }: { total: number }) {
           <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-white/60">
             <ClockIcon size={12} /> {fmt.short(first.date)} · {fmt.time(first.start)} · {first.minutes} min
           </p>
-          <Link href={`/session/${first.id}`} className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-black shadow-[0_0_22px_rgba(139,92,246,0.3)] hover:bg-accent-hover">
+          <Link href={`/session/${first.id}`} className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-black shadow-[0_0_22px_rgba(245,158,11,0.3)] hover:bg-accent-hover">
             <PlayIcon size={11} /> Start First Study Session
           </Link>
           <p className="mt-2.5 text-[11px] text-white/45">You can also start early — the timer only runs while you study.</p>

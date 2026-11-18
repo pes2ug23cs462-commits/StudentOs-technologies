@@ -29,10 +29,10 @@ function html(title: string, sections: NoteSection[], forWord: boolean) {
 <style>
   @page { size: A4; margin: 20mm; }
   body { font-family: Calibri, Arial, sans-serif; color: #0f172a; font-size: 11.5pt; line-height: 1.55; }
-  .brand { color: #6d28d9; font-weight: 700; font-size: 10pt; letter-spacing: .08em; text-transform: uppercase; }
+  .brand { color: #b45309; font-weight: 700; font-size: 10pt; letter-spacing: .08em; text-transform: uppercase; }
   h1 { font-size: 20pt; margin: 4pt 0 2pt; }
   .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 14pt; }
-  h2 { font-size: 13.5pt; color: #4c1d95; border-bottom: 1px solid #ddd6fe; padding-bottom: 3pt; margin: 16pt 0 4pt; }
+  h2 { font-size: 13.5pt; color: #78350f; border-bottom: 1px solid #ddd6fe; padding-bottom: 3pt; margin: 16pt 0 4pt; }
   .sub { color: #64748b; font-size: 9.5pt; margin: 0 0 6pt; }
   p { margin: 0 0 8pt; }
   .empty { color: #94a3b8; font-style: italic; }

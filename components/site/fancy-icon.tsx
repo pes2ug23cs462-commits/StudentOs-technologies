@@ -207,13 +207,13 @@ export type FancyIconName = keyof typeof GLYPHS;
 export type FancyTone = "violet" | "cyan" | "emerald" | "amber" | "pink" | "indigo" | "sky";
 
 const TONES: Record<FancyTone, [string, string]> = {
-  violet: ["#a78bfa", "#6d28d9"],
+  violet: ["#fbbf24", "#b45309"],
   cyan: ["#67e8f9", "#0284c7"],
   emerald: ["#6ee7b7", "#0f766e"],
   amber: ["#fcd34d", "#ea580c"],
   pink: ["#f9a8d4", "#e11d48"],
   indigo: ["#a5b4fc", "#4f46e5"],
-  sky: ["#7dd3fc", "#2563eb"],
+  sky: ["#7dd3fc", "#d97706"],
 };
 
 export function FancyIcon({ name, tone = "violet", size = 48, className, float }: { name: FancyIconName; tone?: FancyTone; size?: number; className?: string; float?: boolean }) {

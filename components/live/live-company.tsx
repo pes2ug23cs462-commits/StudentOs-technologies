@@ -76,7 +76,7 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <CallStage call={call} otherName={m?.name ?? "the student"} className="min-h-[360px]" onEnd={() => window.confirm(`End the interview with ${m?.name ?? "the student"}? Then submit your feedback.`) && call.hangUp()} />
         <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto">
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4">
             <p className="text-[16px] font-semibold">{m?.name ?? "…"}</p>
             <p className="text-[12.5px] text-white/50">Live interview on StudentOS</p>
             <div className={cn("mt-3 rounded-xl p-3 text-[12.5px]", warns.length ? "border border-amber-400/30 bg-amber-400/[0.06]" : "bg-white/[0.04]")}>
@@ -84,13 +84,13 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
               {warns.length > 0 && <ul className="mt-1 list-disc pl-4 text-white/70">{warns.map((w, i) => <li key={i}>{breachLabel(w)}</li>)}</ul>}
             </div>
           </div>
-          <div className={cn("rounded-2xl border bg-[#0f0f11] p-4", call.state === "ended" && !sent ? "border-accent/60 shadow-[0_0_40px_-16px_rgba(167,139,250,0.8)]" : "border-white/[0.08]")}>
+          <div className={cn("rounded-2xl border bg-[#0d152a] p-4", call.state === "ended" && !sent ? "border-accent/60 shadow-[0_0_40px_-16px_rgba(251,191,36,0.8)]" : "border-white/[0.08]")}>
             <p className="text-[14px] font-semibold">Your feedback</p>
             {call.state === "ended" && !sent && <p className="mt-1 text-[12.5px] text-accent">Interview ended. Submit your feedback below.</p>}
             {sent && <p className="mt-1 text-[12.5px] text-emerald-300">Submitted ✓ You can change it and submit again.</p>}
             <div className="mt-3">
               <Label htmlFor="fs">Score: {fb.score}/10</Label>
-              <input id="fs" type="range" min={0} max={10} value={fb.score} onChange={(e) => setFb({ ...fb, score: Number(e.target.value) })} className="w-full accent-[#a78bfa]" />
+              <input id="fs" type="range" min={0} max={10} value={fb.score} onChange={(e) => setFb({ ...fb, score: Number(e.target.value) })} className="w-full accent-[#fbbf24]" />
             </div>
             <div className="mt-2 grid grid-cols-2 gap-1.5">
               {VERDICTS.map((v) => (
@@ -98,7 +98,7 @@ export function LiveRoom({ pid, room, signal, saveFeedback, back = { href: "/com
               ))}
             </div>
             <div className="mt-3"><Label htmlFor="fn">Notes</Label><Textarea id="fn" rows={4} value={fb.notes} onChange={(e) => setFb({ ...fb, notes: e.target.value })} placeholder="What went well, what didn’t, next step" /></div>
-            <div className="sticky bottom-0 -mx-4 mt-3 bg-[#0f0f11] px-4 pt-1 pb-1">
+            <div className="sticky bottom-0 -mx-4 mt-3 bg-[#0d152a] px-4 pt-1 pb-1">
               <Button variant="primary" className="w-full" loading={busy} onClick={() => void save()}>{sent ? "Submit again" : "Submit feedback"}</Button>
               {sent && <Link href={back.href} className="mt-2 block text-center text-[12.5px] text-white/60 hover:text-white">Back to {back.label.toLowerCase()}</Link>}
             </div>

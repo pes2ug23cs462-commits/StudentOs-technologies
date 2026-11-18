@@ -137,7 +137,7 @@ export default function AssessmentPage() {
                 <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-rose-500" />
               </button>
               <span className="flex items-center gap-2.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#818cf8] to-[#6366f1] text-[15px] font-semibold text-white">{first.charAt(0).toUpperCase()}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#818cf8] to-[#fbbf24] text-[15px] font-semibold text-white">{first.charAt(0).toUpperCase()}</span>
                 <span className="hidden text-[14.5px] font-medium text-white sm:inline">{first}</span>
                 <ChevronDownIcon size={16} className="text-white/55" />
               </span>

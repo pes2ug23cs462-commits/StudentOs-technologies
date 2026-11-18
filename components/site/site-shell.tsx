@@ -17,8 +17,9 @@ export const CONTACT_EMAIL = "support@student-os.in";
 export const HR_EMAIL = "hr@student-os.in";
 
 const NAV = [
+  { href: "/#placement", label: "Placement" },
+  { href: "/#asha", label: "AI assistant" },
   { href: "/#features", label: "Features" },
-  { href: "/#how", label: "How it works" },
   { href: "/#free", label: "Free plan" },
   { href: "/institutions", label: "For institutions" },
   { href: "/reviews", label: "Reviews" },
@@ -105,7 +106,7 @@ export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.07] bg-ink">
       <div className="pointer-events-none absolute -top-px left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-40 w-[70%] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(124,58,237,0.16),transparent)] blur-2xl" />
+      <div className="pointer-events-none absolute bottom-0 left-1/2 h-40 w-[70%] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(217,119,6,0.16),transparent)] blur-2xl" />
       <div className="relative mx-auto max-w-[1200px] px-5 pt-14 pb-8">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_2fr]">
           <div>
@@ -161,7 +162,7 @@ export function PageHero({ eyebrow, title, sub, children }: { eyebrow: string; t
   return (
     <section className="relative overflow-hidden pt-16">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(55%_60%_at_50%_0%,rgba(124,58,237,0.32),transparent_70%)]" />
+        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(55%_60%_at_50%_0%,rgba(217,119,6,0.32),transparent_70%)]" />
         <div className="land-floor absolute inset-x-[-20%] bottom-[-20%] h-[60%] opacity-70" />
       </div>
       <div className="relative mx-auto max-w-[1200px] px-5 pt-20 pb-20 text-center">

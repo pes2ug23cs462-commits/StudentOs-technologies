@@ -4,6 +4,7 @@
    click with your StudentOS resume, follow every round, open test / interview
    links sent only to you, and see and answer your offer. */
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,7 @@ function ProfileForm({ initial, onSave, onCancel }: { initial?: PlacementProfile
     onSave(p);
   };
   return (
-    <div className="rounded-2xl border border-accent/30 bg-[#0f0f11] p-5 shadow-[0_0_40px_-20px_rgba(167,139,250,0.7)]">
+    <div className="rounded-2xl border border-accent/30 bg-[#0d152a] p-5 shadow-[0_0_40px_-20px_rgba(251,191,36,0.7)]">
       <p className="text-[15px] font-semibold text-white">Your placement details</p>
       <p className="mt-1 text-[12.5px] text-white/55">Companies set rules on these. Your college sees them with your applications. Fill them honestly; the college checks them.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
@@ -126,7 +127,7 @@ function Steps({ a: a0, d }: { a: Application; d: Drive }) {
         return (
           <li key={s + i} className="flex flex-1 items-center last:flex-none">
             <span className="flex flex-col items-center gap-1.5">
-              <span className={cn("flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold", fail ? "bg-rose-500/20 text-rose-300" : done ? "bg-emerald-400 text-[#06281d]" : cur ? "bg-accent text-[#120826] shadow-[0_0_0_4px_rgba(167,139,250,0.25)]" : "bg-white/[0.07] text-white/40")}>{done ? <CheckIcon size={12} /> : i + 1}</span>
+              <span className={cn("flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold", fail ? "bg-rose-500/20 text-rose-300" : done ? "bg-emerald-400 text-[#06281d]" : cur ? "bg-accent text-[#120826] shadow-[0_0_0_4px_rgba(251,191,36,0.25)]" : "bg-white/[0.07] text-white/40")}>{done ? <CheckIcon size={12} /> : i + 1}</span>
               <span className={cn("max-w-[86px] text-center text-[10.5px] leading-tight", cur || done ? "text-white/80" : "text-white/40")}>{s}</span>
             </span>
             {i < stages.length - 1 && <span className={cn("mx-1 mb-5 h-0.5 flex-1 rounded-full", i < at ? "bg-emerald-400/60" : "bg-white/[0.08]")} />}
@@ -172,7 +173,7 @@ function PlacementAlerts() {
     </span>
   );
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-white/[0.08] bg-[#0f0f11] px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-white/[0.08] bg-[#0d152a] px-4 py-3">
       <p className="mr-auto text-[13px] font-medium text-white">
         Placement alerts
         <span className="block text-[11.5px] font-normal text-white/45">New drives you can apply to, test links, rounds and offers.</span>
@@ -284,7 +285,7 @@ export function CampusDrives() {
         </div>
         <div className="flex gap-2">
           {[["Open for you", openDrives.filter((d) => !ineligible(d, profile)).length], ["Applied", mine.length], ["Offers", offers.length]].map(([l, v]) => (
-            <div key={l as string} className="rounded-xl border border-white/[0.08] bg-[#0f0f11] px-4 py-2.5 text-center">
+            <div key={l as string} className="rounded-xl border border-white/[0.08] bg-[#0d152a] px-4 py-2.5 text-center">
               <p className="text-[20px] font-semibold text-white tabular-nums">{v}</p>
               <p className="text-[11px] text-white/45">{l}</p>
             </div>
@@ -331,9 +332,9 @@ export function CampusDrives() {
               const why = ineligible(d, profile) ?? (d.partner?.minInterview && bestIv < d.partner.minInterview ? `Needs a verified StudentOS mock interview score of ${d.partner.minInterview}+ (yours: ${bestIv || "none yet"}). Take a mock interview to get one.` : null);
               const left = daysLeft(d.deadline);
               return (
-                <div key={d.id} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+                <div key={d.id} className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-[16px] font-bold text-white">{d.company.slice(0, 1)}</span>
+                    <CompanyLogo name={d.company} website={d.website} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" letterClassName="bg-gradient-to-br from-violet-500 to-cyan-400 text-[16px] font-bold text-white" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[15.5px] font-semibold text-white">{d.company}</p>
                       <p className="text-[12.5px] text-white/55">{d.role} · {d.kind}{d.location ? ` · ${d.location}` : ""}</p>
@@ -373,9 +374,9 @@ export function CampusDrives() {
           {mine.map((d) => {
             const a = apps[d.id]!;
             return (
-              <div key={d.id} className={cn("rounded-2xl border bg-[#0f0f11] p-5", a.offer ? "border-emerald-400/30 shadow-[0_0_50px_-24px_rgba(16,185,129,0.8)]" : "border-white/[0.08]")}>
+              <div key={d.id} className={cn("rounded-2xl border bg-[#0d152a] p-5", a.offer ? "border-emerald-400/30 shadow-[0_0_50px_-24px_rgba(16,185,129,0.8)]" : "border-white/[0.08]")}>
                 <div className="flex flex-wrap items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-[16px] font-bold text-white">{d.company.slice(0, 1)}</span>
+                  <CompanyLogo name={d.company} website={d.website} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" letterClassName="bg-gradient-to-br from-violet-500 to-cyan-400 text-[16px] font-bold text-white" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[15.5px] font-semibold text-white">{d.company} · {d.role}</p>
                     <p className="text-[12.5px] text-white/55">{d.ctc} · applied {new Date(a.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>

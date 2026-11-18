@@ -38,6 +38,8 @@ export interface Drive {
   open: boolean;
   createdAt: number;
   createdBy: string;
+  /** the company's website, used to show its logo */
+  website?: string;
   /** a StudentOS partner drive: the company runs the rounds; the college approved it */
   partner?: { pid: string; companyId: string; minInterview?: number };
 }

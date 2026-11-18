@@ -60,7 +60,7 @@ type Tab = "overview" | "sections" | "chapters" | "placements" | "students" | "f
 
 function Panel({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5", className)}>
+    <section className={cn("rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5", className)}>
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {title && <h2 className="text-[14.5px] font-semibold text-white">{title}</h2>}
@@ -110,7 +110,7 @@ function download(name: string, rows: (string | number)[][]) {
 function Gate({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-ink px-5 py-10">
-      <div className="pointer-events-none fixed inset-0" style={{ background: "radial-gradient(800px 400px at 50% -10%, rgba(124,58,237,0.25), transparent)" }} />
+      <div className="pointer-events-none fixed inset-0" style={{ background: "radial-gradient(800px 400px at 50% -10%, rgba(217,119,6,0.25), transparent)" }} />
       <div className="relative w-full max-w-[880px]">
         <div className="mb-8 flex items-center justify-center gap-2.5">
           <LogoMark size={28} />
@@ -141,7 +141,7 @@ function SignedOut() {
         {ROLE_CARDS.map((r) => {
           const next = encodeURIComponent("/college?as=" + r.as);
           return (
-            <div key={r.as} className="flex flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6 transition hover:border-accent/40">
+            <div key={r.as} className="flex flex-col rounded-2xl border border-white/[0.08] bg-[#0d152a] p-6 transition hover:border-accent/40">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-plum)] text-accent">{r.icon}</span>
               <p className="mt-4 text-[17px] font-semibold text-white">{r.title}</p>
               <p className="mt-1.5 flex-1 text-[13px] leading-relaxed text-white/55">{r.text}</p>
@@ -207,7 +207,7 @@ function Setup() {
       <h1 className="text-center text-[26px] font-semibold text-white">{faculty ? "Join your college" : "Set up your college"}</h1>
       <p className="mt-2 text-center text-[13.5px] text-white/55">Signed in as {me.name}{me.email ? ` · ${me.email}` : ""}</p>
       <div className={cn("mt-8 grid gap-4", faculty ? "md:grid-cols-[1fr_1.2fr] [&>*:first-child]:md:order-2" : "md:grid-cols-[1.2fr_1fr]")}>
-        <div className="rounded-2xl border border-accent/30 bg-[#0f0f11] p-6 shadow-[0_0_50px_-20px_rgba(167,139,250,0.6)]">
+        <div className="rounded-2xl border border-accent/30 bg-[#0d152a] p-6 shadow-[0_0_50px_-20px_rgba(251,191,36,0.6)]">
           <p className="text-[15px] font-semibold text-white">New college</p>
           <p className="mt-1 text-[12.5px] text-white/50">You become the admin. You get a code for students and one for faculty.</p>
           <div className="mt-5 space-y-4">
@@ -233,7 +233,7 @@ function Setup() {
             <Button variant="primary" onClick={create} loading={busy === "create"} disabled={!!busy} className="w-full">Create college</Button>
           </div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6">
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-6">
           <p className="text-[15px] font-semibold text-white">I’m faculty</p>
           <p className="mt-1 text-[12.5px] text-white/50">Your college admin shares two codes with you.</p>
           <div className="mt-5 space-y-4">
@@ -352,7 +352,7 @@ export function CollegeConsole() {
       </div>
       <nav className="mt-4 space-y-0.5">
         {visibleNav.map(({ key, label, Icon, degree }) => (
-          <button key={key} type="button" onClick={() => { go(key); setMenu(false); }} className={cn("flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13.5px] transition", tab === key ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#a78bfa]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
+          <button key={key} type="button" onClick={() => { go(key); setMenu(false); }} className={cn("flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13.5px] transition", tab === key ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#fbbf24]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
             <Icon size={16} /> {type === "degree" && degree ? degree : label}
           </button>
         ))}
@@ -381,7 +381,7 @@ export function CollegeConsole() {
       {logoOpen && college && <LogoEditor college={college} onClose={() => setLogoOpen(false)} onSaved={setCollege} />}
 
       <main className="lg:pl-[236px]">
-        <div className="pointer-events-none fixed inset-0 lg:left-[236px]" style={{ background: "radial-gradient(900px 340px at 35% -60px, rgba(124,58,237,0.2), transparent)" }} />
+        <div className="pointer-events-none fixed inset-0 lg:left-[236px]" style={{ background: "radial-gradient(900px 340px at 35% -60px, rgba(217,119,6,0.2), transparent)" }} />
         <div className="relative px-5 py-6 lg:px-8">
           {loading ? (
             <div className="space-y-4">
@@ -450,7 +450,7 @@ function Header({ college, tab, type, sample, setSample, realCount }: { college:
         </p>
       </div>
       <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-[12.5px] text-white/70">
-        <input type="checkbox" checked={sample} onChange={(e) => setSample(e.target.checked)} className="h-3.5 w-3.5 accent-[#a78bfa]" />
+        <input type="checkbox" checked={sample} onChange={(e) => setSample(e.target.checked)} className="h-3.5 w-3.5 accent-[#fbbf24]" />
         Preview with sample data
       </label>
     </div>
@@ -556,7 +556,7 @@ function Invite({ college, joinUrl, big }: { college: College; joinUrl: string; 
   const copy = (t: string, what: string) => void navigator.clipboard?.writeText(t).then(() => actions.toast(`${what} copied`));
   const msg = `Join ${college.name} on StudentOS so our teachers can see where we need help: ${joinUrl} (code ${college.code})`;
   return (
-    <section className={cn("relative overflow-hidden rounded-2xl border border-accent/25 bg-[#0f0f11] p-6", big && "py-10")}>
+    <section className={cn("relative overflow-hidden rounded-2xl border border-accent/25 bg-[#0d152a] p-6", big && "py-10")}>
       <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
       <div className="relative flex flex-wrap items-center gap-8">
         <div className="min-w-[260px] flex-1">

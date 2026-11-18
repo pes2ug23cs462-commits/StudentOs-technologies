@@ -134,8 +134,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           aria-hidden
           className="h-6 w-6 shrink-0 rounded-full transition-transform group-hover:scale-105"
           style={{
-            background: "radial-gradient(circle at 32% 30%, #b9f3ff 0%, #22d3ee 22%, #6d5bff 58%, #a855f7 100%)",
-            boxShadow: "inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 2px 10px -2px rgb(109 91 255 / 0.7)",
+            background: "radial-gradient(circle at 32% 30%, #b9f3ff 0%, #22d3ee 22%, #f59e0b 58%, #fbbf24 100%)",
+            boxShadow: "inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 2px 10px -2px rgb(245 158 11 / 0.7)",
           }}
         />
         <span className="flex-1">Ask Asha</span>

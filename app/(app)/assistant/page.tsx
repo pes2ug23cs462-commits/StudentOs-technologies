@@ -360,7 +360,7 @@ export default function AssistantPage() {
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[680px] px-6 pb-4">
-            {launch > 0 && <span key={`ball-${launch}`} aria-hidden className="orb-launch pointer-events-none absolute top-6 left-1/2 z-10 h-10 w-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ede9fe,#a78bfa_45%,#6d28d9)] shadow-[0_0_30px_rgba(139,92,246,0.7)]" />}
+            {launch > 0 && <span key={`ball-${launch}`} aria-hidden className="orb-launch pointer-events-none absolute top-6 left-1/2 z-10 h-10 w-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fef3c7,#fbbf24_45%,#b45309)] shadow-[0_0_30px_rgba(245,158,11,0.7)]" />}
             <div key={`box-${launch}`} className={launch > 0 ? "composer-launch" : undefined}>
               <Composer onSend={(t, f) => send(t, f)} allowFiles disabled={thinking} />
             </div>

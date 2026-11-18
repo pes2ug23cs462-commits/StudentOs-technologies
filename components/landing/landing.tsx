@@ -89,7 +89,7 @@ function HeroStage() {
         style={{ transform: "rotateX(calc(var(--my, 0) * -8deg)) rotateY(calc(var(--mx, 0) * 12deg))", transition: "transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)" }}
       >
         {/* glow + pedestal */}
-        <div className="absolute top-1/2 left-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(124,58,237,0.5),rgba(34,211,238,0.12)_60%,transparent)] blur-2xl" />
+        <div className="absolute top-1/2 left-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(217,119,6,0.5),rgba(34,211,238,0.12)_60%,transparent)] blur-2xl" />
         <div className="absolute top-[74%] left-1/2 h-[90px] w-[380px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgba(34,211,238,0.35),transparent)] blur-md" />
 
         {/* turning ring of feature cards */}
@@ -168,7 +168,7 @@ function Hero() {
   return (
     <section ref={ref} className="relative overflow-hidden pt-16">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-[700px] bg-[radial-gradient(50%_60%_at_65%_15%,rgba(124,58,237,0.34),transparent_70%)]" />
+        <div className="absolute inset-x-0 top-0 h-[700px] bg-[radial-gradient(50%_60%_at_65%_15%,rgba(217,119,6,0.34),transparent_70%)]" />
         <div className="absolute top-32 -left-48 h-[420px] w-[420px] rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="land-floor absolute inset-x-[-20%] bottom-[-12%] h-[50%]" />
       </div>
@@ -381,7 +381,7 @@ function Story() {
               className="relative [transform-style:preserve-3d]"
               style={{ transform: "rotateX(calc(8deg + var(--my, 0) * -4deg)) rotateY(calc(-14deg + var(--mx, 0) * 6deg))", transition: "transform 0.9s cubic-bezier(0.2,0.8,0.2,1)" }}
             >
-              <div className="pointer-events-none absolute -inset-10 rounded-[40px] bg-[radial-gradient(closest-side,rgba(124,58,237,0.4),transparent)] blur-2xl" />
+              <div className="pointer-events-none absolute -inset-10 rounded-[40px] bg-[radial-gradient(closest-side,rgba(217,119,6,0.4),transparent)] blur-2xl" />
               <div className="land-glass relative overflow-hidden rounded-[22px]">
                 <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
@@ -545,6 +545,159 @@ function Bento() {
 
 /* ================= page ================= */
 
+type Chip = { text: string; at: string; tone: "emerald" | "blue" | "amber" };
+const CHIP_TONE = { emerald: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200", blue: "border-violet-400/40 bg-violet-500/15 text-violet-100", amber: "border-amber-400/40 bg-amber-500/15 text-amber-100" };
+
+/* A real screen from the app, in a simple browser frame. As it scrolls in, the
+   screen settles from a slight zoom and small labels pop in to point at what matters. */
+function Screen({ src, alt, note, chips = [], ask }: { src: string; alt: string; note: string; chips?: Chip[]; ask?: string }) {
+  const [ref, p] = useScrollProgress<HTMLDivElement>(0.75);
+  const on = p > 0.45;
+  return (
+    <div ref={ref} className="relative">
+      {ask && (
+        <div className={cn("absolute -top-5 right-6 z-20 max-w-[78%] rounded-2xl rounded-br-md border border-violet-400/30 bg-violet-600/90 px-4 py-2.5 text-[13px] font-medium text-[#ffffff] shadow-[0_18px_40px_-12px_rgba(217,119,6,0.7)] transition-all duration-500", on ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0")}>
+          {on ? <Typing text={ask} start={0.2} speed={22} /> : ask}
+        </div>
+      )}
+      {chips.map((c, i) => (
+        <span
+          key={c.text}
+          className={cn("absolute z-20 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold backdrop-blur-md shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] transition-all duration-500", CHIP_TONE[c.tone], c.at, on ? "scale-100 opacity-100" : "scale-75 opacity-0")}
+          style={{ transitionDelay: on ? `${0.9 + i * 0.35}s` : "0s" }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+          {c.text}
+        </span>
+      ))}
+    <TiltCard max={4} className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a1122] shadow-[0_40px_120px_-30px_rgba(217,119,6,0.45)]">
+      <div className="flex items-center gap-1.5 border-b border-white/[0.07] px-4 py-2.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+        <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+        <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+        <span className="ml-3 rounded-md bg-white/[0.05] px-2.5 py-0.5 text-[11px] text-white/40">student-os.in</span>
+        <span className="ml-auto text-[10.5px] text-white/35">{note}</span>
+      </div>
+      <div className="overflow-hidden">
+        <Image src={src} alt={alt} width={1200} height={750} className="block h-auto w-full origin-top will-change-transform" style={{ transform: `scale(${1 + (1 - p) * 0.06}) translateY(${(1 - p) * 14}px)`, transition: "transform 120ms linear" }} />
+      </div>
+    </TiltCard>
+    </div>
+  );
+}
+
+const PREP: { icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
+  { icon: "mic", tone: "violet", title: "Mock interviews that talk back", text: "Asha asks, listens, and asks a follow-up when your answer is vague, like a real panel. Then you get a score and what to fix." },
+  { icon: "code", tone: "cyan", title: "Coding rounds", text: "Solve in Python or JavaScript while Asha asks you to explain your approach, the way interviewers do." },
+  { icon: "target", tone: "amber", title: "Aptitude practice", text: "Quant, logical and verbal, timed like the real test, with your weak topics called out." },
+  { icon: "rocket", tone: "emerald", title: "Your college’s drives", text: "When your college runs drives on StudentOS, you apply and take the company’s rounds in the same place." },
+];
+
+function PlacementPrep() {
+  return (
+    <section id="placement" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-24">
+      <div className="reveal mx-auto max-w-[720px] text-center">
+        <Eyebrow>Placement prep</Eyebrow>
+        <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">Practise the real thing before the real thing</h2>
+        <p className="mt-4 text-[15px] leading-relaxed text-white/60">Interviews, coding and aptitude with an AI interviewer that behaves like a person, not a quiz.</p>
+      </div>
+      <div className="mt-12 grid items-center gap-10 lg:grid-cols-[1.25fr_1fr]">
+        <div className="reveal" style={d(0.05)}>
+          <Screen
+            src="/landing/mock-interview.jpg"
+            alt="A StudentOS mock interview: Asha asks a follow-up question about the student's project"
+            note="Mock interview · sample"
+            chips={[
+              { text: "Asha asked a follow-up", at: "top-[38%] -left-3 sm:-left-6", tone: "blue" },
+              { text: "Talks back, by voice", at: "-bottom-4 right-6", tone: "emerald" },
+            ]}
+          />
+        </div>
+        <ul className="grid gap-3">
+          {PREP.map((p, i) => (
+            <li key={p.title} className="reveal group flex gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition duration-300 hover:-translate-y-1 hover:border-violet-400/40 hover:bg-white/[0.045] hover:shadow-[0_20px_50px_-24px_rgba(217,119,6,0.6)]" style={d(0.08 * i)}>
+              <FancyIcon name={p.icon} tone={p.tone} size={44} />
+              <div>
+                <h3 className="text-[15.5px] font-semibold text-white">{p.title}</h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-white/60">{p.text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+const ASHA: string[] = [
+  "Answers anything, in English, Hindi, Hinglish or Kannada",
+  "Knows your own record: tests, interviews, coding and upcoming exams",
+  "Does the work: adds your exam to the timeline, plans study time, opens the right page",
+  "Turns any explanation into a PDF or Word file you can print",
+];
+
+function MeetAsha() {
+  const cta = usePrimaryCta();
+  return (
+    <section id="asha" className="relative overflow-hidden border-y border-white/[0.06] bg-white/[0.015]">
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[120px]" aria-hidden />
+      <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 py-24 lg:grid-cols-[1fr_1.25fr]">
+        <div className="reveal">
+          <Eyebrow>Meet Asha</Eyebrow>
+          <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">
+            She doesn’t just answer.{" "}
+            <span className="bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent">She does it.</span>
+          </h2>
+          <ul className="mt-7 space-y-3.5">
+            {ASHA.map((t) => (
+              <li key={t} className="flex gap-3 text-[14.5px] leading-relaxed text-white/75">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300"><CheckIcon size={12} /></span>
+                {t}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-[12.5px] text-white/45">Nothing in your account changes until you press Apply.</p>
+          <Link href={cta.signedIn ? "/assistant" : cta.href} className="mt-7 inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.3)] transition hover:-translate-y-0.5">
+            {cta.signedIn ? "Ask Asha" : "Try Asha free"} <ArrowRightIcon size={15} />
+          </Link>
+        </div>
+        <div className="reveal" style={d(0.1)}>
+          <Screen
+            src="/landing/asha.jpg"
+            alt="Asha adds a DBMS exam to the student's timeline and offers notes on normalization as a PDF"
+            note="AI assistant · sample"
+            ask="Mera DBMS internal 23 Nov ko hai, timeline mein daal de aur PDF bana de"
+            chips={[
+              { text: "Added to timeline", at: "top-[52%] -left-3 sm:-left-6", tone: "emerald" },
+              { text: "PDF ready", at: "-bottom-4 left-[38%]", tone: "amber" },
+            ]}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* A thin bar at the top that fills as you read the page. */
+function ScrollBar() {
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    if (reducedMotion()) return;
+    let f = 0;
+    const on = () => {
+      cancelAnimationFrame(f);
+      f = requestAnimationFrame(() => {
+        const max = document.documentElement.scrollHeight - innerHeight;
+        setW(max > 0 ? scrollY / max : 0);
+      });
+    };
+    on();
+    addEventListener("scroll", on, { passive: true });
+    return () => removeEventListener("scroll", on);
+  }, []);
+  return <div aria-hidden className="pointer-events-none fixed top-0 left-0 z-[80] h-[2px] origin-left bg-gradient-to-r from-cyan-300 via-violet-500 to-fuchsia-400" style={{ width: "100%", transform: `scaleX(${w})` }} />;
+}
+
 export function Landing() {
   const cta = usePrimaryCta();
   const [still, setStill] = useState(false);
@@ -565,6 +718,7 @@ export function Landing() {
 
   return (
     <SiteShell>
+      <ScrollBar />
       <Hero />
 
       {/* degree marquee */}
@@ -581,9 +735,11 @@ export function Landing() {
         </div>
       </section>
 
+      <PlacementPrep />
+      <MeetAsha />
       <Story />
       <Bento />
-      <ReviewsStrip />
+      <ReviewsStrip hideEmpty />
 
       {/* how it works */}
       <section id="how" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.015]">
@@ -615,7 +771,7 @@ export function Landing() {
       {/* free plan */}
       <section id="free" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-24">
         <div className="reveal land-ring rounded-3xl">
-          <div className="grid items-center gap-10 rounded-3xl bg-[linear-gradient(135deg,rgba(124,58,237,0.18),rgba(34,211,238,0.06))] p-8 sm:p-12 lg:grid-cols-[1fr_1.1fr]">
+          <div className="grid items-center gap-10 rounded-3xl bg-[linear-gradient(135deg,rgba(217,119,6,0.18),rgba(34,211,238,0.06))] p-8 sm:p-12 lg:grid-cols-[1fr_1.1fr]">
             <div>
               <Eyebrow>Free plan</Eyebrow>
               <h2 className="mt-3 text-[36px] leading-tight font-semibold tracking-tight sm:text-[46px]">
@@ -647,7 +803,7 @@ export function Landing() {
 
       {/* final call */}
       <section className="relative overflow-hidden border-t border-white/[0.06]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_80%_at_50%_100%,rgba(124,58,237,0.32),transparent_70%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_80%_at_50%_100%,rgba(217,119,6,0.32),transparent_70%)]" />
         <div className="land-floor pointer-events-none absolute inset-x-[-20%] bottom-[-30%] h-[70%] opacity-60" />
         <div className="reveal relative mx-auto max-w-[1200px] px-5 py-24 text-center">
           <div className="mx-auto h-[96px] w-[96px] [animation:land-float-3d_7s_ease-in-out_infinite]">

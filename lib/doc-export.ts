@@ -10,13 +10,13 @@ const PW = 1240, PH = 1754, M = 110; // A4 at 150 dpi, margins
 const STYLE: Record<DocBlock["kind"], { font: string; size: number; gap: number; color: string; indent?: number }> = {
   title: { font: "700", size: 46, gap: 22, color: "#14121c" },
   sub: { font: "400", size: 25, gap: 26, color: "#4a4560" },
-  h: { font: "700", size: 30, gap: 14, color: "#4c1d95" },
+  h: { font: "700", size: 30, gap: 14, color: "#78350f" },
   p: { font: "400", size: 25, gap: 14, color: "#1f1c29" },
   li: { font: "400", size: 25, gap: 10, color: "#1f1c29", indent: 34 },
   small: { font: "400", size: 20, gap: 8, color: "#6b6680" },
 };
 const FAMILY = "Inter, 'Noto Sans', 'Segoe UI', Arial, sans-serif";
-const VIOLET = "#7c3aed";
+const VIOLET = "#d97706";
 
 /* The StudentOS mark, made small once (for the PDF header and the Word header). */
 type Logo = { img: HTMLCanvasElement; png: Uint8Array };

@@ -46,7 +46,7 @@ export function TestCard({ pid, rounds, summary, onSaved }: { pid: string; round
     }
   };
   return (
-    <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
+    <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent"><ShieldIcon size={18} /></span>
         <div className="min-w-0 flex-1">
@@ -175,7 +175,7 @@ export function TestEditor({ pid, rounds, onClose, onSaved, io }: { pid: string;
                     const on = coding.includes(pr.id);
                     return (
                       <label key={pr.id} className={cn("flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12.5px]", on ? "border-accent/60 bg-accent/10" : "border-white/10 hover:border-white/25", !on && coding.length >= 3 && "opacity-45")}>
-                        <input type="checkbox" checked={on} disabled={!on && coding.length >= 3} onChange={() => toggleCode(pr.id)} className="accent-[#a78bfa]" />
+                        <input type="checkbox" checked={on} disabled={!on && coding.length >= 3} onChange={() => toggleCode(pr.id)} className="accent-[#fbbf24]" />
                         <span className="min-w-0 flex-1 truncate text-white">{pr.title}</span>
                         <span className={cn("text-[11px] font-semibold", LEVEL_TONE[pr.level])}>{pr.level}</span>
                       </label>

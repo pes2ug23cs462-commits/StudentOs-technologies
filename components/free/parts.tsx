@@ -25,7 +25,7 @@ export function PageHeader({ title, sub, actions, icon, tone = "violet" }: { tit
 export function PremiumNote({ title, children, className, href, cta = "See Premium" }: { title: string; children: ReactNode; className?: string; href?: string; cta?: string }) {
   return (
     <div className={cn("flex items-start gap-3 rounded-xl border border-violet-400/25 bg-violet-500/[0.07] p-4", className)}>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#a78bfa] to-[#6366f1] text-white">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#fbbf24] to-[#fbbf24] text-white">
         <CrownIcon size={17} />
       </span>
       <div className="min-w-0 flex-1">

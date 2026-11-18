@@ -2,24 +2,30 @@
 
 /* ---------- Design tokens ----------
    Design system: “AI-Native UI” (from the ui-ux-pro-max design search, see
-   design-system/studentos/MASTER.md): one brand colour — violet — in both
+   design-system/studentos/MASTER.md): one brand colour — gold on navy (was violet) — in both
    themes, cyan as the secondary highlight, Inter, light chrome. */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
+  /* Brand colour: Navy + Gold. The violet, purple and fuchsia classes used across the
+     site are mapped to gold (amber) and sky here, so the whole site changes in one place. */
+  --color-violet-50: #fffbeb; --color-violet-100: #fef3c7; --color-violet-200: #fde68a; --color-violet-300: #fcd34d; --color-violet-400: #fbbf24; --color-violet-500: #f59e0b; --color-violet-600: #d97706; --color-violet-700: #b45309; --color-violet-800: #92400e; --color-violet-900: #78350f; --color-violet-950: #451a03;
+  --color-purple-50: #fffbeb; --color-purple-100: #fef3c7; --color-purple-200: #fde68a; --color-purple-300: #fcd34d; --color-purple-400: #fbbf24; --color-purple-500: #f59e0b; --color-purple-600: #d97706; --color-purple-700: #b45309; --color-purple-800: #92400e; --color-purple-900: #78350f; --color-purple-950: #451a03;
+  --color-fuchsia-50: #f0f9ff; --color-fuchsia-100: #e0f2fe; --color-fuchsia-200: #bae6fd; --color-fuchsia-300: #7dd3fc; --color-fuchsia-400: #38bdf8; --color-fuchsia-500: #0ea5e9; --color-fuchsia-600: #0284c7; --color-fuchsia-700: #0369a1; --color-fuchsia-800: #075985; --color-fuchsia-900: #0c4a6e; --color-fuchsia-950: #082f49;
+
   /* Surfaces */
-  --color-ink: #0b0a10;          /* app background */
-  --color-panel: #0e0d15;        /* sidebar, side panels */
-  --color-raised: #171522;       /* drawers, popovers */
-  --color-field: #191724;        /* inputs */
+  --color-ink: #0a1122;          /* app background */
+  --color-panel: #0d152a;        /* sidebar, side panels */
+  --color-raised: #142039;       /* drawers, popovers */
+  --color-field: #15203a;        /* inputs */
   --color-scrim: #000000;        /* behind dialogs */
 
   /* Brand */
-  --color-accent: #a78bfa;       /* brand violet (7.6:1 with black text) */
-  --color-accent-hover: #c4b5fd;
-  --color-plum: #231640;         /* active nav */
-  --color-plum-strong: #3a1466;  /* user bubbles, upcoming sessions */
-  --color-violet-glow: #4c1d95;
+  --color-accent: #fbbf24;       /* brand gold (11:1 with black text) */
+  --color-accent-hover: #fcd34d;
+  --color-plum: #162a55;         /* active nav */
+  --color-plum-strong: #1c3366;  /* user bubbles, upcoming sessions */
+  --color-violet-glow: #78350f;
 
   --animate-spin-slow: spin 1.4s linear infinite;
   --animate-float: float 7s ease-in-out infinite;
@@ -54,7 +60,7 @@
     @apply bg-ink text-white antialiased;
   }
   ::selection {
-    background: rgb(139 92 246 / 0.35);
+    background: rgb(245 158 11 / 0.35);
   }
   /* visible keyboard focus everywhere */
   :focus-visible {
@@ -111,8 +117,8 @@
 @keyframes hero-orbit { to { rotate: 360deg; } }
 @keyframes hero-orbit-rev { to { rotate: -360deg; } }
 @keyframes hero-glow {
-  0%, 100% { filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.6)); }
-  50% { filter: drop-shadow(0 0 55px rgba(124, 58, 237, 0.95)) drop-shadow(0 0 18px rgba(34, 211, 238, 0.35)); }
+  0%, 100% { filter: drop-shadow(0 0 30px rgba(217,119,6, 0.6)); }
+  50% { filter: drop-shadow(0 0 55px rgba(217,119,6, 0.95)) drop-shadow(0 0 18px rgba(34, 211, 238, 0.35)); }
 }
 @keyframes hero-bob {
   0%, 100% { translate: 0 0; }
@@ -178,16 +184,16 @@ html.light {
   --color-raised: #ffffff;       /* drawers, popovers */
   --color-field: #ffffff;        /* inputs */
   --color-scrim: #1e1b3a;
-  --color-accent: #7c3aed;       /* brand violet (5.7:1 with white text) */
-  --color-accent-hover: #6d28d9;
-  --color-plum: #ede9fe;         /* active nav */
-  --color-plum-strong: #ede9fe;  /* user bubbles, sessions */
+  --color-accent: #b45309;       /* brand gold, dark enough for white text (5:1) */
+  --color-accent-hover: #92400e;
+  --color-plum: #fef3c7;         /* active nav */
+  --color-plum-strong: #fef3c7;  /* user bubbles, sessions */
 
   /* Secondary highlight → readable cyan; success stays green */
   --color-cyan-100: #0e7490;
   --color-cyan-200: #0e7490;
   --color-emerald-200: #15803d;
-  --color-violet-100: #6d28d9;
+  --color-violet-100: #b45309;
   --color-cyan-300: #0e7490;
   --color-cyan-400: #0891b2;
   --color-emerald-300: #15803d;
@@ -198,15 +204,15 @@ html.light {
   --color-rose-400: #e11d48;
   --color-amber-200: #b45309;
   --color-amber-300: #b45309;
-  --color-violet-200: #6d28d9;
-  --color-violet-300: #7c3aed;
+  --color-violet-200: #b45309;
+  --color-violet-300: #d97706;
   --color-violet-400: #895efa;   /* “OS” in the wordmark */
 }
 html.light body {
   background: var(--color-ink);
 }
 html.light ::selection {
-  background: rgb(124 58 237 / 0.18);
+  background: rgb(217 119 6 / 0.18);
 }
 html.light * {
   scrollbar-color: rgb(15 23 42 / 0.15) transparent;
@@ -269,11 +275,11 @@ html.light .hero-glass {
 }
 html.light .hero-track { background: #e6e8f0; }
 html.light .hero-bar-violet { background: #afa6f1; }
-html.light .hero-dot { box-shadow: 0 0 10px rgb(124 58 237 / 0.5); }
+html.light .hero-dot { box-shadow: 0 0 10px rgb(217 119 6 / 0.5); }
 html.light .hero-plan {
   background-image: linear-gradient(90deg, #67b1ff, #8b9cff, #67b1ff);
 }
-html.light [data-hero] img { filter: drop-shadow(0 10px 30px rgb(124 58 237 / 0.35)); }
+html.light [data-hero] img { filter: drop-shadow(0 10px 30px rgb(217 119 6 / 0.35)); }
 html.light .hero-track > div { box-shadow: none; }
 
 /* ------------------------------------------------------------------
@@ -294,8 +300,8 @@ html.light .setup-bg {
 }
 .setup-left {
   background:
-    radial-gradient(70% 40% at 30% 0%, rgb(124 58 237 / 0.16), transparent 70%),
-    radial-gradient(70% 50% at 50% 70%, rgb(124 58 237 / 0.10), transparent 70%),
+    radial-gradient(70% 40% at 30% 0%, rgb(217 119 6 / 0.16), transparent 70%),
+    radial-gradient(70% 50% at 50% 70%, rgb(217 119 6 / 0.10), transparent 70%),
     rgb(255 255 255 / 0.015);
 }
 html.light .setup-left {
@@ -311,7 +317,7 @@ html.light .setup-left {
 }
 @keyframes setup-glow {
   0%, 100% { filter: drop-shadow(0 4px 10px rgb(79 70 229 / 0.30)); }
-  50% { filter: drop-shadow(0 6px 22px rgb(124 58 237 / 0.60)) drop-shadow(0 0 10px rgb(34 211 238 / 0.25)); }
+  50% { filter: drop-shadow(0 6px 22px rgb(217 119 6 / 0.60)) drop-shadow(0 0 10px rgb(34 211 238 / 0.25)); }
 }
 @keyframes setup-shine {
   0%, 70% { translate: -120% 0; }
@@ -453,7 +459,7 @@ html.light .setup-left {
 .logo3d-float { animation: logo3d-float 4s ease-in-out infinite; }
 .logo3d-shadow { animation: logo3d-shadow 4s ease-in-out infinite; }
 .logo3d-glow {
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.45), rgba(34, 211, 238, 0.18) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(217,119,6, 0.45), rgba(34, 211, 238, 0.18) 45%, transparent 70%);
   filter: blur(8px);
   animation: logo3d-glow 4s ease-in-out infinite;
 }
@@ -497,25 +503,25 @@ html.light .setup-left {
 }
 
 .land-shine {
-  background: linear-gradient(100deg, #a78bfa 10%, #22d3ee 35%, #c4b5fd 55%, #a78bfa 80%);
+  background: linear-gradient(100deg, #fbbf24 10%, #22d3ee 35%, #fcd34d 55%, #fbbf24 80%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   animation: hero-shimmer 5s linear infinite;
 }
-html.light .land-shine { background-image: linear-gradient(100deg, #7c3aed 10%, #0891b2 35%, #16a34a 55%, #7c3aed 80%); }
+html.light .land-shine { background-image: linear-gradient(100deg, #d97706 10%, #0891b2 35%, #16a34a 55%, #d97706 80%); }
 
 /* moving perspective floor behind the hero */
 .land-floor {
-  background-image: linear-gradient(rgb(139 92 246 / 0.22) 1px, transparent 1px), linear-gradient(90deg, rgb(139 92 246 / 0.22) 1px, transparent 1px);
+  background-image: linear-gradient(rgb(245 158 11 / 0.22) 1px, transparent 1px), linear-gradient(90deg, rgb(245 158 11 / 0.22) 1px, transparent 1px);
   background-size: 64px 64px;
   transform: perspective(500px) rotateX(62deg);
   transform-origin: center top;
   mask-image: linear-gradient(to bottom, black 0%, transparent 75%);
   animation: land-grid 3s linear infinite;
 }
-html.light .land-floor { background-image: linear-gradient(rgb(124 58 237 / 0.14) 1px, transparent 1px), linear-gradient(90deg, rgb(124 58 237 / 0.14) 1px, transparent 1px); }
+html.light .land-floor { background-image: linear-gradient(rgb(217 119 6 / 0.14) 1px, transparent 1px), linear-gradient(90deg, rgb(217 119 6 / 0.14) 1px, transparent 1px); }
 
 /* rotating gradient border (CTA, free plan) */
 .land-ring { position: relative; isolation: isolate; overflow: hidden; }
@@ -524,7 +530,7 @@ html.light .land-floor { background-image: linear-gradient(rgb(124 58 237 / 0.14
   position: absolute;
   inset: -60%;
   z-index: -2;
-  background: conic-gradient(from 0deg, transparent 0 55%, #22d3ee 70%, #a78bfa 85%, transparent 100%);
+  background: conic-gradient(from 0deg, transparent 0 55%, #22d3ee 70%, #fbbf24 85%, transparent 100%);
   animation: land-spin 6s linear infinite;
 }
 .land-ring::after { content: ""; position: absolute; inset: 1.5px; z-index: -1; border-radius: inherit; background: var(--land-ring-bg, #0d0b16); }
@@ -625,7 +631,7 @@ html.light .lift-3d:hover {
 
 /* glossy 3D icon tile (empty states, stat cards) */
 .tile-3d {
-  background: linear-gradient(145deg, #a78bfa, #6d28d9);
+  background: linear-gradient(145deg, #fbbf24, #b45309);
   color: #ffffff;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.45),
@@ -638,17 +644,17 @@ html.light .lift-3d:hover {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.35),
     inset 0 -2px 0 rgb(46 16 101 / 0.25),
-    0 8px 20px -8px rgb(124 58 237 / 0.65);
+    0 8px 20px -8px rgb(217 119 6 / 0.65);
 }
 
 /* active sidebar item: a raised glass pill */
 .nav-3d {
-  background: linear-gradient(180deg, rgb(139 92 246 / 0.28), rgb(109 40 217 / 0.16));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 6px 16px -10px rgb(124 58 237 / 0.9);
+  background: linear-gradient(180deg, rgb(245 158 11 / 0.28), rgb(109 40 217 / 0.16));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 6px 16px -10px rgb(217 119 6 / 0.9);
 }
 html.light .nav-3d {
-  background: linear-gradient(180deg, #f1ecff, #e6defd);
-  box-shadow: inset 0 1px 0 #ffffff, 0 6px 14px -10px rgb(124 58 237 / 0.5);
+  background: linear-gradient(180deg, #fff7e6, #fdeccd);
+  box-shadow: inset 0 1px 0 #ffffff, 0 6px 14px -10px rgb(217 119 6 / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -657,16 +663,16 @@ html.light .nav-3d {
 
 /* code editor colours (dark / light) */
 .code-editor { background: #0d0b16; }
-.tok-k { color: #c4b5fd; }
+.tok-k { color: #fcd34d; }
 .tok-b { color: #67e8f9; }
-.tok-f { color: #93c5fd; }
+.tok-f { color: #fcd34d; }
 .tok-s { color: #86efac; }
 .tok-n { color: #fdba74; }
 .tok-c { color: #6b7280; font-style: italic; }
 html.light .code-editor { background: #fbfaff; }
-html.light .tok-k { color: #6d28d9; }
+html.light .tok-k { color: #b45309; }
 html.light .tok-b { color: #0e7490; }
-html.light .tok-f { color: #1d4ed8; }
+html.light .tok-f { color: #b45309; }
 html.light .tok-s { color: #15803d; }
 html.light .tok-n { color: #c2410c; }
 html.light .tok-c { color: #94a3b8; }
@@ -681,7 +687,7 @@ html.light .tok-c { color: #94a3b8; }
 @keyframes orb-shimmer { from { background-position: 150% 0; } to { background-position: -100% 0; } }
 @keyframes orb-dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 @keyframes orb-launch { 0% { transform: translate(-50%, 0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-50%, -220px) scale(2.2); opacity: 0; } }
-@keyframes composer-squeeze { 0% { transform: scaleX(1); } 35% { transform: scaleX(0.97); box-shadow: 0 0 0 3px rgb(167 139 250 / 0.35), 0 0 40px rgb(124 58 237 / 0.45); } 100% { transform: scaleX(1); } }
+@keyframes composer-squeeze { 0% { transform: scaleX(1); } 35% { transform: scaleX(0.97); box-shadow: 0 0 0 3px rgb(251 191 36 / 0.35), 0 0 40px rgb(217 119 6 / 0.45); } 100% { transform: scaleX(1); } }
 @keyframes answer-word { from { opacity: 0; filter: blur(6px); transform: translateY(4px); } to { opacity: 1; filter: blur(0); transform: none; } }
 .orb-label { animation: orb-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .orb-shimmer { animation: orb-shimmer 2.2s linear infinite; }
@@ -714,7 +720,7 @@ html.light .tok-c { color: #94a3b8; }
 .explain-bar { animation: explain-bar 0.7s ease-in-out infinite; }
 .explain-pulse { animation: explain-pulse 1.8s ease-in-out infinite; }
 .explain-grid {
-  background-image: linear-gradient(rgba(167, 139, 250, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(167, 139, 250, 0.07) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(251,191,36, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(251,191,36, 0.07) 1px, transparent 1px);
   background-size: 32px 32px;
   mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
 }
@@ -730,29 +736,29 @@ html.light .tok-c { color: #94a3b8; }
    gradient only on brand moments (logo, Ask button, active marker).
 =================================================================== */
 html.app-ui {
-  --brand-grad: linear-gradient(135deg, #22d3ee 0%, #6d5bff 50%, #a855f7 100%);
+  --brand-grad: linear-gradient(135deg, #22d3ee 0%, #f59e0b 50%, #fbbf24 100%);
   --cyan: #22d3ee;
 }
 /* Dark (from the brand reference): near-black chrome, a deep purple glow at
    the top, violet for “you are here”, cyan for small highlights. */
 html.app-ui:not(.light) {
-  --color-ink: #09090b;
-  --color-panel: #0f0f11;
-  --color-raised: #17171a;
-  --color-field: #131316;
-  --color-accent: #a78bfa;        /* violet, 7.6:1 with black text */
-  --color-accent-hover: #c4b5fd;
-  --color-plum: #2a1250;          /* active nav */
-  --color-plum-strong: #351766;
-  --color-violet-glow: #4c1d95;
+  --color-ink: #0a1122;
+  --color-panel: #0d152a;
+  --color-raised: #142039;
+  --color-field: #111a31;
+  --color-accent: #fbbf24;        /* gold, 11:1 with black text */
+  --color-accent-hover: #fcd34d;
+  --color-plum: #162a55;          /* active nav */
+  --color-plum-strong: #1c3366;
+  --color-violet-glow: #78350f;
 }
 html.light.app-ui {
   --color-ink: #f7f6fb;
   --color-panel: #ffffff;
-  --color-accent: #7c3aed;        /* 5.7:1 with white text */
-  --color-accent-hover: #6d28d9;
-  --color-plum: #f1ecff;
-  --color-plum-strong: #ebe3ff;
+  --color-accent: #b45309;        /* gold, 5:1 with white text */
+  --color-accent-hover: #92400e;
+  --color-plum: #fef3c7;
+  --color-plum-strong: #fef3c7;
   --cyan: #0891b2;
 }
 html.app-ui .app-glow {
@@ -763,10 +769,10 @@ html.app-ui .app-glow {
   background-attachment: fixed;
 }
 html.light.app-ui .app-glow {
-  background: radial-gradient(60% 30% at 50% -8%, rgb(124 58 237 / 0.10), transparent 72%), radial-gradient(30% 24% at 100% 100%, rgb(8 145 178 / 0.05), transparent 70%), var(--color-ink);
+  background: radial-gradient(60% 30% at 50% -8%, rgb(217 119 6 / 0.10), transparent 72%), radial-gradient(30% 24% at 100% 100%, rgb(8 145 178 / 0.05), transparent 70%), var(--color-ink);
   background-attachment: fixed;
 }
-html.app-ui ::selection { background: rgb(167 139 250 / 0.32); }
+html.app-ui ::selection { background: rgb(251 191 36 / 0.32); }
 
 /* flat cards: no gloss, no glow */
 html.app-ui .depth { background-image: none !important; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
@@ -775,8 +781,8 @@ html.light.app-ui .depth { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px
 html.light.app-ui :where(.card-glow, .bg-white\/\[0\.025\], .bg-white\/\[0\.03\], .bg-white\/\[0\.035\]) { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04); }
 html.light.app-ui :where(.border-white\/\[0\.06\], .border-white\/\[0\.07\], .border-white\/\[0\.08\]) { border-color: #e7e8ef; }
 html.app-ui .lift-3d { transform: none; transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 150ms ease, background-color 150ms ease, box-shadow 200ms ease; }
-html.app-ui .lift-3d:hover { transform: translateY(-2px); border-color: rgb(167 139 250 / 0.45); box-shadow: 0 4px 16px -8px rgb(0 0 0 / 0.5); }
-html.light.app-ui .lift-3d:hover { border-color: rgb(124 58 237 / 0.35); box-shadow: 0 4px 14px -8px rgb(16 24 40 / 0.18); }
+html.app-ui .lift-3d:hover { transform: translateY(-2px); border-color: rgb(251 191 36 / 0.45); box-shadow: 0 4px 16px -8px rgb(0 0 0 / 0.5); }
+html.light.app-ui .lift-3d:hover { border-color: rgb(217 119 6 / 0.35); box-shadow: 0 4px 14px -8px rgb(16 24 40 / 0.18); }
 html.app-ui .lift-3d:active { transform: scale(0.995); }
 
 /* buttons: crisp, no coloured glow */
@@ -860,7 +866,7 @@ html.app-ui .ui-live::after { content: ""; position: absolute; inset: 0; border-
 
 /* active nav item: violet fill like the brand reference */
 html.app-ui .nav-active { background: var(--color-plum); color: #fff; }
-html.light.app-ui .nav-active { color: #4c1d95; }
+html.light.app-ui .nav-active { color: #78350f; }
 
 @media (prefers-reduced-motion: reduce) {
   html.app-ui .page-enter, html.app-ui .page-enter :is(.depth, .lift-3d), html.app-ui .app-glow,
@@ -881,15 +887,15 @@ html.light.app-ui .nav-active { color: #4c1d95; }
 @keyframes ui-sweep { to { --ui-angle: 360deg; } }
 html.app-ui .ui-sweep::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-  background: conic-gradient(from var(--ui-angle), transparent 0deg, rgb(167 139 250 / 0.9) 40deg, rgb(34 211 238 / 0.8) 80deg, transparent 130deg, transparent 360deg);
+  background: conic-gradient(from var(--ui-angle), transparent 0deg, rgb(251 191 36 / 0.9) 40deg, rgb(34 211 238 / 0.8) 80deg, transparent 130deg, transparent 360deg);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   animation: ui-sweep 6s linear infinite;
 }
 /* soft orbit drawing in the corner of the hero card */
 html.app-ui .ui-orbit-art {
   position: absolute; right: -70px; top: -70px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none;
-  border: 1px dashed rgb(167 139 250 / 0.22);
-  box-shadow: inset 0 0 0 36px transparent, 0 0 0 36px rgb(167 139 250 / 0.03);
+  border: 1px dashed rgb(251 191 36 / 0.22);
+  box-shadow: inset 0 0 0 36px transparent, 0 0 0 36px rgb(251 191 36 / 0.03);
   animation: brand-orb-spin 40s linear infinite;
 }
 html.app-ui .ui-orbit-art::before {
@@ -909,14 +915,14 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 }
 
 /* Placement page motion */
-.pl-wire { fill: none; stroke: rgb(167 139 250 / 0.22); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; animation: pl-dash 2.4s linear infinite; }
+.pl-wire { fill: none; stroke: rgb(251 191 36 / 0.22); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; animation: pl-dash 2.4s linear infinite; }
 @keyframes pl-dash { to { stroke-dashoffset: -14; } }
-.pl-dot { fill: #a78bfa; offset-distance: 0%; opacity: 0; animation: pl-travel 2.2s cubic-bezier(0.45, 0, 0.2, 1) infinite; filter: drop-shadow(0 0 4px rgb(167 139 250 / 0.9)); }
+.pl-dot { fill: #fbbf24; offset-distance: 0%; opacity: 0; animation: pl-travel 2.2s cubic-bezier(0.45, 0, 0.2, 1) infinite; filter: drop-shadow(0 0 4px rgb(251 191 36 / 0.9)); }
 .pl-dot-out { fill: #22d3ee; filter: drop-shadow(0 0 4px rgb(34 211 238 / 0.9)); animation-duration: 3.6s; }
 @keyframes pl-travel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 55% { offset-distance: 100%; opacity: 1; } 60%, 100% { offset-distance: 100%; opacity: 0; } }
 .pl-chip { animation: ui-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
-.pl-pulse { animation: pl-pulse 2.2s ease-out infinite; box-shadow: 0 0 0 0 rgb(167 139 250 / 0.45); }
-@keyframes pl-pulse { 0% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0.45); } 100% { box-shadow: 0 0 0 18px rgb(167 139 250 / 0); } }
+.pl-pulse { animation: pl-pulse 2.2s ease-out infinite; box-shadow: 0 0 0 0 rgb(251 191 36 / 0.45); }
+@keyframes pl-pulse { 0% { box-shadow: 0 0 0 0 rgb(251 191 36 / 0.45); } 100% { box-shadow: 0 0 0 18px rgb(251 191 36 / 0); } }
 .pl-slot { animation: pl-slot 3.6s ease-in-out infinite; }
 .pl-slot .pl-slot-tag { animation: pl-tag 3.6s ease-in-out infinite; animation-delay: inherit; }
 @keyframes pl-slot { 0%, 20%, 75%, 100% { border-color: rgb(255 255 255 / 0.08); background: rgb(255 255 255 / 0.02); } 35%, 60% { border-color: rgb(34 211 238 / 0.45); background: rgb(34 211 238 / 0.05); } }
@@ -925,7 +931,7 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
 .pl-mover { animation: pl-mover 7s ease-in-out infinite; }
 @keyframes pl-mover {
   0%, 30% { transform: none; opacity: 1; box-shadow: none; }
-  38% { transform: translateY(-3px); border-color: rgb(167 139 250 / 0.5); box-shadow: 0 10px 24px -12px rgb(124 58 237 / 0.8); }
+  38% { transform: translateY(-3px); border-color: rgb(251 191 36 / 0.5); box-shadow: 0 10px 24px -12px rgb(217 119 6 / 0.8); }
   48%, 86% { transform: none; opacity: 0.3; }
   96%, 100% { opacity: 1; }
 }
@@ -976,7 +982,7 @@ html.app-ui .page-enter .rounded-full > [style*="width"] { transform-origin: lef
    company and team pages, interview report, dialogs). Video frames, the code editor and
    caption overlays keep their dark colour on purpose. */
 html.light :where(
-  .bg-\[\#0f0f11\], .bg-\[\#121216\], .bg-\[\#121118\], .bg-\[\#13121b\], .bg-\[\#0f0f13\],
+  .bg-\[\#0d152a\], .bg-\[\#121216\], .bg-\[\#121118\], .bg-\[\#13121b\], .bg-\[\#0f0f13\],
   .bg-\[\#0d0b16\], .bg-\[\#0d0c14\]\/90, .bg-\[\#16131f\], .bg-\[\#0f0b1d\], .bg-\[\#1a1726\], .bg-\[\#1a1a1f\]
 ) {
   background-color: #ffffff;

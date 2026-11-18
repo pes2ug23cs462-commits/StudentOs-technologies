@@ -184,7 +184,7 @@ export function TestRun({ io }: { io: TestIO }) {
 
   if (done)
     return (
-      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
+      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-8 text-center">
         <span className={cn("mx-auto flex h-14 w-14 items-center justify-center rounded-full", done.ended ? "bg-rose-500/15 text-rose-300" : "bg-emerald-400/15 text-emerald-300")}>
           {done.ended ? <AlertCircleIcon size={24} /> : <CheckIcon size={24} />}
         </span>
@@ -198,7 +198,7 @@ export function TestRun({ io }: { io: TestIO }) {
 
   if (!info.test)
     return (
-      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
+      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-8 text-center">
         <p className="text-[15px] font-semibold text-white">No test for you right now</p>
         <p className="mt-2 text-[13px] text-white/55">{io.none}</p>
         <Back back={io.back} className="mt-5 inline-block text-[13px] text-accent hover:underline" />
@@ -208,7 +208,7 @@ export function TestRun({ io }: { io: TestIO }) {
   if (!run) {
     const resuming = !!info.attempt && !info.attempt.done;
     return (
-      <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7">
+      <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-7">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">{info.test.company} · {info.test.role}</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">{info.test.title}</h1>
         <p className="mt-1 text-[13.5px] text-white/60">{[info.test.count ? `${info.test.count} questions` : "", info.test.coding ? `${info.test.coding} coding problem${info.test.coding === 1 ? "" : "s"} (Python or JavaScript)` : ""].filter(Boolean).join(" + ")} · {info.test.minutes} minutes · one attempt</p>
@@ -252,7 +252,7 @@ export function TestRun({ io }: { io: TestIO }) {
         </div>
 
         {q && (
-          <div className="mt-5 rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6">
+          <div className="mt-5 rounded-2xl border border-white/[0.08] bg-[#0d152a] p-6">
             <p className="text-[12px] font-semibold text-white/45">Question {at + 1} of {nQ}</p>
             <p className="mt-2 text-[16px] leading-relaxed whitespace-pre-wrap text-white">{q.q}</p>
             <div role="radiogroup" className="mt-5 space-y-2">
@@ -273,7 +273,7 @@ export function TestRun({ io }: { io: TestIO }) {
         {cq && work[cq.id] && (
           // coding uses the whole screen, like a coding platform: problem on the left, editor on the right
           <div className="mt-4 grid gap-4 lg:h-[calc(100vh-150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
-            <div className="overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+            <div className="overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
               <p className="text-[12px] font-semibold text-white/45">Coding {at - nQ + 1} of {run.coding.length} · {cq.level}</p>
               <p className="mt-1 text-[17px] font-semibold text-white">{cq.title}</p>
               <p className="mt-3 text-[13.5px] leading-relaxed whitespace-pre-wrap text-white/80">{cq.statement}</p>
@@ -286,7 +286,7 @@ export function TestRun({ io }: { io: TestIO }) {
               </div>
               <p className="mt-3 text-[11.5px] text-white/40">Your code is also checked on hidden tests when you submit.</p>
             </div>
-            <div className="flex min-h-[460px] min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 lg:min-h-0">
+            <div className="flex min-h-[460px] min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4 lg:min-h-0">
               <div className="flex items-center gap-2">
                 <select
                   value={work[cq.id].lang}

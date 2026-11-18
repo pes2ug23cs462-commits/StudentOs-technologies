@@ -105,7 +105,7 @@ function Roles() {
   const live = data.roles.filter((r) => !r.paused).length;
   return (
     <div className="mt-5 space-y-5">
-      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-semibold">Hiring on the careers page</p>
           <p className="mt-0.5 text-[12.5px] text-white/55">{data.open ? `On · ${live} role${live === 1 ? "" : "s"} showing at /careers` : "Off · the page says there are no open roles"}</p>
@@ -116,7 +116,7 @@ function Roles() {
         <a href="/careers" target="_blank" rel="noreferrer" className="text-[12.5px] text-accent hover:underline">Open /careers ↗</a>
       </section>
 
-      <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+      <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold">Roles ({data.roles.length})</h2>
           <Button size="sm" variant="primary" icon={<PlusIcon size={14} />} onClick={() => setEdit(blank())}>Post a role</Button>
@@ -178,7 +178,7 @@ function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerR
   const ok = r.title.trim().length > 2 && !winBad;
   const sel = "h-10 w-full rounded-lg border border-white/10 bg-field px-3 text-[13.5px] text-white";
   return (
-    <section className="mx-auto mt-5 max-w-[820px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-6">
+    <section className="mx-auto mt-5 max-w-[820px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-6">
       <h2 className="text-[18px] font-semibold">{isNew ? "Post a role" : "Edit role"}</h2>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2"><Label htmlFor="rt">Role title</Label><Input id="rt" value={r.title} onChange={(e) => setR({ ...r, title: e.target.value })} placeholder="e.g. Full-stack Developer Intern" /></div>
@@ -369,13 +369,13 @@ function Apps({ openApp }: { openApp?: string | null }) {
     <div className="mt-5 space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[["Applied", apps.length], ["Round done", count("completed")], ["Waiting", count("invited") + count("in-progress")], ["Live booked", apps.filter((a) => a.live).length]].map(([l, v]) => (
-          <div key={l as string} className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4">
+          <div key={l as string} className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4">
             <p className="text-[26px] leading-none font-semibold tabular-nums">{v}</p>
             <p className="mt-1.5 text-[12px] text-white/50">{l}</p>
           </div>
         ))}
       </div>
-      <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
+      <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
           {(["all", "completed", "in-progress", "invited", "missed"] as const).map((k) => (
             <button key={k} type="button" onClick={() => setStage(k)} className={cn("h-8 rounded-lg border px-3 text-[12.5px] transition", stage === k ? "border-accent/60 bg-[var(--color-plum)] text-white" : "border-white/10 text-white/60 hover:text-white")}>
@@ -422,7 +422,7 @@ function Apps({ openApp }: { openApp?: string | null }) {
             <table className="w-full min-w-[980px] text-[13px]">
               <thead>
                 <tr className="text-left text-[11.5px] text-white/45">
-                  <th className="w-8 pb-2"><input type="checkbox" aria-label="Select all" checked={list.length > 0 && list.every((a) => sel.has(a.token))} onChange={(e) => setSel(e.target.checked ? new Set(list.map((a) => a.token)) : new Set())} className="accent-[#a78bfa]" /></th>
+                  <th className="w-8 pb-2"><input type="checkbox" aria-label="Select all" checked={list.length > 0 && list.every((a) => sel.has(a.token))} onChange={(e) => setSel(e.target.checked ? new Set(list.map((a) => a.token)) : new Set())} className="accent-[#fbbf24]" /></th>
                   <th className="pb-2 font-medium">Applicant</th>
                   <th className="pb-2 font-medium">Role</th>
                   <th className="pb-2 font-medium">Now in</th>
@@ -440,7 +440,7 @@ function Apps({ openApp }: { openApp?: string | null }) {
                   const step = stepOf(a);
                   return (
                     <tr key={a.token} onClick={() => setOpen(a.token)} className={cn("cursor-pointer border-t border-white/[0.06] hover:bg-white/[0.02]", sel.has(a.token) && "bg-accent/[0.05]")}>
-                      <td className="py-2.5" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${a.name}`} checked={sel.has(a.token)} onChange={() => toggle(a.token)} className="accent-[#a78bfa]" /></td>
+                      <td className="py-2.5" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${a.name}`} checked={sel.has(a.token)} onChange={() => toggle(a.token)} className="accent-[#fbbf24]" /></td>
                       <td className="py-2.5"><p className="font-medium text-white">{a.name}</p><p className="text-[11.5px] text-white/45">{a.college}</p></td>
                       <td className="py-2.5 text-white/70">{a.role}</td>
                       <td className="py-2.5">{step ? <span className="flex flex-col gap-0.5"><span className="text-[12px] text-white/80">{STEP_LABEL[step]}</span><span className={cn("w-fit rounded-md px-1.5 py-0.5 text-[10.5px]", STAGE[st].cls)}>{step === "live" ? (a.live?.feedback ? "Feedback in" : `${fmtWhen(a.live?.at ?? 0)}`) : STAGE[st].label}</span></span> : <span className="text-white/40">—</span>}</td>

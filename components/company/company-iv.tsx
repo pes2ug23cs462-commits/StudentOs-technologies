@@ -41,7 +41,7 @@ export function IvCard({ pid, kind = "technical", rounds, summary, onSaved }: { 
   };
   const round = summary ? rounds[summary.round] ?? `Round ${summary.round + 1}` : "";
   return (
-    <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-4 sm:p-5">
+    <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-3">
         <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", kind === "hr" ? "bg-cyan-400/15 text-cyan-200" : "bg-violet-400/15 text-violet-200")}><MicIcon size={18} /></span>
         <div className="min-w-0 flex-1">

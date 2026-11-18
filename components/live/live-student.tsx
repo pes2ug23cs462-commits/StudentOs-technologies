@@ -44,7 +44,7 @@ export function LiveStudent({ pid, room, signal, other = "the recruiter" }: { pi
   const waitText = wait > 3600000 ? `${Math.floor(wait / 3600000)} h ${Math.ceil((wait % 3600000) / 60000)} min` : `${Math.max(1, Math.ceil(wait / 60000))} min`;
   if (left)
     return (
-      <div className="mx-auto mt-6 max-w-[600px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7 text-center">
+      <div className="mx-auto mt-6 max-w-[600px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-7 text-center">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">Live interview</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">{state === "over" ? "The interview has ended" : "You’ve left the interview"}</h1>
         <p className="mt-2 text-[13.5px] text-white/60">Thank you! {other.replace(/^the /, "The ")} will share the result with you. {state === "over" ? "" : "Left by mistake? Join again while the slot is on."}</p>
@@ -53,7 +53,7 @@ export function LiveStudent({ pid, room, signal, other = "the recruiter" }: { pi
     );
   if (!joined)
     return (
-      <div className="mx-auto mt-6 max-w-[600px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7">
+      <div className="mx-auto mt-6 max-w-[600px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-7">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">Live interview on StudentOS</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">Join your interview</h1>
         <p className="mt-1 text-[13.5px] text-white/60">A video call with {other}, right here. Use Chrome or Edge with a working camera and mic.</p>

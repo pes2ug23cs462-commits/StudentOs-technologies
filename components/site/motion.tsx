@@ -130,7 +130,7 @@ export function TiltCard({ className, children, style, max = 12 }: { className?:
       style={style}
       className={cn("group relative overflow-hidden transition-transform duration-300 ease-out will-change-transform [transform-style:preserve-3d]", className)}
     >
-      <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 [background:radial-gradient(280px_circle_at_var(--sx,50%)_var(--sy,50%),rgba(124,58,237,0.22),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 [background:radial-gradient(280px_circle_at_var(--sx,50%)_var(--sy,50%),rgba(217,119,6,0.22),transparent_60%)]" />
       {children}
     </div>
   );

@@ -201,11 +201,11 @@ export function CareerInterview({ token }: { token: string }) {
               <p className="mt-1 text-[14px] text-white/65">Finish before {fmtWhen(v.end)} (IST) · {left(v.end - now)} left. It runs in strict mode: full screen, camera and mic on, no other tabs.</p>
               {!started && (
                 <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-[13.5px] text-white/80">
-                  <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[#a78bfa]" />
+                  <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[#fbbf24]" />
                   I’ll do this on my own, without help from other people or AI tools.
                 </label>
               )}
-              <button type="button" disabled={!started && !agree} onClick={() => setMode(cur)} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition disabled:opacity-50">
+              <button type="button" disabled={!started && !agree} onClick={() => setMode(cur)} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[15px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(245,158,11,0.4)] transition disabled:opacity-50">
                 {started ? "Continue" : "Get ready"} <ArrowRightIcon size={15} />
               </button>
             </>

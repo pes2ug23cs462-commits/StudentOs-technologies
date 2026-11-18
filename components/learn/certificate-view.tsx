@@ -22,7 +22,7 @@ export interface CertificateDetails {
 }
 
 const INK = "#1e1b4b";
-const VIOLET = "#5b21b6";
+const VIOLET = "#92400e";
 const GREEN = "#15803d";
 const MUTED = "#64748b";
 const GOLD = "#b8860b";
@@ -73,7 +73,7 @@ function Corner({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 40 40" className={`absolute h-[4.5cqw] w-[4.5cqw] ${className}`} aria-hidden>
       <path d="M2 38 V8 a6 6 0 0 1 6-6 H38" fill="none" stroke={VIOLET} strokeWidth="1.6" />
-      <path d="M8 38 V14 a6 6 0 0 1 6-6 H38" fill="none" stroke="#c4b5fd" strokeWidth="1" />
+      <path d="M8 38 V14 a6 6 0 0 1 6-6 H38" fill="none" stroke="#fcd34d" strokeWidth="1" />
       <circle cx="8" cy="8" r="2" fill={GOLD} />
     </svg>
   );
@@ -100,18 +100,18 @@ export function CertificateView({ cert, printId }: { cert: CertificateDetails; p
       <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden>
         <defs>
           <pattern id="cert-waves" width="60" height="16" patternUnits="userSpaceOnUse">
-            <path d="M0 8 Q15 0 30 8 T60 8" fill="none" stroke="#ede9fe" strokeWidth="1" />
+            <path d="M0 8 Q15 0 30 8 T60 8" fill="none" stroke="#fef3c7" strokeWidth="1" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#cert-waves)" />
       </svg>
 
       {/* left brand band */}
-      <div className="absolute inset-y-0 left-0 flex w-[27%] flex-col items-center px-[2.2cqw] pt-[5cqw] pb-[3.2cqw] text-center text-[#ffffff]" style={{ background: "linear-gradient(165deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%)" }}>
+      <div className="absolute inset-y-0 left-0 flex w-[27%] flex-col items-center px-[2.2cqw] pt-[5cqw] pb-[3.2cqw] text-center text-[#ffffff]" style={{ background: "linear-gradient(165deg, #1e1b4b 0%, #312e81 55%, #78350f 100%)" }}>
         <svg className="absolute inset-0 h-full w-full opacity-[0.12]" aria-hidden>
           <circle cx="110%" cy="-5%" r="38%" fill="none" stroke="#a5b4fc" strokeWidth="1" />
           <circle cx="110%" cy="-5%" r="48%" fill="none" stroke="#a5b4fc" strokeWidth="1" />
-          <circle cx="-10%" cy="105%" r="40%" fill="none" stroke="#c4b5fd" strokeWidth="1" />
+          <circle cx="-10%" cy="105%" r="40%" fill="none" stroke="#fcd34d" strokeWidth="1" />
         </svg>
         <span className="relative flex h-[9.5cqw] w-[9.5cqw] items-center justify-center rounded-full bg-[#ffffff] shadow-[0_0_0_0.5cqw_rgba(255,255,255,0.12)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -3,12 +3,13 @@
 /* Placement prep: one place to see how ready you are, what to do this week,
    aptitude practice, how the big recruiters hire, and your campus drives. */
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 import { Aptitude } from "@/components/placement/aptitude";
 import { CampusDrives, JoinForDrives } from "@/components/placement/campus-drives";
-import { ArrowRightIcon, BriefcaseIcon, BuildingIcon, CheckIcon, CodeIcon, FileIcon, FolderIcon, MicIcon, OpenBookIcon, TargetIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, BriefcaseIcon, CheckIcon, CodeIcon, FileIcon, FolderIcon, MicIcon, OpenBookIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { TOPIC, type TopicId } from "@/lib/aptitude";
 import { PLACEMENT_PARTS, type PlacementPart } from "@/lib/college";
@@ -93,7 +94,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
               <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden>
                 <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
                 <circle cx="60" cy="60" r={R} fill="none" stroke="url(#rg)" strokeWidth="10" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - overall / 100)} className="transition-[stroke-dashoffset] duration-700" />
-                <defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stopColor="#a78bfa" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
+                <defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stopColor="#fbbf24" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-[32px] font-semibold text-white tabular-nums">{overall}</span>
@@ -199,9 +200,12 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {COMPANIES.map((c) => (
-              <button key={c.id} type="button" onClick={() => go("companies")} className="rounded-xl border border-white/[0.07] px-3 py-3 text-left transition hover:border-accent/40">
-                <p className="text-[13.5px] font-semibold text-white">{c.name}</p>
-                <p className="mt-0.5 truncate text-[11.5px] text-white/45">{c.steps.length} rounds · {c.program}</p>
+              <button key={c.id} type="button" onClick={() => go("companies")} className="flex items-center gap-2.5 rounded-xl border border-white/[0.07] px-3 py-3 text-left transition hover:border-accent/40">
+                <CompanyLogo name={c.name} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" letterClassName="bg-white/[0.06] text-[13px] font-bold text-white/70" />
+                <span className="min-w-0">
+                  <span className="block text-[13.5px] font-semibold text-white">{c.name}</span>
+                  <span className="mt-0.5 block truncate text-[11.5px] text-white/45">{c.steps.length} rounds · {c.program}</span>
+                </span>
               </button>
             ))}
           </div>
@@ -235,7 +239,7 @@ function CompanyCard({ c }: { c: Company }) {
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-white/70"><BuildingIcon size={18} /></span>
+        <CompanyLogo name={c.name} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" letterClassName="bg-white/[0.06] text-[15px] font-bold text-white/70" />
         <div className="min-w-0">
           <p className="text-[16px] font-semibold text-white">{c.name}</p>
           <p className="text-[12.5px] text-white/50">{c.program}</p>

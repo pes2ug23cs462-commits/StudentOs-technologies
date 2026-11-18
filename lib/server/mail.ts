@@ -36,11 +36,11 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 export function mailHtml(o: { heading: string; lines: string[]; button: string; url: string; foot: string; brand?: string }) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f3f8;font-family:Arial,Helvetica,sans-serif;color:#1a1726">
 <div style="max-width:520px;margin:0 auto;padding:28px 18px">
-<p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#7c3aed">${esc(o.brand ?? "StudentOS · Placements")}</p>
+<p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#d97706">${esc(o.brand ?? "StudentOS · Placements")}</p>
 <div style="background:#ffffff;border-radius:14px;padding:26px 24px">
 <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3">${esc(o.heading)}</h1>
 ${o.lines.map((l) => `<p style="margin:0 0 8px;font-size:14.5px;line-height:1.5;color:#3d3a4a">${esc(l)}</p>`).join("")}
-<p style="margin:22px 0 4px"><a href="${esc(o.url)}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:11px 18px;border-radius:10px">${esc(o.button)}</a></p>
+<p style="margin:22px 0 4px"><a href="${esc(o.url)}" style="display:inline-block;background:#d97706;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:11px 18px;border-radius:10px">${esc(o.button)}</a></p>
 </div>
 <p style="margin:16px 4px 0;font-size:11.5px;line-height:1.5;color:#7a7590">${esc(o.foot)}</p>
 </div></body></html>`;

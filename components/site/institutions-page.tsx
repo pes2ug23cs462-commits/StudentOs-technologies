@@ -96,7 +96,7 @@ export function InstitutionsPage() {
       {/* hero with a live 3D preview */}
       <section className="relative overflow-hidden pt-16">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(55%_60%_at_50%_0%,rgba(124,58,237,0.32),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(55%_60%_at_50%_0%,rgba(217,119,6,0.32),transparent_70%)]" />
           <div className="land-floor absolute inset-x-[-20%] bottom-[-20%] h-[60%] opacity-60" />
         </div>
         <div className="relative mx-auto grid max-w-[1200px] items-center gap-10 px-5 pt-16 pb-20 lg:grid-cols-[1fr_1.1fr]">
@@ -123,7 +123,7 @@ export function InstitutionsPage() {
             </p>
           </div>
           <div className="hero-in" style={d(0.25)}>
-            <div className="rounded-3xl border border-white/10 bg-[#0d0c14]/90 p-5 shadow-[0_40px_120px_-40px_rgba(124,58,237,0.7)] backdrop-blur">
+            <div className="rounded-3xl border border-white/10 bg-[#0d0c14]/90 p-5 shadow-[0_40px_120px_-40px_rgba(217,119,6,0.7)] backdrop-blur">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-[14px] font-semibold text-white">{kind === "school" ? "Readiness by section and subject" : "Placement readiness by section"}</p>
@@ -203,7 +203,7 @@ export function InstitutionsPage() {
 
       {/* privacy */}
       <section className="mx-auto max-w-[1200px] px-5 pb-20">
-        <div className="reveal grid gap-8 rounded-3xl border border-emerald-400/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.1),rgba(124,58,237,0.06))] p-8 sm:p-10 lg:grid-cols-[1fr_1.2fr]">
+        <div className="reveal grid gap-8 rounded-3xl border border-emerald-400/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.1),rgba(217,119,6,0.06))] p-8 sm:p-10 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <Eyebrow>Privacy</Eyebrow>
             <h2 className="mt-3 text-[30px] leading-tight font-semibold tracking-tight">Students choose what you see</h2>
@@ -224,7 +224,7 @@ export function InstitutionsPage() {
 
       {/* pilot + demo */}
       <section id="demo" className="relative scroll-mt-20 overflow-hidden border-t border-white/[0.06]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_80%_at_50%_100%,rgba(124,58,237,0.3),transparent_70%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_80%_at_50%_100%,rgba(217,119,6,0.3),transparent_70%)]" />
         <div className="relative mx-auto grid max-w-[1200px] gap-10 px-5 py-20 lg:grid-cols-[1fr_1.1fr]">
           <div className="reveal">
             <Eyebrow>Free pilot</Eyebrow>
@@ -259,7 +259,7 @@ export function InstitutionsBand() {
   const grid = useMemo(() => readinessGrid(sampleMembers("school"), "school"), []);
   return (
     <section id="institutions" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-24">
-      <div className="reveal grid items-center gap-10 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(34,211,238,0.05))] p-8 sm:p-12 lg:grid-cols-[1fr_1.15fr]">
+      <div className="reveal grid items-center gap-10 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(217,119,6,0.16),rgba(34,211,238,0.05))] p-8 sm:p-12 lg:grid-cols-[1fr_1.15fr]">
         <div>
           <Eyebrow>For institutions</Eyebrow>
           <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">

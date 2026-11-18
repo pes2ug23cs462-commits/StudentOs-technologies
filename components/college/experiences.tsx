@@ -34,7 +34,7 @@ export function Experiences({ cid, canEdit }: { cid: string; canEdit: boolean })
     }
   };
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+    <div className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-[15px] font-semibold text-white">

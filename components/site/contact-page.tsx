@@ -58,7 +58,7 @@ export function ContactPage() {
         <div>
           <div ref={stage} className="reveal relative h-[230px] [perspective:1000px]" aria-hidden>
             <div className="absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]" style={{ transform: "rotateX(calc(12deg + var(--my,0) * -10deg)) rotateY(calc(-16deg + var(--mx,0) * 16deg))", transition: "transform 0.9s cubic-bezier(0.2,0.8,0.2,1)" }}>
-              <div className="absolute h-[200px] w-[300px] rounded-full bg-[radial-gradient(closest-side,rgba(124,58,237,0.5),transparent)] blur-2xl" />
+              <div className="absolute h-[200px] w-[300px] rounded-full bg-[radial-gradient(closest-side,rgba(217,119,6,0.5),transparent)] blur-2xl" />
               <div className="land-glass relative flex h-[170px] w-[270px] flex-col justify-between rounded-2xl p-5 [animation:hero-bob_6s_ease-in-out_infinite]">
                 <div className="flex items-center justify-between">
                   <FancyIcon name="mail" tone="sky" size={44} />

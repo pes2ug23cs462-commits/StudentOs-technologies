@@ -605,7 +605,7 @@ export default function InterviewPage() {
         <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
           <div className="min-w-0">
             {/* video */}
-            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(124,58,237,0.6)]">
+            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(217,119,6,0.6)]">
               <Interviewer talker={talker} listening={status === "listening"} />
               <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} />
               <div className="absolute top-3 left-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 backdrop-blur">
@@ -637,7 +637,7 @@ export default function InterviewPage() {
             </div>
 
             {/* question + answer */}
-            <div className="mt-4 rounded-2xl border border-accent/30 bg-[#0f0f13] p-5 shadow-[0_0_0_1px_rgba(167,139,250,0.08),0_0_40px_-18px_rgba(167,139,250,0.7)] sm:p-6">
+            <div className="mt-4 rounded-2xl border border-accent/30 bg-[#0f0f13] p-5 shadow-[0_0_0_1px_rgba(251,191,36,0.08),0_0_40px_-18px_rgba(251,191,36,0.7)] sm:p-6">
               {phase === "scoring" ? (
                 <div className="flex flex-col items-center py-10 text-center">
                   <FancyIcon name="sparkle" tone="violet" size={56} float />
@@ -738,7 +738,7 @@ export default function InterviewPage() {
           {/* side */}
           <div className="space-y-4">
             {strict && <SelfView onBreach={proctor.report} voice={{ paused: speaking }} />}
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
+            <div className="rounded-2xl border border-white/[0.07] bg-[#0d152a] p-5">
               <p className="text-[13.5px] font-semibold text-white">This answer</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="rounded-xl border border-white/[0.06] p-3">
@@ -756,7 +756,7 @@ export default function InterviewPage() {
               <p className="mt-2 text-[11.5px] text-white/45">Good answers are usually 60–150 words, about 1–2 minutes.</p>
             </div>
 
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-5">
+            <div className="rounded-2xl border border-white/[0.07] bg-[#0d152a] p-5">
               <p className="text-[13.5px] font-semibold text-white">Questions</p>
               <ol className="mt-3 space-y-1.5">
                 {questions.map((x, k) => (
@@ -771,8 +771,8 @@ export default function InterviewPage() {
               </ol>
             </div>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.07] bg-[#0f0f11] p-4">
-              <input type="checkbox" checked={handsFree} onChange={(e) => setHandsFree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#a78bfa]" />
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.07] bg-[#0d152a] p-4">
+              <input type="checkbox" checked={handsFree} onChange={(e) => setHandsFree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#fbbf24]" />
               <span>
                 <span className="block text-[13px] font-medium text-white">Talk like a real interview</span>
                 <span className="mt-0.5 block text-[12px] text-white/50">{INTERVIEWER} listens, asks about anything unclear when you pause, and moves on when you’re done.</span>

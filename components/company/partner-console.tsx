@@ -4,6 +4,7 @@
    add companies (each gets a code for its recruiters), post partner drives and
    offer them to partner colleges, and see which colleges approved. */
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import { useEffect, useMemo, useState } from "react";
 import { DriveForm } from "@/components/college/placements";
 import { CareersEditor } from "@/components/company/careers-editor";
@@ -166,7 +167,7 @@ export function PartnerConsole() {
         <div className="mt-6 h-64 animate-pulse rounded-2xl bg-white/[0.04]" />
       ) : tab === "colleges" ? (
         <div className="mt-6 space-y-5">
-          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
             <h2 className="text-[15px] font-semibold">Waiting for approval {pending.length > 0 && <span className="ml-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11.5px] text-amber-200">{pending.length}</span>}</h2>
             {pending.length ? (
               <div className="mt-4 space-y-3">
@@ -186,7 +187,7 @@ export function PartnerConsole() {
               <p className="mt-4 text-[13px] text-white/45">No college is waiting. New ones show up here.</p>
             )}
           </section>
-          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
             <h2 className="text-[15px] font-semibold">All colleges <span className="ml-1 text-[12.5px] font-normal text-white/45">{data.colleges.length}</span></h2>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {[...data.colleges].sort((a, b) => b.createdAt - a.createdAt).map((c) => (
@@ -201,7 +202,7 @@ export function PartnerConsole() {
         </div>
       ) : draft ? (
         <div className="mt-6 space-y-5">
-          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
             <div className="grid gap-4 md:grid-cols-[1fr_200px]">
               <div>
                 <Label htmlFor="pc">Company</Label>
@@ -220,7 +221,7 @@ export function PartnerConsole() {
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {degree.map((c) => (
                   <label key={c.id} className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-[13px] transition", draft.colleges.has(c.id) ? "border-accent/60 bg-[var(--color-plum)]/60" : "border-white/[0.08] hover:border-white/20")}>
-                    <input type="checkbox" checked={draft.colleges.has(c.id)} onChange={() => setDraft((d) => { if (!d) return d; const s = new Set(d.colleges); if (s.has(c.id)) s.delete(c.id); else s.add(c.id); return { ...d, colleges: s }; })} className="accent-[#a78bfa]" />
+                    <input type="checkbox" checked={draft.colleges.has(c.id)} onChange={() => setDraft((d) => { if (!d) return d; const s = new Set(d.colleges); if (s.has(c.id)) s.delete(c.id); else s.add(c.id); return { ...d, colleges: s }; })} className="accent-[#fbbf24]" />
                     <span className="min-w-0"><span className="block truncate">{c.name}</span><span className="block text-[11px] text-white/40">{c.city || "—"}</span></span>
                   </label>
                 ))}
@@ -239,7 +240,7 @@ export function PartnerConsole() {
         </div>
       ) : (
         <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_380px]">
-          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-[15px] font-semibold">Partner drives</h2>
               <Button size="sm" variant="primary" icon={<PlusIcon size={14} />} onClick={() => setDraft({ companyId: "", colleges: new Set(), minInterview: 0, drive: null })} disabled={!data.companies.length}>New partner drive</Button>
@@ -266,12 +267,12 @@ export function PartnerConsole() {
               <p className="mt-6 mb-4 text-center text-[13px] text-white/45">{data.companies.length ? "No partner drives yet." : "Add a company first, then post its drive."}</p>
             )}
           </section>
-          <section className="rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5">
+          <section className="rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5">
             <h2 className="text-[15px] font-semibold">Companies</h2>
             <div className="mt-3 space-y-2">
               {data.companies.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/[0.07] px-3 py-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#ffffff] text-[13px] font-extrabold text-[#0b0a12]">{c.name.slice(0, 1)}</span>
+                  <CompanyLogo name={c.name} website={c.website} className="flex h-8 w-8 items-center justify-center rounded-lg" letterClassName="border border-white/10 bg-[#ffffff] text-[13px] font-extrabold text-[#0b0a12]" />
                   <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{c.name}</span><span className="block text-[11px] text-white/40">{c.website || "—"}</span></span>
                   <button type="button" onClick={() => void navigator.clipboard.writeText(`Join ${c.name} on StudentOS: ${window.location.origin}/company · code ${c.code}`).then(() => actions.toast("Invite copied."))} title="Copy recruiter invite" className="flex items-center gap-1.5 rounded-lg border border-white/10 px-2 py-1 font-mono text-[12px] tracking-wider text-white/75 hover:text-white">
                     {c.code} <CopyIcon size={12} />

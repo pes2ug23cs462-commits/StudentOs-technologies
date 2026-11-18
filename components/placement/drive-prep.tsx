@@ -312,7 +312,7 @@ function ShareDialog({ drive, cid, onClose, onDone }: { drive: Drive; cid: strin
                 <button key={k} type="button" role="radio" aria-checked={result === k} onClick={() => setResult(k)} className={cn("h-8 rounded-md px-3 text-[12.5px]", result === k ? "bg-[var(--color-plum)] text-white" : "text-white/55")}>{l}</button>
               ))}
             </div>
-            <label className="flex items-center gap-2 text-[12.5px] text-white/65"><input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4 accent-[#a78bfa]" /> Show my name (else “{by}”)</label>
+            <label className="flex items-center gap-2 text-[12.5px] text-white/65"><input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4 accent-[#fbbf24]" /> Show my name (else “{by}”)</label>
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>

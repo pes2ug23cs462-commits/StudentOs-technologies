@@ -247,7 +247,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
 
   if (done)
     return (
-      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
+      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-8 text-center">
         <span className={cn("mx-auto flex h-14 w-14 items-center justify-center rounded-full", done.ended ? "bg-rose-500/15 text-rose-300" : "bg-emerald-400/15 text-emerald-300")}>{done.ended ? <AlertCircleIcon size={24} /> : <CheckIcon size={24} />}</span>
         <h1 className="mt-4 text-[22px] font-semibold text-white">{done.ended ? "Interview ended" : "Interview done"}</h1>
         <p className="mt-2 text-[13.5px] text-white/60">{done.ended ? `It closed after ${MAX_WARNINGS} warnings, with the answers you had given.` : "Thank you. Your answers are in."} {info.iv?.company ?? "The company"} {io.next}</p>
@@ -257,7 +257,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
 
   if (!info.iv)
     return (
-      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-8 text-center">
+      <div className="mx-auto mt-10 max-w-[520px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-8 text-center">
         <p className="text-[15px] font-semibold text-white">No AI interview for you right now</p>
         <p className="mt-2 text-[13px] text-white/55">{io.none}</p>
         <Back back={io.back} className="mt-5 inline-block text-[13px] text-accent hover:underline" />
@@ -267,7 +267,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
   if (!v) {
     const resuming = !!info.attempt && !info.attempt.done;
     return (
-      <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-7">
+      <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-7">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">{info.iv.company} · {info.iv.role}</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">{info.iv.title}</h1>
         <p className="mt-1 text-[13.5px] text-white/60">Asha, the AI interviewer, asks {info.iv.count} {kind === "hr" ? "HR questions: about you, why this company, and how you work with others" : "questions"}. Answer each by speaking or typing, about 1–2 minutes each. Like a real interviewer, she may ask a follow-up on an answer, and you can ask her to repeat or explain a question. {kind === "hr" ? "Be yourself and give real examples." : ""}</p>

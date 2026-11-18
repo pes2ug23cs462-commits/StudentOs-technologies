@@ -91,7 +91,7 @@ export default function PlanChoicePage() {
               >
                 {premium && <span className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-[radial-gradient(closest-side,rgb(139_92_246/0.25),transparent)]" />}
                 <div className="flex items-center gap-3">
-                  <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", premium ? "bg-gradient-to-br from-[#a78bfa] to-[#6366f1] text-white" : "bg-accent/[0.12] text-accent")}>
+                  <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", premium ? "bg-gradient-to-br from-[#fbbf24] to-[#fbbf24] text-white" : "bg-accent/[0.12] text-accent")}>
                     {premium ? <CrownIcon size={22} /> : <Icon name="sprout" size={22} />}
                   </span>
                   <div>

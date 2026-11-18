@@ -58,7 +58,7 @@ export function AboutPage() {
         </div>
         <div ref={stage} className="reveal relative h-[380px] [perspective:1200px]" style={d(0.15)} aria-hidden>
           <div className="absolute inset-0 [transform-style:preserve-3d]" style={{ transform: "rotateX(calc(var(--my,0) * -10deg)) rotateY(calc(var(--mx,0) * 14deg))", transition: "transform 0.9s cubic-bezier(0.2,0.8,0.2,1)" }}>
-            <div className="absolute top-1/2 left-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(124,58,237,0.5),transparent)] blur-2xl" />
+            <div className="absolute top-1/2 left-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(217,119,6,0.5),transparent)] blur-2xl" />
             {[0, 1, 2].map((i) => (
               <div key={i} className="absolute top-1/2 left-1/2 rounded-full border border-violet-400/25" style={{ width: 200 + i * 80, height: 200 + i * 80, transform: `translate(-50%,-50%) rotateX(72deg) rotateZ(${i * 30}deg)` }}>
                 <div className="absolute inset-0" style={{ animation: `hero-orbit ${8 + i * 5}s linear infinite ${i % 2 ? "reverse" : ""}` }}>
@@ -99,7 +99,7 @@ export function AboutPage() {
       {/* CTA */}
       <section className="mx-auto max-w-[1200px] px-5 py-20">
         <div className="reveal grid gap-4 md:grid-cols-2">
-          <TiltCard className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(124,58,237,0.2),rgba(34,211,238,0.05))] p-8">
+          <TiltCard className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(217,119,6,0.2),rgba(34,211,238,0.05))] p-8">
             <FancyIcon name="bulb" tone="cyan" size={54} />
             <h3 className="relative mt-4 text-[22px] font-semibold text-white">Try StudentOS</h3>
             <p className="relative mt-2 text-[14px] text-white/60">Free for every student. Your plan and courses in a few minutes.</p>

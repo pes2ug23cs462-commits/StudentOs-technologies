@@ -35,7 +35,7 @@ function Ring({ value, size = 112 }: { value: number; size?: number }) {
       <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
         <defs>
           <linearGradient id="mt-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#a78bfa" />
+            <stop offset="0" stopColor="#fbbf24" />
             <stop offset="1" stopColor="#22d3ee" />
           </linearGradient>
         </defs>
@@ -60,8 +60,8 @@ function TrendChart({ points }: { points: { at: number; value: number; subject: 
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Score trend">
       <defs>
         <linearGradient id="mt-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#8b5cf6" stopOpacity="0" />
+          <stop offset="0" stopColor="#f59e0b" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#f59e0b" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[0, 50, 100].map((v) => (
@@ -71,10 +71,10 @@ function TrendChart({ points }: { points: { at: number; value: number; subject: 
         </g>
       ))}
       {area && <path d={area} fill="url(#mt-area)" />}
-      <path d={line} fill="none" stroke="#a78bfa" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={line} fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => (
         <g key={p.at}>
-          <circle cx={x(i)} cy={y(p.value)} r="4.5" fill="#a78bfa" className="stroke-[#0f0b1d]" strokeWidth="2">
+          <circle cx={x(i)} cy={y(p.value)} r="4.5" fill="#fbbf24" className="stroke-[#0f0b1d]" strokeWidth="2">
             <title>{`${p.subject}: ${p.value}%`}</title>
           </circle>
           {(points.length <= 8 || i === points.length - 1) && (
@@ -94,7 +94,7 @@ function Donut({ parts, score }: { parts: [number, number, number]; score: numbe
   const total = parts.reduce((a, b) => a + b, 0) || 1;
   const r = 15.5;
   const c = 2 * Math.PI * r;
-  const colors = ["#34d399", "#a78bfa", "#fb7185"];
+  const colors = ["#34d399", "#fbbf24", "#fb7185"];
   let offset = 0;
   return (
     <div className="relative h-[124px] w-[124px] shrink-0">
@@ -915,7 +915,7 @@ function Tests() {
                 </button>
               </label>
               {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
-              <button type="button" onClick={() => { setSetupOpen(false); void start(); }} disabled={!subject.trim()} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:opacity-50">
+              <button type="button" onClick={() => { setSetupOpen(false); void start(); }} disabled={!subject.trim()} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(251,191,36,0.7)] transition hover:brightness-110 disabled:opacity-50">
                 <PlayIcon size={15} /> Start Mock Test <ArrowRightIcon size={14} />
               </button>
             </Card>

@@ -21,7 +21,7 @@ function Glass({ className, style, children }: { className?: string; style?: CSS
   return (
     <div
       className={cn(
-        "hero-glass rounded-xl border border-white/15 bg-white/[0.07] shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md transition-[border-color,box-shadow] duration-300 hover:border-white/30 hover:shadow-[0_16px_50px_rgba(124,58,237,0.35)]",
+        "hero-glass rounded-xl border border-white/15 bg-white/[0.07] shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md transition-[border-color,box-shadow] duration-300 hover:border-white/30 hover:shadow-[0_16px_50px_rgba(217,119,6,0.35)]",
         className,
       )}
       style={style}
@@ -178,7 +178,7 @@ export function HeroPanel() {
         <div style={layer(10)}>
           <div className="hero-pop relative flex h-[340px] w-[340px] items-center justify-center" style={delay(0.15)}>
             {/* rings */}
-            <div className="absolute inset-0 rounded-full border border-violet-300/25 shadow-[inset_0_0_60px_rgba(124,58,237,0.25)]" />
+            <div className="absolute inset-0 rounded-full border border-violet-300/25 shadow-[inset_0_0_60px_rgba(217,119,6,0.25)]" />
             <div className="absolute h-[150px] w-[600px] rounded-[50%] border border-white/10 [transform:rotate(-4deg)]" />
             {/* dot travelling on the ring */}
             <div className="absolute inset-0 [animation:hero-orbit_14s_linear_infinite]">

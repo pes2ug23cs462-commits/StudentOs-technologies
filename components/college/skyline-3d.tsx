@@ -7,11 +7,11 @@
 import { useEffect, useRef, useState, type PointerEvent as RPE } from "react";
 import { cn } from "@/lib/utils";
 
-/* rose (weak) → amber → violet (strong), blended smoothly so small differences show */
+/* rose (weak) → amber → blue (strong), blended smoothly so small differences show */
 const STOPS: [number, [number, number, number]][] = [
   [35, [244, 63, 94]],
   [55, [245, 158, 11]],
-  [75, [124, 58, 237]],
+  [75, [37, 99, 235]],
 ];
 function rgb(v: number) {
   if (v <= STOPS[0][0]) return STOPS[0][1];
@@ -27,7 +27,7 @@ function rgb(v: number) {
 }
 const shade = ([r, g, b]: [number, number, number], f: number) => `rgb(${Math.min(255, Math.round(r * f))},${Math.min(255, Math.round(g * f))},${Math.min(255, Math.round(b * f))})`;
 const tone = (v: number | null) => {
-  if (v == null) return ["#2a2540", "#221e36", "#1b1830"];
+  if (v == null) return ["#232a3d", "#1d2333", "#171c29"];
   const c = rgb(v);
   return [shade(c, 1.25), shade(c, 0.95), shade(c, 0.72)];
 };
@@ -104,7 +104,7 @@ export function Skyline3D({ rows, cols, values, height: h0 = 380 }: { rows: stri
         )}
         <span className="flex items-center gap-2 text-[11px] text-white/55">
           Weak
-          <i className="h-2 w-20 rounded-full" style={{ background: "linear-gradient(90deg, rgb(244,63,94), rgb(245,158,11), rgb(124,58,237))" }} />
+          <i className="h-2 w-20 rounded-full" style={{ background: "linear-gradient(90deg, rgb(244,63,94), rgb(245,158,11), rgb(217,119,6))" }} />
           Strong
         </span>
       </div>
@@ -123,7 +123,7 @@ export function Skyline3D({ rows, cols, values, height: h0 = 380 }: { rows: stri
           style={{ width: planeW, height: planeH, transformStyle: "preserve-3d", transform: `translate(-50%, -46%) rotateX(${rx}deg) rotateZ(${rz}deg)` }}
         >
           {/* floor */}
-          <div className="absolute -inset-6 rounded-2xl" style={{ background: "radial-gradient(closest-side, rgba(124,58,237,0.28), rgba(124,58,237,0.04) 70%, transparent)", transform: "translateZ(-1px)" }} />
+          <div className="absolute -inset-6 rounded-2xl" style={{ background: "radial-gradient(closest-side, rgba(217,119,6,0.28), rgba(217,119,6,0.04) 70%, transparent)", transform: "translateZ(-1px)" }} />
           <div className="absolute inset-0 rounded-lg" style={{ backgroundImage: `linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)`, backgroundSize: `${S}px ${S}px`, border: "1px solid rgba(255,255,255,0.1)" }} />
 
           {/* labels lying on the floor */}
@@ -186,10 +186,10 @@ export function Tilt({ children, className }: { children: React.ReactNode; class
           setT({ x: (0.5 - py) * 10, y: (px - 0.5) * 12, gx: px * 100, gy: py * 100, on: true });
         }}
         onPointerLeave={() => setT({ x: 0, y: 0, gx: 50, gy: 50, on: false })}
-        className="relative h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f11] transition-transform duration-200 ease-out"
+        className="relative h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d152a] transition-transform duration-200 ease-out"
         style={{ transform: `rotateX(${t.x}deg) rotateY(${t.y}deg) translateZ(0)`, transformStyle: "preserve-3d" }}
       >
-        <div className="pointer-events-none absolute inset-0 transition-opacity duration-300" style={{ opacity: t.on ? 1 : 0, background: `radial-gradient(circle at ${t.gx}% ${t.gy}%, rgba(167,139,250,0.18), transparent 55%)` }} />
+        <div className="pointer-events-none absolute inset-0 transition-opacity duration-300" style={{ opacity: t.on ? 1 : 0, background: `radial-gradient(circle at ${t.gx}% ${t.gy}%, rgba(251,191,36,0.18), transparent 55%)` }} />
         {children}
       </div>
     </div>

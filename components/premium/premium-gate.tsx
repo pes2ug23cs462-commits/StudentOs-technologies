@@ -18,7 +18,7 @@ export function PremiumBadge() {
 
 export function PremiumGate({ icon, title, text, points, children }: { icon: FancyIconName; title: string; text: string; points: string[]; children?: ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-violet-400/25 bg-[linear-gradient(135deg,rgba(124,58,237,0.18),rgba(34,211,238,0.05))] p-8 sm:p-10">
+    <div className="relative overflow-hidden rounded-3xl border border-violet-400/25 bg-[linear-gradient(135deg,rgba(217,119,6,0.18),rgba(34,211,238,0.05))] p-8 sm:p-10">
       <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
       <div className="relative grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
         <div>
@@ -33,7 +33,7 @@ export function PremiumGate({ icon, title, text, points, children }: { icon: Fan
             ))}
           </ul>
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            <Link href="/premium" className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 text-[14px] font-semibold text-[#ffffff] shadow-[0_12px_36px_rgba(139,92,246,0.4)] transition lift-3d">
+            <Link href="/premium" className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 text-[14px] font-semibold text-[#ffffff] shadow-[0_12px_36px_rgba(245,158,11,0.4)] transition lift-3d">
               <CrownIcon size={15} /> Get Premium · ₹{PREMIUM_PRICE}/month
             </Link>
             <span className="text-[12px] text-white/45">Payments are launching soon</span>

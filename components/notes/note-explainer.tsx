@@ -252,7 +252,7 @@ export function NoteExplainer({ title, scenes, onClose }: { title: string; scene
 
   return (
     <div ref={stage} tabIndex={-1} onKeyDown={onKey} className="outline-none" role="region" aria-label={`Animated explanation of ${title}`}>
-      <div className="explain-stage relative overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(124,58,237,0.22),transparent_60%)]">
+      <div className="explain-stage relative overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(217,119,6,0.22),transparent_60%)]">
         <div aria-hidden className="explain-grid pointer-events-none absolute inset-0" />
         <div className="relative flex min-h-[460px] flex-col p-5 sm:aspect-video sm:min-h-0 sm:p-7">
           <div className="flex items-center justify-between gap-3">
@@ -285,7 +285,7 @@ export function NoteExplainer({ title, scenes, onClose }: { title: string; scene
         </div>
         {!playing && !ended && scene === 0 && line === 0 && prog === 0 && (
           <button type="button" onClick={toggle} className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]" aria-label="Play the explanation">
-            <span className="explain-pulse flex h-16 w-16 items-center justify-center rounded-full bg-accent text-black shadow-[0_10px_40px_-6px_rgba(124,58,237,0.8)]">
+            <span className="explain-pulse flex h-16 w-16 items-center justify-center rounded-full bg-accent text-black shadow-[0_10px_40px_-6px_rgba(217,119,6,0.8)]">
               <PlayIcon size={22} />
             </span>
           </button>
@@ -434,10 +434,10 @@ function Visual({ scene, share, simShare }: { scene: Scene; share: number; simSh
       return (
         <div className="relative aspect-square w-full max-w-[300px]">
           <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
-            <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(167,139,250,0.35)" strokeWidth="0.6" strokeDasharray="2 2" />
+            <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(251,191,36,0.35)" strokeWidth="0.6" strokeDasharray="2 2" />
           </svg>
           <div className="explain-orbit absolute inset-0" aria-hidden>
-            <span className="absolute top-[14%] left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_12px_rgba(167,139,250,0.9)]" />
+            <span className="absolute top-[14%] left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_12px_rgba(251,191,36,0.9)]" />
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-[11px] font-semibold tracking-wide text-violet-300/80 uppercase">Repeats</span>
@@ -512,7 +512,7 @@ function Visual({ scene, share, simShare }: { scene: Scene; share: number; simSh
 
 function Box({ n, item, active, wide }: { n: number; item: { label: string; note?: string }; active: boolean; wide?: boolean }) {
   return (
-    <div className={cn("explain-pop rounded-xl border px-3.5 py-3 transition-colors duration-300", wide ? "w-full" : "w-full sm:w-[150px]", active ? "border-accent/70 bg-violet-500/20 shadow-[0_0_30px_-8px_rgba(124,58,237,0.8)]" : "border-white/12 bg-white/[0.05]")}>
+    <div className={cn("explain-pop rounded-xl border px-3.5 py-3 transition-colors duration-300", wide ? "w-full" : "w-full sm:w-[150px]", active ? "border-accent/70 bg-violet-500/20 shadow-[0_0_30px_-8px_rgba(217,119,6,0.8)]" : "border-white/12 bg-white/[0.05]")}>
       <span className="flex items-start gap-2.5">
         <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11.5px] font-bold", active ? "bg-accent text-black" : "bg-violet-500/20 text-violet-200")}>{n}</span>
         <span className="min-w-0">

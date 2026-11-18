@@ -80,8 +80,10 @@ function ReviewCard({ r, className }: { r: Review; className?: string }) {
 }
 
 /** Landing page section. Shows only real, approved reviews; otherwise invites the first one. */
-export function ReviewsStrip() {
+export function ReviewsStrip({ hideEmpty = false }: { hideEmpty?: boolean } = {}) {
   const [list] = useApproved();
+  // on the landing page, an empty "no reviews yet" block only takes space
+  if (hideEmpty && list !== null && list.length === 0) return null;
   const many = (list?.length ?? 0) >= 4;
   return (
     <section id="reviews" className="relative scroll-mt-20 overflow-hidden border-y border-white/[0.06] bg-white/[0.015] py-24">

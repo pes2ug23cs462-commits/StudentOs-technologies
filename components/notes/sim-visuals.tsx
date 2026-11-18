@@ -104,7 +104,7 @@ function ArrayRow({ sim, share }: { sim: Sim; share: number }) {
               key={k}
               className={cn(
                 "absolute top-2 flex h-11 w-11 items-center justify-center rounded-xl border text-[15px] font-bold tabular-nums transition-all duration-500 ease-out",
-                hl ? "-translate-y-2 border-accent bg-violet-500/30 text-white shadow-[0_10px_24px_-10px_rgba(124,58,237,0.9)]" : done ? "border-emerald-400/50 bg-emerald-400/15 text-emerald-200" : "border-white/15 bg-white/[0.05] text-white",
+                hl ? "-translate-y-2 border-accent bg-violet-500/30 text-white shadow-[0_10px_24px_-10px_rgba(217,119,6,0.9)]" : done ? "border-emerald-400/50 bg-emerald-400/15 text-emerald-200" : "border-white/15 bg-white/[0.05] text-white",
               )}
               style={{ left: at * W }}
             >
@@ -226,7 +226,7 @@ function Graph({ sim, share }: { sim: Sim; share: number }) {
       <svg viewBox="0 0 100 62" className="w-full" role="img" aria-label="Diagram">
         <defs>
           <marker id="sim-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M0 0 L10 5 L0 10 z" fill="rgba(167,139,250,0.7)" />
+            <path d="M0 0 L10 5 L0 10 z" fill="rgba(251,191,36,0.7)" />
           </marker>
         </defs>
         {(sim.edges ?? []).map(([a, b], i) => {
@@ -245,7 +245,7 @@ function Graph({ sim, share }: { sim: Sim; share: number }) {
               y1={A.y * 0.62 + dy * k}
               x2={B.x - dx * k}
               y2={B.y * 0.62 - dy * k}
-              stroke={on ? "#22d3ee" : "rgba(167,139,250,0.35)"}
+              stroke={on ? "#22d3ee" : "rgba(251,191,36,0.35)"}
               strokeWidth={on ? 0.9 : 0.5}
               strokeDasharray={on ? "2 1.2" : undefined}
               className={on ? "sim-flow" : undefined}
@@ -258,13 +258,13 @@ function Graph({ sim, share }: { sim: Sim; share: number }) {
           const visited = f?.visited?.includes(n.id);
           return (
             <g key={n.id}>
-              {active && <circle cx={n.x} cy={n.y * 0.62} r="7.5" className="sim-ring" fill="none" stroke="#a78bfa" strokeWidth="0.5" />}
+              {active && <circle cx={n.x} cy={n.y * 0.62} r="7.5" className="sim-ring" fill="none" stroke="#fbbf24" strokeWidth="0.5" />}
               <circle
                 cx={n.x}
                 cy={n.y * 0.62}
                 r="5.2"
-                fill={active ? "#7c3aed" : visited ? "rgba(34,211,238,0.25)" : "rgba(255,255,255,0.06)"}
-                stroke={active ? "#c4b5fd" : visited ? "#22d3ee" : "rgba(255,255,255,0.25)"}
+                fill={active ? "#d97706" : visited ? "rgba(34,211,238,0.25)" : "rgba(255,255,255,0.06)"}
+                stroke={active ? "#fcd34d" : visited ? "#22d3ee" : "rgba(255,255,255,0.25)"}
                 strokeWidth="0.5"
                 style={{ transition: "fill 400ms, stroke 400ms" }}
               />

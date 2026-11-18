@@ -183,7 +183,7 @@ export function MaterialsHub() {
           role="tab"
           aria-selected={tab === key}
           onClick={() => go(key)}
-          className={cn("flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-medium transition", tab === key ? "bg-violet-500 text-[#ffffff] shadow-[0_6px_20px_-6px_rgba(139,92,246,0.8)]" : "text-white/60 hover:bg-white/[0.05] hover:text-white")}
+          className={cn("flex h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-medium transition", tab === key ? "bg-violet-500 text-[#ffffff] shadow-[0_6px_20px_-6px_rgba(245,158,11,0.8)]" : "text-white/60 hover:bg-white/[0.05] hover:text-white")}
         >
           <Icon size={14} /> {label}
           {key === "plan" && due.length > 0 && <span className={cn("rounded-full px-1.5 text-[10.5px] font-bold", tab === key ? "bg-[rgba(255,255,255,0.25)] text-[#ffffff]" : "bg-amber-300/20 text-amber-300")}>{due.length}</span>}
@@ -257,7 +257,7 @@ export function MaterialsHub() {
             type="button"
             onClick={() => void explain(n)}
             disabled={explaining === n.id}
-            className="group mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-violet-400/30 bg-[linear-gradient(110deg,rgba(124,58,237,0.22),rgba(124,58,237,0.05)_60%)] p-4 text-left hover:border-violet-400/60 disabled:opacity-70"
+            className="group mt-6 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-violet-400/30 bg-[linear-gradient(110deg,rgba(217,119,6,0.22),rgba(217,119,6,0.05)_60%)] p-4 text-left hover:border-violet-400/60 disabled:opacity-70"
           >
             <span className="explain-pulse flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent text-black">
               <PlayIcon size={15} />
@@ -420,7 +420,7 @@ export function MaterialsHub() {
                       ))}
                     </div>
                   </div>
-                  <button type="button" onClick={() => void create()} disabled={reading} className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:opacity-50">
+                  <button type="button" onClick={() => void create()} disabled={reading} className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(251,191,36,0.7)] transition hover:brightness-110 disabled:opacity-50">
                     <SparkleIcon size={15} /> Make notes <ArrowRightIcon size={14} />
                   </button>
                 </div>

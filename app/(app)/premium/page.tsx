@@ -67,7 +67,7 @@ export default function PremiumPage() {
         </Card>
 
         <div className="land-ring rounded-2xl">
-          <div className="h-full rounded-2xl bg-[linear-gradient(135deg,rgba(124,58,237,0.22),rgba(34,211,238,0.06))] p-6">
+          <div className="h-full rounded-2xl bg-[linear-gradient(135deg,rgba(217,119,6,0.22),rgba(34,211,238,0.06))] p-6">
             <div className="flex items-center justify-between">
               <p className="flex items-center gap-1.5 text-[13px] font-semibold text-violet-200">
                 <CrownIcon size={14} /> Premium
@@ -95,7 +95,7 @@ export default function PremiumPage() {
             </ul>
             {!premium && !loading && (
               <>
-                <a href={ask} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_12px_36px_rgba(139,92,246,0.4)]">
+                <a href={ask} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_12px_36px_rgba(245,158,11,0.4)]">
                   <CrownIcon size={15} /> Ask for early access
                 </a>
                 <p className="mt-2 text-center text-[11.5px] text-white/45">Online payment is launching soon. Until then, email us and we’ll turn Premium on for you.</p>

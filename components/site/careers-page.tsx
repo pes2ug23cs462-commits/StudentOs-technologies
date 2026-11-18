@@ -83,7 +83,7 @@ function HeroScene() {
     <div ref={ref} className="relative mx-auto h-[420px] w-full max-w-[560px] [perspective:1300px] sm:h-[480px]" aria-hidden>
       <div className="absolute inset-0 [transform-style:preserve-3d]" style={{ transform: "rotateX(calc(var(--my,0) * -8deg)) rotateY(calc(var(--mx,0) * 12deg))", transition: "transform 0.9s cubic-bezier(0.2,0.8,0.2,1)" }}>
         {/* glow + sweeping light ribbons */}
-        <div className="absolute top-1/2 left-1/2 h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.55),rgba(34,211,238,0.1)_65%,transparent)] blur-2xl" />
+        <div className="absolute top-1/2 left-1/2 h-[440px] w-[440px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(245,158,11,0.55),rgba(34,211,238,0.1)_65%,transparent)] blur-2xl" />
         <div className="absolute top-[18%] -right-10 h-[300px] w-[160px] rotate-[28deg] rounded-[60px] bg-gradient-to-b from-violet-500/40 to-transparent blur-sm" />
         <div className="absolute bottom-[8%] -left-6 h-[220px] w-[120px] -rotate-[30deg] rounded-[60px] bg-gradient-to-b from-fuchsia-500/30 to-transparent blur-sm" />
 
@@ -91,7 +91,7 @@ function HeroScene() {
         <div className="absolute top-1/2 left-1/2" style={layer(10)}>
           <div className="-translate-x-1/2 -translate-y-1/2">
             <div className="hero-pop" style={d(0.1)}>
-              <div className="relative flex h-[210px] w-[210px] items-center justify-center rounded-[48px] border border-violet-300/30 bg-[linear-gradient(150deg,rgba(139,92,246,0.45),rgba(30,20,70,0.85))] shadow-[0_40px_90px_-20px_rgba(124,58,237,0.8),inset_0_1px_0_rgba(255,255,255,0.35)] [animation:land-float-3d_7s_ease-in-out_infinite] sm:h-[240px] sm:w-[240px]">
+              <div className="relative flex h-[210px] w-[210px] items-center justify-center rounded-[48px] border border-violet-300/30 bg-[linear-gradient(150deg,rgba(245,158,11,0.45),rgba(30,20,70,0.85))] shadow-[0_40px_90px_-20px_rgba(217,119,6,0.8),inset_0_1px_0_rgba(255,255,255,0.35)] [animation:land-float-3d_7s_ease-in-out_infinite] sm:h-[240px] sm:w-[240px]">
                 <span className="absolute inset-0 overflow-hidden rounded-[48px]">
                   <span className="absolute inset-y-0 left-0 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/25 to-transparent [animation:land-sweep_4s_ease-in-out_infinite]" />
                 </span>
@@ -138,7 +138,7 @@ function CultureVisual() {
   return (
     <div ref={ref} className="relative h-[330px] [perspective:1200px]" aria-hidden>
       <div className="absolute inset-0 [transform-style:preserve-3d]" style={{ transform: "rotateX(calc(10deg + var(--my,0) * -6deg)) rotateY(calc(-14deg + var(--mx,0) * 10deg))", transition: "transform 0.9s cubic-bezier(0.2,0.8,0.2,1)" }}>
-        <div className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(closest-side,rgba(139,92,246,0.4),transparent)] blur-2xl" />
+        <div className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(closest-side,rgba(245,158,11,0.4),transparent)] blur-2xl" />
         {/* main screen: a team board */}
         <div className="land-glass absolute top-0 left-0 w-[88%] overflow-hidden rounded-[22px] border-violet-300/40! [transform:translateZ(0px)]">
           <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
@@ -320,7 +320,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
             </div>
             {tried && missing && <p className="mt-3 text-[12.5px] text-rose-300">Add your name, a valid email, a 10-digit phone, your college, and upload your resume (PDF) or paste a link starting with https://</p>}
             {err && <p className="mt-3 text-[12.5px] text-rose-300">{err}</p>}
-            <button type="button" disabled={busy} onClick={() => void submit()} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5 disabled:opacity-60">
+            <button type="button" disabled={busy} onClick={() => void submit()} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(245,158,11,0.4)] transition hover:-translate-y-0.5 disabled:opacity-60">
               {busy ? "Sending…" : "Submit application"} {!busy && <ArrowRightIcon size={15} />}
             </button>
             <p className="mt-3 text-center text-[11.5px] text-white/40">We use these details only for hiring. Questions? <a href={`mailto:${HR_EMAIL}`} className="text-white/70 hover:underline">{HR_EMAIL}</a></p>
@@ -348,7 +348,7 @@ export function CareersPage() {
       {/* ---------- hero ---------- */}
       <section className="relative overflow-hidden pt-16">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(55%_60%_at_70%_20%,rgba(139,92,246,0.38),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(55%_60%_at_70%_20%,rgba(245,158,11,0.38),transparent_70%)]" />
           <div className="land-floor absolute inset-x-[-20%] bottom-[-14%] h-[50%] opacity-70" />
         </div>
         <div className="relative mx-auto grid max-w-[1200px] items-center gap-8 px-5 pt-12 pb-16 lg:grid-cols-[1fr_1.05fr]">
@@ -365,7 +365,7 @@ export function CareersPage() {
               StudentOS helps students plan, learn, practise interviews and get placed. Join the team building it, while you’re still a student yourself.
             </p>
             <div className="hero-in mt-7 flex flex-wrap gap-3" style={d(0.4)}>
-              <a href="#roles" className="group inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.45)] transition hover:-translate-y-0.5">
+              <a href="#roles" className="group inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(245,158,11,0.45)] transition hover:-translate-y-0.5">
                 See open roles <ArrowRightIcon size={15} className="transition group-hover:translate-x-1" />
               </a>
               <a href="#process" className="inline-flex h-12 items-center rounded-xl border border-violet-400/40 bg-white/[0.03] px-6 text-[14.5px] font-medium text-white/90 transition hover:border-violet-300">
@@ -452,7 +452,7 @@ export function CareersPage() {
                         ))}
                         <div className="flex items-end">
                           {HIRING_OPEN ? (
-                            <button type="button" onClick={() => setApply(r.id)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5">
+                            <button type="button" onClick={() => setApply(r.id)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_rgba(245,158,11,0.4)] transition hover:-translate-y-0.5">
                               Apply <ArrowRightIcon size={14} />
                             </button>
                           ) : (
@@ -532,7 +532,7 @@ export function CareersPage() {
       {/* ---------- CTA ---------- */}
       <section className="mx-auto max-w-[1200px] px-5 pb-20">
         <div className="reveal land-ring rounded-3xl">
-          <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl bg-[linear-gradient(120deg,rgba(124,58,237,0.45),rgba(124,58,237,0.12)_55%,rgba(34,211,238,0.08))] p-8 sm:p-10">
+          <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl bg-[linear-gradient(120deg,rgba(217,119,6,0.45),rgba(217,119,6,0.12)_55%,rgba(34,211,238,0.08))] p-8 sm:p-10">
             <div className="flex items-start gap-4">
               <FancyIcon name="mail" tone="violet" size={56} float />
               <div>

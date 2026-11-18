@@ -4,6 +4,7 @@
    students through rounds, send assessment / interview links only to the
    students picked, and add offers. */
 
+import { CompanyLogo } from "@/components/company/company-logo";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Experiences } from "@/components/college/experiences";
@@ -25,7 +26,7 @@ import { fallbackResume } from "@/lib/resume-snapshot";
 const fmtDate = (s: string) => (s ? new Date(s + "T12:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—");
 
 function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cn("rounded-2xl border border-white/[0.08] bg-[#0f0f11] p-5", className)}>{children}</section>;
+  return <section className={cn("rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5", className)}>{children}</section>;
 }
 
 /** A 3D funnel: one glowing layer per stage, width = students at that stage. */
@@ -203,7 +204,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
             .filter((o) => o.status === "pending")
             .map((o) => (
               <div key={o.pid} className="flex flex-wrap items-start gap-4 rounded-2xl border border-cyan-400/35 bg-[#13121b] p-5">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#ffffff] text-[18px] font-extrabold text-[#0b0a12]">{o.company.slice(0, 1)}</span>
+                <CompanyLogo name={o.company} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" letterClassName="border border-white/10 bg-[#ffffff] text-[18px] font-extrabold text-[#0b0a12]" />
                 <div className="min-w-[240px] flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-[16px] font-semibold text-white">
                     {o.company} · {o.role}
@@ -248,7 +249,7 @@ export function Placements({ college, uid, sample, canEdit }: { college: College
                 <Tilt>
                   <div className="p-5">
                     <div className="flex items-start gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-[15px] font-bold text-white">{d.company.slice(0, 1)}</span>
+                      <CompanyLogo name={d.company} website={d.website} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" letterClassName="bg-gradient-to-br from-violet-500 to-cyan-400 text-[15px] font-bold text-white" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[15px] font-semibold text-white">{d.company}</p>
                         <p className="truncate text-[12.5px] text-white/55">{d.role} · {d.kind}</p>
@@ -309,6 +310,7 @@ export function DriveForm({ initial, onSave, onCancel, isNew }: { initial: Drive
         <h2 className="text-[18px] font-semibold text-white">{initial.company && !isNew ? "Edit drive" : "New drive"}</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div><Label htmlFor="co">Company</Label><Input id="co" value={d.company} onChange={(e) => set({ company: e.target.value })} placeholder="e.g. Infosys" /></div>
+          <div><Label htmlFor="cw">Company website <span className="font-normal text-white/40">(optional, for the logo)</span></Label><Input id="cw" value={d.website ?? ""} onChange={(e) => set({ website: e.target.value })} placeholder="e.g. infosys.com" /></div>
           <div><Label htmlFor="ro">Role</Label><Input id="ro" value={d.role} onChange={(e) => set({ role: e.target.value })} placeholder="e.g. Systems Engineer" /></div>
           <div>
             <Label>Type</Label>
@@ -447,7 +449,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card>
           <div className="flex flex-wrap items-start gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-[22px] font-bold text-white">{drive.company.slice(0, 1)}</span>
+            <CompanyLogo name={drive.company} website={drive.website} className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl" letterClassName="bg-gradient-to-br from-violet-500 to-cyan-400 text-[22px] font-bold text-white" />
             <div className="min-w-0 flex-1">
               <p className="text-[20px] font-semibold text-white">{drive.company}</p>
               <p className="text-[13px] text-white/60">{drive.role} · {drive.kind}{drive.location ? ` · ${drive.location}` : ""}</p>
@@ -504,7 +506,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
             <Button size="sm" variant="ghost" icon={<XIcon size={13} />} onClick={reject}>Not selected</Button>
             <Button size="sm" variant="ghost" icon={<FileIcon size={13} />} onClick={() => resumes.print(list.filter((a) => picked.has(a.uid)).map(cvOf))}>Resumes</Button>
             <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[12px] text-white/70" title="Email and phone notification to the picked students">
-              <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#a78bfa]" /> Notify students
+              <input type="checkbox" checked={tell} onChange={(e) => setTell(e.target.checked)} className="accent-[#fbbf24]" /> Notify students
             </label>
           </div>
         )}
@@ -513,7 +515,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
           <table className="mt-4 w-full text-[13px]">
             <thead>
               <tr className="text-left text-[11.5px] text-white/45">
-                <th className={cn("w-8 pb-2", !canEdit && "hidden")}><input type="checkbox" checked={picked.size > 0 && picked.size === list.length} onChange={toggleAll} className="accent-[#a78bfa]" aria-label="Pick all" /></th>
+                <th className={cn("w-8 pb-2", !canEdit && "hidden")}><input type="checkbox" checked={picked.size > 0 && picked.size === list.length} onChange={toggleAll} className="accent-[#fbbf24]" aria-label="Pick all" /></th>
                 <th className="pb-2 font-medium">Student</th>
                 <th className="pb-2 font-medium">Branch</th>
                 <th className="pb-2 font-medium" title="Entered by the student. Check it against your own records.">CGPA*</th>
@@ -529,7 +531,7 @@ function DriveDetail({ college, drive, apps: rawApps, sample, canEdit, back, edi
             <tbody>
               {list.map((a) => [
                 <tr key={a.uid} className="border-t border-white/[0.06] hover:bg-white/[0.02]">
-                  <td className={cn("py-2.5", !canEdit && "hidden")}><input type="checkbox" checked={picked.has(a.uid)} onChange={() => setPicked((p) => { const n = new Set(p); n.has(a.uid) ? n.delete(a.uid) : n.add(a.uid); return n; })} className="accent-[#a78bfa]" aria-label={`Pick ${a.name}`} /></td>
+                  <td className={cn("py-2.5", !canEdit && "hidden")}><input type="checkbox" checked={picked.has(a.uid)} onChange={() => setPicked((p) => { const n = new Set(p); n.has(a.uid) ? n.delete(a.uid) : n.add(a.uid); return n; })} className="accent-[#fbbf24]" aria-label={`Pick ${a.name}`} /></td>
                   <td className="cursor-pointer py-2.5 pr-3 whitespace-nowrap text-white" onClick={() => setOpenRow(openRow === a.uid ? null : a.uid)}>{a.name}</td>
                   <td className="py-2.5 pr-3 text-white/60">{a.branch}</td>
                   <td className="py-2.5 pr-3 text-white/60 tabular-nums">{a.cgpa}</td>

@@ -453,7 +453,7 @@ export function CodingRound({
         <div className="flex min-h-0 min-w-0 flex-col gap-3">
           <section className="flex min-h-[220px] flex-1 flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02]">
             <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
-              <span className={cn("relative h-10 w-10 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#c4b5fd,#7c3aed_45%,#22d3ee_100%)]", asha === "speaking" && "animate-pulse")} aria-hidden />
+              <span className={cn("relative h-10 w-10 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#fcd34d,#d97706_45%,#22d3ee_100%)]", asha === "speaking" && "animate-pulse")} aria-hidden />
               <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-white">Asha · AI interviewer</p>
                 <p className="flex items-center gap-1.5 text-[11.5px] text-cyan-300" aria-live="polite">
