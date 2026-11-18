@@ -8,11 +8,12 @@ import { Markdown } from "@/components/chat/markdown";
 import { ThinkingOrb } from "@/components/chat/thinking-orb";
 import { StudyCard } from "@/components/chat/study-card";
 import { ActionCard } from "@/components/chat/action-card";
+import { DocDownload, worthAFile } from "@/components/chat/doc-download";
 import { MaximizeIcon, PlusIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/primitives";
 import { AssistantError, OfflineError, askAssistant } from "@/lib/assistant";
 import { buildContext } from "@/lib/ai-context";
-import { applyAction, markApplied, parseActions } from "@/lib/assistant-actions";
+import { applyAction, docSource, markApplied, parseActions } from "@/lib/assistant-actions";
 import { parseStudy } from "@/lib/assistant-study";
 import type { Attachment } from "@/lib/attachments";
 import { chatTitle, newChatId, saveChat, touchChat, type StoredMessage } from "@/lib/chats";
@@ -110,7 +111,7 @@ export function SideChat({ open, onClose }: { open: boolean; onClose: () => void
       resume: state.resume ?? starterResume(state),
       entries: state.entries ?? [],
       timeline: state.timeline ?? [],
-      reply: messages.find((x) => x.id === msgId)?.text,
+      reply: docSource(messages, msgId),
       addSession: actions.addSession,
       setPrefs: actions.setPrefs,
       patch: actions.patch,
@@ -195,6 +196,7 @@ export function SideChat({ open, onClose }: { open: boolean; onClose: () => void
                           {parsed.actions.map((p) => (
                             <ActionCard key={p.index} action={p.action} applied={p.applied} onApply={() => apply(m.id, p.index, p.action)} />
                           ))}
+                          {!m.error && worthAFile(parsed.text) && !parsed.actions.some((p) => p.action.type === "download_doc") && <DocDownload text={parsed.text} />}
                         </>
                       );
                     })()}

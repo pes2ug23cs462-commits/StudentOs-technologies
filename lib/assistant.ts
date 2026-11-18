@@ -3,7 +3,7 @@
    calls the AI provider. generatePlan asks /api/plan.
 ------------------------------------------------------------------ */
 
-import { normalizeActionBlocks } from "./action-blocks";
+import { ensureDownload, normalizeActionBlocks } from "./action-blocks";
 import { auth } from "./firebase";
 import type { Attachment } from "./attachments";
 import type { Goal, Milestone, OnboardingAnswers, StudySession } from "./types";
@@ -64,7 +64,7 @@ export async function askAssistant(message: string, opts: { history?: ChatTurn[]
     throw new OfflineError();
   }
   const j = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
-  if (res.ok && j.reply) return normalizeActionBlocks(j.reply);
+  if (res.ok && j.reply) return ensureDownload(message, normalizeActionBlocks(j.reply));
   throw new AssistantError(say(j.error ?? "failed"));
 }
 

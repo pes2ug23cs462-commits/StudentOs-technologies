@@ -20,9 +20,10 @@ import { nextSession } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import { NOW, TODAY, cn, greeting, uid } from "@/lib/utils";
 import { ActionCard } from "@/components/chat/action-card";
+import { DocDownload, worthAFile } from "@/components/chat/doc-download";
 import { StudyCard } from "@/components/chat/study-card";
 import { parseStudy } from "@/lib/assistant-study";
-import { applyAction, markApplied, parseActions } from "@/lib/assistant-actions";
+import { applyAction, docSource, markApplied, parseActions } from "@/lib/assistant-actions";
 import { starterResume } from "@/lib/resume-starter";
 
 type Msg = { id: number; role: "user" | "assistant"; text: string; time: string; failed?: boolean; files?: Attachment[]; error?: boolean };
@@ -186,7 +187,7 @@ export default function AssistantPage() {
       resume: state.resume ?? starterResume(state),
       entries: state.entries ?? [],
       timeline: state.timeline ?? [],
-      reply: messages.find((x) => x.id === msgId)?.text,
+      reply: docSource(messages, msgId),
       addSession: actions.addSession,
       setPrefs: actions.setPrefs,
       patch: actions.patch,
@@ -339,6 +340,7 @@ export default function AssistantPage() {
                           {parsed.actions.map((p) => (
                             <ActionCard key={p.index} action={p.action} applied={p.applied} onApply={() => apply(m.id, p.index, p.action)} />
                           ))}
+                          {!m.error && worthAFile(parsed.text) && !parsed.actions.some((p) => p.action.type === "download_doc") && <DocDownload text={parsed.text} />}
                         </>
                       );
                     })()}

@@ -13,7 +13,7 @@ export function ActionCard({ action, applied, onApply }: { action: AssistantActi
   if (dismissed) return null;
   return (
     <div className={cn("mt-3 rounded-xl border p-3.5", applied ? "border-emerald-400/30 bg-emerald-500/[0.06]" : "border-accent/35 bg-accent/[0.07]")}>
-      <p className="text-[10.5px] font-semibold tracking-[0.12em] text-white/50 uppercase">{applied ? "Done" : "Suggested change"} · {d.where}</p>
+      <p className="text-[10.5px] font-semibold tracking-[0.12em] text-white/50 uppercase">{applied ? "Done" : action.type === "download_doc" ? "Ready to download" : action.type === "open_page" ? "Shortcut" : "Suggested change"} · {d.where}</p>
       <p className="mt-1 text-[13.5px] font-semibold text-white">{d.title}</p>
       {d.lines.map((l) => (
         <p key={l} className="mt-0.5 text-[12.5px] text-white/65">

@@ -12,6 +12,7 @@
 import { ENTRY_KINDS, type Entry, type EntryKind, type ResumeData, type TimelineEvent, type TimelineKind } from "./free";
 import type { RestDay, StudyPrefs, StudySession } from "./types";
 import { downloadDocx, downloadPdf, type DocBlock } from "./doc-export";
+import { docTitle } from "./action-blocks";
 
 export type AssistantAction =
   | { type: "add_session"; title: string; date: string; start: string; minutes: number }
@@ -96,7 +97,7 @@ function check(raw: unknown): AssistantAction | null {
       return { type: "add_event", kind, title, date, note: str(o.note, 200) };
     }
     case "download_doc": {
-      const title = str(typeof o.title === "string" ? o.title.replace(/_/g, " ") : "", 90) || "StudentOS notes";
+      const title = str(typeof o.title === "string" ? o.title.replace(/_/g, " ") : "", 90); // "" = take it from the answer
       return { type: "download_doc", title, format: o.format === "docx" || o.format === "word" ? "docx" : "pdf" };
     }
     case "open_page": {
@@ -165,7 +166,7 @@ export function describe(a: AssistantAction): { title: string; where: string; li
     case "add_event":
       return { title: `Add to timeline: ${a.title}`, where: "College timeline", lines: [`${a.kind[0].toUpperCase() + a.kind.slice(1)} · ${fmtDate(a.date)}`, a.note].filter(Boolean), button: "Add to timeline" };
     case "download_doc":
-      return { title: a.title, where: a.format === "pdf" ? "PDF" : "Word file", lines: ["The explanation above, as a file you can keep, print or share."], button: a.format === "pdf" ? "Download PDF" : "Download Word file" };
+      return { title: a.title || "Your notes from this chat", where: a.format === "pdf" ? "PDF" : "Word file", lines: ["The explanation above, as a file you can keep, print or share."], button: a.format === "pdf" ? "Download PDF" : "Download Word file" };
     case "open_page":
       return { title: `Open ${a.label}`, where: a.label, lines: [], button: "Open" };
   }
@@ -232,15 +233,27 @@ export function applyAction(a: AssistantAction, c: Ctx): { ok: true; message: st
       return { ok: true, message: `Added “${a.title}” on ${fmtDate(a.date)} to your timeline.` };
     }
     case "download_doc": {
-      const blocks = replyToBlocks(a.title, c.reply ?? "");
-      if (blocks.length < 2) return { ok: false, error: "There’s nothing to put in the file yet." };
-      void (a.format === "pdf" ? downloadPdf(a.title, blocks) : downloadDocx(a.title, blocks));
-      return { ok: true, message: `Downloading “${a.title}”…` };
+      const title = a.title || docTitle(c.reply ?? "");
+      const blocks = replyToBlocks(title, c.reply ?? "");
+      if (blocks.length < 3) return { ok: false, error: "There’s nothing to put in the file yet. Ask for the explanation first." };
+      void (a.format === "pdf" ? downloadPdf(title, blocks) : downloadDocx(title, blocks));
+      return { ok: true, message: `Downloading “${title}”…` };
     }
     case "open_page":
       c.go(a.page);
       return { ok: true, message: `Opening ${a.label}…` };
   }
+}
+
+/** Text for a file made from message `id`: that reply if it has real content, else the
+    nearest earlier assistant reply that does (for "now give me a PDF of that"). */
+export function docSource(list: { id: number; role: string; text: string }[], id: number): string {
+  const body = (t: string) => t.replace(/```[\s\S]*?```/g, "").trim();
+  const i = list.findIndex((m) => m.id === id);
+  if (i < 0) return "";
+  if (body(list[i].text).length >= 350) return list[i].text;
+  for (let j = i - 1; j >= 0; j--) if (list[j].role === "assistant" && body(list[j].text).length >= 350) return list[j].text;
+  return list[i].text;
 }
 
 /** The assistant's reply (markdown) as document blocks: headings, paragraphs, list items. */
