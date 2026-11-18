@@ -11,7 +11,7 @@
                                                    only if it runs a gpt-oss-120b-class model)
    Chat-only backups (a different model; never used for scoring):
      ZAI_API_KEY                                   z.ai (GLM flash, free)
-     groq-fast                                     llama-3.1-8b-instant on the Groq key
+     groq-fast                                     openai/gpt-oss-20b on the Groq key
 
    AI_ORDER (optional) picks and orders providers by name, e.g.
      AI_ORDER=groq,cerebras,cloudflare,zai,groq-fast
@@ -53,7 +53,7 @@ export function allProviders(): Provider[] {
   if (e.CUSTOM_AI_URL && e.CUSTOM_AI_KEY && e.CUSTOM_AI_MODEL)
     list.push({ name: "custom", url: e.CUSTOM_AI_URL, key: e.CUSTOM_AI_KEY, model: e.CUSTOM_AI_MODEL, strong: e.CUSTOM_AI_STRONG === "1" });
   if (e.ZAI_API_KEY) list.push({ name: "zai", url: "https://api.z.ai/api/paas/v4/chat/completions", key: e.ZAI_API_KEY, model: e.ZAI_MODEL || "glm-4.7-flash", strong: false });
-  if (e.GROQ_API_KEY) list.push({ name: "groq-fast", url: GROQ_URL, key: e.GROQ_API_KEY, model: e.GROQ_FAST_MODEL || "llama-3.1-8b-instant", strong: false });
+  if (e.GROQ_API_KEY) list.push({ name: "groq-fast", url: GROQ_URL, key: e.GROQ_API_KEY, model: e.GROQ_FAST_MODEL || "openai/gpt-oss-20b", strong: false });
 
   const order = (e.AI_ORDER ?? "")
     .split(",")
