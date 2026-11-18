@@ -30,10 +30,9 @@ const VALUES: { icon: FancyIconName; tone: FancyTone; label: string }[] = [
   { icon: "sprout", tone: "emerald", label: "Always learning" },
 ];
 
-const TEAM: { name: string; role: string; tone: string }[] = [
+const TEAM: { name: string; role: string; tone: string; photo?: string }[] = [
   { name: "Rahul Rathod", role: "Founder & CEO", tone: "from-violet-500 to-fuchsia-500" },
   { name: "Mahesh Ajjer", role: "Co-founder · Marketing", tone: "from-amber-400 to-pink-500" },
-  { name: "Manmohan Gowda", role: "Co-founder · Technical", tone: "from-cyan-400 to-indigo-500" },
 ];
 
 const LOOK: Record<CareerTeam, { icon: FancyIconName; tone: FancyTone }> = {
@@ -486,10 +485,14 @@ export function CareersPage() {
               </span>
             ))}
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {TEAM.map((m) => (
               <TiltCard key={m.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <span className={cn("flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br text-[14px] font-bold text-[#ffffff]", m.tone)}>{m.name.split(" ").map((x) => x[0]).join("")}</span>
+                {m.photo ? (
+                  <Image src={m.photo} alt={m.name} width={44} height={44} className="h-11 w-11 rounded-full object-cover ring-2 ring-white/15" />
+                ) : (
+                  <span className={cn("flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br text-[14px] font-bold text-[#ffffff]", m.tone)}>{m.name.split(" ").map((x) => x[0]).join("")}</span>
+                )}
                 <p className="mt-3 text-[14px] font-semibold text-white">{m.name}</p>
                 <p className="text-[12px] text-white/55">{m.role}</p>
               </TiltCard>
