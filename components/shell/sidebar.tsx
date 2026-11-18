@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDownIcon, LogOutIcon, SettingsIcon, SparkleIcon, UserIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, LogOutIcon, SettingsIcon, UserIcon } from "@/components/ui/icons";
 import { Avatar, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { ChatListItem } from "@/components/chat/chat-list-item";
 import { sortChats } from "@/lib/chats";
@@ -127,12 +127,19 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         href="/assistant"
         onClick={onNavigate}
-        className="brand-ring relative mb-4 flex h-8 items-center gap-2 rounded-lg px-2.5 text-[12.5px] font-semibold text-white hover:bg-white/[0.04]"
+        className="group mb-4 flex h-9 items-center gap-2.5 rounded-lg border border-white/[0.09] bg-white/[0.05] px-2 text-[12.5px] font-semibold text-white transition-colors hover:border-white/[0.16] hover:bg-white/[0.08]"
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-md text-[#ffffff]" style={{ background: "var(--brand-grad)" }}>
-          <SparkleIcon size={11} />
-        </span>
-        Ask StudentOS
+        {/* Asha, the assistant: a glowing orb */}
+        <span
+          aria-hidden
+          className="h-6 w-6 shrink-0 rounded-full transition-transform group-hover:scale-105"
+          style={{
+            background: "radial-gradient(circle at 32% 30%, #b9f3ff 0%, #22d3ee 22%, #6d5bff 58%, #a855f7 100%)",
+            boxShadow: "inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 2px 10px -2px rgb(109 91 255 / 0.7)",
+          }}
+        />
+        <span className="flex-1">Ask Asha</span>
+        <span className="rounded-[5px] border border-white/20 px-1.5 py-px text-[10px] font-medium text-white/50 group-hover:text-white/75">AI</span>
       </Link>
 
       <nav className="flex flex-col gap-4" aria-label="Main">
