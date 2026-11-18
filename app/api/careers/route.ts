@@ -151,7 +151,7 @@ async function tellTeam(a: CareerApp, origin: string, kind: "applied" | "done", 
   const url = `${origin}/partner?tab=careers&app=${a.token}`;
   const lines =
     kind === "applied"
-      ? [`${a.name} applied for ${a.role}.`, `${a.college} · ${a.email} · ${a.phone}`, `Resume: ${a.resume}`, stepOf(a) ? `${STEP_LABEL[stepOf(a) as CareerStep]} window: ${fmtWhen(a.start)} – ${fmtWhen(a.end)}.` : "No rounds on StudentOS for this role."]
+      ? [`${a.name} applied for ${a.role}.`, `${a.college} · ${a.email} · ${a.phone}`, `Resume: ${a.resumeFile ? `uploaded PDF (${a.resumeFile.name}), open it on the careers team page` : a.resume}`, stepOf(a) ? `${STEP_LABEL[stepOf(a) as CareerStep]} window: ${fmtWhen(a.start)} – ${fmtWhen(a.end)}.` : "No rounds on StudentOS for this role."]
       : [`${a.name} finished the ${STEP_LABEL[step]} for ${a.role}.`, score || "The report couldn’t be made yet; open the application to try again."];
   await sendMails(
     to.map((m) => ({
@@ -196,7 +196,17 @@ export async function POST(req: Request) {
     /* ---------------- apply (public) ---------------- */
     if (action === "apply") {
       const f = { name: str(b.name, 80), email: str(b.email, 120).toLowerCase(), phone: str(b.phone, 20), college: str(b.college, 160), resume: str(b.resume, 500), links: str(b.links, 500), why: para(b.why, 1500) };
-      if (f.name.length < 2 || !/^\S+@\S+\.\S+$/.test(f.email) || f.phone.replace(/\D/g, "").length < 10 || f.college.length < 2 || !/^https?:\/\/\S+\.\S+/.test(f.resume)) return bad("bad-form");
+      // resume: an uploaded PDF (base64, up to 700 KB so it fits one Firestore document) or a link
+      const up = (b.resumeFile ?? null) as { name?: unknown; data?: unknown } | null;
+      let pdf: { name: string; data: string; size: number } | null = null;
+      if (up && typeof up.data === "string" && up.data.length < 1_000_000) {
+        const bytes = Buffer.from(up.data, "base64");
+        if (bytes.length > 700_000) return bad("resume-too-big");
+        if (bytes.subarray(0, 5).toString("latin1") !== "%PDF-") return bad("resume-not-pdf");
+        pdf = { name: (str(up.name, 80) || "resume.pdf").replace(/[^\w.\- ]+/g, "_"), data: bytes.toString("base64"), size: bytes.length };
+        f.resume = "";
+      }
+      if (f.name.length < 2 || !/^\S+@\S+\.\S+$/.test(f.email) || f.phone.replace(/\D/g, "").length < 10 || f.college.length < 2 || (!pdf && !/^https?:\/\/\S+\.\S+/.test(f.resume))) return bad("bad-form");
       // spam limits: per person (email), plus a high cap per network, since a whole campus
       // on one Wi-Fi shares one IP address
       const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "x";
@@ -223,6 +233,10 @@ export async function POST(req: Request) {
       const start = fixed ? Math.max(now, role!.windowStart || now) : now;
       const end = fixed ? role!.windowEnd! : now + (role?.within || 3) * 86400000;
       const a: CareerApp = { token: randomBytes(12).toString("hex"), ...f, roleId: role?.id ?? "other", role: role?.title ?? "Other", appliedAt: now, start, end, ai, stage: "invited", questions: [], answers: [], flags: { tabs: 0, pastes: 0 }, report: null, decision: "", note: "", steps, at: steps[0] ?? "" };
+      if (pdf) {
+        a.resumeFile = { name: pdf.name, size: pdf.size };
+        await adminSet(`careerResumes/${a.token}`, { name: pdf.name, data: pdf.data, size: pdf.size, at: now });
+      }
       await save(a);
       await adminSet(dkey, { token: a.token, at: now });
       await Promise.all([
@@ -401,6 +415,11 @@ export async function POST(req: Request) {
       const list = (await adminList("careerApps", 2000)).map((x) => x.data as unknown as CareerApp & { testRun?: unknown }).map(({ testRun: _, ...x }) => x).sort((x, y) => y.appliedAt - x.appliedAt);
       return NextResponse.json({ apps: list });
     }
+    if (action === "resume-get") {
+      const doc = await adminGet(`careerResumes/${str(b.token, 40)}`);
+      if (!doc?.data) return bad("not-found", 404);
+      return NextResponse.json({ name: doc.name, data: doc.data });
+    }
     if (action === "test-get") {
       const rid = str(b.roleId, 80);
       return NextResponse.json({ test: rid ? await careerTest(rid) : null });
@@ -489,6 +508,7 @@ export async function POST(req: Request) {
     }
     if (action === "app-delete") {
       await adminDelete(`careerApps/${a.token}`);
+      if (a.resumeFile) await adminDelete(`careerResumes/${a.token}`).catch(() => {});
       return NextResponse.json({ ok: true });
     }
     return bad("action");

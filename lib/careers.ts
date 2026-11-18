@@ -37,7 +37,9 @@ export async function careersApi<T>(action: string, body: Record<string, unknown
 export const CAREERS_ERROR: Record<string, string> = {
   closed: "Applications for this role are closed.",
   "slow-down": "Too many applications from here today. Try again tomorrow.",
-  "bad-form": "Fill in your name, a valid email, phone, college and a resume link starting with https://",
+  "bad-form": "Fill in your name, a valid email, phone, college, and upload your resume (PDF) or add a link starting with https://",
+  "resume-too-big": "Your resume PDF is over 700 KB. Please upload a smaller PDF, or add a link instead.",
+  "resume-not-pdf": "That file isn’t a PDF. Please upload your resume as a PDF, or add a link instead.",
   "not-found": "This interview link isn’t valid. Check the link you were given.",
   "not-yet": "Your interview hasn’t opened yet.",
   over: "The time for this interview is over.",

@@ -55,7 +55,7 @@ const sections = [
             <B>Notifications:</B> if you turn on phone or laptop notifications, a device token from Firebase Cloud Messaging.
           </li>
           <li>
-            <B>Careers applicants</B> (people applying to work at StudentOS): name, email, phone, college, resume link, and for each round they take (online test, AI interview, AI HR interview, live interview) their answers and scores, the AI’s report, the strict-mode warnings and our team’s notes. Camera and mic are checked on the applicant’s device the same way as for students; nothing is recorded.
+            <B>Careers applicants</B> (people applying to work at StudentOS): name, email, phone, college, the resume link or PDF they upload (kept only for hiring, and deleted with the application), and for each round they take (online test, AI interview, AI HR interview, live interview) their answers and scores, the AI’s report, the strict-mode warnings and our team’s notes. Camera and mic are checked on the applicant’s device the same way as for students; nothing is recorded.
           </li>
           <li>
             <B>Technical data:</B> basic data your browser sends to any website (such as IP address and browser type), which our hosting and Firebase use to deliver and protect the service.

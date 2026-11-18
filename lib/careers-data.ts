@@ -80,8 +80,10 @@ export type CareerApp = {
   roleId: string;
   role: string;
   links: string;
-  /** link to their resume (Google Drive, Dropbox, a PDF) */
+  /** link to their resume (Google Drive, Dropbox, a PDF); empty when they uploaded one */
   resume: string;
+  /** a PDF they uploaded (kept at careerResumes/{token}) */
+  resumeFile?: { name: string; size: number };
   why: string;
   appliedAt: number;
   start: number;

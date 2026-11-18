@@ -200,11 +200,23 @@ function CultureVisual() {
 /* ---------- application form: saved on StudentOS, then the AI interview link ---------- */
 function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: CareerRole[]; onClose: () => void }) {
   const [f, setF] = useState({ name: "", email: "", phone: "", college: "", roleId, resume: "", links: "", why: "" });
+  const [file, setFile] = useState<{ name: string; size: number; data: string } | null>(null);
+  const [fileErr, setFileErr] = useState("");
+  const pick = (x: File | undefined) => {
+    setFileErr("");
+    if (!x) return;
+    if (x.type !== "application/pdf" && !/\.pdf$/i.test(x.name)) return setFileErr("Please choose a PDF file.");
+    if (x.size > 700_000) return setFileErr("That PDF is over 700 KB. Export a smaller one, or paste a link below.");
+    const r = new FileReader();
+    r.onload = () => setFile({ name: x.name, size: x.size, data: String(r.result).split(",")[1] ?? "" });
+    r.onerror = () => setFileErr("Couldn’t read that file. Try again.");
+    r.readAsDataURL(x);
+  };
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<{ token: string; start: number; end: number; ai: boolean; steps?: CareerStep[]; again?: boolean } | null>(null);
-  const missing = f.name.trim().length < 2 || !/^\S+@\S+\.\S+$/.test(f.email.trim()) || f.phone.replace(/\D/g, "").length < 10 || f.college.trim().length < 2 || !/^https?:\/\/\S+\.\S+/.test(f.resume.trim());
+  const missing = f.name.trim().length < 2 || !/^\S+@\S+\.\S+$/.test(f.email.trim()) || f.phone.replace(/\D/g, "").length < 10 || f.college.trim().length < 2 || (!file && !/^https?:\/\/\S+\.\S+/.test(f.resume.trim()));
   const field = "mt-1.5 h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-[14px] text-white outline-none placeholder:text-white/35 focus:border-violet-400/60";
   const role = roles.find((r) => r.id === f.roleId);
   const submit = async () => {
@@ -213,7 +225,7 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
     if (missing) return;
     setBusy(true);
     try {
-      setDone(await careersApi<{ token: string; start: number; end: number; ai: boolean; steps?: CareerStep[]; again?: boolean }>("apply", f));
+      setDone(await careersApi<{ token: string; start: number; end: number; ai: boolean; steps?: CareerStep[]; again?: boolean }>("apply", { ...f, resume: file ? "" : f.resume, ...(file ? { resumeFile: { name: file.name, data: file.data } } : {}) }));
     } catch (e) {
       setErr(careersErrorText(e));
     } finally {
@@ -271,11 +283,43 @@ function ApplyDialog({ roleId, roles, onClose }: { roleId: string; roles: Career
                   <option value="other">Other</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-medium text-white/80">Resume link<input className={field} value={f.resume} onChange={(e) => setF({ ...f, resume: e.target.value })} placeholder="https://drive.google.com/… (set to “Anyone with the link”)" /></label>
+              <div>
+                <p className="text-[13px] font-medium text-white/80">Resume</p>
+                {file ? (
+                  <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.06] px-3.5 py-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/15 text-[11px] font-bold text-emerald-300">PDF</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-medium text-white">{file.name}</span>
+                      <span className="block text-[11.5px] text-white/50">{Math.max(1, Math.round(file.size / 1024))} KB · ready to send</span>
+                    </span>
+                    <button type="button" onClick={() => setFile(null)} className="rounded-lg px-2.5 py-1.5 text-[12px] text-white/60 hover:bg-white/[0.06] hover:text-white">Remove</button>
+                  </div>
+                ) : (
+                  <label
+                    className="mt-1.5 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-5 text-center transition hover:border-violet-400/60 hover:bg-violet-500/[0.05]"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      pick(e.dataTransfer.files?.[0]);
+                    }}
+                  >
+                    <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
+                    <span className="text-[13.5px] font-semibold text-white">Upload your resume</span>
+                    <span className="text-[12px] text-white/50">PDF, up to 700 KB · tap or drop it here</span>
+                  </label>
+                )}
+                {fileErr && <p className="mt-1.5 text-[12px] text-rose-300">{fileErr}</p>}
+                {!file && (
+                  <label className="mt-3 block text-[12px] font-normal text-white/50">
+                    or paste a link
+                    <input className={field} value={f.resume} onChange={(e) => setF({ ...f, resume: e.target.value })} placeholder="https://drive.google.com/… (set to “Anyone with the link”)" />
+                  </label>
+                )}
+              </div>
               <label className="block text-[13px] font-medium text-white/80">Portfolio, GitHub, LinkedIn <span className="font-normal text-white/40">(optional)</span><input className={field} value={f.links} onChange={(e) => setF({ ...f, links: e.target.value })} placeholder="https://…" /></label>
               <label className="block text-[13px] font-medium text-white/80">Why StudentOS? <span className="font-normal text-white/40">(optional)</span><textarea className={cn(field, "h-24 resize-none py-2.5")} value={f.why} onChange={(e) => setF({ ...f, why: e.target.value })} placeholder="A few lines about you and what you’d like to build" /></label>
             </div>
-            {tried && missing && <p className="mt-3 text-[12.5px] text-rose-300">Add your name, a valid email, a 10-digit phone, your college and a resume link starting with https://</p>}
+            {tried && missing && <p className="mt-3 text-[12.5px] text-rose-300">Add your name, a valid email, a 10-digit phone, your college, and upload your resume (PDF) or paste a link starting with https://</p>}
             {err && <p className="mt-3 text-[12.5px] text-rose-300">{err}</p>}
             <button type="button" disabled={busy} onClick={() => void submit()} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-[14.5px] font-semibold text-[#ffffff] shadow-[0_12px_40px_rgba(139,92,246,0.4)] transition hover:-translate-y-0.5 disabled:opacity-60">
               {busy ? "Sending…" : "Submit application"} {!busy && <ArrowRightIcon size={15} />}

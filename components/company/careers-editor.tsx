@@ -19,6 +19,23 @@ import { TestEditor } from "@/components/company/company-test";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
+/** An uploaded resume PDF, opened in a new tab. The tab is opened first so the browser doesn't block it. */
+async function openResume(token: string) {
+  const w = window.open("", "_blank");
+  try {
+    const r = await careersApi<{ name: string; data: string }>("resume-get", { token }, true);
+    const bin = atob(r.data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    if (w) w.location.href = url;
+    else window.location.href = url;
+  } catch (e) {
+    w?.close();
+    window.alert(careersErrorText(e));
+  }
+}
+
 const blank = (): CareerRole => ({ id: `r${Date.now().toString(36)}`, title: "", team: "Engineering", where: "Remote", pay: "Unpaid", length: "3 months", tags: [], does: [], wants: [], postedAt: Date.now(), ai: true, within: 3, questions: 6 });
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 const toLocal = (ms?: number) => (ms ? new Date(ms - new Date(ms).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
@@ -432,7 +449,7 @@ function Apps({ openApp }: { openApp?: string | null }) {
                       <td className="py-2.5"><ScoreCell v={scoreOf(a, "hr")} warn={a.hr?.warnings?.length} /></td>
                       <td className="py-2.5">{a.live?.feedback ? <span className={cn("font-semibold tabular-nums", scoreCls(a.live.feedback.score * 10))}>{a.live.feedback.score}/10</span> : a.live ? <a href={`/partner/live?t=${a.token}`} onClick={(e) => e.stopPropagation()} className="text-[12px] text-accent hover:underline">Join</a> : <span className="text-white/30">—</span>}</td>
                       <td className="py-2.5">{a.decision ? <span className={cn("rounded-md px-2 py-0.5 text-[11.5px]", a.decision === "rejected" ? "bg-white/[0.06] text-white/50" : "bg-emerald-400/12 text-emerald-300")}>{DECISION_LABEL[a.decision]}</span> : <span className="text-white/35">New</span>}</td>
-                      <td className="py-2.5 text-right">{a.resume && <a href={a.resume} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</a>}</td>
+                      <td className="py-2.5 text-right">{a.resumeFile ? <button type="button" onClick={(e) => { e.stopPropagation(); void openResume(a.token); }} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</button> : a.resume && <a href={a.resume} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-2.5 text-[12px] text-white/70 hover:border-violet-400/50 hover:text-white"><FileIcon size={13} /> Resume</a>}</td>
                     </tr>
                   );
                 })}
@@ -604,7 +621,7 @@ function AppDrawer({ a, onClose, onChange, onDelete, onAdvance }: { a: CareerApp
           <a href={wa} target="_blank" rel="noreferrer" className="flex h-11 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-400/[0.07] text-[13px] font-medium text-emerald-300 hover:bg-emerald-400/15">WhatsApp</a>
           <a href={`tel:${phone.length === 10 ? `+91${phone}` : `+${phone}`}`} className="flex h-11 items-center justify-center rounded-xl border border-white/10 text-[13px] font-medium text-white/85 hover:border-violet-400/50">Call</a>
         </div>
-        {a.resume && <a href={a.resume} target="_blank" rel="noreferrer" className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-black"><FileIcon size={15} /> Open resume</a>}
+        {a.resumeFile ? <button type="button" onClick={() => void openResume(a.token)} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-black"><FileIcon size={15} /> Open resume (PDF)</button> : a.resume && <a href={a.resume} target="_blank" rel="noreferrer" className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-accent text-[14px] font-semibold text-black"><FileIcon size={15} /> Open resume</a>}
         <div className="mt-4 space-y-1.5 text-[13px]">
           <p className="text-white/70"><span className="text-white/40">Email:</span> {a.email}</p>
           <p className="text-white/70"><span className="text-white/40">Phone:</span> {a.phone}</p>
