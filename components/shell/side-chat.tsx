@@ -110,6 +110,7 @@ export function SideChat({ open, onClose }: { open: boolean; onClose: () => void
       resume: state.resume ?? starterResume(state),
       entries: state.entries ?? [],
       timeline: state.timeline ?? [],
+      reply: messages.find((x) => x.id === msgId)?.text,
       addSession: actions.addSession,
       setPrefs: actions.setPrefs,
       patch: actions.patch,
@@ -118,7 +119,7 @@ export function SideChat({ open, onClose }: { open: boolean; onClose: () => void
     });
     if (!res.ok) return res.error;
     actions.toast(res.message);
-    if (action.type !== "open_page") {
+    if (action.type !== "open_page" && action.type !== "download_doc") {
       const list = messages.map((x) => (x.id === msgId ? { ...x, text: markApplied(x.text, index) } : x));
       setMessages(list);
       persist(list);

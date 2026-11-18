@@ -11,6 +11,7 @@
 
 import { ENTRY_KINDS, type Entry, type EntryKind, type ResumeData, type TimelineEvent, type TimelineKind } from "./free";
 import type { RestDay, StudyPrefs, StudySession } from "./types";
+import { downloadDocx, downloadPdf, type DocBlock } from "./doc-export";
 
 export type AssistantAction =
   | { type: "add_session"; title: string; date: string; start: string; minutes: number }
@@ -18,6 +19,7 @@ export type AssistantAction =
   | { type: "add_resume_skills"; skills: string[] }
   | { type: "set_prefs"; restDay?: RestDay; sessionLength?: StudyPrefs["sessionLength"] }
   | { type: "add_event"; kind: TimelineKind; title: string; date: string; note: string }
+  | { type: "download_doc"; title: string; format: "pdf" | "docx" }
   | { type: "open_page"; page: string; label: string };
 
 const EVENT_KINDS: TimelineKind[] = ["exam", "internship", "hackathon", "placement", "milestone", "personal"];
@@ -93,6 +95,10 @@ function check(raw: unknown): AssistantAction | null {
       const kind = EVENT_KINDS.includes(o.kind as TimelineKind) ? (o.kind as TimelineKind) : "milestone";
       return { type: "add_event", kind, title, date, note: str(o.note, 200) };
     }
+    case "download_doc": {
+      const title = str(o.title, 90) || "StudentOS notes";
+      return { type: "download_doc", title, format: o.format === "docx" || o.format === "word" ? "docx" : "pdf" };
+    }
     case "open_page": {
       const page = str(o.page, 60);
       return PAGES[page] ? { type: "open_page", page, label: PAGES[page] } : null;
@@ -158,6 +164,8 @@ export function describe(a: AssistantAction): { title: string; where: string; li
       };
     case "add_event":
       return { title: `Add to timeline: ${a.title}`, where: "College timeline", lines: [`${a.kind[0].toUpperCase() + a.kind.slice(1)} · ${fmtDate(a.date)}`, a.note].filter(Boolean), button: "Add to timeline" };
+    case "download_doc":
+      return { title: a.title, where: a.format === "pdf" ? "PDF" : "Word file", lines: ["The explanation above, as a file you can keep, print or share."], button: a.format === "pdf" ? "Download PDF" : "Download Word file" };
     case "open_page":
       return { title: `Open ${a.label}`, where: a.label, lines: [], button: "Open" };
   }
@@ -168,6 +176,8 @@ type Ctx = {
   resume: ResumeData;
   entries: Entry[];
   timeline: TimelineEvent[];
+  /** the text of the reply the action came from (for download_doc) */
+  reply?: string;
   addSession: (s: StudySession) => void;
   setPrefs: (p: Partial<StudyPrefs>) => void;
   patch: (p: { entries?: Entry[]; resume?: ResumeData; timeline?: TimelineEvent[] }) => void;
@@ -221,10 +231,40 @@ export function applyAction(a: AssistantAction, c: Ctx): { ok: true; message: st
       c.patch({ timeline: [...c.timeline, ev].sort((x, y) => x.date.localeCompare(y.date)) });
       return { ok: true, message: `Added “${a.title}” on ${fmtDate(a.date)} to your timeline.` };
     }
+    case "download_doc": {
+      const blocks = replyToBlocks(a.title, c.reply ?? "");
+      if (blocks.length < 2) return { ok: false, error: "There’s nothing to put in the file yet." };
+      void (a.format === "pdf" ? downloadPdf(a.title, blocks) : downloadDocx(a.title, blocks));
+      return { ok: true, message: `Downloading “${a.title}”…` };
+    }
     case "open_page":
       c.go(a.page);
       return { ok: true, message: `Opening ${a.label}…` };
   }
+}
+
+/** The assistant's reply (markdown) as document blocks: headings, paragraphs, list items. */
+export function replyToBlocks(title: string, reply: string): DocBlock[] {
+  const plain = (t: string) => t.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/`([^`]+)`/g, "$1").replace(/\[(.+?)\]\([^)]*\)/g, "$1").trim();
+  const out: DocBlock[] = [
+    { kind: "title", text: title },
+    { kind: "sub", text: `Explained by Asha, StudentOS · ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` },
+  ];
+  const body = reply.replace(/```[\s\S]*?```/g, "").split("\n");
+  for (const raw of body) {
+    const line = raw.trim();
+    if (!line || /^(-{3,}|\*{3,})$/.test(line)) continue;
+    if (/press (apply|download)|download (it|the pdf)|here('|’)s (your|the) (pdf|file)/i.test(line) && line.length < 90) continue;
+    const h = line.match(/^#{1,6}\s+(.*)$/);
+    if (h) {
+      if (plain(h[1]).toLowerCase() !== title.toLowerCase()) out.push({ kind: "h", text: plain(h[1]) });
+    }
+    else if (/^\*\*[^*]+\*\*:?$/.test(line)) out.push({ kind: "h", text: plain(line).replace(/:$/, "") });
+    else if (/^[-*•]\s+/.test(line)) out.push({ kind: "li", text: plain(line.replace(/^[-*•]\s+/, "")) });
+    else if (/^\d+[.)]\s+/.test(line)) out.push({ kind: "p", text: `${line.match(/^\d+/)![0]}. ${plain(line.replace(/^\d+[.)]\s+/, ""))}` });
+    else out.push({ kind: "p", text: plain(line) });
+  }
+  return out;
 }
 
 /** What the assistant is told it can do (added to its instructions on the server). */
@@ -239,5 +279,6 @@ Allowed types:
 - add_resume_skills: skills (list). Only skills the student says they have.
 - set_prefs: restDay (sunday | saturday | none) and/or sessionLength (45 | 60 | 90).
 - add_event: an exam, deadline or date to remember on their college timeline. kind (exam | internship | hackathon | placement | milestone | personal), title, date (YYYY-MM-DD), note (short, optional).
+- download_doc: when they ask for a PDF, Word file, document, handout or notes to download. title (short), format (pdf | docx). Write the whole content in your reply first, as long as they asked for (a 2–3 page explanation is about 900–1300 words), with "## " headings, short paragraphs and bullet points; the file is made from your reply. Never say you can't make a PDF or Word file.
 - open_page: page, one of ${Object.keys(PAGES).join(", ")}. Use it whenever they ask to open, show or go to something, or when a page does what they want (e.g. mock interview → /interview, make notes → /learn?tab=materials&m=notes, coding practice → /code, placement drives → /placement).
 Never say a change is done; say "Press Apply to add it". Don't put blocks in answers that only explain something.`;

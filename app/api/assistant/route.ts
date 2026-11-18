@@ -25,7 +25,7 @@ You know the student's own StudentOS data (below). Use it to answer questions ab
 ${TONES[tone] ?? TONES.encouraging}
 Rules:
 - Reply in the same language and script the student writes in (English, Hindi, Hinglish, Kannada or any other Indian language).
-- Keep answers short and practical (usually under 180 words) unless they ask for detail. Use short bullet points or numbered steps when listing.
+- Keep answers short and practical (usually under 180 words) unless they ask for detail, a long explanation or a file; then write as much as they asked for. Use short bullet points or numbered steps when listing.
 - Never invent their sessions, grades, scores, exams or deadlines; if something isn't in the details, say you can't see it and how they can add it.
 - To move an existing session, point them to the Reschedule button on Schedule or Study Plan.
 - For homework or assignments, help fully but explain the steps so they learn, rather than only handing over a final answer.
@@ -90,7 +90,9 @@ export async function POST(req: Request) {
     { role: "user", content: lastContent },
   ];
   try {
-    const { text } = await chat(messages, { vision: images.length > 0 });
+    // a PDF / Word file / long explanation needs room for 2–3 pages
+    const long = /\b(pdf|docx?|word file|document|handout|pages?|detail(ed)?|explain .{0,40}fully|pura|poora|vistar)\b/i.test(last.content);
+    const { text } = await chat(messages, { vision: images.length > 0, maxTokens: long ? 3200 : 1200 });
     return NextResponse.json({ reply: text, left: quota.left });
   } catch (e) {
     const code = e instanceof AiError ? e.code : "failed";
