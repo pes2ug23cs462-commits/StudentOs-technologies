@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Eyebrow, TiltCard, delay as d, usePointerVars } from "@/components/site/motion";
 import { CONTACT_EMAIL, PageHero, SiteShell } from "@/components/site/site-shell";
 import { FancyIcon, type FancyIconName, type FancyTone } from "@/components/site/fancy-icon";
-import { SendIcon } from "@/components/ui/icons";
+import { CheckIcon, SendIcon } from "@/components/ui/icons";
+import { CONTACT_TOPICS as TOPICS, sendContact } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 
-const TOPICS = ["Help with my account", "Feedback or an idea", "Report a problem", "Privacy or data request", "Partnership or college", "Careers"];
 
 const CARDS: { icon: FancyIconName; tone: FancyTone; title: string; text: string; href: string }[] = [
   { icon: "chat", tone: "cyan", title: "Help and feedback", text: "Questions about your plan, courses or account.", href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Help · StudentOS")}` },
@@ -18,17 +18,26 @@ const CARDS: { icon: FancyIconName; tone: FancyTone; title: string; text: string
 
 export function ContactPage() {
   const stage = usePointerVars<HTMLDivElement>();
-  const [f, setF] = useState({ name: "", email: "", topic: TOPICS[0], message: "" });
+  const [f, setF] = useState({ name: "", email: "", topic: TOPICS[0], message: "", website: "" });
   const [sent, setSent] = useState(false);
-  const valid = f.name.trim() && /\S+@\S+\.\S+/.test(f.email) && f.message.trim().length > 5;
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const valid = f.name.trim().length >= 2 && /\S+@\S+\.\S+/.test(f.email) && f.message.trim().length >= 10;
 
-  // No server needed: the message opens in the student’s own email app, addressed to us.
-  const submit = (e: FormEvent) => {
+  // Sent straight to the StudentOS team; the sender gets a confirmation email.
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!valid) return;
-    const body = `${f.message}\n\n— ${f.name} (${f.email})`;
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`${f.topic} · StudentOS`)}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    if (!valid || busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      await sendContact(f);
+      setSent(true);
+    } catch (x) {
+      setErr(x instanceof Error ? x.message : "Couldn’t send your message. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
   const field = "mt-1.5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none transition focus:border-accent focus:bg-white/[0.06]";
 
@@ -83,8 +92,18 @@ export function ContactPage() {
         </div>
 
         {/* right: form */}
-        <form onSubmit={submit} className="reveal land-glass rounded-3xl p-6 sm:p-8" style={d(0.1)}>
+        {sent ? (
+          <div className="reveal land-glass flex flex-col items-center justify-center rounded-3xl p-8 text-center" style={d(0.1)}>
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300"><CheckIcon size={26} /></span>
+            <h3 className="mt-4 text-[20px] font-semibold text-white">Message sent</h3>
+            <p className="mt-2 max-w-[340px] text-[13.5px] leading-relaxed text-white/60">Thanks, {f.name.split(" ")[0]}. It’s with our team now. We’ve sent a confirmation to {f.email}, and we’ll reply there.</p>
+            <button type="button" onClick={() => { setSent(false); setF({ ...f, message: "" }); }} className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-[13px] text-white/75 hover:border-white/25 hover:text-white">Send another message</button>
+          </div>
+        ) : (
+        <form onSubmit={submit} className="reveal land-glass relative rounded-3xl p-6 sm:p-8" style={d(0.1)}>
           <Eyebrow>Send a message</Eyebrow>
+          {/* a field people never see; bots fill it */}
+          <input type="text" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-0 w-0 opacity-0" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="text-[12.5px] text-white/70">
               Your name
@@ -107,13 +126,13 @@ export function ContactPage() {
             Message
             <textarea className={cn(field, "min-h-[140px] resize-y")} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} placeholder="Tell us what’s on your mind…" />
           </label>
-          <button type="submit" disabled={!valid} className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.3)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-40 disabled:shadow-none">
-            <SendIcon size={15} /> Send message
+          <button type="submit" disabled={!valid || busy} className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.3)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-40 disabled:shadow-none">
+            <SendIcon size={15} /> {busy ? "Sending…" : "Send message"}
           </button>
-          <p className="mt-3 text-center text-[11.5px] text-white/45">
-            {sent ? "Your email app should open with the message ready. Press send there." : "This opens your email app with your message ready to send."}
-          </p>
+          {err && <p className="mt-3 text-center text-[12.5px] text-rose-300">{err}</p>}
+          <p className="mt-3 text-center text-[11.5px] text-white/45">We reply to your email, usually within a day.</p>
         </form>
+        )}
       </section>
     </SiteShell>
   );
