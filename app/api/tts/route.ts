@@ -11,6 +11,7 @@ import { verifyIdToken } from "@/lib/server/auth";
 import { isPremium } from "@/lib/server/premium";
 import { adminConfigured } from "@/lib/server/firestore-admin";
 import { GoogleTtsError, googleSpeak, type TtsLang } from "@/lib/server/google-tts";
+import { SarvamError, sarvamConfigured, sarvamSpeak } from "@/lib/server/sarvam-tts";
 
 export const maxDuration = 30;
 
@@ -41,7 +42,8 @@ const wav = (b: ArrayBuffer) => new Response(b, { headers: { "Content-Type": "au
 export async function POST(req: Request) {
   const groqKey = process.env.GROQ_API_KEY;
   const google = adminConfigured();
-  if (!groqKey && !google) return NextResponse.json({ error: "no-key" }, { status: 503 });
+  const sarvam = sarvamConfigured();
+  if (!groqKey && !google && !sarvam) return NextResponse.json({ error: "no-key" }, { status: 503 });
   const uid = await verifyIdToken(req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null);
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
 
@@ -77,7 +79,22 @@ export async function POST(req: Request) {
     }
   }
 
-  // 2. Google voice (everyone, every language)
+  // 2. Hindi / Kannada: Sarvam's Indian voices first (no card needed)
+  const trySarvam = async () => {
+    try {
+      return wav(await sarvamSpeak(text, lang));
+    } catch (e) {
+      console.error("tts sarvam", e instanceof SarvamError ? `${e.status} ${e.message}` : e);
+      if (e instanceof SarvamError && e.status === 429) busy = true;
+      return null;
+    }
+  };
+  if (sarvam && lang !== "en") {
+    const r = await trySarvam();
+    if (r) return r;
+  }
+
+  // 3. Google voice (everyone, every language; needs billing on the Google project)
   if (google) {
     try {
       return wav(await googleSpeak(text, lang));
@@ -85,6 +102,12 @@ export async function POST(req: Request) {
       console.error("tts google", e instanceof GoogleTtsError ? `${e.status} ${e.message}` : e);
       if (e instanceof GoogleTtsError && e.status === 429) busy = true;
     }
+  }
+
+  // 4. English when Google isn't on: Sarvam's Indian English
+  if (sarvam && lang === "en") {
+    const r = await trySarvam();
+    if (r) return r;
   }
 
   return busy ? NextResponse.json({ error: "busy" }, { status: 429 }) : NextResponse.json({ error: "failed" }, { status: 502 });

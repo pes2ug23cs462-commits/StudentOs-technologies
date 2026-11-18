@@ -6,6 +6,7 @@ import { verifyIdToken } from "@/lib/server/auth";
 import { adminConfigured, adminPing, adminPushCheck } from "@/lib/server/firestore-admin";
 import { allProviders } from "@/lib/server/ai";
 import { googleSpeak, googleTtsProblem, googleVoiceName } from "@/lib/server/google-tts";
+import { sarvamConfigured, sarvamProblem, sarvamSpeak, sarvamVoice } from "@/lib/server/sarvam-tts";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -81,6 +82,21 @@ export async function GET(req: Request) {
       if (!j.data?.some((m) => m.id === stt)) throw new Error(`Model “${stt}” not found on Groq. Set GROQ_STT_MODEL.`);
       return `Ready · ${stt}`;
     }),
+    run(
+      "tts-sarvam",
+      "Asha’s Hindi voice (Sarvam)",
+      async () => {
+        if (!sarvamConfigured()) return missing("SARVAM_API_KEY");
+        const t0 = Date.now();
+        try {
+          await sarvamSpeak("नमस्ते", "hi");
+        } catch (e) {
+          throw new Error(sarvamProblem(e));
+        }
+        return `Working · ${sarvamVoice()} · ${Date.now() - t0} ms`;
+      },
+      true,
+    ),
     run(
       "tts-google",
       "Asha’s voice in English and Hindi (Google)",
