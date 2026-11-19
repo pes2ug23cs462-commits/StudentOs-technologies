@@ -85,9 +85,12 @@ export async function generateProblem(o: { level: Level; topic?: string; profile
     const seen = new Set(g.examples.map((e) => key(e.args)));
     const inputs = [...g.examples.map((e) => e.args), ...g.tests.filter((t) => !seen.has(key(t)) && seen.add(key(t)))];
     const res = await runCode("javascript", g.reference, g.fn.javascript, inputs.map((args) => ({ args, expected: undefined })));
-    if (res.status !== "ok" || res.cases.some((c) => c.error || c.got === undefined)) continue;
-    const ok = g.examples.every((e, i) => same(res.cases[i].got, e.expected));
-    if (!ok) continue;
+    if (res.status !== "ok") continue;
+    const bad = (i: number) => !res.cases[i] || res.cases[i].error || res.cases[i].got === undefined;
+    // the examples must run and match what the AI said; a hidden test the reference can't run is just dropped
+    if (g.examples.some((e, i) => bad(i) || !same(res.cases[i].got, e.expected))) continue;
+    const keep = inputs.map((args, i) => ({ args, i })).filter((x) => !bad(x.i));
+    if (keep.length < 5) continue;
     const id = `ai-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const pyArgs = g.params.join(", ");
     return {
@@ -105,7 +108,7 @@ export async function generateProblem(o: { level: Level; topic?: string; profile
         javascript: `function ${g.fn.javascript}(${pyArgs}) {\n  // write your code here\n}\n`,
       },
       shown: Math.min(3, g.examples.length),
-      tests: inputs.map((args, i) => ({ args, expected: res.cases[i].got })),
+      tests: keep.map((x) => ({ args: x.args, expected: res.cases[x.i].got })),
       ai: true,
     };
   }

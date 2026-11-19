@@ -78,19 +78,34 @@ Reply with JSON only:
 {"title":"...","level":"${level}","topics":["..."],"statement":"...","constraints":["..."],"params":["..."],"fn_python":"...","fn_javascript":"...","reference_javascript":"function name(...) { ... }","tests":[[arg1, arg2]],"examples":[{"args":[arg1, arg2],"expected":...}]}`;
 
   try {
-    for (let i = 0; i < 2; i++) {
-      const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 3000, temperature: 0.8 });
+    const start = Date.now();
+    // up to 3 tries, but never past ~45 s (the function stops at 60)
+    for (let i = 0; i < 3 && (i === 0 || Date.now() - start < 30000); i++) {
+      const { text } = await chat([{ role: "user", content: prompt }], { maxTokens: 3000, temperature: i ? 0.5 : 0.8 });
       const r = json<Raw>(text);
       if (!r) continue;
-      const params = (Array.isArray(r.params) ? r.params : []).map((p) => ident(p, true)).filter(Boolean).slice(0, 4);
+      // models often write "nums: List[int]" or "Nums": keep the plain name
+      const params = (Array.isArray(r.params) ? r.params : []).map((p) => ident(String(p ?? "").trim().split(/[\s:=(]/)[0].toLowerCase(), true)).filter(Boolean).slice(0, 4);
+      // one test's argument list, however the model wrote it: {args:[…]}, {input:[…]}, or (with one
+      // parameter) the bare value instead of a one-item list
+      const argsOf = (t: unknown): unknown[] | null => {
+        const o = t && typeof t === "object" && !Array.isArray(t) ? (t as Record<string, unknown>) : null;
+        const a = o ? (o.args ?? o.input ?? o.inputs) : t;
+        if (Array.isArray(a) && a.length === params.length) return a;
+        if (params.length === 1 && a !== undefined) return [a];
+        return null;
+      };
       const py = ident(r.fn_python, true);
       const js = ident(r.fn_javascript, false);
       const reference = String(r.reference_javascript ?? "").slice(0, 4000);
-      const tests = (Array.isArray(r.tests) ? r.tests : []).filter((t) => Array.isArray(t) && t.length === params.length && t.every((a) => plain(a))).slice(0, 12) as unknown[][];
+      const tests = (Array.isArray(r.tests) ? r.tests : []).map(argsOf).filter((t): t is unknown[] => !!t && t.every((a) => plain(a))).slice(0, 12);
       const examples = (Array.isArray(r.examples) ? r.examples : [])
-        .map((e) => e as { args?: unknown; expected?: unknown })
-        .filter((e) => Array.isArray(e.args) && e.args.length === params.length && e.args.every((a) => plain(a)) && plain(e.expected))
-        .slice(0, 3) as { args: unknown[]; expected: unknown }[];
+        .map((e) => {
+          const o = (e && typeof e === "object" ? e : {}) as Record<string, unknown>;
+          return { args: argsOf(o), expected: o.expected ?? o.output };
+        })
+        .filter((e): e is { args: unknown[]; expected: unknown } => !!e.args && e.args.every((a) => plain(a)) && plain(e.expected))
+        .slice(0, 3);
       if (!params.length || !py || !js || !reference.includes(js) || tests.length < 5 || examples.length < 2) continue;
       return NextResponse.json({
         title: s(r.title, 70) || "New problem",
