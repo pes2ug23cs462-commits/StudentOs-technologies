@@ -15,7 +15,7 @@ import { runCode, show } from "@/lib/coding/runner";
 import { LANG_LABEL, type Lang, type Problem, type RunResult } from "@/lib/coding/types";
 import { codeChat, codeFollowups, type ChatLine, type InterviewLang, type InterviewStyle, type RoundEvent } from "@/lib/interview";
 import { watchPresence, type PresenceSummary } from "@/lib/presence";
-import { LOOK_SECS } from "@/components/interview/proctor";
+import { LOOK_SECS, useVoiceMatch } from "@/components/interview/proctor";
 import type { Talker } from "@/lib/talker";
 import { cn } from "@/lib/utils";
 import { startRecording, transcribe, type Recorder } from "@/lib/voice";
@@ -80,7 +80,7 @@ export function CodingRound({
   /** record the round's audio, kept on this device only */
   record: boolean;
   /** strict mode: told when the student looks away or leaves the frame for a few seconds */
-  onBreach?: (kind: "away" | "out" | "people" | "device") => void;
+  onBreach?: (kind: "away" | "out" | "people" | "device" | "voice") => void;
   onEnd: (r: RoundResult) => void;
   onQuit: () => void;
 }) {
@@ -110,7 +110,7 @@ export function CodingRound({
   const now = () => secsRef.current;
   const video = useRef<HTMLVideoElement>(null);
   const streams = useRef<MediaStream[]>([]);
-  const watcher = useRef<{ stop: () => PresenceSummary | null } | null>(null);
+  const watcher = useRef<{ stop: () => PresenceSummary | null; mouth: () => number } | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const audioParts = useRef<Blob[]>([]);
   const recStart = useRef(0);
@@ -118,6 +118,8 @@ export function CodingRound({
   const [watching, setWatching] = useState(false);
   const breachRef = useRef(onBreach);
   breachRef.current = onBreach;
+  // strict: someone else's voice (lips still, or no face in view) counts as a warning here too
+  const { hear } = useVoiceMatch(!!onBreach && watching, () => watcher.current?.mouth() ?? -1, asha === "speaking", () => breachRef.current?.("voice"));
   const [recording, setRecording] = useState(false);
 
   const evRef = useRef<RoundEvent[]>([]);
@@ -479,7 +481,7 @@ export function CodingRound({
                   {cam !== "on" && <span className="absolute inset-0 flex items-center justify-center px-1 text-center text-[10px] text-white/50">{cam === "blocked" ? "Camera blocked" : "Starting…"}</span>}
                   {cam === "on" && (
                     <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[9.5px] text-white/80" title={watching ? "Checking that you face the screen, on this device" : "Self-view only"}>
-                      You{watching ? " · ✓" : ""}
+                      You{watching ? (hear === "other" ? " · voice ⚠" : " · ✓") : ""}
                     </span>
                   )}
                 </div>

@@ -251,7 +251,7 @@ const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops sp
  * interviewer speaks, and for a moment after, so its voice from the speakers doesn't count.
  * Only numbers are used; nothing is recorded or sent.
  */
-function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMismatch: () => void) {
+export function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMismatch: () => void) {
   const [mic, setMic] = useState<"off" | "on" | "blocked">("off");
   /** what the check hears right now, shown on the camera so a student (or tester) can see it working */
   const [hear, setHear] = useState<"quiet" | "you" | "other" | "paused">("quiet");
@@ -309,9 +309,9 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
             return;
           }
           const m = mouthRef.current();
-          const still = voice && m >= 0 && m < STILL_LIPS;
+          // strict: a voice while the lips are still, or while no face is in view, is someone else
+          const still = voice && m < STILL_LIPS;
           say(!voice ? "quiet" : still ? "other" : "you");
-          // no face: "out of the camera" already covers it
           recent.push(still ? 1 : 0);
           if (recent.length > VOICE_WINDOW) recent.shift();
           quiet = voice ? 0 : quiet + 1;
