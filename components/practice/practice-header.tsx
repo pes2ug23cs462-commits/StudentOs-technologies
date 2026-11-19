@@ -8,8 +8,6 @@ import type { ReactNode } from "react";
 import { PremiumBadge } from "@/components/premium/premium-gate";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { BarChartIcon, CodeIcon, FileIcon, GridIcon, MicIcon } from "@/components/ui/icons";
-import { useStore } from "@/lib/store";
-import { wantsCoding } from "@/lib/coding/use-coding";
 import { cn } from "@/lib/utils";
 
 export type PracticeTab = "overview" | "all" | "analytics" | "interview" | "coding";
@@ -23,9 +21,8 @@ const TABS: { key: PracticeTab; label: string; href: string; Icon: typeof GridIc
 ];
 
 export function PracticeHeader({ active, action, onTab }: { active: PracticeTab; action?: ReactNode; onTab?: (t: PracticeTab) => void }) {
-  const { state } = useStore();
-  // the Coding tab is for engineering students and anyone who wants to code
-  const tabs = TABS.filter((t) => t.key !== "coding" || active === "coding" || wantsCoding(state));
+  // every student sees the Coding tab (it's free)
+  const tabs = TABS;
   return (
     <div className="page-head">
       <div className="flex flex-wrap items-center justify-between gap-4">
