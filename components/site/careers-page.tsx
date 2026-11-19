@@ -32,7 +32,7 @@ const VALUES: { icon: FancyIconName; tone: FancyTone; label: string }[] = [
 
 const TEAM: { name: string; role: string; tone: string; photo?: string }[] = [
   { name: "Rahul Rathod", role: "Founder & CEO", tone: "from-violet-500 to-fuchsia-500", photo: "/team/rahul.jpg" },
-  { name: "Mahesh Ajjer", role: "Co-founder · Marketing", tone: "from-amber-400 to-pink-500" },
+  { name: "Mahesh Ajjer", role: "Co-founder · Marketing", tone: "from-amber-400 to-pink-500", photo: "/team/mahesh.jpg" },
 ];
 
 const LOOK: Record<CareerTeam, { icon: FancyIconName; tone: FancyTone }> = {
