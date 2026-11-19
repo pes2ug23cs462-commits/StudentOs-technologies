@@ -48,6 +48,7 @@ export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
       { href: "/schedule", label: "Schedule", Icon: CalendarIcon, match: ["/schedule", "/timeline"] },
       { href: "/learn", label: "Learning", Icon: VideoIcon, match: ["/learn", "/resources", "/goals", "/notes"] },
       { href: "/exam-prep", label: "Exam Prep", Icon: OpenBookIcon, match: ["/exam-prep"], badge: "NEW" },
+      { href: "/paper", label: "Question Paper", Icon: FileIcon, match: ["/paper"], badge: "NEW" },
     ],
   },
 ];

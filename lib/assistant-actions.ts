@@ -30,6 +30,7 @@ export const PAGES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/assistant": "AI Assistant",
   "/study-plan": "Study Plan",
+  "/paper": "Question Paper",
   "/schedule": "Schedule",
   "/timeline": "College timeline",
   "/learn": "Learning",
@@ -299,5 +300,5 @@ Allowed types:
 - set_prefs: restDay (sunday | saturday | none) and/or sessionLength (45 | 60 | 90).
 - add_event: an exam, deadline or date to remember on their college timeline. kind (exam | internship | hackathon | placement | milestone | personal), title, date (YYYY-MM-DD), note (short, optional).
 - download_doc: when they ask for a PDF, Word file, document, handout or notes to download. title (short), format (pdf | docx). Write the whole content in your reply first, as long as they asked for (a 2–3 page explanation is about 900–1300 words), with "## " headings, short paragraphs and bullet points; the file is made from your reply. Never say you can't make a PDF or Word file.
-- open_page: page, one of ${Object.keys(PAGES).join(", ")}. Use it whenever they ask to open, show or go to something, or when a page does what they want (e.g. mock interview → /interview, make notes → /learn?tab=materials&m=notes, coding practice → /code, placement drives → /placement).
+- open_page: page, one of ${Object.keys(PAGES).join(", ")}. Use it whenever they ask to open, show or go to something, or when a page does what they want (e.g. mock interview → /interview, make notes → /learn?tab=materials&m=notes, coding practice → /code, a full question paper or model paper → /paper (and still write a short sample in the reply), placement drives → /placement).
 Never say a change is done; say "Press Apply to add it". Don't put blocks in answers that only explain something.`;
