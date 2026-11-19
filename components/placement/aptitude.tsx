@@ -114,7 +114,7 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
           </label>
           <Button variant="primary" onClick={() => begin("mock")}><PlayIcon size={13} /> Start mock</Button>
         </div>
-        {strict && <p className="w-full text-[12px] text-white/45">Strict mode: full screen until you finish, no other tabs, no copy or paste. The camera checks you look at the screen and are alone, and the mic checks for talking. {MAX_WARNINGS} warnings, then the mock closes and can’t be reopened. Camera and mic stay on your device; nothing is recorded.</p>}
+        {strict && <p className="w-full text-[12px] text-white/45">Strict mode: full screen until you finish, no other tabs, no copy or paste. The camera checks you look at the screen, are alone and have no phone or other device in view, and the mic checks for talking. {MAX_WARNINGS} warnings, then the mock closes and can’t be reopened. Camera and mic stay on your device; nothing is recorded.</p>}
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">

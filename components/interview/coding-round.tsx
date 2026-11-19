@@ -80,7 +80,7 @@ export function CodingRound({
   /** record the round's audio, kept on this device only */
   record: boolean;
   /** strict mode: told when the student looks away or leaves the frame for a few seconds */
-  onBreach?: (kind: "away" | "out" | "people") => void;
+  onBreach?: (kind: "away" | "out" | "people" | "device") => void;
   onEnd: (r: RoundResult) => void;
   onQuit: () => void;
 }) {
@@ -128,7 +128,13 @@ export function CodingRound({
   const log = (ok: boolean, text: string, t = now()) => addEvent({ t, ok, text });
   const brief = { title: problem.title, statement: problem.statement, level: problem.level };
 
+  // once the round ends or this screen closes, a late reply must not start speaking
+  useEffect(() => () => {
+    ended.current = true;
+    talker?.stop();
+  }, [talker]);
   const say = async (text: string) => {
+    if (ended.current) return;
     setChat((c) => [...c, { who: "asha", text, t: now() }]);
     if (!voice || !talker) return;
     setAsha("speaking");

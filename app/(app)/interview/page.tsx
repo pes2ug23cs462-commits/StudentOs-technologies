@@ -152,8 +152,14 @@ export default function InterviewPage() {
   const [talk, setTalk] = useState<{ who: "you" | "asha"; text: string }[]>([]);
   const [asking, setAsking] = useState(false);
   const nextRef = useRef<() => void>(() => {});
+  // once the interview ends (or the page closes), nothing late may speak or open the mic again
+  const over = useRef(false);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const silenced = () => over.current || phaseRef.current !== "live";
   const threadEnd = useRef<HTMLDivElement>(null);
   const proctor = useProctor(strict && (phase === "live" || phase === "coding"), (log) => {
+    over.current = true;
     rec?.cancel();
     setRec(null);
     talker?.stop();
@@ -198,7 +204,7 @@ export default function InterviewPage() {
   };
   const ask = async (k: number, again = false) => {
     const q = questions[k];
-    if (!talker || !q) return;
+    if (!talker || !q || silenced()) return;
     const L = LINES[ilang];
     const text = again ? q.q : k === 0 ? `${L.hello} ${q.q}` : `${L.lead[k % L.lead.length]} ${q.q}`;
     if (questions[k + 1]) talker.prefetch(questions[k + 1].q);
@@ -234,6 +240,20 @@ export default function InterviewPage() {
     };
   }, [phase, i, talker]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stopSpeaking(), []);
+  // outside the live round (ended, scoring, results, back to setup) Asha never keeps talking
+  useEffect(() => {
+    if (phase === "live" || phase === "coding") return;
+    talker?.stop();
+    recRef.current?.cancel();
+    setSpeaking(false);
+  }, [phase, talker]);
+  // leaving the page mid-interview: stop the voice and the mic
+  const recRef = useRef(rec);
+  recRef.current = rec;
+  useEffect(() => () => {
+    over.current = true;
+    recRef.current?.cancel();
+  }, []);
   // opened from a drive's prep page: /interview?role=Software%20Engineer&kind=hr&company=HP
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -268,6 +288,7 @@ export default function InterviewPage() {
       setPhase("coding");
       return;
     }
+    over.current = false;
     setPhase("preparing");
     try {
       const qs = await makeQuestions({ role: role.trim(), kind, level, count, profile, style, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang });
@@ -386,6 +407,7 @@ export default function InterviewPage() {
         } finally {
           setHearing(false);
         }
+        if (silenced()) return;
         if (text.trim()) void heard(text.trim());
         else if (handsFree && auto) micRef.current();
       }, { pause: handsFree ? 1800 : undefined });
@@ -398,7 +420,7 @@ export default function InterviewPage() {
   };
 
   micRef.current = () => {
-    if (!rec && !hearing) void mic(true);
+    if (!rec && !hearing && !silenced()) void mic(true);
   };
 
   /** The candidate said (or typed) something on the current question: add it, and let Asha react. */
@@ -411,13 +433,13 @@ export default function InterviewPage() {
     setThinking(true);
     const r = await turn({ role: role.trim(), kind, level, style, lang: ilang, q: questions[k]?.q ?? "", thread: th, probes: th.filter((x) => x.act === "probe").length });
     setThinking(false);
-    if (iRef.current !== k) return; // they moved on meanwhile
+    if (iRef.current !== k || silenced()) return; // they moved on or ended meanwhile
     if (r.say) {
       setThreads((t) => ({ ...t, [k]: [...(t[k] ?? []), { who: "asha", text: r.say, act: r.act }] }));
       setTimeout(() => threadEnd.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
       await say(r.say);
     }
-    if (iRef.current !== k) return;
+    if (iRef.current !== k || silenced()) return;
     if (r.act === "done") {
       if (handsFree) setTimeout(() => iRef.current === k && nextRef.current(), 700);
     } else if (handsFree) micRef.current();
@@ -431,6 +453,7 @@ export default function InterviewPage() {
   };
 
   const finish = async (final: string[]) => {
+    over.current = true;
     proctor.stop();
     rec?.cancel();
     setRec(null);
@@ -450,12 +473,13 @@ export default function InterviewPage() {
       setPhase("result");
     } catch (e) {
       setError(e instanceof AssistantError ? e.message : "Couldn’t score the interview. Try again.");
+      over.current = false;
       setPhase("live");
     }
   };
 
   const say = async (text: string) => {
-    if (!readAloud || !talker) return "skipped";
+    if (!readAloud || !talker || silenced()) return "skipped";
     setSpeaking(true);
     const r = await talker.say(text);
     setSpeaking(false);
@@ -605,7 +629,7 @@ export default function InterviewPage() {
         <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
           <div className="min-w-0">
             {/* video */}
-            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(217,119,6,0.6)]">
+            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] lg:aspect-auto lg:h-[min(40vh,420px)] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(217,119,6,0.6)]">
               <Interviewer talker={talker} listening={status === "listening"} />
               <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} />
               <div className="absolute top-3 left-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 backdrop-blur">
@@ -1104,7 +1128,7 @@ export default function InterviewPage() {
                 </button>
                 <p className="min-w-[200px] flex-1 text-[11.5px] leading-snug text-white/45">
                   {kind === "coding" ? `One ${CODE_LEVEL[level]} problem, ${codeMin} minutes · ` : `${count} questions · `}{kind === "coding" ? `${voice ? `${INTERVIEWER} talks to you; tap the mic to answer and think out loud.` : "Type your answers to Asha."}${cameraOn || recordOn ? " Camera and recording stay on this device — nothing is uploaded." : ""}` : voice ? `${INTERVIEWER} asks out loud and the mic turns on by itself.` : "You read the questions and type or speak your answers."} Your voice is only used to write down your answer.
-                  {strict && ` Strict mode: full screen, no other tabs, and the camera checks you look at the screen. ${MAX_WARNINGS} warnings, then the interview ends. The camera stays on this device.`}
+                  {strict && ` Strict mode: full screen, no other tabs, the camera checks you look at the screen, are alone and have no phone in view, and the mic checks only your voice answers. ${MAX_WARNINGS} warnings, then the interview ends. The camera stays on this device.`}
                 </p>
               </div>
             </Card>

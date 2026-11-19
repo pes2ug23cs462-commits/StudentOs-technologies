@@ -9,6 +9,8 @@ const VERSION = "0.10.33";
 const BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/vision_bundle.mjs`;
 const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/wasm`;
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+// a small object detector (~4 MB): phones, laptops, tablets/screens, books, and whole people
+const OBJECT_MODEL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
 
 export type PresenceSummary = { facing: number; away: number; out: number };
 export type PresenceEvent = { kind: "away" | "out"; startedAt: number; secs: number };
@@ -20,17 +22,56 @@ type Landmarker = {
   close: () => void;
 };
 
+type Detection = { categories: Category[] };
+type Detector = { detectForVideo: (v: HTMLVideoElement, ts: number) => { detections: Detection[] }; close: () => void };
+type Vision = {
+  FilesetResolver: { forVisionTasks: (p: string) => Promise<unknown> };
+  FaceLandmarker: { createFromOptions: (v: unknown, o: unknown) => Promise<Landmarker> };
+  ObjectDetector: { createFromOptions: (v: unknown, o: unknown) => Promise<Detector> };
+};
+let visionLoading: Promise<{ mp: Vision; files: unknown }> | null = null;
+function vision() {
+  if (!visionLoading) {
+    visionLoading = (async () => {
+      const url = BUNDLE;
+      const mp = (await import(/* webpackIgnore: true */ url)) as Vision;
+      return { mp, files: await mp.FilesetResolver.forVisionTasks(WASM) };
+    })();
+    visionLoading.catch(() => {
+      visionLoading = null;
+    });
+  }
+  return visionLoading;
+}
+
+/** What counts as "a device" on camera, with how sure the model must be. */
+const DEVICES: Record<string, number> = { "cell phone": 0.3, laptop: 0.45, tv: 0.45, remote: 0.4, book: 0.5 };
+let detLoading: Promise<Detector> | null = null;
+function loadDetector(): Promise<Detector> {
+  if (!detLoading) {
+    detLoading = (async () => {
+      const { mp, files } = await vision();
+      return mp.ObjectDetector.createFromOptions(files, {
+        baseOptions: { modelAssetPath: OBJECT_MODEL, delegate: "GPU" },
+        runningMode: "VIDEO",
+        scoreThreshold: 0.3,
+        maxResults: 10,
+        categoryAllowlist: [...Object.keys(DEVICES), "person"],
+      });
+    })();
+    detLoading.catch(() => {
+      detLoading = null;
+    });
+  }
+  return detLoading;
+}
+
 let loading: Promise<Landmarker> | null = null;
 function load(): Promise<Landmarker> {
   if (!loading) {
     loading = (async () => {
-      const url = BUNDLE;
-      const mp = (await import(/* webpackIgnore: true */ url)) as {
-        FilesetResolver: { forVisionTasks: (p: string) => Promise<unknown> };
-        FaceLandmarker: { createFromOptions: (v: unknown, o: unknown) => Promise<Landmarker> };
-      };
-      const vision = await mp.FilesetResolver.forVisionTasks(WASM);
-      return mp.FaceLandmarker.createFromOptions(vision, {
+      const { mp, files } = await vision();
+      return mp.FaceLandmarker.createFromOptions(files, {
         baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
         runningMode: "VIDEO",
         // strict: find a second face even when it's small, half in view or in poor light
@@ -77,7 +118,7 @@ export async function watchPresence(
   now: () => number,
   onEvent: (e: PresenceEvent) => void,
   /** strict mode: called once per look-away (or a second face) as soon as it lasts `secs` */
-  warn?: { secs: number; on: (kind: "away" | "out" | "people") => void },
+  warn?: { secs: number; on: (kind: "away" | "out" | "people" | "device") => void },
 ) {
   let lm: Landmarker;
   try {
@@ -85,6 +126,13 @@ export async function watchPresence(
   } catch {
     return null;
   }
+  // devices and extra people, checked a little less often (about 3 times a second).
+  // The face check works without it, so a model that fails to load just skips this part.
+  let det: Detector | null = null;
+  if (warn) void loadDetector().then((d) => (det = d)).catch(() => {});
+  const dev: boolean[] = [];
+  const crowd: boolean[] = [];
+  let devWarned = false, crowdWarned = false, tick = 0, lastTs = 0;
   let samples = 0, onScreen = 0, away = 0, out = 0;
   let state: "on" | "away" | "out" = "on";
   let since = now();
@@ -118,16 +166,42 @@ export async function watchPresence(
   const timer = setInterval(() => {
     if (video.readyState < 2 || !video.videoWidth) return;
     try {
-      const r = lm.detectForVideo(video, performance.now());
+      const ts = Math.max(performance.now(), lastTs + 1);
+      lastTs = ts;
+      const r = lm.detectForVideo(video, ts);
       const face = r.faceLandmarks[0];
       two.push(r.faceLandmarks.length > 1);
-      if (two.length > 8) two.shift();
+      if (two.length > 6) two.shift();
       const seenTwo = two.filter(Boolean).length;
-      if (warn && !twoWarned && seenTwo >= 5) {
+      if (warn && det && ++tick % 2 === 0) {
+        try {
+          const found = det.detectForVideo(video, ts).detections.map((d) => d.categories[0]).filter(Boolean);
+          dev.push(found.some((c) => c.categoryName in DEVICES && c.score >= DEVICES[c.categoryName]));
+          crowd.push(found.filter((c) => c.categoryName === "person" && c.score >= 0.4).length > 1);
+          if (dev.length > 5) dev.shift();
+          if (crowd.length > 5) crowd.shift();
+          const nDev = dev.filter(Boolean).length, nCrowd = crowd.filter(Boolean).length;
+          // seen in 2 of the last ~1.5 s of checks: a phone held up for a moment is enough
+          if (!devWarned && nDev >= 2) {
+            devWarned = true;
+            warn.on("device");
+          }
+          if (devWarned && nDev === 0 && dev.length === 5) devWarned = false;
+          if (!crowdWarned && !twoWarned && nCrowd >= 2) {
+            crowdWarned = true;
+            warn.on("people");
+          }
+          if (crowdWarned && nCrowd === 0 && crowd.length === 5) crowdWarned = false;
+        } catch {
+          /* skipped */
+        }
+      }
+      // strict: a second face in 3 of the last ~1 s of frames
+      if (warn && !twoWarned && !crowdWarned && seenTwo >= 3) {
         twoWarned = true;
         warn.on("people");
       }
-      if (twoWarned && seenTwo === 0 && two.length === 8) twoWarned = false; // gone again: can warn next time
+      if (twoWarned && seenTwo === 0 && two.length === 6) twoWarned = false; // gone again: can warn next time
       if (face) {
         const s = r.faceBlendshapes?.[0]?.categories;
         const jaw = s?.find((c) => c.categoryName === "jawOpen")?.score ?? 0;

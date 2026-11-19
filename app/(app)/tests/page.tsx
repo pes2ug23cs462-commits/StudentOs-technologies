@@ -908,7 +908,7 @@ function Tests() {
                 <ShieldIcon size={15} className="mt-0.5 text-white/50" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-medium text-white">Strict mode</span>
-                  <span className="mt-0.5 block text-[12px] text-white/50">Full screen until you finish, no other tabs, no copy or paste. The camera checks you look at the screen and are alone, and the mic checks for talking. {MAX_WARNINGS} warnings, then the test closes and can’t be reopened. Camera and mic stay on your device; nothing is recorded.</span>
+                  <span className="mt-0.5 block text-[12px] text-white/50">Full screen until you finish, no other tabs, no copy or paste. The camera checks you look at the screen, are alone and have no phone or other device in view, and the mic checks for talking. {MAX_WARNINGS} warnings, then the test closes and can’t be reopened. Camera and mic stay on your device; nothing is recorded.</span>
                 </span>
                 <button type="button" role="switch" aria-checked={strict} aria-label="Strict mode" onClick={() => setStrict(!strict)} className={cn("relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition", strict ? "bg-cyan-400" : "bg-white/15")}>
                   <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />

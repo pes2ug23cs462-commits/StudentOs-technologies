@@ -14,7 +14,7 @@ export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 4;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice";
+export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice" | "device";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
@@ -23,6 +23,7 @@ export const BREACH_TEXT: Record<Breach, string> = {
   people: "Someone else appeared on the camera.",
   talk: "Talking was heard. Tests are taken in silence.",
   voice: "A voice was heard while your lips weren’t moving. Only you should answer.",
+  device: "A phone or another device was seen on the camera. Keep phones, tablets and books away.",
 };
 /** Covers the app around a strict round, so only the round is on screen. */
 export const STRICT_SHELL = "fixed inset-0 z-[60] overflow-auto bg-ink";
@@ -201,12 +202,12 @@ function useTalkWatch(on: boolean, onTalk: () => void) {
           n++;
           floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
           // strict: quieter talking counts, and ~2 s of it inside 4 s is enough
-          const voice = n > 20 && level > Math.max(floor * 1.5, floor + 12);
+          const voice = n > 20 && level > Math.max(floor * 1.4, floor + 9);
           recent.push(voice);
           if (recent.length > 40) recent.shift();
           quiet = voice ? 0 : quiet + 1;
           if (!armed && quiet >= 20) armed = true;
-          if (armed && recent.filter(Boolean).length >= 20) {
+          if (armed && recent.filter(Boolean).length >= 15) {
             armed = false;
             recent.length = 0;
             cb.current();
@@ -239,9 +240,9 @@ export function StrictDock({ left, onBreach, listen = true }: { left: number; on
 }
 
 /** Thresholds for the voice check (see useVoiceMatch). */
-const STILL_LIPS = 0.08; // mouth() below this = lips not moving (talking moves it 0.15+; face-tracking jitter stays under)
+const STILL_LIPS = 0.09; // mouth() below this = lips not moving (talking moves it 0.15+; face-tracking jitter stays under)
 const VOICE_WINDOW = 30; // last 3 s (10 checks a second)
-const VOICE_STILL = 9; // strict: ~0.9 s of voice with still lips in that window
+const VOICE_STILL = 6; // strict: ~0.6 s of voice with still lips in that window
 const ECHO_MS = 1500; // ignore the mic this long after the interviewer stops speaking
 
 /**
@@ -300,7 +301,7 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
           n++;
           floor = n < 20 ? Math.max(floor, level) : floor * 0.995 + Math.min(level, floor + 4) * 0.005;
           // strict: a quieter voice counts too (someone whispering from the side)
-          const voice = n > 20 && level > Math.max(floor * 1.3, floor + 7);
+          const voice = n > 20 && level > Math.max(floor * 1.2, floor + 5);
           const muted = pausedRef.current || Date.now() - pausedAt.current < ECHO_MS;
           if (muted) {
             recent.length = 0;
@@ -314,7 +315,7 @@ function useVoiceMatch(on: boolean, mouth: () => number, paused: boolean, onMism
           recent.push(still ? 1 : 0);
           if (recent.length > VOICE_WINDOW) recent.shift();
           quiet = voice ? 0 : quiet + 1;
-          if (!armed && quiet >= 20) armed = true;
+          if (!armed && quiet >= 12) armed = true;
           if (armed && recent.reduce((a, b) => a + b, 0) >= VOICE_STILL) {
             armed = false;
             recent.length = 0;
