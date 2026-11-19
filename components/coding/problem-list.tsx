@@ -89,6 +89,18 @@ export function ProblemList() {
         </Link>
       </div>
 
+      {/* for students who have never coded */}
+      <Link href="/code/learn" className="group mt-5 flex items-center gap-4 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/[0.12] to-transparent px-5 py-4 transition hover:border-accent/60">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-[18px] font-bold text-black" aria-hidden>
+          {"</>"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold text-white">New to coding? Learn Python from zero</span>
+          <span className="block text-[12.5px] text-white/60">12 short lessons for any stream (B.Com, BA, BSc too). Write and run code right here, checked as you go.</span>
+        </span>
+        <span className="hidden text-[13px] font-semibold text-accent group-hover:underline sm:block">Start →</span>
+      </Link>
+
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           {/* topic chips */}
