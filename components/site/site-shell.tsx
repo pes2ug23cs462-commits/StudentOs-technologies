@@ -137,7 +137,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-6 text-[12px] text-white/45">
           <span>© {new Date().getFullYear()} StudentOS</span>
-          <span>Made in Kolar for students, placement cells and recruiters.</span>
+          <span>Made in Vijayapura for students, placement cells and recruiters.</span>
         </div>
       </div>
     </footer>

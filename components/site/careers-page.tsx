@@ -373,7 +373,7 @@ export function CareersPage() {
               </a>
             </div>
             <div className="hero-in mt-8 flex flex-wrap gap-6" style={d(0.55)}>
-              {[[String(live.length), live.length === 1 ? "open role" : "open roles"], ["Remote", "around your classes"], ["3 founders", "+ PM + 10 interns"]].map(([v, l]) => (
+              {[[String(live.length), live.length === 1 ? "open role" : "open roles"], ["Remote", "around your classes"], ["2 founders", "+ PM + 10 interns"]].map(([v, l]) => (
                 <div key={l}>
                   <p className="text-[22px] font-bold text-white">{v}</p>
                   <p className="text-[12px] text-white/50">{l}</p>
