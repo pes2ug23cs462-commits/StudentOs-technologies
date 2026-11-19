@@ -98,13 +98,20 @@ function pose(points: Point[]) {
 /** Is the face turned to the screen? Measured against how this student sat at the start
     (a camera off to one side, or a laptop low on the desk, is their "straight").
     Looking down is fine: in a coding round that is the keyboard. */
-function facing(points: Point[], shapes: Category[] | undefined, base: { yaw: number; pitch: number }) {
+function facing(points: Point[], shapes: Category[] | undefined, base: { yaw: number; pitch: number }, down: boolean) {
   const p = pose(points);
   if (!p) return false;
-  if (Math.abs(p.yaw - base.yaw) > 0.24 || p.pitch < base.pitch - 0.16) return false;
+  // strict: a small turn of the head to either side, or looking up, already counts
+  if (Math.abs(p.yaw - base.yaw) > 0.17 || p.pitch < base.pitch - 0.12) return false;
+  // in a spoken interview, looking down (a phone or notes in the lap) counts too
+  if (down && p.pitch > base.pitch + 0.13) return false;
   const s = (n: string) => shapes?.find((c) => c.categoryName === n)?.score ?? 0;
+  // eyes alone moved to the side (head still)
   const side = Math.max(s("eyeLookOutLeft") + s("eyeLookInRight"), s("eyeLookOutRight") + s("eyeLookInLeft")) / 2;
-  return side < 0.75;
+  if (side >= 0.55) return false;
+  // eyes looking down at a lap, only where looking down isn't allowed
+  if (down && (s("eyeLookDownLeft") + s("eyeLookDownRight")) / 2 >= 0.6) return false;
+  return true;
 }
 const median = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 
@@ -118,7 +125,7 @@ export async function watchPresence(
   now: () => number,
   onEvent: (e: PresenceEvent) => void,
   /** strict mode: called once per look-away (or a second face) as soon as it lasts `secs` */
-  warn?: { secs: number; on: (kind: "away" | "out" | "people" | "device") => void },
+  warn?: { secs: number; on: (kind: "away" | "out" | "people" | "device") => void; down?: boolean },
 ) {
   let lm: Landmarker;
   try {
@@ -221,7 +228,7 @@ export async function watchPresence(
       }
       samples++;
       // still learning where "straight" is: count it as on screen
-      const next = !face ? "out" : seen.length < 15 || facing(face, r.faceBlendshapes?.[0]?.categories, base) ? "on" : "away";
+      const next = !face ? "out" : seen.length < 15 || facing(face, r.faceBlendshapes?.[0]?.categories, base, !!warn?.down) ? "on" : "away";
       if (next === "on") onScreen++;
       flush(next);
       if (warn && state !== "on" && !warned && now() - since >= warn.secs) {

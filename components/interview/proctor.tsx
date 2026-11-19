@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
-export const LOOK_SECS = 4;
+export const LOOK_SECS = 2;
 
 export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice" | "device";
 export const BREACH_TEXT: Record<Breach, string> = {
@@ -361,7 +361,7 @@ export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach)
         await video.current.play().catch(() => {});
         setCam("on");
         const clock = () => performance.now() / 1000;
-        w = await watchPresence(video.current, clock, () => {}, { secs: LOOK_SECS, on: (k) => cb.current(k) });
+        w = await watchPresence(video.current, clock, () => {}, { secs: LOOK_SECS, on: (k) => cb.current(k), down: !!voice });
         if (dead) return void w?.stop();
         watcher.current = w;
         setWatching(!!w);
