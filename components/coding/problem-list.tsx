@@ -12,6 +12,8 @@ import { useState } from "react";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, BookmarkIcon, BuildingIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, FlameIcon, SearchIcon, ShuffleIcon, SparkleIcon } from "@/components/ui/icons";
+import { CompanyLogo } from "@/components/company/company-logo";
+import { CODING_COMPANIES } from "@/lib/coding/companies";
 import { generateProblem, useMyProblems } from "@/lib/coding/personal";
 import { AI_LIMIT, LEVEL_TONE, type Level } from "@/lib/coding/types";
 import { codingStreak, useCoding } from "@/lib/coding/use-coding";
@@ -19,6 +21,7 @@ import { studentLine } from "@/lib/setup";
 import { cn } from "@/lib/utils";
 
 const LEVELS: Level[] = ["Easy", "Medium", "Hard"];
+const POPULAR = ["tcs", "infosys", "wipro", "accenture", "cognizant", "capgemini", "zoho", "amazon", "microsoft", "google"];
 const BAR: Record<Level, string> = { Easy: "bg-emerald-400", Medium: "bg-amber-300", Hard: "bg-rose-400" };
 
 export function ProblemList() {
@@ -89,18 +92,35 @@ export function ProblemList() {
         </Link>
       </div>
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-      {/* practise for one company's coding round */}
-      <Link href="/code/company" className="group flex items-center gap-4 rounded-2xl border border-violet-400/30 bg-gradient-to-r from-violet-500/[0.12] to-transparent px-5 py-4 transition hover:border-violet-400/60">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white" aria-hidden>
-          <BuildingIcon size={20} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold text-white">Company-wise practice</span>
-          <span className="block text-[12.5px] text-white/60">Pick TCS, Infosys, Amazon… and practise for that company’s coding round, with questions students were really asked.</span>
-        </span>
-        <span className="hidden text-[13px] font-semibold text-violet-300 group-hover:underline sm:block">Open →</span>
-      </Link>
+      {/* most practice starts from a target company */}
+      <div className="mt-5 rounded-2xl border border-violet-400/30 bg-gradient-to-r from-violet-500/[0.14] via-violet-500/[0.05] to-transparent p-5">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white" aria-hidden>
+            <BuildingIcon size={22} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[17px] font-semibold text-white">Practise for your target company</p>
+            <p className="text-[12.5px] text-white/60">Each company gets its own practice set, a timed mock round in strict mode, and questions students were really asked there.</p>
+          </div>
+          <Link href="/code/company" className="text-[13px] font-semibold text-violet-300 hover:underline">
+            All {CODING_COMPANIES.length} companies →
+          </Link>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {POPULAR.map((id) => {
+            const c = CODING_COMPANIES.find((x) => x.id === id);
+            if (!c) return null;
+            return (
+              <Link key={id} href={`/code/company?c=${id}`} className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] pr-3.5 pl-1.5 text-[13px] text-white/85 transition hover:border-violet-400/60 hover:text-white">
+                <CompanyLogo name={c.name} website={c.website} className="flex h-7 w-7 items-center justify-center rounded-lg" letterClassName="bg-white/10 text-white text-[12px]" />
+                {c.name}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-3">
       {/* for students who have never coded */}
       <Link href="/code/learn" className="group flex items-center gap-4 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/[0.12] to-transparent px-5 py-4 transition hover:border-accent/60">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-[18px] font-bold text-black" aria-hidden>

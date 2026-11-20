@@ -10213,5 +10213,6955 @@ export const PROBLEMS: Problem[] = [
     "expected": 6
    }
   ]
+ },
+ {
+  "id": "reverse-number",
+  "num": 25,
+  "title": "Reverse a Number",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "Given a non-negative integer n, return the number with its digits reversed (leading zeros drop, so 120 becomes 21).",
+  "constraints": [
+   "0 ≤ n ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "reverse_number",
+   "javascript": "reverseNumber"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def reverse_number(n):\n    # write your code here\n    pass\n",
+   "javascript": "function reverseNumber(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     123
+    ],
+    "expected": 321
+   },
+   {
+    "args": [
+     120
+    ],
+    "expected": 21
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     7
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     1000
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     987654321
+    ],
+    "expected": 123456789
+   },
+   {
+    "args": [
+     10203
+    ],
+    "expected": 30201
+   }
+  ]
+ },
+ {
+  "id": "sum-of-digits",
+  "num": 26,
+  "title": "Sum of Digits",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "Return the sum of the digits of a non-negative integer n.",
+  "constraints": [
+   "0 ≤ n ≤ 10¹²"
+  ],
+  "fn": {
+   "python": "digit_sum",
+   "javascript": "digitSum"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def digit_sum(n):\n    # write your code here\n    pass\n",
+   "javascript": "function digitSum(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     1234
+    ],
+    "expected": 10
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     9
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     1000000
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     999999999999
+    ],
+    "expected": 108
+   },
+   {
+    "args": [
+     5050
+    ],
+    "expected": 10
+   }
+  ]
+ },
+ {
+  "id": "is-prime",
+  "num": 27,
+  "title": "Prime Check",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "Number theory"
+  ],
+  "statement": "Return true if n is a prime number, otherwise false. 0 and 1 are not prime.",
+  "constraints": [
+   "0 ≤ n ≤ 10⁷"
+  ],
+  "fn": {
+   "python": "is_prime",
+   "javascript": "isPrime"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def is_prime(n):\n    # write your code here\n    pass\n",
+   "javascript": "function isPrime(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     7
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     12
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     2
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     97
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     9973
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     1000000
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     7919
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "primes-in-range",
+  "num": 28,
+  "title": "Primes in a Range",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "Number theory"
+  ],
+  "statement": "Return a list of all prime numbers p with a ≤ p ≤ b, in increasing order.",
+  "constraints": [
+   "0 ≤ a ≤ b ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "primes_between",
+   "javascript": "primesBetween"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def primes_between(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function primesBetween(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     1,
+     10
+    ],
+    "expected": [
+     2,
+     3,
+     5,
+     7
+    ]
+   },
+   {
+    "args": [
+     10,
+     20
+    ],
+    "expected": [
+     11,
+     13,
+     17,
+     19
+    ]
+   },
+   {
+    "args": [
+     14,
+     16
+    ],
+    "expected": []
+   },
+   {
+    "args": [
+     0,
+     2
+    ],
+    "expected": [
+     2
+    ]
+   },
+   {
+    "args": [
+     90,
+     110
+    ],
+    "expected": [
+     97,
+     101,
+     103,
+     107,
+     109
+    ]
+   },
+   {
+    "args": [
+     2,
+     2
+    ],
+    "expected": [
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "armstrong-number",
+  "num": 29,
+  "title": "Armstrong Number",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "A number is an Armstrong number if the sum of its digits, each raised to the power of the number of digits, equals the number (153 = 1³ + 5³ + 3³). Return true if n is one.",
+  "constraints": [
+   "0 ≤ n ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "is_armstrong",
+   "javascript": "isArmstrong"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def is_armstrong(n):\n    # write your code here\n    pass\n",
+   "javascript": "function isArmstrong(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     153
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     123
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     9
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     9474
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     9475
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     370
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "gcd-lcm",
+  "num": 30,
+  "title": "GCD and LCM",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "Number theory"
+  ],
+  "statement": "Return [g, l] where g is the greatest common divisor and l the least common multiple of two positive integers a and b.",
+  "constraints": [
+   "1 ≤ a, b ≤ 10⁶"
+  ],
+  "fn": {
+   "python": "gcd_lcm",
+   "javascript": "gcdLcm"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def gcd_lcm(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function gcdLcm(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     12,
+     18
+    ],
+    "expected": [
+     6,
+     36
+    ]
+   },
+   {
+    "args": [
+     7,
+     5
+    ],
+    "expected": [
+     1,
+     35
+    ]
+   },
+   {
+    "args": [
+     10,
+     10
+    ],
+    "expected": [
+     10,
+     10
+    ]
+   },
+   {
+    "args": [
+     1,
+     99
+    ],
+    "expected": [
+     1,
+     99
+    ]
+   },
+   {
+    "args": [
+     48,
+     180
+    ],
+    "expected": [
+     12,
+     720
+    ]
+   },
+   {
+    "args": [
+     17,
+     289
+    ],
+    "expected": [
+     17,
+     289
+    ]
+   }
+  ]
+ },
+ {
+  "id": "factorial-trailing-zeros",
+  "num": 31,
+  "title": "Trailing Zeros in n!",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "Return how many zeros are at the end of n! (n factorial).",
+  "constraints": [
+   "0 ≤ n ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "trailing_zeros",
+   "javascript": "trailingZeros"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def trailing_zeros(n):\n    # write your code here\n    pass\n",
+   "javascript": "function trailingZeros(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     5
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     10
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     3
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     25
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     100
+    ],
+    "expected": 24
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     1000000000
+    ],
+    "expected": 249999998
+   }
+  ]
+ },
+ {
+  "id": "perfect-number",
+  "num": 32,
+  "title": "Perfect Number",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "A perfect number equals the sum of its positive divisors other than itself (6 = 1 + 2 + 3). Return true if n is perfect.",
+  "constraints": [
+   "1 ≤ n ≤ 10⁸"
+  ],
+  "fn": {
+   "python": "is_perfect",
+   "javascript": "isPerfect"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def is_perfect(n):\n    # write your code here\n    pass\n",
+   "javascript": "function isPerfect(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     6
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     28
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     12
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     496
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     8128
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     100
+    ],
+    "expected": false
+   }
+  ]
+ },
+ {
+  "id": "decimal-to-binary",
+  "num": 33,
+  "title": "Decimal to Binary",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "String"
+  ],
+  "statement": "Return the binary form of a non-negative integer n as a string, without leading zeros (0 is \"0\").",
+  "constraints": [
+   "0 ≤ n ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "to_binary",
+   "javascript": "toBinary"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def to_binary(n):\n    # write your code here\n    pass\n",
+   "javascript": "function toBinary(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     5
+    ],
+    "expected": "101"
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": "0"
+   },
+   {
+    "args": [
+     8
+    ],
+    "expected": "1000"
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": "1"
+   },
+   {
+    "args": [
+     255
+    ],
+    "expected": "11111111"
+   },
+   {
+    "args": [
+     1023
+    ],
+    "expected": "1111111111"
+   },
+   {
+    "args": [
+     1000000000
+    ],
+    "expected": "111011100110101100101000000000"
+   }
+  ]
+ },
+ {
+  "id": "base-convert",
+  "num": 34,
+  "title": "Number in Base k",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "String"
+  ],
+  "statement": "Write the non-negative integer n in base k (2 ≤ k ≤ 36), using digits 0-9 then uppercase letters A-Z. Return it as a string.",
+  "constraints": [
+   "0 ≤ n ≤ 10⁹",
+   "2 ≤ k ≤ 36"
+  ],
+  "fn": {
+   "python": "to_base",
+   "javascript": "toBase"
+  },
+  "params": [
+   "n",
+   "k"
+  ],
+  "starter": {
+   "python": "def to_base(n, k):\n    # write your code here\n    pass\n",
+   "javascript": "function toBase(n, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     255,
+     16
+    ],
+    "expected": "FF"
+   },
+   {
+    "args": [
+     10,
+     2
+    ],
+    "expected": "1010"
+   },
+   {
+    "args": [
+     0,
+     7
+    ],
+    "expected": "0"
+   },
+   {
+    "args": [
+     35,
+     36
+    ],
+    "expected": "Z"
+   },
+   {
+    "args": [
+     100,
+     17
+    ],
+    "expected": "5F"
+   },
+   {
+    "args": [
+     123456,
+     8
+    ],
+    "expected": "361100"
+   }
+  ]
+ },
+ {
+  "id": "leap-year",
+  "num": 35,
+  "title": "Leap Year",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "Return true if year y is a leap year: divisible by 4, except years divisible by 100 that are not divisible by 400.",
+  "constraints": [
+   "1 ≤ y ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "is_leap",
+   "javascript": "isLeap"
+  },
+  "params": [
+   "y"
+  ],
+  "starter": {
+   "python": "def is_leap(y):\n    # write your code here\n    pass\n",
+   "javascript": "function isLeap(y) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     2024
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     1900
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     2000
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     2023
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     2400
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     4
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "fibonacci-n",
+  "num": 36,
+  "title": "Nth Fibonacci",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "Dynamic programming"
+  ],
+  "statement": "F(0) = 0, F(1) = 1 and F(n) = F(n-1) + F(n-2). Return F(n).",
+  "constraints": [
+   "0 ≤ n ≤ 70"
+  ],
+  "fn": {
+   "python": "fib",
+   "javascript": "fib"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def fib(n):\n    # write your code here\n    pass\n",
+   "javascript": "function fib(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     0
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     10
+    ],
+    "expected": 55
+   },
+   {
+    "args": [
+     2
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     30
+    ],
+    "expected": 832040
+   },
+   {
+    "args": [
+     50
+    ],
+    "expected": 12586269025
+   },
+   {
+    "args": [
+     70
+    ],
+    "expected": 190392490709135
+   }
+  ]
+ },
+ {
+  "id": "strong-number",
+  "num": 37,
+  "title": "Strong Number",
+  "level": "Easy",
+  "topics": [
+   "Math"
+  ],
+  "statement": "A strong number equals the sum of the factorials of its digits (145 = 1! + 4! + 5!). Return true if n is strong.",
+  "constraints": [
+   "1 ≤ n ≤ 10⁷"
+  ],
+  "fn": {
+   "python": "is_strong",
+   "javascript": "isStrong"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def is_strong(n):\n    # write your code here\n    pass\n",
+   "javascript": "function isStrong(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     145
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     123
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     2
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     40585
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     10
+    ],
+    "expected": false
+   }
+  ]
+ },
+ {
+  "id": "count-divisors",
+  "num": 38,
+  "title": "Count Divisors",
+  "level": "Easy",
+  "topics": [
+   "Math",
+   "Number theory"
+  ],
+  "statement": "Return how many positive integers divide n exactly.",
+  "constraints": [
+   "1 ≤ n ≤ 10¹⁰"
+  ],
+  "fn": {
+   "python": "count_divisors",
+   "javascript": "countDivisors"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def count_divisors(n):\n    # write your code here\n    pass\n",
+   "javascript": "function countDivisors(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     12
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     7
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     36
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     100
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     9999999967
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     720720
+    ],
+    "expected": 240
+   }
+  ]
+ },
+ {
+  "id": "reverse-words",
+  "num": 39,
+  "title": "Reverse the Words",
+  "level": "Easy",
+  "topics": [
+   "String"
+  ],
+  "statement": "Given a sentence s, return the words in reverse order joined by single spaces. Extra spaces anywhere are ignored.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "reverse_words",
+   "javascript": "reverseWords"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def reverse_words(s):\n    # write your code here\n    pass\n",
+   "javascript": "function reverseWords(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "the sky is blue"
+    ],
+    "expected": "blue is sky the"
+   },
+   {
+    "args": [
+     "  hello world  "
+    ],
+    "expected": "world hello"
+   },
+   {
+    "args": [
+     "a"
+    ],
+    "expected": "a"
+   },
+   {
+    "args": [
+     "StudentOS  gets you   placed"
+    ],
+    "expected": "placed you gets StudentOS"
+   },
+   {
+    "args": [
+     "one two"
+    ],
+    "expected": "two one"
+   }
+  ]
+ },
+ {
+  "id": "count-vowels",
+  "num": 40,
+  "title": "Count Vowels",
+  "level": "Easy",
+  "topics": [
+   "String"
+  ],
+  "statement": "Return how many vowels (a, e, i, o, u, in any case) are in the string s.",
+  "constraints": [
+   "0 ≤ len(s) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "count_vowels",
+   "javascript": "countVowels"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def count_vowels(s):\n    # write your code here\n    pass\n",
+   "javascript": "function countVowels(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "hello"
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     "AEIOU"
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     "rhythm"
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     ""
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     "Placement Season 2026"
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     "Bengaluru"
+    ],
+    "expected": 4
+   }
+  ]
+ },
+ {
+  "id": "palindrome-string",
+  "num": 41,
+  "title": "Valid Palindrome",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Two pointers"
+  ],
+  "statement": "Return true if s reads the same forwards and backwards after keeping only letters and digits and ignoring case.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 2·10⁵"
+  ],
+  "fn": {
+   "python": "is_palindrome",
+   "javascript": "isPalindrome"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def is_palindrome(s):\n    # write your code here\n    pass\n",
+   "javascript": "function isPalindrome(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "A man, a plan, a canal: Panama"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "race a car"
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     " "
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "Madam"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "0P"
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     "No lemon, no melon"
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "first-unique-char",
+  "num": 42,
+  "title": "First Non-Repeating Character",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Hash map"
+  ],
+  "statement": "Return the index of the first character in s that appears exactly once, or -1 if every character repeats.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁵",
+   "s has lowercase letters"
+  ],
+  "fn": {
+   "python": "first_unique",
+   "javascript": "firstUnique"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def first_unique(s):\n    # write your code here\n    pass\n",
+   "javascript": "function firstUnique(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "leetcode"
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     "loveleetcode"
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     "aabb"
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     "z"
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     "swiss"
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     "aabbcdc"
+    ],
+    "expected": 5
+   }
+  ]
+ },
+ {
+  "id": "toggle-case",
+  "num": 43,
+  "title": "Toggle Case",
+  "level": "Easy",
+  "topics": [
+   "String"
+  ],
+  "statement": "Return s with every uppercase letter made lowercase and every lowercase letter made uppercase. Other characters stay the same.",
+  "constraints": [
+   "0 ≤ len(s) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "toggle_case",
+   "javascript": "toggleCase"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def toggle_case(s):\n    # write your code here\n    pass\n",
+   "javascript": "function toggleCase(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "Hello World"
+    ],
+    "expected": "hELLO wORLD"
+   },
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": "ABC"
+   },
+   {
+    "args": [
+     "123!"
+    ],
+    "expected": "123!"
+   },
+   {
+    "args": [
+     "StudentOS"
+    ],
+    "expected": "sTUDENTos"
+   },
+   {
+    "args": [
+     ""
+    ],
+    "expected": ""
+   }
+  ]
+ },
+ {
+  "id": "remove-duplicate-chars",
+  "num": 44,
+  "title": "Remove Duplicate Characters",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Hash set"
+  ],
+  "statement": "Return s with only the first occurrence of each character kept, in the original order.",
+  "constraints": [
+   "0 ≤ len(s) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "remove_duplicates",
+   "javascript": "removeDuplicates"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def remove_duplicates(s):\n    # write your code here\n    pass\n",
+   "javascript": "function removeDuplicates(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "programming"
+    ],
+    "expected": "progamin"
+   },
+   {
+    "args": [
+     "aaaa"
+    ],
+    "expected": "a"
+   },
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": "abc"
+   },
+   {
+    "args": [
+     ""
+    ],
+    "expected": ""
+   },
+   {
+    "args": [
+     "banana"
+    ],
+    "expected": "ban"
+   },
+   {
+    "args": [
+     "mississippi"
+    ],
+    "expected": "misp"
+   }
+  ]
+ },
+ {
+  "id": "char-frequency",
+  "num": 45,
+  "title": "Character Count String",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Hash map"
+  ],
+  "statement": "Return a string listing each distinct character of s in order of first appearance, followed by how many times it appears. \"aabcc\" → \"a2b1c2\".",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁵",
+   "s has lowercase letters"
+  ],
+  "fn": {
+   "python": "char_count",
+   "javascript": "charCount"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def char_count(s):\n    # write your code here\n    pass\n",
+   "javascript": "function charCount(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "aabcc"
+    ],
+    "expected": "a2b1c2"
+   },
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": "a1b1c1"
+   },
+   {
+    "args": [
+     "zzzz"
+    ],
+    "expected": "z4"
+   },
+   {
+    "args": [
+     "banana"
+    ],
+    "expected": "b1a3n2"
+   },
+   {
+    "args": [
+     "placement"
+    ],
+    "expected": "p1l1a1c1e2m1n1t1"
+   }
+  ]
+ },
+ {
+  "id": "compress-string",
+  "num": 46,
+  "title": "String Compression",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Two pointers"
+  ],
+  "statement": "Compress runs of the same character: \"aaabbc\" → \"a3b2c1\". Return the compressed string.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "compress",
+   "javascript": "compress"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def compress(s):\n    # write your code here\n    pass\n",
+   "javascript": "function compress(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "aaabbc"
+    ],
+    "expected": "a3b2c1"
+   },
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": "a1b1c1"
+   },
+   {
+    "args": [
+     "aaaaaaaaaaaa"
+    ],
+    "expected": "a12"
+   },
+   {
+    "args": [
+     "aabbaa"
+    ],
+    "expected": "a2b2a2"
+   },
+   {
+    "args": [
+     "x"
+    ],
+    "expected": "x1"
+   }
+  ]
+ },
+ {
+  "id": "pangram",
+  "num": 47,
+  "title": "Pangram Check",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Hash set"
+  ],
+  "statement": "Return true if the sentence s uses every letter of the English alphabet at least once (case does not matter).",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "is_pangram",
+   "javascript": "isPangram"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def is_pangram(s):\n    # write your code here\n    pass\n",
+   "javascript": "function isPangram(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "The quick brown fox jumps over the lazy dog"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "Hello world"
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     "abcdefghijklmnopqrstuvwxyz"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "Pack my box with five dozen liquor jugs"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": false
+   }
+  ]
+ },
+ {
+  "id": "count-words",
+  "num": 48,
+  "title": "Count Words",
+  "level": "Easy",
+  "topics": [
+   "String"
+  ],
+  "statement": "Return how many words are in s. Words are separated by one or more spaces.",
+  "constraints": [
+   "0 ≤ len(s) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "count_words",
+   "javascript": "countWords"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def count_words(s):\n    # write your code here\n    pass\n",
+   "javascript": "function countWords(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "Hello world"
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     "   "
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     "one"
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     "  a  b c  "
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     ""
+    ],
+    "expected": 0
+   }
+  ]
+ },
+ {
+  "id": "caesar-cipher",
+  "num": 49,
+  "title": "Caesar Cipher",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Math"
+  ],
+  "statement": "Shift every letter of s forward by k places in the alphabet, wrapping from z to a and keeping its case. Other characters stay the same.",
+  "constraints": [
+   "0 ≤ len(s) ≤ 10⁴",
+   "0 ≤ k ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "caesar",
+   "javascript": "caesar"
+  },
+  "params": [
+   "s",
+   "k"
+  ],
+  "starter": {
+   "python": "def caesar(s, k):\n    # write your code here\n    pass\n",
+   "javascript": "function caesar(s, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "abc",
+     1
+    ],
+    "expected": "bcd"
+   },
+   {
+    "args": [
+     "xyz",
+     3
+    ],
+    "expected": "abc"
+   },
+   {
+    "args": [
+     "Hello, World!",
+     13
+    ],
+    "expected": "Uryyb, Jbeyq!"
+   },
+   {
+    "args": [
+     "abc",
+     26
+    ],
+    "expected": "abc"
+   },
+   {
+    "args": [
+     "Zoho",
+     1000000000
+    ],
+    "expected": "Lata"
+   }
+  ]
+ },
+ {
+  "id": "longest-word",
+  "num": 50,
+  "title": "Longest Word",
+  "level": "Easy",
+  "topics": [
+   "String"
+  ],
+  "statement": "Return the longest word in the sentence s. If several are equally long, return the first one.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 10⁴",
+   "s has at least one word"
+  ],
+  "fn": {
+   "python": "longest_word",
+   "javascript": "longestWord"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def longest_word(s):\n    # write your code here\n    pass\n",
+   "javascript": "function longestWord(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "I love coding"
+    ],
+    "expected": "coding"
+   },
+   {
+    "args": [
+     "a bb cc"
+    ],
+    "expected": "bb"
+   },
+   {
+    "args": [
+     "placement"
+    ],
+    "expected": "placement"
+   },
+   {
+    "args": [
+     "the quick brown fox"
+    ],
+    "expected": "quick"
+   },
+   {
+    "args": [
+     "  hi  there  "
+    ],
+    "expected": "there"
+   }
+  ]
+ },
+ {
+  "id": "second-largest",
+  "num": 51,
+  "title": "Second Largest",
+  "level": "Easy",
+  "topics": [
+   "Array"
+  ],
+  "statement": "Return the second largest distinct value in nums, or -1 if there is none.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "second_largest",
+   "javascript": "secondLargest"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def second_largest(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function secondLargest(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      12,
+      35,
+      1,
+      10,
+      34,
+      1
+     ]
+    ],
+    "expected": 34
+   },
+   {
+    "args": [
+     [
+      10,
+      10,
+      10
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      1,
+      2
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      -1,
+      -5,
+      -3
+     ]
+    ],
+    "expected": -3
+   },
+   {
+    "args": [
+     [
+      7,
+      7,
+      6
+     ]
+    ],
+    "expected": 6
+   }
+  ]
+ },
+ {
+  "id": "array-reverse",
+  "num": 52,
+  "title": "Reverse an Array",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Two pointers"
+  ],
+  "statement": "Return nums in reverse order.",
+  "constraints": [
+   "0 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "reverse_array",
+   "javascript": "reverseArray"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def reverse_array(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function reverseArray(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": [
+     3,
+     2,
+     1
+    ]
+   },
+   {
+    "args": [
+     []
+    ],
+    "expected": []
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": [
+     5
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      1,
+      9,
+      9,
+      2
+     ]
+    ],
+    "expected": [
+     2,
+     9,
+     9,
+     1,
+     4
+    ]
+   }
+  ]
+ },
+ {
+  "id": "even-odd-count",
+  "num": 53,
+  "title": "Count Even and Odd",
+  "level": "Easy",
+  "topics": [
+   "Array"
+  ],
+  "statement": "Return [e, o]: how many numbers in nums are even and how many are odd.",
+  "constraints": [
+   "0 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "even_odd",
+   "javascript": "evenOdd"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def even_odd(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function evenOdd(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    ],
+    "expected": [
+     2,
+     3
+    ]
+   },
+   {
+    "args": [
+     []
+    ],
+    "expected": [
+     0,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      4,
+      6
+     ]
+    ],
+    "expected": [
+     3,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      -3,
+      0,
+      7
+     ]
+    ],
+    "expected": [
+     1,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rotate-left-k",
+  "num": 54,
+  "title": "Rotate Left by k",
+  "level": "Easy",
+  "topics": [
+   "Array"
+  ],
+  "statement": "Rotate nums to the left by k places and return it ([1,2,3,4,5], k = 2 → [3,4,5,1,2]).",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵",
+   "0 ≤ k ≤ 10⁹"
+  ],
+  "fn": {
+   "python": "rotate_left",
+   "javascript": "rotateLeft"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def rotate_left(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function rotateLeft(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     2
+    ],
+    "expected": [
+     3,
+     4,
+     5,
+     1,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ],
+     0
+    ],
+    "expected": [
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ],
+     4
+    ],
+    "expected": [
+     2,
+     3,
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      9
+     ],
+     100
+    ],
+    "expected": [
+     9
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2
+     ],
+     1
+    ],
+    "expected": [
+     2,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "most-frequent",
+  "num": 55,
+  "title": "Most Frequent Element",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Hash map"
+  ],
+  "statement": "Return the value that appears most often in nums. If there is a tie, return the smallest such value.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "most_frequent",
+   "javascript": "mostFrequent"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def most_frequent(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function mostFrequent(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      3,
+      2,
+      3,
+      1,
+      3
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      4,
+      4,
+      5,
+      5
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      7
+     ]
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      -1,
+      -1,
+      2,
+      2,
+      2,
+      -1
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      9,
+      8,
+      7
+     ]
+    ],
+    "expected": 7
+   }
+  ]
+ },
+ {
+  "id": "merge-sorted-arrays",
+  "num": 56,
+  "title": "Merge Two Sorted Lists",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Two pointers",
+   "Sorting"
+  ],
+  "statement": "a and b are sorted in increasing order. Return one sorted list with all their numbers.",
+  "constraints": [
+   "0 ≤ len(a), len(b) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "merge_sorted",
+   "javascript": "mergeSorted"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def merge_sorted(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function mergeSorted(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      3,
+      5
+     ],
+     [
+      2,
+      4,
+      6
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   {
+    "args": [
+     [],
+     [
+      1
+     ]
+    ],
+    "expected": [
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      1
+     ],
+     [
+      1
+     ]
+    ],
+    "expected": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      -5,
+      0
+     ],
+     [
+      -6,
+      10,
+      20
+     ]
+    ],
+    "expected": [
+     -6,
+     -5,
+     0,
+     10,
+     20
+    ]
+   },
+   {
+    "args": [
+     [],
+     []
+    ],
+    "expected": []
+   }
+  ]
+ },
+ {
+  "id": "array-intersection",
+  "num": 57,
+  "title": "Common Elements",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Hash set",
+   "Sorting"
+  ],
+  "statement": "Return the distinct values that are in both a and b, sorted in increasing order.",
+  "constraints": [
+   "0 ≤ len(a), len(b) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "common_elements",
+   "javascript": "commonElements"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def common_elements(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function commonElements(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ]
+    ],
+    "expected": [
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      9,
+      5
+     ],
+     [
+      9,
+      4,
+      9,
+      8,
+      4
+     ]
+    ],
+    "expected": [
+     4,
+     9
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    "expected": []
+   },
+   {
+    "args": [
+     [],
+     [
+      1
+     ]
+    ],
+    "expected": []
+   },
+   {
+    "args": [
+     [
+      3,
+      1,
+      2
+     ],
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "leaders-in-array",
+  "num": 58,
+  "title": "Leaders in an Array",
+  "level": "Easy",
+  "topics": [
+   "Array"
+  ],
+  "statement": "An element is a leader if it is strictly greater than every element to its right. The last element is always a leader. Return the leaders in their original order.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "leaders",
+   "javascript": "leaders"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def leaders(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function leaders(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      16,
+      17,
+      4,
+      3,
+      5,
+      2
+     ]
+    ],
+    "expected": [
+     17,
+     5,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": [
+     3
+    ]
+   },
+   {
+    "args": [
+     [
+      5,
+      4,
+      3
+     ]
+    ],
+    "expected": [
+     5,
+     4,
+     3
+    ]
+   },
+   {
+    "args": [
+     [
+      7
+     ]
+    ],
+    "expected": [
+     7
+    ]
+   },
+   {
+    "args": [
+     [
+      3,
+      3,
+      3
+     ]
+    ],
+    "expected": [
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "sort-012",
+  "num": 59,
+  "title": "Sort 0s, 1s and 2s",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Two pointers",
+   "Sorting"
+  ],
+  "statement": "nums has only 0, 1 and 2. Return it sorted. Try to do it in one pass without a sort function.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "sort_colors",
+   "javascript": "sortColors"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def sort_colors(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function sortColors(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      2,
+      0,
+      2,
+      1,
+      1,
+      0
+     ]
+    ],
+    "expected": [
+     0,
+     0,
+     1,
+     1,
+     2,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      0,
+      1
+     ]
+    ],
+    "expected": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      0
+     ]
+    ],
+    "expected": [
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      1,
+      1
+     ]
+    ],
+    "expected": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      2,
+      0,
+      0
+     ]
+    ],
+    "expected": [
+     0,
+     0,
+     2,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "plus-one",
+  "num": 60,
+  "title": "Plus One",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Math"
+  ],
+  "statement": "digits holds a non-negative number, one digit per element, most significant first. Return the digits of that number plus one.",
+  "constraints": [
+   "1 ≤ len(digits) ≤ 100",
+   "no leading zeros except the number 0"
+  ],
+  "fn": {
+   "python": "plus_one",
+   "javascript": "plusOne"
+  },
+  "params": [
+   "digits"
+  ],
+  "starter": {
+   "python": "def plus_one(digits):\n    # write your code here\n    pass\n",
+   "javascript": "function plusOne(digits) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     4
+    ]
+   },
+   {
+    "args": [
+     [
+      9
+     ]
+    ],
+    "expected": [
+     1,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      9,
+      9,
+      9
+     ]
+    ],
+    "expected": [
+     1,
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      0
+     ]
+    ],
+    "expected": [
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      3,
+      2,
+      1
+     ]
+    ],
+    "expected": [
+     4,
+     3,
+     2,
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "id": "pascal-row",
+  "num": 61,
+  "title": "Pascal's Triangle Row",
+  "level": "Easy",
+  "topics": [
+   "Array",
+   "Math"
+  ],
+  "statement": "Return row n of Pascal's triangle (row 0 is [1], row 1 is [1, 1]).",
+  "constraints": [
+   "0 ≤ n ≤ 33"
+  ],
+  "fn": {
+   "python": "pascal_row",
+   "javascript": "pascalRow"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def pascal_row(n):\n    # write your code here\n    pass\n",
+   "javascript": "function pascalRow(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     0
+    ],
+    "expected": [
+     1
+    ]
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": [
+     1,
+     1
+    ]
+   },
+   {
+    "args": [
+     3
+    ],
+    "expected": [
+     1,
+     3,
+     3,
+     1
+    ]
+   },
+   {
+    "args": [
+     5
+    ],
+    "expected": [
+     1,
+     5,
+     10,
+     10,
+     5,
+     1
+    ]
+   },
+   {
+    "args": [
+     10
+    ],
+    "expected": [
+     1,
+     10,
+     45,
+     120,
+     210,
+     252,
+     210,
+     120,
+     45,
+     10,
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "star-pyramid",
+  "num": 62,
+  "title": "Star Pyramid",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Pattern"
+  ],
+  "statement": "Return a pyramid of n rows as a list of strings. Row i (1-based) has n - i spaces followed by 2·i - 1 stars, with no trailing spaces. n = 3 → [\"  *\", \" ***\", \"*****\"].",
+  "constraints": [
+   "1 ≤ n ≤ 50"
+  ],
+  "fn": {
+   "python": "pyramid",
+   "javascript": "pyramid"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def pyramid(n):\n    # write your code here\n    pass\n",
+   "javascript": "function pyramid(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     3
+    ],
+    "expected": [
+     "  *",
+     " ***",
+     "*****"
+    ]
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": [
+     "*"
+    ]
+   },
+   {
+    "args": [
+     2
+    ],
+    "expected": [
+     " *",
+     "***"
+    ]
+   },
+   {
+    "args": [
+     5
+    ],
+    "expected": [
+     "    *",
+     "   ***",
+     "  *****",
+     " *******",
+     "*********"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "number-triangle",
+  "num": 63,
+  "title": "Number Triangle",
+  "level": "Easy",
+  "topics": [
+   "String",
+   "Pattern"
+  ],
+  "statement": "Return n rows as a list of strings. Row i (1-based) holds the numbers 1 to i separated by single spaces. n = 3 → [\"1\", \"1 2\", \"1 2 3\"].",
+  "constraints": [
+   "1 ≤ n ≤ 50"
+  ],
+  "fn": {
+   "python": "number_triangle",
+   "javascript": "numberTriangle"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def number_triangle(n):\n    # write your code here\n    pass\n",
+   "javascript": "function numberTriangle(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     3
+    ],
+    "expected": [
+     "1",
+     "1 2",
+     "1 2 3"
+    ]
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": [
+     "1"
+    ]
+   },
+   {
+    "args": [
+     4
+    ],
+    "expected": [
+     "1",
+     "1 2",
+     "1 2 3",
+     "1 2 3 4"
+    ]
+   },
+   {
+    "args": [
+     6
+    ],
+    "expected": [
+     "1",
+     "1 2",
+     "1 2 3",
+     "1 2 3 4",
+     "1 2 3 4 5",
+     "1 2 3 4 5 6"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "stock-profit-many",
+  "num": 64,
+  "title": "Stock Profit, Many Trades",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Greedy"
+  ],
+  "statement": "prices[i] is a stock's price on day i. You may buy and sell as many times as you like, but hold at most one share at a time. Return the maximum total profit.",
+  "constraints": [
+   "1 ≤ len(prices) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "max_profit_many",
+   "javascript": "maxProfitMany"
+  },
+  "params": [
+   "prices"
+  ],
+  "starter": {
+   "python": "def max_profit_many(prices):\n    # write your code here\n    pass\n",
+   "javascript": "function maxProfitMany(prices) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      7,
+      1,
+      5,
+      3,
+      6,
+      4
+     ]
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      7,
+      6,
+      4,
+      3,
+      1
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      3,
+      3,
+      5,
+      0,
+      0,
+      3,
+      1,
+      4
+     ]
+    ],
+    "expected": 8
+   }
+  ]
+ },
+ {
+  "id": "subarray-sum-k",
+  "num": 65,
+  "title": "Subarrays with Sum k",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Hash map",
+   "Prefix sums"
+  ],
+  "statement": "Return how many contiguous subarrays of nums add up to exactly k.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 2·10⁴",
+   "-1000 ≤ nums[i] ≤ 1000"
+  ],
+  "fn": {
+   "python": "subarray_sum",
+   "javascript": "subarraySum"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def subarray_sum(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function subarraySum(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      1,
+      1
+     ],
+     2
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ],
+     3
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      1,
+      -1,
+      0
+     ],
+     0
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      3
+     ],
+     3
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      1,
+      2,
+      1
+     ],
+     3
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      -1,
+      -1,
+      1
+     ],
+     0
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "group-anagrams-count",
+  "num": 66,
+  "title": "Count Anagram Groups",
+  "level": "Medium",
+  "topics": [
+   "String",
+   "Hash map",
+   "Sorting"
+  ],
+  "statement": "Words that are anagrams of each other form one group. Return the number of groups in words.",
+  "constraints": [
+   "1 ≤ len(words) ≤ 10⁴",
+   "words have lowercase letters"
+  ],
+  "fn": {
+   "python": "anagram_groups",
+   "javascript": "anagramGroups"
+  },
+  "params": [
+   "words"
+  ],
+  "starter": {
+   "python": "def anagram_groups(words):\n    # write your code here\n    pass\n",
+   "javascript": "function anagramGroups(words) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      "eat",
+      "tea",
+      "tan",
+      "ate",
+      "nat",
+      "bat"
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      "a"
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      "abc",
+      "bca",
+      "cab"
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      "ab",
+      "ba",
+      "abc",
+      "cd",
+      "dc"
+     ]
+    ],
+    "expected": 3
+   }
+  ]
+ },
+ {
+  "id": "top-k-frequent",
+  "num": 67,
+  "title": "Top k Frequent Numbers",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Hash map",
+   "Heap"
+  ],
+  "statement": "Return the k numbers that appear most often in nums, most frequent first. Break ties by the smaller number first.",
+  "constraints": [
+   "1 ≤ k ≤ number of distinct values ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "top_k_frequent",
+   "javascript": "topKFrequent"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def top_k_frequent(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function topKFrequent(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      1,
+      1,
+      2,
+      2,
+      3
+     ],
+     2
+    ],
+    "expected": [
+     1,
+     2
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     1
+    ],
+    "expected": [
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      4,
+      5,
+      5,
+      6
+     ],
+     2
+    ],
+    "expected": [
+     4,
+     5
+    ]
+   },
+   {
+    "args": [
+     [
+      3,
+      0,
+      1,
+      0
+     ],
+     1
+    ],
+    "expected": [
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      5,
+      2,
+      5,
+      3,
+      5,
+      3,
+      1,
+      1,
+      3
+     ],
+     2
+    ],
+    "expected": [
+     3,
+     5
+    ]
+   }
+  ]
+ },
+ {
+  "id": "three-sum-count",
+  "num": 68,
+  "title": "Triplets with Zero Sum",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Two pointers",
+   "Sorting"
+  ],
+  "statement": "Return how many distinct triplets of values [a, b, c] (a ≤ b ≤ c, taken from different positions) add up to 0.",
+  "constraints": [
+   "3 ≤ len(nums) ≤ 3000"
+  ],
+  "fn": {
+   "python": "three_sum_count",
+   "javascript": "threeSumCount"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def three_sum_count(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function threeSumCount(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      -1,
+      0,
+      1,
+      2,
+      -1,
+      -4
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      0,
+      1,
+      1
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      -2,
+      0,
+      1,
+      1,
+      2
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      -3,
+      0,
+      -1,
+      1
+     ]
+    ],
+    "expected": 2
+   }
+  ]
+ },
+ {
+  "id": "container-water",
+  "num": 69,
+  "title": "Container With Most Water",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Two pointers",
+   "Greedy"
+  ],
+  "statement": "height[i] is the height of a line at position i. Two lines and the x-axis form a container. Return the most water a container can hold.",
+  "constraints": [
+   "2 ≤ len(height) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "max_area",
+   "javascript": "maxArea"
+  },
+  "params": [
+   "height"
+  ],
+  "starter": {
+   "python": "def max_area(height):\n    # write your code here\n    pass\n",
+   "javascript": "function maxArea(height) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      8,
+      6,
+      2,
+      5,
+      4,
+      8,
+      3,
+      7
+     ]
+    ],
+    "expected": 49
+   },
+   {
+    "args": [
+     [
+      1,
+      1
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      4,
+      3,
+      2,
+      1,
+      4
+     ]
+    ],
+    "expected": 16
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      1
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      2,
+      3,
+      4,
+      5,
+      18,
+      17,
+      6
+     ]
+    ],
+    "expected": 17
+   }
+  ]
+ },
+ {
+  "id": "min-window-sum",
+  "num": 70,
+  "title": "Shortest Subarray with Sum ≥ target",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Sliding window"
+  ],
+  "statement": "All numbers are positive. Return the length of the shortest contiguous subarray whose sum is at least target, or 0 if there is none.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵",
+   "1 ≤ nums[i] ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "min_subarray_len",
+   "javascript": "minSubarrayLen"
+  },
+  "params": [
+   "target",
+   "nums"
+  ],
+  "starter": {
+   "python": "def min_subarray_len(target, nums):\n    # write your code here\n    pass\n",
+   "javascript": "function minSubarrayLen(target, nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     7,
+     [
+      2,
+      3,
+      1,
+      2,
+      4,
+      3
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     4,
+     [
+      1,
+      4,
+      4
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     11,
+     [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     15,
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     3,
+     [
+      5
+     ]
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "max-sum-window-k",
+  "num": 71,
+  "title": "Maximum Sum of k in a Row",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Sliding window"
+  ],
+  "statement": "Return the largest sum of any k consecutive numbers in nums.",
+  "constraints": [
+   "1 ≤ k ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "max_sum_k",
+   "javascript": "maxSumK"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def max_sum_k(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function maxSumK(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      2,
+      1,
+      5,
+      1,
+      3,
+      2
+     ],
+     3
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     [
+      2,
+      3,
+      4,
+      1,
+      5
+     ],
+     2
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      -1,
+      -2,
+      -3
+     ],
+     1
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      5
+     ],
+     1
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     [
+      1,
+      9,
+      -10,
+      9,
+      1
+     ],
+     2
+    ],
+    "expected": 10
+   }
+  ]
+ },
+ {
+  "id": "longest-consecutive",
+  "num": 72,
+  "title": "Longest Consecutive Run",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Hash set"
+  ],
+  "statement": "Return the length of the longest run of consecutive integers that all appear in nums (in any order).",
+  "constraints": [
+   "0 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "longest_consecutive",
+   "javascript": "longestConsecutive"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def longest_consecutive(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function longestConsecutive(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      100,
+      4,
+      200,
+      1,
+      3,
+      2
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      0,
+      3,
+      7,
+      2,
+      5,
+      8,
+      4,
+      6,
+      0,
+      1
+     ]
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     []
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      0,
+      1
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      9
+     ]
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "next-greater",
+  "num": 73,
+  "title": "Next Greater Element",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Stack"
+  ],
+  "statement": "For each element, find the first element to its right that is strictly greater. Return those values, using -1 where there is none.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "next_greater",
+   "javascript": "nextGreater"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def next_greater(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function nextGreater(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      4,
+      5,
+      2,
+      25
+     ]
+    ],
+    "expected": [
+     5,
+     25,
+     25,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      13,
+      7,
+      6,
+      12
+     ]
+    ],
+    "expected": [
+     -1,
+     12,
+     12,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": [
+     2,
+     3,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      1
+     ]
+    ],
+    "expected": [
+     -1,
+     -1,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      7,
+      3,
+      5,
+      4,
+      6,
+      8
+     ]
+    ],
+    "expected": [
+     7,
+     8,
+     5,
+     6,
+     6,
+     8,
+     -1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "daily-temperatures",
+  "num": 74,
+  "title": "Days Until Warmer",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Stack"
+  ],
+  "statement": "temps[i] is the temperature on day i. For each day, return how many days you wait for a warmer day, or 0 if none comes.",
+  "constraints": [
+   "1 ≤ len(temps) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "days_until_warmer",
+   "javascript": "daysUntilWarmer"
+  },
+  "params": [
+   "temps"
+  ],
+  "starter": {
+   "python": "def days_until_warmer(temps):\n    # write your code here\n    pass\n",
+   "javascript": "function daysUntilWarmer(temps) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      73,
+      74,
+      75,
+      71,
+      69,
+      72,
+      76,
+      73
+     ]
+    ],
+    "expected": [
+     1,
+     1,
+     4,
+     2,
+     1,
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      30,
+      40,
+      50,
+      60
+     ]
+    ],
+    "expected": [
+     1,
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      30,
+      60,
+      90
+     ]
+    ],
+    "expected": [
+     1,
+     1,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      50
+     ]
+    ],
+    "expected": [
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      60,
+      50,
+      40
+     ]
+    ],
+    "expected": [
+     0,
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ {
+  "id": "eval-rpn",
+  "num": 75,
+  "title": "Evaluate Postfix Expression",
+  "level": "Medium",
+  "topics": [
+   "Stack",
+   "Math"
+  ],
+  "statement": "tokens is an expression in postfix (Reverse Polish) form with +, -, * and / on integers. Division truncates toward zero. Return the result.",
+  "constraints": [
+   "1 ≤ len(tokens) ≤ 10⁴",
+   "the expression is valid"
+  ],
+  "fn": {
+   "python": "eval_rpn",
+   "javascript": "evalRpn"
+  },
+  "params": [
+   "tokens"
+  ],
+  "starter": {
+   "python": "def eval_rpn(tokens):\n    # write your code here\n    pass\n",
+   "javascript": "function evalRpn(tokens) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      "2",
+      "1",
+      "+",
+      "3",
+      "*"
+     ]
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     [
+      "4",
+      "13",
+      "5",
+      "/",
+      "+"
+     ]
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     [
+      "10",
+      "6",
+      "9",
+      "3",
+      "+",
+      "-11",
+      "*",
+      "/",
+      "*",
+      "17",
+      "+",
+      "5",
+      "+"
+     ]
+    ],
+    "expected": 22
+   },
+   {
+    "args": [
+     [
+      "7"
+     ]
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      "3",
+      "-4",
+      "/"
+     ]
+    ],
+    "expected": 0
+   }
+  ]
+ },
+ {
+  "id": "search-rotated",
+  "num": 76,
+  "title": "Search in Rotated Sorted List",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Binary search"
+  ],
+  "statement": "A sorted list of distinct numbers was rotated at some point. Return the index of target, or -1 if it is not there. Aim for O(log n).",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵",
+   "values are distinct"
+  ],
+  "fn": {
+   "python": "search_rotated",
+   "javascript": "searchRotated"
+  },
+  "params": [
+   "nums",
+   "target"
+  ],
+  "starter": {
+   "python": "def search_rotated(nums, target):\n    # write your code here\n    pass\n",
+   "javascript": "function searchRotated(nums, target) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2
+     ],
+     0
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      4,
+      5,
+      6,
+      7,
+      0,
+      1,
+      2
+     ],
+     3
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     0
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      1,
+      3
+     ],
+     3
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      5,
+      1,
+      3
+     ],
+     5
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      6,
+      7,
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     6
+    ],
+    "expected": 0
+   }
+  ]
+ },
+ {
+  "id": "first-last-position",
+  "num": 77,
+  "title": "First and Last Position",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Binary search"
+  ],
+  "statement": "nums is sorted. Return [first, last], the first and last index of target, or [-1, -1] if it is not there.",
+  "constraints": [
+   "0 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "search_range",
+   "javascript": "searchRange"
+  },
+  "params": [
+   "nums",
+   "target"
+  ],
+  "starter": {
+   "python": "def search_range(nums, target):\n    # write your code here\n    pass\n",
+   "javascript": "function searchRange(nums, target) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      5,
+      7,
+      7,
+      8,
+      8,
+      10
+     ],
+     8
+    ],
+    "expected": [
+     3,
+     4
+    ]
+   },
+   {
+    "args": [
+     [
+      5,
+      7,
+      7,
+      8,
+      8,
+      10
+     ],
+     6
+    ],
+    "expected": [
+     -1,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [],
+     0
+    ],
+    "expected": [
+     -1,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     1
+    ],
+    "expected": [
+     0,
+     0
+    ]
+   },
+   {
+    "args": [
+     [
+      2,
+      2,
+      2,
+      2
+     ],
+     2
+    ],
+    "expected": [
+     0,
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "sqrt-floor",
+  "num": 78,
+  "title": "Integer Square Root",
+  "level": "Medium",
+  "topics": [
+   "Math",
+   "Binary search"
+  ],
+  "statement": "Return the largest integer r with r·r ≤ x, without using a square root function.",
+  "constraints": [
+   "0 ≤ x ≤ 2³¹ - 1"
+  ],
+  "fn": {
+   "python": "my_sqrt",
+   "javascript": "mySqrt"
+  },
+  "params": [
+   "x"
+  ],
+  "starter": {
+   "python": "def my_sqrt(x):\n    # write your code here\n    pass\n",
+   "javascript": "function mySqrt(x) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     4
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     8
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     2147395599
+    ],
+    "expected": 46339
+   },
+   {
+    "args": [
+     99
+    ],
+    "expected": 9
+   }
+  ]
+ },
+ {
+  "id": "matrix-spiral",
+  "num": 79,
+  "title": "Spiral Order",
+  "level": "Medium",
+  "topics": [
+   "Matrix",
+   "Simulation"
+  ],
+  "statement": "Return all elements of the matrix in spiral order: along the top row, down the right side, back along the bottom, up the left, and so on inward.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 50"
+  ],
+  "fn": {
+   "python": "spiral_order",
+   "javascript": "spiralOrder"
+  },
+  "params": [
+   "matrix"
+  ],
+  "starter": {
+   "python": "def spiral_order(matrix):\n    # write your code here\n    pass\n",
+   "javascript": "function spiralOrder(matrix) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3
+      ],
+      [
+       4,
+       5,
+       6
+      ],
+      [
+       7,
+       8,
+       9
+      ]
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     3,
+     6,
+     9,
+     8,
+     7,
+     4,
+     5
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3,
+       4
+      ],
+      [
+       5,
+       6,
+       7,
+       8
+      ],
+      [
+       9,
+       10,
+       11,
+       12
+      ]
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     3,
+     4,
+     8,
+     12,
+     11,
+     10,
+     9,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       7
+      ]
+     ]
+    ],
+    "expected": [
+     7
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       5,
+       6
+      ]
+     ]
+    ],
+    "expected": [
+     1,
+     2,
+     4,
+     6,
+     5,
+     3
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rotate-matrix",
+  "num": 80,
+  "title": "Rotate the Matrix",
+  "level": "Medium",
+  "topics": [
+   "Matrix"
+  ],
+  "statement": "Return the n×n matrix rotated 90 degrees clockwise.",
+  "constraints": [
+   "1 ≤ n ≤ 100"
+  ],
+  "fn": {
+   "python": "rotate_matrix",
+   "javascript": "rotateMatrix"
+  },
+  "params": [
+   "matrix"
+  ],
+  "starter": {
+   "python": "def rotate_matrix(matrix):\n    # write your code here\n    pass\n",
+   "javascript": "function rotateMatrix(matrix) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3
+      ],
+      [
+       4,
+       5,
+       6
+      ],
+      [
+       7,
+       8,
+       9
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      7,
+      4,
+      1
+     ],
+     [
+      8,
+      5,
+      2
+     ],
+     [
+      9,
+      6,
+      3
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      1
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      2
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       5,
+       1,
+       9,
+       11
+      ],
+      [
+       2,
+       4,
+       8,
+       10
+      ],
+      [
+       13,
+       3,
+       6,
+       7
+      ],
+      [
+       15,
+       14,
+       12,
+       16
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      15,
+      13,
+      2,
+      5
+     ],
+     [
+      14,
+      3,
+      4,
+      1
+     ],
+     [
+      12,
+      6,
+      8,
+      9
+     ],
+     [
+      16,
+      7,
+      10,
+      11
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "set-matrix-zeroes",
+  "num": 81,
+  "title": "Set Matrix Zeroes",
+  "level": "Medium",
+  "topics": [
+   "Matrix"
+  ],
+  "statement": "If any cell of the matrix is 0, its whole row and column become 0. Return the resulting matrix.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 200"
+  ],
+  "fn": {
+   "python": "set_zeroes",
+   "javascript": "setZeroes"
+  },
+  "params": [
+   "matrix"
+  ],
+  "starter": {
+   "python": "def set_zeroes(matrix):\n    # write your code here\n    pass\n",
+   "javascript": "function setZeroes(matrix) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      1,
+      0,
+      1
+     ],
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      1
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       0,
+       1,
+       2,
+       0
+      ],
+      [
+       3,
+       4,
+       5,
+       2
+      ],
+      [
+       1,
+       3,
+       1,
+       5
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      4,
+      5,
+      0
+     ],
+     [
+      0,
+      3,
+      1,
+      0
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       5
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      5
+     ]
+    ]
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       0
+      ]
+     ]
+    ],
+    "expected": [
+     [
+      0,
+      0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "word-search-grid",
+  "num": 82,
+  "title": "Word in a Grid",
+  "level": "Medium",
+  "topics": [
+   "Matrix",
+   "DFS / BFS",
+   "Recursion"
+  ],
+  "statement": "board is a grid of letters, given as a list of strings. Return true if word can be spelled by moving between horizontally or vertically adjacent cells, using each cell at most once.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 6",
+   "1 ≤ len(word) ≤ 15"
+  ],
+  "fn": {
+   "python": "exist",
+   "javascript": "exist"
+  },
+  "params": [
+   "board",
+   "word"
+  ],
+  "starter": {
+   "python": "def exist(board, word):\n    # write your code here\n    pass\n",
+   "javascript": "function exist(board, word) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      "ABCE",
+      "SFCS",
+      "ADEE"
+     ],
+     "ABCCED"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     [
+      "ABCE",
+      "SFCS",
+      "ADEE"
+     ],
+     "SEE"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     [
+      "ABCE",
+      "SFCS",
+      "ADEE"
+     ],
+     "ABCB"
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     [
+      "A"
+     ],
+     "A"
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     [
+      "AB",
+      "CD"
+     ],
+     "ABDC"
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "subsets-sum-count",
+  "num": 83,
+  "title": "Subsets with Sum k",
+  "level": "Medium",
+  "topics": [
+   "Recursion",
+   "Dynamic programming"
+  ],
+  "statement": "Return how many subsets of nums (chosen by position) add up to exactly k. The empty subset counts when k is 0.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 20",
+   "0 ≤ nums[i] ≤ 100"
+  ],
+  "fn": {
+   "python": "count_subsets",
+   "javascript": "countSubsets"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def count_subsets(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function countSubsets(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      3
+     ],
+     6
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      1,
+      1,
+      1,
+      1
+     ],
+     1
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      5
+     ],
+     3
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      2,
+      3,
+      5,
+      6,
+      8,
+      10
+     ],
+     10
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      0,
+      0,
+      1
+     ],
+     1
+    ],
+    "expected": 4
+   }
+  ]
+ },
+ {
+  "id": "permutations-count-unique",
+  "num": 84,
+  "title": "Unique Arrangements",
+  "level": "Medium",
+  "topics": [
+   "Math",
+   "Recursion",
+   "String"
+  ],
+  "statement": "Return how many different strings can be made by rearranging all the letters of s.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 15"
+  ],
+  "fn": {
+   "python": "count_arrangements",
+   "javascript": "countArrangements"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def count_arrangements(s):\n    # write your code here\n    pass\n",
+   "javascript": "function countArrangements(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "abc"
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     "aab"
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     "aaaa"
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     "banana"
+    ],
+    "expected": 60
+   },
+   {
+    "args": [
+     "placement"
+    ],
+    "expected": 181440
+   }
+  ]
+ },
+ {
+  "id": "generate-parentheses-count",
+  "num": 85,
+  "title": "Balanced Brackets Count",
+  "level": "Medium",
+  "topics": [
+   "Recursion",
+   "Dynamic programming"
+  ],
+  "statement": "Return how many different strings of n pairs of round brackets are balanced.",
+  "constraints": [
+   "0 ≤ n ≤ 15"
+  ],
+  "fn": {
+   "python": "count_balanced",
+   "javascript": "countBalanced"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def count_balanced(n):\n    # write your code here\n    pass\n",
+   "javascript": "function countBalanced(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     3
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     0
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     4
+    ],
+    "expected": 14
+   },
+   {
+    "args": [
+     10
+    ],
+    "expected": 16796
+   }
+  ]
+ },
+ {
+  "id": "house-robber",
+  "num": 86,
+  "title": "Houses on a Street",
+  "level": "Medium",
+  "topics": [
+   "Dynamic programming"
+  ],
+  "statement": "money[i] is the cash in house i. You can't take from two neighbouring houses. Return the most you can collect.",
+  "constraints": [
+   "1 ≤ len(money) ≤ 10⁵",
+   "0 ≤ money[i] ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "rob",
+   "javascript": "rob"
+  },
+  "params": [
+   "money"
+  ],
+  "starter": {
+   "python": "def rob(money):\n    # write your code here\n    pass\n",
+   "javascript": "function rob(money) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      1
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      2,
+      7,
+      9,
+      3,
+      1
+     ]
+    ],
+    "expected": 12
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     [
+      2,
+      1,
+      1,
+      2
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "expected": 0
+   }
+  ]
+ },
+ {
+  "id": "unique-paths",
+  "num": 87,
+  "title": "Paths in a Grid",
+  "level": "Medium",
+  "topics": [
+   "Dynamic programming",
+   "Math"
+  ],
+  "statement": "A robot starts at the top-left of an r×c grid and can move only right or down. Return how many paths reach the bottom-right.",
+  "constraints": [
+   "1 ≤ r, c ≤ 100"
+  ],
+  "fn": {
+   "python": "unique_paths",
+   "javascript": "uniquePaths"
+  },
+  "params": [
+   "r",
+   "c"
+  ],
+  "starter": {
+   "python": "def unique_paths(r, c):\n    # write your code here\n    pass\n",
+   "javascript": "function uniquePaths(r, c) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     3,
+     7
+    ],
+    "expected": 28
+   },
+   {
+    "args": [
+     3,
+     2
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     1,
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     10,
+     10
+    ],
+    "expected": 48620
+   },
+   {
+    "args": [
+     2,
+     20
+    ],
+    "expected": 20
+   }
+  ]
+ },
+ {
+  "id": "min-path-sum",
+  "num": 88,
+  "title": "Cheapest Path in a Grid",
+  "level": "Medium",
+  "topics": [
+   "Dynamic programming",
+   "Matrix"
+  ],
+  "statement": "Each cell has a cost. Moving only right or down from the top-left to the bottom-right, return the smallest total cost (including both ends).",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 200"
+  ],
+  "fn": {
+   "python": "min_path_sum",
+   "javascript": "minPathSum"
+  },
+  "params": [
+   "grid"
+  ],
+  "starter": {
+   "python": "def min_path_sum(grid):\n    # write your code here\n    pass\n",
+   "javascript": "function minPathSum(grid) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       1,
+       3,
+       1
+      ],
+      [
+       1,
+       5,
+       1
+      ],
+      [
+       4,
+       2,
+       1
+      ]
+     ]
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       3
+      ],
+      [
+       4,
+       5,
+       6
+      ]
+     ]
+    ],
+    "expected": 12
+   },
+   {
+    "args": [
+     [
+      [
+       7
+      ]
+     ]
+    ],
+    "expected": 7
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    ],
+    "expected": 8
+   }
+  ]
+ },
+ {
+  "id": "lcs-length",
+  "num": 89,
+  "title": "Longest Common Subsequence",
+  "level": "Medium",
+  "topics": [
+   "Dynamic programming",
+   "String"
+  ],
+  "statement": "Return the length of the longest sequence of characters that appears, in order but not necessarily together, in both a and b.",
+  "constraints": [
+   "1 ≤ len(a), len(b) ≤ 1000"
+  ],
+  "fn": {
+   "python": "lcs",
+   "javascript": "lcs"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def lcs(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function lcs(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "abcde",
+     "ace"
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     "abc",
+     "abc"
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     "abc",
+     "def"
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     "placement",
+     "planet"
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     "AGGTAB",
+     "GXTXAYB"
+    ],
+    "expected": 4
+   }
+  ]
+ },
+ {
+  "id": "knapsack-01",
+  "num": 90,
+  "title": "Bag of Items",
+  "level": "Medium",
+  "topics": [
+   "Dynamic programming"
+  ],
+  "statement": "Item i weighs w[i] and is worth v[i]. Each item can be taken once. Return the most value that fits in a bag that holds weight cap.",
+  "constraints": [
+   "1 ≤ len(w) = len(v) ≤ 200",
+   "1 ≤ cap ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "knapsack",
+   "javascript": "knapsack"
+  },
+  "params": [
+   "w",
+   "v",
+   "cap"
+  ],
+  "starter": {
+   "python": "def knapsack(w, v, cap):\n    # write your code here\n    pass\n",
+   "javascript": "function knapsack(w, v, cap) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      3,
+      4,
+      5
+     ],
+     [
+      1,
+      4,
+      5,
+      7
+     ],
+     7
+    ],
+    "expected": 9
+   },
+   {
+    "args": [
+     [
+      10,
+      20,
+      30
+     ],
+     [
+      60,
+      100,
+      120
+     ],
+     50
+    ],
+    "expected": 220
+   },
+   {
+    "args": [
+     [
+      5
+     ],
+     [
+      10
+     ],
+     4
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      10,
+      20,
+      30
+     ],
+     2
+    ],
+    "expected": 50
+   }
+  ]
+ },
+ {
+  "id": "jump-game",
+  "num": 91,
+  "title": "Can You Reach the End?",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Greedy"
+  ],
+  "statement": "You start at index 0. nums[i] is the furthest you can jump forward from i. Return true if you can reach the last index.",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "can_jump",
+   "javascript": "canJump"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def can_jump(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function canJump(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      2,
+      3,
+      1,
+      1,
+      4
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      1,
+      0,
+      4
+     ]
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     [
+      0
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     [
+      1,
+      0,
+      1
+     ]
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     [
+      2,
+      0,
+      0
+     ]
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "meeting-rooms",
+  "num": 92,
+  "title": "Rooms Needed",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Sorting",
+   "Greedy"
+  ],
+  "statement": "Each meeting is [start, end) (it ends just before end). Return the fewest rooms needed so no two meetings in one room overlap.",
+  "constraints": [
+   "1 ≤ meetings ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "min_rooms",
+   "javascript": "minRooms"
+  },
+  "params": [
+   "meetings"
+  ],
+  "starter": {
+   "python": "def min_rooms(meetings):\n    # write your code here\n    pass\n",
+   "javascript": "function minRooms(meetings) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       0,
+       30
+      ],
+      [
+       5,
+       10
+      ],
+      [
+       15,
+       20
+      ]
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      [
+       7,
+       10
+      ],
+      [
+       2,
+       4
+      ]
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       5
+      ],
+      [
+       5,
+       10
+      ]
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       10
+      ],
+      [
+       2,
+       9
+      ],
+      [
+       3,
+       8
+      ]
+     ]
+    ],
+    "expected": 3
+   }
+  ]
+ },
+ {
+  "id": "gas-station",
+  "num": 93,
+  "title": "Round Trip Petrol Pump",
+  "level": "Medium",
+  "topics": [
+   "Array",
+   "Greedy"
+  ],
+  "statement": "Pump i gives petrol[i] litres; driving from pump i to the next uses cost[i]. The route is a circle. Return the index of the pump to start from to go all the way round, or -1 if impossible (the answer is unique).",
+  "constraints": [
+   "1 ≤ n ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "start_pump",
+   "javascript": "startPump"
+  },
+  "params": [
+   "petrol",
+   "cost"
+  ],
+  "starter": {
+   "python": "def start_pump(petrol, cost):\n    # write your code here\n    pass\n",
+   "javascript": "function startPump(petrol, cost) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     [
+      3,
+      4,
+      5,
+      1,
+      2
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      2,
+      3,
+      4
+     ],
+     [
+      3,
+      4,
+      3
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      5
+     ],
+     [
+      4
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      4,
+      6,
+      7,
+      4
+     ],
+     [
+      6,
+      5,
+      3,
+      5
+     ]
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "islands-perimeter",
+  "num": 94,
+  "title": "Island Perimeter",
+  "level": "Medium",
+  "topics": [
+   "Matrix"
+  ],
+  "statement": "grid has 1 for land and 0 for water, and contains exactly one island with no lakes. Return the island's perimeter.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 100"
+  ],
+  "fn": {
+   "python": "island_perimeter",
+   "javascript": "islandPerimeter"
+  },
+  "params": [
+   "grid"
+  ],
+  "starter": {
+   "python": "def island_perimeter(grid):\n    # write your code here\n    pass\n",
+   "javascript": "function islandPerimeter(grid) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       0,
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0,
+       0
+      ]
+     ]
+    ],
+    "expected": 16
+   },
+   {
+    "args": [
+     [
+      [
+       1
+      ]
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       0
+      ]
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    ],
+    "expected": 8
+   }
+  ]
+ },
+ {
+  "id": "rotting-oranges",
+  "num": 95,
+  "title": "Spreading Infection",
+  "level": "Medium",
+  "topics": [
+   "Graph",
+   "DFS / BFS",
+   "Matrix"
+  ],
+  "statement": "In the grid, 0 is empty, 1 a healthy cell and 2 an infected one. Each minute, infection spreads to healthy cells above, below, left and right. Return the minutes until no healthy cell remains, or -1 if that never happens.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 10"
+  ],
+  "fn": {
+   "python": "minutes_to_infect",
+   "javascript": "minutesToInfect"
+  },
+  "params": [
+   "grid"
+  ],
+  "starter": {
+   "python": "def minutes_to_infect(grid):\n    # write your code here\n    pass\n",
+   "javascript": "function minutesToInfect(grid) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       2,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      [
+       2,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      [
+       0,
+       2
+      ]
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      [
+       1
+      ]
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      [
+       2,
+       2
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "shortest-path-grid",
+  "num": 96,
+  "title": "Shortest Path in a Maze",
+  "level": "Medium",
+  "topics": [
+   "Graph",
+   "DFS / BFS",
+   "Matrix"
+  ],
+  "statement": "maze is a list of strings: '.' is open and '#' is a wall. Moving up, down, left or right, return the fewest steps from the top-left to the bottom-right, or -1 if you can't get there.",
+  "constraints": [
+   "1 ≤ rows, cols ≤ 100"
+  ],
+  "fn": {
+   "python": "shortest_path",
+   "javascript": "shortestPath"
+  },
+  "params": [
+   "maze"
+  ],
+  "starter": {
+   "python": "def shortest_path(maze):\n    # write your code here\n    pass\n",
+   "javascript": "function shortestPath(maze) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      "..#",
+      "#..",
+      "#.."
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      ".#",
+      "#."
+     ]
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      "."
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      "....",
+      "###.",
+      "....",
+      ".###",
+      "...."
+     ]
+    ],
+    "expected": 13
+   }
+  ]
+ },
+ {
+  "id": "course-schedule",
+  "num": 97,
+  "title": "Can You Finish All Courses?",
+  "level": "Medium",
+  "topics": [
+   "Graph",
+   "DFS / BFS"
+  ],
+  "statement": "There are n courses numbered 0 to n - 1. Each pair [a, b] means b must be taken before a. Return true if all courses can be finished.",
+  "constraints": [
+   "1 ≤ n ≤ 2000",
+   "0 ≤ pairs ≤ 5000"
+  ],
+  "fn": {
+   "python": "can_finish",
+   "javascript": "canFinish"
+  },
+  "params": [
+   "n",
+   "pairs"
+  ],
+  "starter": {
+   "python": "def can_finish(n, pairs):\n    # write your code here\n    pass\n",
+   "javascript": "function canFinish(n, pairs) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     2,
+     [
+      [
+       1,
+       0
+      ]
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     2,
+     [
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ]
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     3,
+     []
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     4,
+     [
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       2
+      ]
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     3,
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       0
+      ]
+     ]
+    ],
+    "expected": false
+   }
+  ]
+ },
+ {
+  "id": "connected-components",
+  "num": 98,
+  "title": "Friend Circles",
+  "level": "Medium",
+  "topics": [
+   "Graph",
+   "DFS / BFS"
+  ],
+  "statement": "There are n students numbered 0 to n - 1. Each pair [a, b] means a and b are friends. Friends of friends are in the same circle. Return the number of circles.",
+  "constraints": [
+   "1 ≤ n ≤ 10⁴"
+  ],
+  "fn": {
+   "python": "count_circles",
+   "javascript": "countCircles"
+  },
+  "params": [
+   "n",
+   "pairs"
+  ],
+  "starter": {
+   "python": "def count_circles(n, pairs):\n    # write your code here\n    pass\n",
+   "javascript": "function countCircles(n, pairs) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     5,
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     3,
+     []
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     4,
+     [
+      [
+       0,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       1,
+       2
+      ]
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     1,
+     []
+    ],
+    "expected": 1
+   }
+  ]
+ },
+ {
+  "id": "longest-palindromic-substring",
+  "num": 99,
+  "title": "Longest Palindromic Substring",
+  "level": "Hard",
+  "topics": [
+   "String",
+   "Dynamic programming"
+  ],
+  "statement": "Return the longest substring of s that is a palindrome. If there are several of the same length, return the one that starts first.",
+  "constraints": [
+   "1 ≤ len(s) ≤ 1000"
+  ],
+  "fn": {
+   "python": "longest_palindrome",
+   "javascript": "longestPalindrome"
+  },
+  "params": [
+   "s"
+  ],
+  "starter": {
+   "python": "def longest_palindrome(s):\n    # write your code here\n    pass\n",
+   "javascript": "function longestPalindrome(s) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "babad"
+    ],
+    "expected": "bab"
+   },
+   {
+    "args": [
+     "cbbd"
+    ],
+    "expected": "bb"
+   },
+   {
+    "args": [
+     "a"
+    ],
+    "expected": "a"
+   },
+   {
+    "args": [
+     "forgeeksskeegfor"
+    ],
+    "expected": "geeksskeeg"
+   },
+   {
+    "args": [
+     "abacdfgdcaba"
+    ],
+    "expected": "aba"
+   }
+  ]
+ },
+ {
+  "id": "min-window-substring",
+  "num": 100,
+  "title": "Smallest Window with All Letters",
+  "level": "Hard",
+  "topics": [
+   "String",
+   "Sliding window",
+   "Hash map"
+  ],
+  "statement": "Return the shortest substring of s that contains every character of t (with repeats). If several have the same length, return the one that starts first; if none exists, return \"\".",
+  "constraints": [
+   "1 ≤ len(s), len(t) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "min_window",
+   "javascript": "minWindow"
+  },
+  "params": [
+   "s",
+   "t"
+  ],
+  "starter": {
+   "python": "def min_window(s, t):\n    # write your code here\n    pass\n",
+   "javascript": "function minWindow(s, t) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "ADOBECODEBANC",
+     "ABC"
+    ],
+    "expected": "BANC"
+   },
+   {
+    "args": [
+     "a",
+     "a"
+    ],
+    "expected": "a"
+   },
+   {
+    "args": [
+     "a",
+     "aa"
+    ],
+    "expected": ""
+   },
+   {
+    "args": [
+     "this is a test string",
+     "tist"
+    ],
+    "expected": "t stri"
+   },
+   {
+    "args": [
+     "aaflslflsldkalskaaa",
+     "aaa"
+    ],
+    "expected": "aaa"
+   }
+  ]
+ },
+ {
+  "id": "largest-rectangle",
+  "num": 101,
+  "title": "Largest Rectangle in a Bar Chart",
+  "level": "Hard",
+  "topics": [
+   "Array",
+   "Stack"
+  ],
+  "statement": "heights[i] is the height of a bar of width 1. Return the area of the largest rectangle that fits inside the bars.",
+  "constraints": [
+   "1 ≤ len(heights) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "largest_rectangle",
+   "javascript": "largestRectangle"
+  },
+  "params": [
+   "heights"
+  ],
+  "starter": {
+   "python": "def largest_rectangle(heights):\n    # write your code here\n    pass\n",
+   "javascript": "function largestRectangle(heights) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      2,
+      1,
+      5,
+      6,
+      2,
+      3
+     ]
+    ],
+    "expected": 10
+   },
+   {
+    "args": [
+     [
+      2,
+      4
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      1
+     ]
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      6,
+      2,
+      5,
+      4,
+      5,
+      1,
+      6
+     ]
+    ],
+    "expected": 12
+   },
+   {
+    "args": [
+     [
+      3,
+      3,
+      3
+     ]
+    ],
+    "expected": 9
+   }
+  ]
+ },
+ {
+  "id": "sliding-window-max",
+  "num": 102,
+  "title": "Sliding Window Maximum",
+  "level": "Hard",
+  "topics": [
+   "Array",
+   "Sliding window",
+   "Queue"
+  ],
+  "statement": "Return the maximum of every window of k consecutive numbers, from left to right.",
+  "constraints": [
+   "1 ≤ k ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "window_max",
+   "javascript": "windowMax"
+  },
+  "params": [
+   "nums",
+   "k"
+  ],
+  "starter": {
+   "python": "def window_max(nums, k):\n    # write your code here\n    pass\n",
+   "javascript": "function windowMax(nums, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      3,
+      -1,
+      -3,
+      5,
+      3,
+      6,
+      7
+     ],
+     3
+    ],
+    "expected": [
+     3,
+     3,
+     5,
+     5,
+     6,
+     7
+    ]
+   },
+   {
+    "args": [
+     [
+      1
+     ],
+     1
+    ],
+    "expected": [
+     1
+    ]
+   },
+   {
+    "args": [
+     [
+      9,
+      8,
+      7,
+      6
+     ],
+     2
+    ],
+    "expected": [
+     9,
+     8,
+     7
+    ]
+   },
+   {
+    "args": [
+     [
+      1,
+      -1
+     ],
+     1
+    ],
+    "expected": [
+     1,
+     -1
+    ]
+   },
+   {
+    "args": [
+     [
+      4,
+      2,
+      12,
+      3,
+      1,
+      7
+     ],
+     4
+    ],
+    "expected": [
+     12,
+     12,
+     12
+    ]
+   }
+  ]
+ },
+ {
+  "id": "median-two-sorted",
+  "num": 103,
+  "title": "Median of Two Sorted Lists",
+  "level": "Hard",
+  "topics": [
+   "Array",
+   "Binary search"
+  ],
+  "statement": "a and b are sorted. Return the median of all their numbers, multiplied by 2 so the answer is always a whole number (median 2.5 → 5).",
+  "constraints": [
+   "1 ≤ len(a) + len(b) ≤ 2·10⁵"
+  ],
+  "fn": {
+   "python": "double_median",
+   "javascript": "doubleMedian"
+  },
+  "params": [
+   "a",
+   "b"
+  ],
+  "starter": {
+   "python": "def double_median(a, b):\n    # write your code here\n    pass\n",
+   "javascript": "function doubleMedian(a, b) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      1,
+      3
+     ],
+     [
+      2
+     ]
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     [
+      1,
+      2
+     ],
+     [
+      3,
+      4
+     ]
+    ],
+    "expected": 5
+   },
+   {
+    "args": [
+     [],
+     [
+      1
+     ]
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      1,
+      5,
+      9
+     ],
+     [
+      2,
+      3,
+      10,
+      11
+     ]
+    ],
+    "expected": 10
+   }
+  ]
+ },
+ {
+  "id": "word-break",
+  "num": 104,
+  "title": "Split into Dictionary Words",
+  "level": "Hard",
+  "topics": [
+   "String",
+   "Dynamic programming"
+  ],
+  "statement": "Return true if s can be split into one or more words, all from the list words (a word may be used many times).",
+  "constraints": [
+   "1 ≤ len(s) ≤ 300",
+   "1 ≤ len(words) ≤ 1000"
+  ],
+  "fn": {
+   "python": "word_break",
+   "javascript": "wordBreak"
+  },
+  "params": [
+   "s",
+   "words"
+  ],
+  "starter": {
+   "python": "def word_break(s, words):\n    # write your code here\n    pass\n",
+   "javascript": "function wordBreak(s, words) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     "leetcode",
+     [
+      "leet",
+      "code"
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "applepenapple",
+     [
+      "apple",
+      "pen"
+     ]
+    ],
+    "expected": true
+   },
+   {
+    "args": [
+     "catsandog",
+     [
+      "cats",
+      "dog",
+      "sand",
+      "and",
+      "cat"
+     ]
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     "a",
+     [
+      "b"
+     ]
+    ],
+    "expected": false
+   },
+   {
+    "args": [
+     "placementready",
+     [
+      "place",
+      "ment",
+      "ready",
+      "placement"
+     ]
+    ],
+    "expected": true
+   }
+  ]
+ },
+ {
+  "id": "min-climb-cost",
+  "num": 105,
+  "title": "Fewest Coins to Climb",
+  "level": "Hard",
+  "topics": [
+   "Dynamic programming",
+   "Array"
+  ],
+  "statement": "You can climb 1, 2 or 3 steps at a time. Landing on step i costs cost[i] (steps numbered from 0). You start below step 0 and must finish above the last step. Return the smallest total cost.",
+  "constraints": [
+   "1 ≤ len(cost) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "min_climb_cost",
+   "javascript": "minClimbCost"
+  },
+  "params": [
+   "cost"
+  ],
+  "starter": {
+   "python": "def min_climb_cost(cost):\n    # write your code here\n    pass\n",
+   "javascript": "function minClimbCost(cost) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      10,
+      15,
+      20
+     ]
+    ],
+    "expected": 10
+   },
+   {
+    "args": [
+     [
+      1,
+      100,
+      1,
+      1,
+      1,
+      100,
+      1,
+      1,
+      100,
+      1
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      4,
+      1,
+      6,
+      2
+     ]
+    ],
+    "expected": 3
+   }
+  ]
+ },
+ {
+  "id": "network-delay",
+  "num": 106,
+  "title": "Message to Every Office",
+  "level": "Hard",
+  "topics": [
+   "Graph",
+   "Heap"
+  ],
+  "statement": "There are n offices numbered 1 to n. Each [u, v, t] means a message from u reaches v in t minutes. A message starts at office k. Return the minutes until every office has it, or -1 if some never do.",
+  "constraints": [
+   "1 ≤ n ≤ 100",
+   "1 ≤ edges ≤ 6000"
+  ],
+  "fn": {
+   "python": "network_delay",
+   "javascript": "networkDelay"
+  },
+  "params": [
+   "edges",
+   "n",
+   "k"
+  ],
+  "starter": {
+   "python": "def network_delay(edges, n, k):\n    # write your code here\n    pass\n",
+   "javascript": "function networkDelay(edges, n, k) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      [
+       2,
+       1,
+       1
+      ],
+      [
+       2,
+       3,
+       1
+      ],
+      [
+       3,
+       4,
+       1
+      ]
+     ],
+     4,
+     2
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       1
+      ]
+     ],
+     2,
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       1
+      ]
+     ],
+     2,
+     2
+    ],
+    "expected": -1
+   },
+   {
+    "args": [
+     [
+      [
+       1,
+       2,
+       5
+      ],
+      [
+       1,
+       3,
+       1
+      ],
+      [
+       3,
+       2,
+       1
+      ]
+     ],
+     3,
+     1
+    ],
+    "expected": 2
+   }
+  ]
+ },
+ {
+  "id": "n-queens-count",
+  "num": 107,
+  "title": "N Queens",
+  "level": "Hard",
+  "topics": [
+   "Recursion",
+   "Backtracking"
+  ],
+  "statement": "Return how many ways n queens can be placed on an n×n chessboard so that no two attack each other.",
+  "constraints": [
+   "1 ≤ n ≤ 10"
+  ],
+  "fn": {
+   "python": "total_queens",
+   "javascript": "totalQueens"
+  },
+  "params": [
+   "n"
+  ],
+  "starter": {
+   "python": "def total_queens(n):\n    # write your code here\n    pass\n",
+   "javascript": "function totalQueens(n) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     4
+    ],
+    "expected": 2
+   },
+   {
+    "args": [
+     1
+    ],
+    "expected": 1
+   },
+   {
+    "args": [
+     2
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     6
+    ],
+    "expected": 4
+   },
+   {
+    "args": [
+     8
+    ],
+    "expected": 92
+   }
+  ]
+ },
+ {
+  "id": "count-inversions",
+  "num": 108,
+  "title": "Count Inversions",
+  "level": "Hard",
+  "topics": [
+   "Array",
+   "Sorting",
+   "Divide and conquer"
+  ],
+  "statement": "An inversion is a pair i < j with nums[i] > nums[j]. Return how many inversions nums has. Aim for O(n log n).",
+  "constraints": [
+   "1 ≤ len(nums) ≤ 10⁵"
+  ],
+  "fn": {
+   "python": "count_inversions",
+   "javascript": "countInversions"
+  },
+  "params": [
+   "nums"
+  ],
+  "starter": {
+   "python": "def count_inversions(nums):\n    # write your code here\n    pass\n",
+   "javascript": "function countInversions(nums) {\n  // write your code here\n}\n"
+  },
+  "shown": 3,
+  "tests": [
+   {
+    "args": [
+     [
+      2,
+      4,
+      1,
+      3,
+      5
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      3,
+      2,
+      1
+     ]
+    ],
+    "expected": 3
+   },
+   {
+    "args": [
+     [
+      5
+     ]
+    ],
+    "expected": 0
+   },
+   {
+    "args": [
+     [
+      8,
+      4,
+      2,
+      1
+     ]
+    ],
+    "expected": 6
+   },
+   {
+    "args": [
+     [
+      1,
+      20,
+      6,
+      4,
+      5
+     ]
+    ],
+    "expected": 5
+   }
+  ]
  }
 ];

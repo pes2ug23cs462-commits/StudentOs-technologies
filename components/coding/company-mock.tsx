@@ -5,19 +5,21 @@
    examples and Submit on every test. Leaving the tab and pasting are counted and
    shown in the result. It is practice in the company's format, not a past paper. */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CodeEditor } from "@/components/coding/code-editor";
 import { BREACH_TEXT, MAX_WARNINGS, ProctorWarning, STRICT_SHELL, StrictDock, useProctor, type Breach } from "@/components/interview/proctor";
 import { Button } from "@/components/ui/button";
 import { AlertCircleIcon, CheckIcon, ClockIcon, PlayIcon, SendIcon, XIcon } from "@/components/ui/icons";
 import { companySet, type CodingCompany } from "@/lib/coding/companies";
+import { generateProblem } from "@/lib/coding/personal";
+import { PROBLEMS } from "@/lib/coding/problems";
 import { runCode, show, warmPython } from "@/lib/coding/runner";
 import { LANG_LABEL, LEVEL_TONE, type Lang, type Problem, type RunResult } from "@/lib/coding/types";
 import { cn } from "@/lib/utils";
 
 export const MOCK_KEY = "sos.code-company-mock";
 
-export type MockResult = { company: string; at: number; score: number; mins: number; usedSecs: number; tabs: number; pastes: number; strict?: boolean; ended?: boolean; breaches?: Breach[]; items: { title: string; level: string; passed: number; total: number }[] };
+export type MockResult = { company: string; at: number; score: number; mins: number; usedSecs: number; tabs: number; pastes: number; ids?: string[]; strict?: boolean; ended?: boolean; breaches?: Breach[]; items: { title: string; level: string; passed: number; total: number }[] };
 
 export function loadMocks(): MockResult[] {
   try {
@@ -33,21 +35,67 @@ export function mockPlan(c: CodingCompany) {
   return c.kind === "Service" ? { mins: 45, levels: ["Easy", "Medium"] as const } : { mins: 60, levels: ["Medium", "Hard"] as const };
 }
 
-function pick(c: CodingCompany): Problem[] {
-  const set = companySet(c);
-  return mockPlan(c).levels.map((l) => {
-    const pool = set.filter((p) => p.level === l);
-    return pool[Math.floor(Math.random() * pool.length)];
-  });
+/** A bank problem at this level, from the company's set, avoiding the ones it used in the last rounds. */
+function bankPick(c: CodingCompany, level: Problem["level"], skip: Set<string>): Problem {
+  const set = companySet(c).filter((p) => p.level === level);
+  const pool = set.filter((p) => !skip.has(p.id));
+  const from = pool.length ? pool : set.length ? set : PROBLEMS.filter((p) => p.level === level);
+  return from[Math.floor(Math.random() * from.length)];
+}
+
+/** Prepares the round: the AI writes both problems in the company's style (checked by running its
+    own solution); any it can't write in time comes from our bank instead. Then the round starts. */
+export function CompanyMock({ company, strict, onExit, profile, avoid }: { company: CodingCompany; strict: boolean; onExit: () => void; profile: string; avoid: string[] }) {
+  const [problems, setProblems] = useState<(Problem & { fromAi?: boolean })[] | null>(null);
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    let live = true;
+    const recent = new Set(loadMocks().filter((m) => m.company === company.id).slice(0, 3).flatMap((m) => m.ids ?? []));
+    const used = new Set<string>();
+    const one = async (level: Problem["level"]) => {
+      try {
+        const p = await Promise.race([
+          generateProblem({ level, company: company.name, profile, avoid }),
+          new Promise<never>((_, no) => setTimeout(() => no(new Error("slow")), 45_000)),
+        ]);
+        return { ...p, fromAi: true };
+      } catch {
+        const p = bankPick(company, level, new Set([...recent, ...used]));
+        used.add(p.id);
+        return p;
+      } finally {
+        if (live) setStep((n) => n + 1);
+      }
+    };
+    void Promise.all(mockPlan(company).levels.map(one)).then((ps) => live && setProblems(ps));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company.id]);
+
+  if (!problems)
+    return (
+      <div className={cn(STRICT_SHELL, "flex items-center justify-center p-6")}>
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+          <span className="mx-auto block h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-accent" aria-hidden />
+          <p className="mt-4 text-[16px] font-semibold text-white">Preparing your {company.name} round…</p>
+          <p className="mt-1 text-[13px] text-white/55">The AI is writing 2 fresh problems in {company.name}’s style and checking them ({step}/2 ready). The clock starts when they’re ready.</p>
+          <button type="button" onClick={onExit} className="mt-4 text-[12.5px] text-white/50 hover:text-white">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  return <MockRound company={company} strict={strict} onExit={onExit} problems={problems} />;
 }
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s % 60)).padStart(2, "0")}`;
 
 type Out = { kind: "run" | "submit"; res: RunResult; passed: number; total: number };
 
-export function CompanyMock({ company, strict, onExit }: { company: CodingCompany; strict: boolean; onExit: () => void }) {
+function MockRound({ company, strict, onExit, problems }: { company: CodingCompany; strict: boolean; onExit: () => void; problems: (Problem & { fromAi?: boolean })[] }) {
   const plan = mockPlan(company);
-  const problems = useMemo(() => pick(company), [company]);
   const [lang, setLang] = useState<Lang>("python");
   const [at, setAt] = useState(0);
   const [code, setCode] = useState<string[][]>(() => problems.map((p) => [p.starter.python, p.starter.javascript]));
@@ -118,7 +166,7 @@ export function CompanyMock({ company, strict, onExit }: { company: CodingCompan
     const { best: b, tabs: t, pastes: ps } = live.current;
     const items = problems.map((q, i) => ({ title: q.title, level: q.level, passed: b[i], total: q.tests.length }));
     const score = Math.round((items.reduce((s, x) => s + x.passed / x.total, 0) / items.length) * 100);
-    const r: MockResult = { company: company.id, at: Date.now(), score, mins: plan.mins, usedSecs: Math.min(plan.mins * 60, Math.round((Date.now() - started.current) / 1000)), tabs: t, pastes: ps, strict, ...(breaches ? { ended: true, breaches } : {}), items };
+    const r: MockResult = { company: company.id, at: Date.now(), score, mins: plan.mins, usedSecs: Math.min(plan.mins * 60, Math.round((Date.now() - started.current) / 1000)), tabs: t, pastes: ps, ids: problems.map((q) => q.id), strict, ...(breaches ? { ended: true, breaches } : {}), items };
     try {
       localStorage.setItem(MOCK_KEY, JSON.stringify([r, ...loadMocks()].slice(0, 20)));
     } catch {}
@@ -223,6 +271,7 @@ export function CompanyMock({ company, strict, onExit }: { company: CodingCompan
         <div className="min-h-0 overflow-auto border-white/10 p-6 lg:border-r">
           <p className="text-[21px] font-semibold text-white">
             Q{at + 1}. {p.title} <span className={cn("ml-1 text-[12.5px]", LEVEL_TONE[p.level])}>{p.level}</span>
+            {problems[at].fromAi && <span className="ml-2 rounded bg-violet-500/20 px-1.5 py-0.5 align-middle text-[11px] font-medium text-violet-300">New · in {company.name}’s style</span>}
           </p>
           <p className="mt-3 text-[15.5px] leading-relaxed whitespace-pre-wrap text-white/85">{p.statement}</p>
           {p.tests.slice(0, p.shown).map((t, i) => (

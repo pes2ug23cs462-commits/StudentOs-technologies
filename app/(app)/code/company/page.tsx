@@ -158,7 +158,7 @@ export default function CompanyCoding() {
 
   useEffect(() => {
     try {
-      const id = localStorage.getItem(KEY) ?? "";
+      const id = new URLSearchParams(window.location.search).get("c") || localStorage.getItem(KEY) || "";
       const c = CODING_COMPANIES.find((x) => x.id === id);
       if (c) setCo(c);
       else if (id.startsWith("x-")) {
@@ -246,7 +246,7 @@ export default function CompanyCoding() {
         </Link>
       </div>
 
-      {co && mock && <CompanyMock company={co} strict={strict} onExit={() => setMock(false)} />}
+      {co && mock && <CompanyMock company={co} strict={strict} onExit={() => setMock(false)} profile={studentLine(state.setup?.academic) || [state.setup?.academic.course, state.setup?.skills.level].filter(Boolean).join(" · ")} avoid={mine.map((x) => x.title)} />}
 
       {!mock && (
       <>
@@ -418,7 +418,7 @@ export default function CompanyCoding() {
                   <div>
                     <p className="text-[14px] font-semibold text-white">{co.name} mock coding round</p>
                     <p className="text-[12px] text-white/55">
-                      2 problems ({mockPlan(co).levels.join(" + ")}) · {mockPlan(co).mins} minutes · timed, like the real test
+                      2 fresh problems in {co.name}’s style ({mockPlan(co).levels.join(" + ")}) · {mockPlan(co).mins} minutes · new ones every round
                     </p>
                   </div>
                 </div>
