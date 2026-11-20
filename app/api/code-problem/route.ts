@@ -59,11 +59,13 @@ export async function POST(req: Request) {
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const level = LEVELS.includes(String(b.level)) ? String(b.level) : "Easy";
   const topic = s(b.topic, 60);
+  const company = s(b.company, 40);
+  const like = s(b.like, 600);
   const avoid = (Array.isArray(b.avoid) ? b.avoid : []).map((x) => s(x, 60)).filter(Boolean).slice(0, 60);
   const seed = Math.random().toString(36).slice(2, 8);
 
   const prompt = `You write ORIGINAL coding interview practice problems for an Indian college student (${s(b.profile, 200) || "engineering student"}).
-Write ONE new ${level} problem${topic ? ` on the topic "${topic}"` : ""}. Make it different from these problems the student already has: ${avoid.join("; ") || "none"}.
+Write ONE new ${level} problem${topic ? ` on the topic "${topic}"` : ""}${company ? `, at the level and in the style of ${company}'s campus placement coding round` : ""}.${like ? ` A student says they were asked this in an interview: "${like}". Write a NEW problem that tests the same skill (do not copy it).` : ""} Make it different from these problems the student already has: ${avoid.join("; ") || "none"}.
 Make it fresh (variation id ${seed}): you can use a small real-life story (college, cricket scores, a canteen, train tickets, marks) but the task must be a clear algorithm problem.
 
 Rules:

@@ -45,6 +45,7 @@ export const PAGES: Record<string, string> = {
   "/tests": "Practice Arena",
   "/interview": "Mock Interview",
   "/code": "Coding practice",
+  "/code/company": "Company-wise coding practice (TCS, Infosys, Amazon…)",
   "/certificates": "Certificates",
   "/join": "My college",
   "/premium": "Premium",

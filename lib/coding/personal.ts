@@ -77,7 +77,7 @@ type Generated = {
 };
 
 /** Asks the AI for a new problem and checks it by running its reference solution. */
-export async function generateProblem(o: { level: Level; topic?: string; profile: string; avoid: string[] }): Promise<Problem> {
+export async function generateProblem(o: { level: Level; topic?: string; company?: string; like?: string; profile: string; avoid: string[] }): Promise<Problem> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const g = await postAi<Generated>("/api/code-problem", o);
     // examples first (they become the visible cases), then the other tests without repeats
