@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CodeEditor } from "@/components/coding/code-editor";
+import { BREACH_TEXT, MAX_WARNINGS, ProctorWarning, STRICT_SHELL, StrictDock, useProctor, type Breach } from "@/components/interview/proctor";
 import { Button } from "@/components/ui/button";
 import { AlertCircleIcon, CheckIcon, ClockIcon, PlayIcon, SendIcon, XIcon } from "@/components/ui/icons";
 import { companySet, type CodingCompany } from "@/lib/coding/companies";
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 export const MOCK_KEY = "sos.code-company-mock";
 
-export type MockResult = { company: string; at: number; score: number; mins: number; usedSecs: number; tabs: number; pastes: number; items: { title: string; level: string; passed: number; total: number }[] };
+export type MockResult = { company: string; at: number; score: number; mins: number; usedSecs: number; tabs: number; pastes: number; strict?: boolean; ended?: boolean; breaches?: Breach[]; items: { title: string; level: string; passed: number; total: number }[] };
 
 export function loadMocks(): MockResult[] {
   try {
@@ -44,7 +45,7 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s % 60)).
 
 type Out = { kind: "run" | "submit"; res: RunResult; passed: number; total: number };
 
-export function CompanyMock({ company, onExit }: { company: CodingCompany; onExit: () => void }) {
+export function CompanyMock({ company, strict, onExit }: { company: CodingCompany; strict: boolean; onExit: () => void }) {
   const plan = mockPlan(company);
   const problems = useMemo(() => pick(company), [company]);
   const [lang, setLang] = useState<Lang>("python");
@@ -63,6 +64,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
   const ended = useRef(false);
   const live = useRef({ best: problems.map(() => 0), tabs: 0, pastes: 0 });
 
+  const proctor = useProctor(strict && !done, (log) => finish(log));
   const p = problems[at];
   const li = lang === "python" ? 0 : 1;
 
@@ -84,7 +86,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
 
   // leaving the tab is counted, like a real proctored test
   useEffect(() => {
-    if (done) return;
+    if (done || strict) return;
     const off = () => {
       if (document.visibilityState === "hidden") {
         live.current.tabs++;
@@ -94,7 +96,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
     };
     document.addEventListener("visibilitychange", off);
     return () => document.removeEventListener("visibilitychange", off);
-  }, [done]);
+  }, [done, strict]);
 
   const run = async (kind: "run" | "submit") => {
     setBusy(true);
@@ -109,13 +111,14 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
     setBusy(false);
   };
 
-  function finish() {
+  function finish(breaches?: Breach[]) {
     if (ended.current) return;
     ended.current = true;
+    if (!breaches) proctor.stop();
     const { best: b, tabs: t, pastes: ps } = live.current;
     const items = problems.map((q, i) => ({ title: q.title, level: q.level, passed: b[i], total: q.tests.length }));
     const score = Math.round((items.reduce((s, x) => s + x.passed / x.total, 0) / items.length) * 100);
-    const r: MockResult = { company: company.id, at: Date.now(), score, mins: plan.mins, usedSecs: Math.min(plan.mins * 60, Math.round((Date.now() - started.current) / 1000)), tabs: t, pastes: ps, items };
+    const r: MockResult = { company: company.id, at: Date.now(), score, mins: plan.mins, usedSecs: Math.min(plan.mins * 60, Math.round((Date.now() - started.current) / 1000)), tabs: t, pastes: ps, strict, ...(breaches ? { ended: true, breaches } : {}), items };
     try {
       localStorage.setItem(MOCK_KEY, JSON.stringify([r, ...loadMocks()].slice(0, 20)));
     } catch {}
@@ -129,9 +132,19 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
         <div className="mt-3 flex items-end gap-4">
           <b className={cn("text-[54px] leading-none", done.score >= 70 ? "text-emerald-400" : done.score >= 40 ? "text-amber-300" : "text-rose-400")}>{done.score}%</b>
           <p className="pb-1.5 text-[13px] text-white/60">
-            Time used {fmt(done.usedSecs)} of {done.mins}:00 · left the tab {done.tabs}× · pasted {done.pastes}×
+            Time used {fmt(done.usedSecs)} of {done.mins}:00 · {done.strict ? `strict mode · ${done.breaches?.length ?? 0} warnings` : `left the tab ${done.tabs}× · pasted ${done.pastes}×`}
           </p>
         </div>
+        {done.ended && (
+          <div className="mt-4 rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 py-3 text-[12.5px] text-rose-100/80">
+            <b className="text-white">Strict mode closed this round after {MAX_WARNINGS} warnings.</b> It was saved as it stood.
+            <ul className="mt-1.5 list-disc pl-4 text-white/60">
+              {done.breaches?.map((b, k) => (
+                <li key={k}>{BREACH_TEXT[b]}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <ul className="mt-5 space-y-2">
           {done.items.map((x) => (
             <li key={x.title} className="flex items-center justify-between rounded-xl bg-white/[0.04] px-4 py-3 text-[13.5px]">
@@ -155,10 +168,15 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
 
   const o = out[at];
   return (
-    <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d12]">
+    <div className={cn(STRICT_SHELL, "flex flex-col p-3")}>
+    {strict && <StrictDock left={proctor.left} onBreach={proctor.report} />}
+    <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} what="test" />
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d12]">
       {/* top bar */}
       <div className="flex flex-wrap items-center gap-3 border-b border-white/10 px-4 py-2.5">
-        <p className="text-[13.5px] font-semibold text-white">{company.name} · mock coding round</p>
+        <p className="text-[13.5px] font-semibold text-white">
+          {company.name} · mock coding round{strict && <span className="ml-2 rounded bg-cyan-400/15 px-1.5 py-0.5 text-[11px] text-cyan-300">Strict mode</span>}
+        </p>
         <div className="flex gap-1">
           {problems.map((q, i) => (
             <button key={q.id} type="button" onClick={() => setAt(i)} aria-pressed={at === i} className={cn("flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium", at === i ? "bg-white text-black" : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]")}>
@@ -167,12 +185,12 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
             </button>
           ))}
         </div>
-        {(tabs > 0 || pastes > 0) && (
+        {!strict && (tabs > 0 || pastes > 0) && (
           <span className="ml-auto text-[11.5px] text-amber-300/80">
             Left tab {tabs}× · pasted {pastes}×
           </span>
         )}
-        <span className={cn(tabs > 0 || pastes > 0 ? "" : "ml-auto", "flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[14px] font-semibold tabular-nums", left <= 300 ? "bg-rose-500/20 text-rose-300" : "bg-white/[0.06] text-white")} aria-live="off">
+        <span className={cn(!strict && (tabs > 0 || pastes > 0) ? "" : "ml-auto", "flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[14px] font-semibold tabular-nums", left <= 300 ? "bg-rose-500/20 text-rose-300" : "bg-white/[0.06] text-white")} aria-live="off">
           <ClockIcon size={14} /> {fmt(left)}
         </span>
         {!confirm ? (
@@ -182,7 +200,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
         ) : (
           <span className="flex items-center gap-2 text-[12.5px] text-white/70">
             End now?
-            <Button size="sm" variant="primary" onClick={finish}>
+            <Button size="sm" variant="primary" onClick={() => finish()}>
               Yes, end
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>
@@ -200,15 +218,15 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         {/* problem */}
-        <div className="max-h-[70vh] overflow-auto border-white/10 p-5 lg:border-r">
-          <p className="text-[18px] font-semibold text-white">
+        <div className="min-h-0 overflow-auto border-white/10 p-6 lg:border-r">
+          <p className="text-[21px] font-semibold text-white">
             Q{at + 1}. {p.title} <span className={cn("ml-1 text-[12.5px]", LEVEL_TONE[p.level])}>{p.level}</span>
           </p>
-          <p className="mt-3 text-[13.5px] leading-relaxed whitespace-pre-wrap text-white/80">{p.statement}</p>
+          <p className="mt-3 text-[15.5px] leading-relaxed whitespace-pre-wrap text-white/85">{p.statement}</p>
           {p.tests.slice(0, p.shown).map((t, i) => (
-            <div key={i} className="mt-3 rounded-lg bg-white/[0.04] px-3 py-2 font-mono text-[12px] text-white/75">
+            <div key={i} className="mt-3 rounded-lg bg-white/[0.04] px-4 py-3 font-mono text-[13.5px] text-white/80">
               <p>
                 <span className="text-white/40">Input: </span>
                 {p.params.map((n, j) => `${n} = ${show(t.args[j], lang)}`).join(", ")}
@@ -220,7 +238,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
             </div>
           ))}
           {p.constraints.length > 0 && (
-            <ul className="mt-4 list-disc space-y-0.5 pl-5 text-[12px] text-white/55">
+            <ul className="mt-4 list-disc space-y-0.5 pl-5 text-[13px] text-white/55">
               {p.constraints.map((c) => (
                 <li key={c}>{c}</li>
               ))}
@@ -229,7 +247,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
         </div>
 
         {/* editor */}
-        <div className="flex min-h-[60vh] flex-col">
+        <div className="flex min-h-[60vh] flex-col lg:min-h-0">
           <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
             <select value={lang} onChange={(e) => setLang(e.target.value as Lang)} aria-label="Language" className="h-8 rounded-lg border border-white/10 bg-white/[0.03] px-2 text-[12.5px] text-white [&>option]:bg-[#1a1a1f]">
               {(Object.keys(LANG_LABEL) as Lang[]).map((l) => (
@@ -251,16 +269,16 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
             value={code[at][li]}
             lang={lang}
             onChange={(v, kind) => {
-              if (kind === "paste") {
+              if (kind === "paste" && !strict) {
                 live.current.pastes++;
                 setPastes((n) => n + 1);
               }
               setCode((c) => c.map((x, i) => (i === at ? (li === 0 ? [v, x[1]] : [x[0], v]) : x)));
             }}
-            className="min-h-[300px] flex-1"
+            className="min-h-[300px] flex-1 text-[15px]"
             label={`${LANG_LABEL[lang]} code for ${p.title}`}
           />
-          <div className="min-h-[90px] border-t border-white/10 px-4 py-3 text-[12.5px]">
+          <div className={cn("h-[140px] shrink-0 overflow-auto border-t border-white/10 px-4 py-3 text-[13px]", strict && "pr-[240px]")}>
             {!o && <p className="text-white/40">Run checks the examples. Submit checks every hidden test; your best Submit counts.</p>}
             {o && o.res.status !== "ok" && <p className="whitespace-pre-wrap break-words text-rose-300">{o.res.error || (o.res.status === "timeout" ? "Too slow: your code took too long." : "Your code has an error.")}</p>}
             {o && o.res.status === "ok" && (
@@ -278,6 +296,7 @@ export function CompanyMock({ company, onExit }: { company: CodingCompany; onExi
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

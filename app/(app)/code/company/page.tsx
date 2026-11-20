@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { CompanyMock, loadMocks, mockPlan, type MockResult } from "@/components/coding/company-mock";
+import { MAX_WARNINGS, enterFullscreen } from "@/components/interview/proctor";
 import { CompanyLogo } from "@/components/company/company-logo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, CheckIcon, ChevronDownIcon, ClockIcon, InfoIcon, SearchIcon, SparkleIcon, TrashIcon } from "@/components/ui/icons";
@@ -151,6 +152,7 @@ export default function CompanyCoding() {
   const [pending, setPending] = useState<ReportedQuestion[]>([]);
   const [gen, setGen] = useState<{ level: Level; busy: string; error: string }>({ level: "Easy", busy: "", error: "" });
   const [mock, setMock] = useState(false);
+  const [strict, setStrict] = useState(true);
   const [mocks, setMocks] = useState<MockResult[]>([]);
   const [form, setForm] = useState({ open: false, year: NOW, round: "Coding round", role: "", question: "", busy: false, msg: "", error: "" });
 
@@ -244,7 +246,7 @@ export default function CompanyCoding() {
         </Link>
       </div>
 
-      {co && mock && <CompanyMock company={co} onExit={() => setMock(false)} />}
+      {co && mock && <CompanyMock company={co} strict={strict} onExit={() => setMock(false)} />}
 
       {!mock && (
       <>
@@ -428,7 +430,21 @@ export default function CompanyCoding() {
                     </p>
                   ) : null;
                 })()}
-                <Button variant="primary" className="mt-3 w-full" onClick={() => setMock(true)}>
+                <div className="mt-3 flex items-center justify-between rounded-lg bg-black/20 px-3 py-2 text-[12.5px] text-white/75">
+                  Strict mode
+                  <button type="button" role="switch" aria-checked={strict} aria-label="Strict mode" onClick={() => setStrict(!strict)} className={cn("relative h-5 w-9 rounded-full transition", strict ? "bg-cyan-400" : "bg-white/15")}>
+                    <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />
+                  </button>
+                </div>
+                {strict && <p className="mt-2 text-[11.5px] leading-relaxed text-white/45">Full screen, no other tabs, no copy or paste. The camera checks you look at the screen, are alone and have no phone in view; the mic checks for talking. {MAX_WARNINGS} warnings and the round closes. Nothing is recorded.</p>}
+                <Button
+                  variant="primary"
+                  className="mt-3 w-full"
+                  onClick={() => {
+                    if (strict) enterFullscreen();
+                    setMock(true);
+                  }}
+                >
                   Start mock round
                 </Button>
               </div>
