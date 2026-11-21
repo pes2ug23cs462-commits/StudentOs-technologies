@@ -88,7 +88,7 @@ export async function followUp(o: { role: string; kind: InterviewKind; level: In
     return ""; // never hold the interview up for a follow-up
   }
 }
-/** One live turn: the candidate just said something on this question; Asha clarifies, probes, nods along or wraps up. */
+/** One live turn: the candidate just said something on this question; Disha clarifies, probes, nods along or wraps up. */
 export type TurnAct = "clarify" | "probe" | "continue" | "done";
 export async function turn(o: { role: string; kind: InterviewKind; level: InterviewLevel; style?: InterviewStyle; lang?: InterviewLang; q: string; thread: { who: "you" | "asha"; text: string }[]; probes: number }) {
   try {
@@ -141,7 +141,7 @@ export const RUBRIC_LABEL: Record<RubricItem["key"], string> = { problem: "Probl
 
 type ProblemBrief = { title: string; statement: string; level: string };
 
-/** Asha's next line in a coding round. */
+/** Disha's next line in a coding round. */
 export async function codeChat(o: { problem: ProblemBrief; code: string; lang: string; stage: string; ask: "reply" | "hint"; history: ChatLine[]; style?: InterviewStyle; ilang?: InterviewLang }) {
   const j = await postAi<{ reply?: string }>("/api/interview", { action: "code-chat", ...o, history: o.history.slice(-12) });
   return (j.reply ?? "").trim();

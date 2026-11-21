@@ -1,6 +1,6 @@
 "use client";
 
-/* A company's AI technical interview, taken on StudentOS in strict mode: Asha asks
+/* A company's AI technical interview, taken on StudentOS in strict mode: Disha asks
    the company's questions one at a time (spoken), the student answers by speaking
    or typing, and the camera checks for looking away, a second person and a voice
    that isn't theirs. The report goes to the company, not to the student. */
@@ -113,7 +113,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
   // the fourth warning ends the interview with the answers given so far
   const proctor = useProctor(live, (log) => void finishRef.current(log, true));
 
-  // Asha reads each new question aloud
+  // Disha reads each new question aloud
   useEffect(() => {
     if (!live || !v?.question || !talker) return;
     setQAt(Date.now());
@@ -171,7 +171,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
       setAnswer("");
       setReply("");
       setAsking(false);
-      if (r.followup) setV(r); // Asha asks one follow-up on that answer
+      if (r.followup) setV(r); // Disha asks one follow-up on that answer
       else if (r.index >= r.total) {
         proctor.stop();
         await finish(proctor.log, false);
@@ -183,7 +183,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
     }
   };
 
-  // speak to Asha: what they say goes to her when they stop
+  // speak to Disha: what they say goes to her when they stop
   const [askListening, setAskListening] = useState(false);
   const askRec = useRef<Rec | null>(null);
   const askMic = () => {
@@ -205,13 +205,13 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
     };
     r.onend = () => {
       setAskListening(false);
-      if (said.trim()) void askAsha(said.trim());
+      if (said.trim()) void askDisha(said.trim());
     };
     askRec.current = r;
     setAskListening(true);
     r.start();
   };
-  const askAsha = async (message: string) => {
+  const askDisha = async (message: string) => {
     if (!message.trim() || busy) return;
     rec.current?.stop();
     talker?.stop();
@@ -270,7 +270,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
       <div className="mx-auto mt-6 max-w-[620px] rounded-2xl border border-white/[0.08] bg-[#0d152a] p-7">
         <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">{info.iv.company} · {info.iv.role}</p>
         <h1 className="mt-1 text-[24px] font-semibold text-white">{info.iv.title}</h1>
-        <p className="mt-1 text-[13.5px] text-white/60">Asha, the AI interviewer, asks {info.iv.count} {kind === "hr" ? "HR questions: about you, why this company, and how you work with others" : "questions"}. Answer each by speaking or typing, about 1–2 minutes each. Like a real interviewer, she may ask a follow-up on an answer, and you can ask her to repeat or explain a question. {kind === "hr" ? "Be yourself and give real examples." : ""}</p>
+        <p className="mt-1 text-[13.5px] text-white/60">Disha, the AI interviewer, asks {info.iv.count} {kind === "hr" ? "HR questions: about you, why this company, and how you work with others" : "questions"}. Answer each by speaking or typing, about 1–2 minutes each. Like a real interviewer, she may ask a follow-up on an answer, and you can ask her to repeat or explain a question. {kind === "hr" ? "Be yourself and give real examples." : ""}</p>
         <div className="mt-5 rounded-xl border border-amber-400/25 bg-amber-400/[0.05] p-4">
           <p className="flex items-center gap-2 text-[13.5px] font-semibold text-amber-100"><ShieldIcon size={15} /> Strict mode</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-white/70">
@@ -308,7 +308,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
           <div className="space-y-4">
             <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0b0a14]">
               <Interviewer talker={talker} listening={listening} />
-              <span className="absolute bottom-3 left-3 rounded-lg bg-black/55 px-2.5 py-1 text-[12px] text-white">Asha · {speaking ? "asking" : listening ? "listening" : "waiting for your answer"}</span>
+              <span className="absolute bottom-3 left-3 rounded-lg bg-black/55 px-2.5 py-1 text-[12px] text-white">Disha · {speaking ? "asking" : listening ? "listening" : "waiting for your answer"}</span>
             </div>
             <SelfView onBreach={proctor.report} voice={{ paused: speaking }} className="mx-auto w-[260px]" />
           </div>
@@ -317,26 +317,26 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
             <p className="text-[18px] leading-snug font-semibold text-white">{v.question}</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <button type="button" onClick={() => talker && (setSpeaking(true), void talker.say(v.question).finally(() => setSpeaking(false)))} className="text-[12.5px] text-accent hover:underline">Hear it again</button>
-              <button type="button" onClick={() => setAsking((x) => !x)} className="text-[12.5px] text-accent hover:underline">{asking ? "Close" : "Ask Asha about the question"}</button>
+              <button type="button" onClick={() => setAsking((x) => !x)} className="text-[12.5px] text-accent hover:underline">{asking ? "Close" : "Ask Disha about the question"}</button>
             </div>
             {asking && (
               <div className="mt-3 rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] p-3">
                 <div className="flex flex-wrap gap-1.5">
                   {["Please repeat the question", "What do you mean by this?", "Can you give an example?"].map((c) => (
-                    <button key={c} type="button" disabled={!!busy} onClick={() => void askAsha(c)} className="h-8 rounded-lg border border-white/12 px-2.5 text-[12px] text-white/75 hover:border-violet-400/50 hover:text-white">{c}</button>
+                    <button key={c} type="button" disabled={!!busy} onClick={() => void askDisha(c)} className="h-8 rounded-lg border border-white/12 px-2.5 text-[12px] text-white/75 hover:border-violet-400/50 hover:text-white">{c}</button>
                   ))}
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); void askAsha(askText); }} className="mt-2 flex gap-2">
+                <form onSubmit={(e) => { e.preventDefault(); void askDisha(askText); }} className="mt-2 flex gap-2">
                   {canSpeak && (
-                    <button type="button" onClick={askMic} aria-label={askListening ? "Stop" : "Speak to Asha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[12.5px]", askListening ? "border-rose-400/60 bg-rose-500/15 text-rose-200" : "border-white/15 text-white/80 hover:border-violet-400/50")}>
+                    <button type="button" onClick={askMic} aria-label={askListening ? "Stop" : "Speak to Disha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[12.5px]", askListening ? "border-rose-400/60 bg-rose-500/15 text-rose-200" : "border-white/15 text-white/80 hover:border-violet-400/50")}>
                       <MicIcon size={14} /> {askListening ? "Stop" : "Speak"}
                     </button>
                   )}
-                  <input value={askText} onChange={(e) => setAskText(e.target.value)} maxLength={300} placeholder={canSpeak ? "Speak or type your question for Asha…" : "Type your question for Asha…"} className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-field px-3 text-[13px] text-white placeholder:text-white/35" />
+                  <input value={askText} onChange={(e) => setAskText(e.target.value)} maxLength={300} placeholder={canSpeak ? "Speak or type your question for Disha…" : "Type your question for Disha…"} className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-field px-3 text-[13px] text-white placeholder:text-white/35" />
                   <Button size="sm" type="submit" loading={busy === "ask"} disabled={!askText.trim()}>Ask</Button>
                 </form>
-                {reply && <p className="mt-2.5 rounded-lg bg-[#0b0a14] px-3 py-2 text-[13px] leading-relaxed text-white/85"><b className="text-violet-200">Asha:</b> {reply}</p>}
-                <p className="mt-2 text-[11px] text-white/40">Asha can explain the question, not answer it. {info.iv.company} sees what you asked.</p>
+                {reply && <p className="mt-2.5 rounded-lg bg-[#0b0a14] px-3 py-2 text-[13px] leading-relaxed text-white/85"><b className="text-violet-200">Disha:</b> {reply}</p>}
+                <p className="mt-2 text-[11px] text-white/40">Disha can explain the question, not answer it. {info.iv.company} sees what you asked.</p>
               </div>
             )}
             <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={8} placeholder={canSpeak ? "Tap Speak and answer out loud, or type…" : "Type your answer…"} className="mt-4 min-h-[200px] w-full flex-1 resize-none rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:border-violet-400/60" />

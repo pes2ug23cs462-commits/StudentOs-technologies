@@ -101,7 +101,7 @@ function Learn() {
   const passed = !!checks && checks.every((c) => c.ok);
   const usesInput = lesson.checks.some((c) => c.input);
   const pct = Math.round((done.length / LESSONS.length) * 100);
-  const askAsha = `I'm learning Python from zero (lesson: ${lesson.title}). The task: ${lesson.task}\nMy code:\n${code}\nExplain simply where I went wrong, in Hinglish, without giving the full answer.`;
+  const askDisha = `I'm learning Python from zero (lesson: ${lesson.title}). The task: ${lesson.task}\nMy code:\n${code}\nExplain simply where I went wrong, in Hinglish, without giving the full answer.`;
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -217,8 +217,8 @@ function Learn() {
               <Button variant="ghost" size="sm" icon={<BulbIcon size={14} />} onClick={() => setHint((v) => !v)}>
                 Hint
               </Button>
-              <Link href={`/assistant?ask=${encodeURIComponent(askAsha)}`} className="flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] text-white/75 hover:bg-white/[0.06] hover:text-white">
-                <BotIcon size={14} /> Ask Asha
+              <Link href={`/assistant?ask=${encodeURIComponent(askDisha)}`} className="flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] text-white/75 hover:bg-white/[0.06] hover:text-white">
+                <BotIcon size={14} /> Ask Disha
               </Link>
               {tries >= 2 && !passed && (
                 <Button variant="ghost" size="sm" icon={<EyeIcon size={14} />} onClick={() => edit(lesson.answer)}>

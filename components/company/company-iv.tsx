@@ -17,7 +17,7 @@ const verdictTone = (v: string) => (v === "Strong yes" ? "text-emerald-300" : v 
 
 const KIND = {
   technical: { name: "AI technical interview", title: "Technical interview", blurb: "StudentOS’s AI interviewer asks every shortlisted student your technical questions, by voice, and gives you a scored report.", focus: "e.g. Java, OOP, DBMS joins, one project they built", own: "e.g. Explain the difference between an abstract class and an interface.", hint: "The AI writes questions on these topics for the role.", round: /tech|interview/i },
-  hr: { name: "AI HR interview", title: "HR interview", blurb: "Asha runs a first HR round: about them, why your company, strengths, teamwork and fit. Use it to screen, then meet the best live.", focus: "e.g. communication, why our company, relocation to Bangalore, night shifts, joining in July", own: "e.g. Are you open to working in any of our cities?", hint: "The AI writes HR questions on these points. It never asks about religion, caste, marriage, health or family plans.", round: /hr/i },
+  hr: { name: "AI HR interview", title: "HR interview", blurb: "Disha runs a first HR round: about them, why your company, strengths, teamwork and fit. Use it to screen, then meet the best live.", focus: "e.g. communication, why our company, relocation to Bangalore, night shifts, joining in July", own: "e.g. Are you open to working in any of our cities?", hint: "The AI writes HR questions on these points. It never asks about religion, caste, marriage, health or family plans.", round: /hr/i },
 } as const;
 
 export function IvCard({ pid, kind = "technical", rounds, summary, onSaved }: { pid: string; kind?: IvKind; rounds: string[]; summary: IvSummary | null; onSaved: () => void }) {

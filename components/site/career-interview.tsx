@@ -65,7 +65,7 @@ function Note({ icon, tone, title, text, children }: { icon: "check" | "bolt" | 
 
 const ABOUT: Record<CareerStep, string> = {
   test: "Questions with options, and maybe a coding problem. Timed.",
-  ai: "Asha, our AI interviewer, asks about you and the role. About 15 minutes. Speak or type.",
+  ai: "Disha, our AI interviewer, asks about you and the role. About 15 minutes. Speak or type.",
   hr: "About you, why StudentOS, and how you work with others. About 10 minutes.",
   live: "A video call with our team, here on StudentOS.",
 };

@@ -1,6 +1,6 @@
 "use client";
 
-/* A live coding interview with Asha: she asks for the approach, the student codes
+/* A live coding interview with Disha: she asks for the approach, the student codes
    in the editor (run against the examples, submit against every test), then she
    asks two follow-ups about the solution. Everything that happens is logged with a
    time so the feedback report can point at real moments. */
@@ -33,7 +33,7 @@ export type RoundResult = { code: string; passed: number; total: number; seconds
 const mmss = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`;
 const LINES = {
   en: {
-    hello: (t: string) => `Hi, I’m Asha. Today’s problem is ${t}. Take a moment to read it. Before you code, what’s your approach, and what’s its time complexity?`,
+    hello: (t: string) => `Hi, I’m Disha. Today’s problem is ${t}. Take a moment to read it. Before you code, what’s your approach, and what’s its time complexity?`,
     pass: "Nice, every test passes. Two quick follow-ups.",
     fail: (p: number, n: number) => `${p} of ${n} tests pass. Look at the failing case and try again.`,
     done: "That’s all from me. Thanks! Press End interview to see your feedback.",
@@ -90,7 +90,7 @@ export function CodingRound({
   const [events, setEvents] = useState<RoundEvent[]>([]);
   const [code, setCode] = useState(problem.starter[lang]);
   const [secs, setSecs] = useState(0);
-  const [asha, setAsha] = useState<"speaking" | "thinking" | "idle">("idle");
+  const [asha, setDisha] = useState<"speaking" | "thinking" | "idle">("idle");
   const [input, setInput] = useState("");
   const [rec, setRec] = useState<Recorder | null>(null);
   const [hearing, setHearing] = useState(false);
@@ -139,10 +139,10 @@ export function CodingRound({
     if (ended.current) return;
     setChat((c) => [...c, { who: "asha", text, t: now() }]);
     if (!voice || !talker) return;
-    setAsha("speaking");
+    setDisha("speaking");
     const r = await talker.say(text);
-    setAsha("idle");
-    // a real conversation: when Asha asks something, the mic turns on and she hears the answer when they pause
+    setDisha("idle");
+    // a real conversation: when Disha asks something, the mic turns on and she hears the answer when they pause
     if (r === "done" && /[?？।]\s*$/.test(text.trim()) && !ended.current) micRef.current(true);
   };
   const micRef = useRef<(auto?: boolean) => void>(() => {});
@@ -225,13 +225,13 @@ export function CodingRound({
   };
 
   const ai = async (fn: () => Promise<string>) => {
-    setAsha("thinking");
+    setDisha("thinking");
     try {
       const reply = await fn();
-      setAsha("idle");
+      setDisha("idle");
       if (reply) await say(reply);
     } catch (e) {
-      setAsha("idle");
+      setDisha("idle");
       setChat((c) => [...c, { who: "asha", text: e instanceof AssistantError ? e.message : "Sorry, I couldn’t catch that. Say it again?", t: now() }]);
     }
   };
@@ -299,14 +299,14 @@ export function CodingRound({
     if (stage === "problem" || stage === "intro") {
       checkQuiet();
       setStage("followup");
-      setAsha("thinking");
+      setDisha("thinking");
       let qs: string[] = [];
       try {
         qs = await codeFollowups({ problem: brief, code, lang, ilang });
       } catch {
         qs = [];
       }
-      setAsha("idle");
+      setDisha("idle");
       if (!qs.length) {
         setStage("wrap");
         await say(L.done);
@@ -327,7 +327,7 @@ export function CodingRound({
     if (auto && (hearing || ended.current)) return;
     try {
       talker?.stop();
-      // with voice on, it stops by itself when they pause, so Asha can answer like a person
+      // with voice on, it stops by itself when they pause, so Disha can answer like a person
       const r = await startRecording(async (audio) => {
         setRec(null);
         setHearing(true);
@@ -348,7 +348,7 @@ export function CodingRound({
   micRef.current = (auto = false) => {
     if (!rec && !hearing) void mic(auto);
   };
-  // like a real interviewer: after a long quiet stretch of coding, Asha checks in
+  // like a real interviewer: after a long quiet stretch of coding, Disha checks in
   const live = useRef({ stage, asha, busy: false, checkIn: () => {} });
   live.current = { stage, asha, busy: !!rec || hearing, checkIn: () => void say(L.checkIn) };
   useEffect(() => {
@@ -457,13 +457,13 @@ export function CodingRound({
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3 p-3 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
-        {/* left: Asha, problem, talk bar */}
+        {/* left: Disha, problem, talk bar */}
         <div className="flex min-h-0 min-w-0 flex-col gap-3">
           <section className="flex min-h-[220px] flex-1 flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02]">
             <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
               <span className={cn("relative h-10 w-10 shrink-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#fcd34d,#d97706_45%,#22d3ee_100%)]", asha === "speaking" && "animate-pulse")} aria-hidden />
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-white">Asha · AI interviewer</p>
+                <p className="text-[13px] font-semibold text-white">Disha · AI interviewer</p>
                 <p className="flex items-center gap-1.5 text-[11.5px] text-cyan-300" aria-live="polite">
                   {(asha === "speaking" || rec) && (
                     <span className="flex h-3 items-end gap-[2px]" aria-hidden>
@@ -491,12 +491,12 @@ export function CodingRound({
               {chat.map((m, k) => (
                 <div key={k} className={cn("flex flex-col", m.who === "you" ? "items-end" : "items-start")}>
                   <span className="mb-1 text-[10.5px] text-white/35">
-                    {m.who === "you" ? "You" : "Asha"} · {mmss(m.t)}
+                    {m.who === "you" ? "You" : "Disha"} · {mmss(m.t)}
                   </span>
                   <p className={cn("max-w-[88%] rounded-xl px-3 py-2 text-[12.5px] leading-relaxed", m.who === "you" ? "bg-violet-600/35 text-white" : "border border-white/[0.07] bg-white/[0.04] text-white/85")}>{m.text}</p>
                 </div>
               ))}
-              {asha === "thinking" && <p className="text-[12px] text-white/40">Asha is thinking…</p>}
+              {asha === "thinking" && <p className="text-[12px] text-white/40">Disha is thinking…</p>}
             </div>
           </section>
 
@@ -538,11 +538,11 @@ export function CodingRound({
               }}
               className="flex items-center gap-2"
             >
-              <button type="button" onClick={() => void mic()} aria-label={rec ? "Stop talking" : "Talk to Asha"} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition", rec ? "bg-rose-500 text-white" : "bg-cyan-400 text-[#06141a] hover:bg-cyan-300")}>
+              <button type="button" onClick={() => void mic()} aria-label={rec ? "Stop talking" : "Talk to Disha"} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition", rec ? "bg-rose-500 text-white" : "bg-cyan-400 text-[#06141a] hover:bg-cyan-300")}>
                 {rec ? <StopIcon size={14} /> : <MicIcon size={16} />}
               </button>
               <div className="min-w-0 flex-1">
-                <input value={input} onChange={(e) => setInput(e.target.value)} aria-label="Message to Asha" placeholder={rec ? "Listening… tap stop when you’re done" : "You’re live — think out loud, or type here"} className="h-10 w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 text-[12.5px] text-white outline-none placeholder:text-white/40 focus:border-cyan-400/60" />
+                <input value={input} onChange={(e) => setInput(e.target.value)} aria-label="Message to Disha" placeholder={rec ? "Listening… tap stop when you’re done" : "You’re live — think out loud, or type here"} className="h-10 w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 text-[12.5px] text-white outline-none placeholder:text-white/40 focus:border-cyan-400/60" />
               </div>
               <button type="submit" disabled={!input.trim() || asha === "thinking"} aria-label="Send" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white/70 transition hover:text-white disabled:opacity-30">
                 <SendIcon size={14} />

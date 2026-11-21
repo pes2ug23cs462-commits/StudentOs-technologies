@@ -84,7 +84,7 @@ export async function GET(req: Request) {
     }),
     run(
       "tts-sarvam",
-      "Asha’s Hindi voice (Sarvam)",
+      "Disha’s Hindi voice (Sarvam)",
       async () => {
         if (!sarvamConfigured()) return missing("SARVAM_API_KEY");
         const t0 = Date.now();
@@ -99,7 +99,7 @@ export async function GET(req: Request) {
     ),
     run(
       "tts-google",
-      "Asha’s voice in English and Hindi (Google)",
+      "Disha’s voice in English and Hindi (Google)",
       async () => {
         if (!adminConfigured()) return missing("FIREBASE_SERVICE_ACCOUNT");
         const t0 = Date.now();

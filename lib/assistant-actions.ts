@@ -263,7 +263,7 @@ export function replyToBlocks(title: string, reply: string): DocBlock[] {
   const plain = (t: string) => t.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/`([^`]+)`/g, "$1").replace(/\[(.+?)\]\([^)]*\)/g, "$1").trim();
   const out: DocBlock[] = [
     { kind: "title", text: title },
-    { kind: "sub", text: `Explained by Asha, StudentOS · ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` },
+    { kind: "sub", text: `Explained by Disha, StudentOS · ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` },
   ];
   const body = reply.replace(/```[\s\S]*?```/g, "").split("\n");
   for (const raw of body) {

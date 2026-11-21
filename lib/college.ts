@@ -376,7 +376,7 @@ export function sampleMembers(type: CollegeType): MemberSummary[] {
   let seed = 7;
   const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
   const sections = type === "school" ? ["II PUC A", "II PUC B", "II PUC C", "I PUC A", "I PUC B"] : ["CSE 2nd year", "CSE 3rd year", "ECE 3rd year", "BCom 2nd year"];
-  const first = ["Aarav", "Diya", "Rohan", "Ananya", "Kiran", "Sneha", "Vikram", "Meera", "Arjun", "Pooja", "Rahul", "Nisha", "Aditya", "Kavya", "Suresh", "Divya", "Manoj", "Priya", "Varun", "Asha"];
+  const first = ["Aarav", "Diya", "Rohan", "Ananya", "Kiran", "Sneha", "Vikram", "Meera", "Arjun", "Pooja", "Rahul", "Nisha", "Aditya", "Kavya", "Suresh", "Divya", "Manoj", "Priya", "Varun", "Disha"];
   const out: MemberSummary[] = [];
   // each section is a bit stronger or weaker in each subject
   const lean: Record<string, number> = {};

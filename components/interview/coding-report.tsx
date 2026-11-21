@@ -239,7 +239,7 @@ export function CodingReport({
         {(["code", "chat"] as const).map((x) => (
           <Card key={x} className="overflow-hidden">
             <button type="button" onClick={() => setShow2(show2 === x ? null : x)} aria-expanded={show2 === x} className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[13.5px] font-medium text-white">
-              {x === "code" ? "Your final code" : "Conversation with Asha"}
+              {x === "code" ? "Your final code" : "Conversation with Disha"}
               <ChevronDownIcon size={15} className={cn("text-white/40 transition-transform", show2 === x && "rotate-180")} />
             </button>
             {show2 === x &&
@@ -250,7 +250,7 @@ export function CodingReport({
                   {c.transcript.map((m, k) => (
                     <p key={k} className="text-[12.5px] leading-relaxed">
                       <span className="mr-2 font-mono text-[11px] text-white/35">{mmss(m.t)}</span>
-                      <b className={m.who === "you" ? "text-violet-300" : "text-cyan-300"}>{m.who === "you" ? "You" : "Asha"}:</b> <span className="text-white/75">{m.text}</span>
+                      <b className={m.who === "you" ? "text-violet-300" : "text-cyan-300"}>{m.who === "you" ? "You" : "Disha"}:</b> <span className="text-white/75">{m.text}</span>
                     </p>
                   ))}
                 </div>

@@ -208,7 +208,7 @@ function RoleForm({ initial, isNew, busy, onSave, onCancel }: { initial: CareerR
               </div>
             )}
           </RoundRow>
-          <RoundRow n={2} on={r.ai !== false} title="AI interview" text="Asha asks about them and the role; you get a score, a verdict and every answer." onToggle={() => setR({ ...r, ai: r.ai === false })}>
+          <RoundRow n={2} on={r.ai !== false} title="AI interview" text="Disha asks about them and the role; you get a score, a verdict and every answer." onToggle={() => setR({ ...r, ai: r.ai === false })}>
             {r.ai !== false && (
               <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
                 <div>

@@ -102,7 +102,7 @@ export class AiError extends Error {
 
 /* gpt-oss and GLM "think" before they answer, and that thinking counts against
    max_tokens. With a short limit (a 200-token reply) the thinking used it all up and
-   the answer came back empty, so Asha went quiet. So: think briefly, and leave room. */
+   the answer came back empty, so Disha went quiet. So: think briefly, and leave room. */
 const THINKS = /gpt-oss|glm/i;
 function requestBody(p: Provider, messages: ChatMessage[], maxTokens: number, temperature: number) {
   const body: Record<string, unknown> = { model: p.model, messages, temperature, max_tokens: maxTokens };

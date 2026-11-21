@@ -1,7 +1,7 @@
 "use client";
 
 /* Premium · AI mock interview (/interview).
-   setup → the AI writes questions for the role → an on-screen interviewer (Asha)
+   setup → the AI writes questions for the role → an on-screen interviewer (Disha)
    asks each one aloud with lip sync, then the mic turns on and the student
    answers by speaking or typing → the AI scores every answer and gives
    feedback with a model answer → saved to history. */
@@ -38,7 +38,7 @@ type Phase = "setup" | "preparing" | "live" | "scoring" | "result" | "coding" | 
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-const INTERVIEWER = "Asha";
+const INTERVIEWER = "Disha";
 const LINES: Record<InterviewLang, { hello: string; lead: string[] }> = {
   en: { hello: `Hi, I’m ${INTERVIEWER}. Let’s begin.`, lead: ["Okay, thank you.", "Got it, thanks.", "Alright.", "Thank you. Next one.", "Okay."] },
   hi: { hello: "नमस्ते, मैं आशा हूँ। चलिए शुरू करते हैं।", lead: ["ठीक है, धन्यवाद।", "अच्छा, समझ गई।", "बहुत बढ़िया।", "धन्यवाद। अगला सवाल।", "ठीक है।"] },
@@ -141,7 +141,7 @@ export default function InterviewPage() {
   const [strict, setStrict] = useState(true);
   const rules = useStrictRules(kind === "coding" ? "coding round" : "interview", true);
   const [endLog, setEndLog] = useState<Breach[]>([]);
-  // a real conversation: on each question the candidate speaks in turns; Asha clarifies (never answers),
+  // a real conversation: on each question the candidate speaks in turns; Disha clarifies (never answers),
   // asks about anything unclear in what they said, nods along, or wraps up. "Any questions for me?" at the end.
   type Line = { who: "you" | "asha"; text: string; act?: TurnAct };
   const [threads, setThreads] = useState<Record<number, Line[]>>({});
@@ -243,7 +243,7 @@ export default function InterviewPage() {
     };
   }, [phase, i, talker]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => stopSpeaking(), []);
-  // outside the live round (ended, scoring, results, back to setup) Asha never keeps talking
+  // outside the live round (ended, scoring, results, back to setup) Disha never keeps talking
   useEffect(() => {
     if (phase === "live" || phase === "coding") return;
     talker?.stop();
@@ -398,7 +398,7 @@ export default function InterviewPage() {
     }
     try {
       quiet();
-      // hands-free: the mic stops by itself when they pause, so Asha can react like a person
+      // hands-free: the mic stops by itself when they pause, so Disha can react like a person
       const r = await startRecording(async (audio) => {
         setRec(null);
         setHearing(true);
@@ -426,7 +426,7 @@ export default function InterviewPage() {
     if (!rec && !hearing && !silenced()) void mic(true);
   };
 
-  /** The candidate said (or typed) something on the current question: add it, and let Asha react. */
+  /** The candidate said (or typed) something on the current question: add it, and let Disha react. */
   const heard = async (text: string) => {
     const k = iRef.current;
     const th: Line[] = [...(threadsRef.current[k] ?? []), { who: "you", text }];
@@ -463,10 +463,10 @@ export default function InterviewPage() {
     quiet();
     setPhase("scoring");
     try {
-      // each answer as the conversation it was: what they said, with Asha's questions in between
+      // each answer as the conversation it was: what they said, with Disha's questions in between
       const full = questions.map((_, k) => {
         const th = threads[k] ?? [];
-        return th.some((x) => x.who === "asha") ? th.map((x) => `${x.who === "you" ? "Candidate" : "Asha"}: ${x.text}`).join("\n") : final[k] ?? "";
+        return th.some((x) => x.who === "asha") ? th.map((x) => `${x.who === "you" ? "Candidate" : "Disha"}: ${x.text}`).join("\n") : final[k] ?? "";
       });
       const fb: Feedback = await evaluate({ role: role.trim(), kind, level, style, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang, items: questions.map((q, k) => ({ q: q.q, a: full[k] })) });
       const record: InterviewRecord = { id: uid("iv"), at: Date.now(), role: role.trim(), kind, level, questions, answers: full, feedback: fb, lang: ilang, style, ...(kind === "custom" && topics.trim() ? { topics: topics.trim() } : {}) };
@@ -505,7 +505,7 @@ export default function InterviewPage() {
     }
   };
   nextRef.current = () => void next();
-  const askAsha = async (message: string, end = false) => {
+  const askDisha = async (message: string, end = false) => {
     if (!message.trim() || asking) return;
     quiet();
     setAsking(true);
@@ -518,7 +518,7 @@ export default function InterviewPage() {
         void say(reply);
       }
     } catch (e) {
-      actions.toast(e instanceof AssistantError ? e.message : "Asha couldn’t reply. Try again.");
+      actions.toast(e instanceof AssistantError ? e.message : "Disha couldn’t reply. Try again.");
     } finally {
       setAsking(false);
     }
@@ -548,7 +548,7 @@ export default function InterviewPage() {
       return (
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-6 text-center">
           <span className="ui-live" aria-hidden />
-          <p className="text-[16px] font-semibold text-white">Asha is writing your feedback</p>
+          <p className="text-[16px] font-semibold text-white">Disha is writing your feedback</p>
           <p className="max-w-[360px] text-[13px] text-white/55">She’s reading your code, the tests and what you said. This takes a few seconds.</p>
         </div>
       );
@@ -678,7 +678,7 @@ export default function InterviewPage() {
                       <p className="flex items-center gap-2 text-[12.5px] font-medium text-accent"><BotIcon size={14} /> {INTERVIEWER} asks</p>
                       <p className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">That’s all from my side. Do you have any questions for me?</p>
                       <p className="mt-1 text-[12.5px] text-white/50">Real interviews end like this. Asking one good question (about the work, the team or growth) leaves a strong impression.</p>
-                      <TalkBox talk={talk} busy={asking} value={askText} onChange={setAskText} onSend={(m) => void askAsha(m, true)} lang={lang} onMic={() => { quiet(); rec?.stop(); setRec(null); }} chips={["What does a typical day look like in this role?", "How do freshers learn and grow here?", "What are the next steps after this interview?"]} placeholder="Ask Asha anything about the role…" />
+                      <TalkBox talk={talk} busy={asking} value={askText} onChange={setAskText} onSend={(m) => void askDisha(m, true)} lang={lang} onMic={() => { quiet(); rec?.stop(); setRec(null); }} chips={["What does a typical day look like in this role?", "How do freshers learn and grow here?", "What are the next steps after this interview?"]} placeholder="Ask Disha anything about the role…" />
                       <div className="mt-4 flex justify-end">
                         <Button variant="primary" onClick={() => void finish(answers)}>{talk.length ? "Finish & get score" : "No questions · get my score"} <ArrowRightIcon size={14} /></Button>
                       </div>
@@ -691,7 +691,7 @@ export default function InterviewPage() {
                   </p>
                   <p key={i} className="land-screen-in mt-2 text-[18px] leading-snug font-semibold text-white sm:text-[20px]">{q.q}</p>
 
-                  {/* the conversation on this question: what they said, and Asha's questions in between */}
+                  {/* the conversation on this question: what they said, and Disha's questions in between */}
                   {(threads[i] ?? []).length > 0 && (
                     <div className="mt-4 max-h-[300px] space-y-2 overflow-y-auto pr-1">
                       {(threads[i] ?? []).map((x, k) => (
@@ -718,7 +718,7 @@ export default function InterviewPage() {
                           {INTERVIEWER} is speaking…
                         </>}
                         {status === "writing" && "Writing down what you said…"}
-                        {status === "waiting" && (thinking ? `${INTERVIEWER} is thinking…` : answers[i] ? "Say more, ask Asha something, or go to the next question." : "Talk to Asha: press the mic, or type below. You can also ask her to repeat or explain.")}
+                        {status === "waiting" && (thinking ? `${INTERVIEWER} is thinking…` : answers[i] ? "Say more, ask Disha something, or go to the next question." : "Talk to Disha: press the mic, or type below. You can also ask her to repeat or explain.")}
                       </p>
                     )}
                   </div>
@@ -730,7 +730,7 @@ export default function InterviewPage() {
                       onChange={(e) => setDraft(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                       rows={2}
-                      placeholder="Type to Asha… (Enter to send)"
+                      placeholder="Type to Disha… (Enter to send)"
                       className="min-h-[52px] w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-[14.5px] leading-relaxed text-white placeholder:text-white/35 outline-none focus:border-accent"
                     />
                     <Button className="h-[52px] shrink-0" disabled={!draft.trim() || thinking} onClick={send}>Send</Button>
@@ -1131,7 +1131,7 @@ export default function InterviewPage() {
                   <MicIcon size={14} /> {checking ? "Stop mic check" : "Check mic"}
                 </button>
                 <p className="min-w-[200px] flex-1 text-[11.5px] leading-snug text-white/45">
-                  {kind === "coding" ? `One ${CODE_LEVEL[level]} problem, ${codeMin} minutes · ` : `${count} questions · `}{kind === "coding" ? `${voice ? `${INTERVIEWER} talks to you; tap the mic to answer and think out loud.` : "Type your answers to Asha."}${cameraOn || recordOn ? " Camera and recording stay on this device — nothing is uploaded." : ""}` : voice ? `${INTERVIEWER} asks out loud and the mic turns on by itself.` : "You read the questions and type or speak your answers."} Your voice is only used to write down your answer.
+                  {kind === "coding" ? `One ${CODE_LEVEL[level]} problem, ${codeMin} minutes · ` : `${count} questions · `}{kind === "coding" ? `${voice ? `${INTERVIEWER} talks to you; tap the mic to answer and think out loud.` : "Type your answers to Disha."}${cameraOn || recordOn ? " Camera and recording stay on this device — nothing is uploaded." : ""}` : voice ? `${INTERVIEWER} asks out loud and the mic turns on by itself.` : "You read the questions and type or speak your answers."} Your voice is only used to write down your answer.
                   {strict && ` Strict mode: full screen, no other tabs, the camera checks you look at the screen, are alone and have no phone in view, and the mic checks only your voice answers. ${MAX_WARNINGS} warnings, then the interview ends. The camera stays on this device.`}
                 </p>
                 {strict && <FaceNotice className="w-full" />}
@@ -1231,9 +1231,9 @@ export default function InterviewPage() {
   );
 }
 
-/** A small chat with Asha: quick chips, a text box, and the replies (also spoken). */
+/** A small chat with Disha: quick chips, a text box, and the replies (also spoken). */
 function TalkBox({ talk, busy, value, onChange, onSend, chips, placeholder, note, lang, onMic }: { talk: { who: "you" | "asha"; text: string }[]; busy: boolean; value: string; onChange: (v: string) => void; onSend: (m: string) => void; chips: string[]; placeholder: string; note?: string; lang: string; onMic?: () => void }) {
-  // speak to Asha: record, write it down, send
+  // speak to Disha: record, write it down, send
   const [rec, setRec] = useState<Recorder | null>(null);
   const [hearing, setHearing] = useState(false);
   const talkMic = async () => {
@@ -1280,7 +1280,7 @@ function TalkBox({ talk, busy, value, onChange, onSend, chips, placeholder, note
         ))}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); onSend(value); }} className="mt-2 flex gap-2">
-        <button type="button" onClick={() => void talkMic()} disabled={busy || hearing} title={rec ? "Done" : "Speak to Asha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white/80 hover:border-violet-400/50")}>
+        <button type="button" onClick={() => void talkMic()} disabled={busy || hearing} title={rec ? "Done" : "Speak to Disha"} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition", rec ? "bg-rose-500 text-[#ffffff]" : "border border-white/15 text-white/80 hover:border-violet-400/50")}>
           {rec ? <StopIcon size={13} /> : <MicIcon size={14} />} {hearing ? "Writing…" : rec ? "Done" : "Speak"}
         </button>
         <input value={value} onChange={(e) => onChange(e.target.value)} maxLength={300} placeholder={placeholder} className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-[#121216] px-3 text-[13px] text-white outline-none placeholder:text-white/35 focus:border-accent" />

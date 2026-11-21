@@ -91,7 +91,7 @@ const ratio: Topic["make"] = () => {
   while (a === b || gcd(a, b) !== 1) [a, b] = [R(1, 7), R(1, 7)];
   const total = (a + b) * R(5, 60) * 10;
   const share = (total * a) / (a + b);
-  return { q: `₹${fmt(total)} is divided between Asha and Ravi in the ratio ${a} : ${b}. How much does Asha get?`, ...num(share, [(total * b) / (a + b), total / 2, share + total / (a + b)], ""), explain: `Total parts = ${a} + ${b} = ${a + b}. One part = ₹${fmt(total)} ÷ ${a + b} = ₹${fmt(total / (a + b))}. Asha gets ${a} parts = ₹${fmt(share)}.` };
+  return { q: `₹${fmt(total)} is divided between Disha and Ravi in the ratio ${a} : ${b}. How much does Disha get?`, ...num(share, [(total * b) / (a + b), total / 2, share + total / (a + b)], ""), explain: `Total parts = ${a} + ${b} = ${a + b}. One part = ₹${fmt(total)} ÷ ${a + b} = ₹${fmt(total / (a + b))}. Disha gets ${a} parts = ₹${fmt(share)}.` };
 };
 
 const average: Topic["make"] = () => {
@@ -246,7 +246,7 @@ const BLOOD: { q: string; a: string; wrong: string[]; why: string }[] = [
   { q: "Ravi is the father of Kiran. Kiran is the sister of Arjun. How is Ravi related to Arjun?", a: "Father", wrong: ["Uncle", "Brother", "Grandfather"], why: "Kiran and Arjun are siblings, so Kiran's father is Arjun's father too." },
   { q: "Priya is the daughter of Suresh. Suresh is the only son of Lata. How is Lata related to Priya?", a: "Grandmother", wrong: ["Mother", "Aunt", "Sister"], why: "Lata is Priya's father's mother, her grandmother." },
   { q: "Anil's mother is the only daughter of Meera's father. How is Meera related to Anil?", a: "Mother", wrong: ["Aunt", "Grandmother", "Sister"], why: "The only daughter of Meera's father is Meera herself, so Meera is Anil's mother." },
-  { q: "Vikram is the brother of Asha. Asha is the mother of Dev. How is Vikram related to Dev?", a: "Uncle", wrong: ["Father", "Brother", "Grandfather"], why: "Vikram is the brother of Dev's mother, so he is Dev's (maternal) uncle." },
+  { q: "Vikram is the brother of Disha. Disha is the mother of Dev. How is Vikram related to Dev?", a: "Uncle", wrong: ["Father", "Brother", "Grandfather"], why: "Vikram is the brother of Dev's mother, so he is Dev's (maternal) uncle." },
   { q: "Sunil's wife is the sister of Ramesh. How is Ramesh related to Sunil?", a: "Brother-in-law", wrong: ["Brother", "Cousin", "Uncle"], why: "Ramesh is the brother of Sunil's wife, so he is Sunil's brother-in-law." },
   { q: "Kavya is the only granddaughter of Mohan. Mohan has one son, Ajay. How is Ajay related to Kavya?", a: "Father", wrong: ["Uncle", "Brother", "Grandfather"], why: "Mohan's only son is Ajay, so his granddaughter Kavya must be Ajay's daughter." },
   { q: "Pointing to a man, Rekha says, “He is the son of my grandfather's only son.” How is the man related to Rekha?", a: "Brother", wrong: ["Cousin", "Father", "Uncle"], why: "Her grandfather's only son is her father. Her father's son is her brother." },

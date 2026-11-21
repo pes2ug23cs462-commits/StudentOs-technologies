@@ -587,8 +587,8 @@ function Screen({ src, alt, note, chips = [], ask }: { src: string; alt: string;
 }
 
 const PREP: { icon: FancyIconName; tone: FancyTone; title: string; text: string }[] = [
-  { icon: "mic", tone: "violet", title: "Mock interviews that talk back", text: "Asha asks, listens, and asks a follow-up when your answer is vague, like a real panel. Then you get a score and what to fix." },
-  { icon: "code", tone: "cyan", title: "Coding rounds", text: "Solve in Python or JavaScript while Asha asks you to explain your approach, the way interviewers do." },
+  { icon: "mic", tone: "violet", title: "Mock interviews that talk back", text: "Disha asks, listens, and asks a follow-up when your answer is vague, like a real panel. Then you get a score and what to fix." },
+  { icon: "code", tone: "cyan", title: "Coding rounds", text: "Solve in Python or JavaScript while Disha asks you to explain your approach, the way interviewers do." },
   { icon: "target", tone: "amber", title: "Aptitude practice", text: "Quant, logical and verbal, timed like the real test, with your weak topics called out." },
   { icon: "rocket", tone: "emerald", title: "Your college’s drives", text: "When your college runs drives on StudentOS, you apply and take the company’s rounds in the same place." },
 ];
@@ -605,10 +605,10 @@ function PlacementPrep() {
         <div className="reveal" style={d(0.05)}>
           <Screen
             src="/landing/mock-interview.jpg"
-            alt="A StudentOS mock interview: Asha asks a follow-up question about the student's project"
+            alt="A StudentOS mock interview: Disha asks a follow-up question about the student's project"
             note="Mock interview · sample"
             chips={[
-              { text: "Asha asked a follow-up", at: "top-[38%] -left-3 sm:-left-6", tone: "blue" },
+              { text: "Disha asked a follow-up", at: "top-[38%] -left-3 sm:-left-6", tone: "blue" },
               { text: "Talks back, by voice", at: "-bottom-4 right-6", tone: "emerald" },
             ]}
           />
@@ -636,14 +636,14 @@ const ASHA: string[] = [
   "Turns any explanation into a PDF or Word file you can print",
 ];
 
-function MeetAsha() {
+function MeetDisha() {
   const cta = usePrimaryCta();
   return (
     <section id="asha" className="relative overflow-hidden border-y border-white/[0.06] bg-white/[0.015]">
       <div className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[120px]" aria-hidden />
       <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 py-24 lg:grid-cols-[1fr_1.25fr]">
         <div className="reveal">
-          <Eyebrow>Meet Asha</Eyebrow>
+          <Eyebrow>Meet Disha</Eyebrow>
           <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">
             She doesn’t just answer.{" "}
             <span className="bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent">She does it.</span>
@@ -658,13 +658,13 @@ function MeetAsha() {
           </ul>
           <p className="mt-5 text-[12.5px] text-white/45">Nothing in your account changes until you press Apply.</p>
           <Link href={cta.signedIn ? "/assistant" : cta.href} className="mt-7 inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-[14.5px] font-semibold text-black shadow-[0_10px_40px_rgba(34,211,238,0.3)] transition hover:-translate-y-0.5">
-            {cta.signedIn ? "Ask Asha" : "Try Asha free"} <ArrowRightIcon size={15} />
+            {cta.signedIn ? "Ask Disha" : "Try Disha free"} <ArrowRightIcon size={15} />
           </Link>
         </div>
         <div className="reveal" style={d(0.1)}>
           <Screen
             src="/landing/asha.jpg"
-            alt="Asha adds a DBMS exam to the student's timeline and offers notes on normalization as a PDF"
+            alt="Disha adds a DBMS exam to the student's timeline and offers notes on normalization as a PDF"
             note="AI assistant · sample"
             ask="Mera DBMS internal 23 Nov ko hai, timeline mein daal de aur PDF bana de"
             chips={[
@@ -736,7 +736,7 @@ export function Landing() {
       </section>
 
       <PlacementPrep />
-      <MeetAsha />
+      <MeetDisha />
       <Story />
       <Bento />
       <ReviewsStrip hideEmpty />

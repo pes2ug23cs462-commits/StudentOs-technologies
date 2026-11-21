@@ -129,7 +129,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         onClick={onNavigate}
         className="group mb-4 flex h-9 items-center gap-2.5 rounded-lg border border-white/[0.09] bg-white/[0.05] px-2 text-[12.5px] font-semibold text-white transition-colors hover:border-white/[0.16] hover:bg-white/[0.08]"
       >
-        {/* Asha, the assistant: a glowing orb */}
+        {/* Disha, the assistant: a glowing orb */}
         <span
           aria-hidden
           className="h-6 w-6 shrink-0 rounded-full transition-transform group-hover:scale-105"
@@ -138,7 +138,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             boxShadow: "inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 2px 10px -2px rgb(245 158 11 / 0.7)",
           }}
         />
-        <span className="flex-1">Ask Asha</span>
+        <span className="flex-1">Ask Disha</span>
         <span className="rounded-[5px] border border-white/20 px-1.5 py-px text-[10px] font-medium text-white/50 group-hover:text-white/75">AI</span>
       </Link>
 
