@@ -23,6 +23,8 @@ import { stopSpeaking } from "@/lib/tts";
 import { createTalker, hasHindiVoice, type Talker } from "@/lib/talker";
 import { VOICE_LANGS, startRecording, transcribe, type Recorder } from "@/lib/voice";
 import { Interviewer, MicBars } from "@/components/interview/interviewer";
+import { FaceNotice } from "@/components/interview/face-notice";
+import { useStrictRules } from "@/components/interview/strict-rules";
 import { BREACH_TEXT, enterFullscreen, MAX_WARNINGS, ProctorBadge, ProctorWarning, SelfView, useProctor, type Breach } from "@/components/interview/proctor";
 import { CodingRound, type RoundResult } from "@/components/interview/coding-round";
 import { CodingReport } from "@/components/interview/coding-report";
@@ -137,6 +139,7 @@ export default function InterviewPage() {
   const [cameraOn, setCameraOn] = useState(false);
   const [recordOn, setRecordOn] = useState(false);
   const [strict, setStrict] = useState(true);
+  const rules = useStrictRules(kind === "coding" ? "coding round" : "interview", true);
   const [endLog, setEndLog] = useState<Breach[]>([]);
   // a real conversation: on each question the candidate speaks in turns; Asha clarifies (never answers),
   // asks about anything unclear in what they said, nods along, or wraps up. "Any questions for me?" at the end.
@@ -1120,9 +1123,10 @@ export default function InterviewPage() {
               {error && <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
 
               <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-white/[0.07] pt-5">
-                <button type="button" onClick={() => void start()} disabled={(!role.trim() && kind !== "coding") || (kind === "custom" && !topics.trim())} className="flex h-10 items-center gap-2 rounded-xl bg-cyan-400 px-4 text-[13.5px] font-semibold text-[#06141a] transition hover:bg-cyan-300 disabled:opacity-40">
+                <button type="button" onClick={() => (strict ? rules.ask(() => void start()) : void start())} disabled={(!role.trim() && kind !== "coding") || (kind === "custom" && !topics.trim())} className="flex h-10 items-center gap-2 rounded-xl bg-cyan-400 px-4 text-[13.5px] font-semibold text-[#06141a] transition hover:bg-cyan-300 disabled:opacity-40">
                   <PlayIcon size={13} /> Start interview
                 </button>
+                {rules.modal}
                 <button type="button" onClick={() => void checkMic()} className="flex h-10 items-center gap-2 rounded-xl border border-white/12 px-3.5 text-[13px] font-medium text-white/80 transition hover:border-white/25 hover:text-white">
                   <MicIcon size={14} /> {checking ? "Stop mic check" : "Check mic"}
                 </button>
@@ -1130,6 +1134,7 @@ export default function InterviewPage() {
                   {kind === "coding" ? `One ${CODE_LEVEL[level]} problem, ${codeMin} minutes · ` : `${count} questions · `}{kind === "coding" ? `${voice ? `${INTERVIEWER} talks to you; tap the mic to answer and think out loud.` : "Type your answers to Asha."}${cameraOn || recordOn ? " Camera and recording stay on this device — nothing is uploaded." : ""}` : voice ? `${INTERVIEWER} asks out loud and the mic turns on by itself.` : "You read the questions and type or speak your answers."} Your voice is only used to write down your answer.
                   {strict && ` Strict mode: full screen, no other tabs, the camera checks you look at the screen, are alone and have no phone in view, and the mic checks only your voice answers. ${MAX_WARNINGS} warnings, then the interview ends. The camera stays on this device.`}
                 </p>
+                {strict && <FaceNotice className="w-full" />}
               </div>
             </Card>
           )}

@@ -4,6 +4,8 @@
    30-question mock in the usual company-test mix. Results stay in the
    student's profile and feed their placement readiness. */
 
+import { FaceNotice } from "@/components/interview/face-notice";
+import { useStrictRules } from "@/components/interview/strict-rules";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircleIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon, ClockIcon, FlagIcon, PlayIcon, ShieldIcon, XIcon } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,7 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
   const [run, setRun] = useState<Run | null>(null);
   const [done, setDone] = useState<{ run: Run; attempt: AptitudeAttempt; breaches?: Breach[] } | null>(null);
   const [strict, setStrict] = useState(true);
+  const rules = useStrictRules("test");
   const runRef = useRef(run);
   runRef.current = run;
   const strictOn = strict && run?.kind === "mock";
@@ -112,9 +115,11 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
               <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />
             </button>
           </label>
-          <Button variant="primary" onClick={() => begin("mock")}><PlayIcon size={13} /> Start mock</Button>
+          <Button variant="primary" onClick={() => (strict ? rules.ask(() => begin("mock")) : begin("mock"))}><PlayIcon size={13} /> Start mock</Button>
         </div>
         {strict && <p className="w-full text-[12px] text-white/45">Strict mode: full screen until you finish, no other tabs, no copy or paste. The camera checks you look at the screen, are alone and have no phone or other device in view, and the mic checks for talking. {MAX_WARNINGS} warnings, then the mock closes and can’t be reopened. Camera and mic stay on your device; nothing is recorded.</p>}
+        {strict && <FaceNotice className="w-full" />}
+        {rules.modal}
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">

@@ -7,14 +7,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircleIcon, ShieldIcon } from "@/components/ui/icons";
+import { faceApi, type FaceCheck } from "@/lib/faceprint";
 import { watchPresence } from "@/lib/presence";
+import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 2;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice" | "device";
+export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice" | "device" | "identity" | "impersonation";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
@@ -24,6 +26,8 @@ export const BREACH_TEXT: Record<Breach, string> = {
   talk: "Talking was heard. Tests are taken in silence.",
   voice: "A voice was heard while your lips weren’t moving. Only you should answer.",
   device: "A phone or another device was seen on the camera. Keep phones, tablets and books away.",
+  identity: "The face on camera doesn’t match this account. Only the account’s owner may take this round.",
+  impersonation: "This face does not match this account. The round has been stopped and your placement cell has been told.",
 };
 /** Covers the app around a strict round, so only the round is on screen. */
 export const STRICT_SHELL = "fixed inset-0 z-[60] overflow-auto bg-ink";
@@ -68,7 +72,8 @@ export function useProctor(on: boolean, onExit: (log: Breach[]) => void) {
       const next = [...logRef.current, b];
       logRef.current = next;
       setLog(next);
-      if (next.length > MAX_WARNINGS) {
+      // someone taking the round for another student: no warnings, it ends now
+      if (next.length > MAX_WARNINGS || b === "impersonation") {
         done.current = true;
         setWarn(null);
         leaveFullscreen();
@@ -342,7 +347,10 @@ export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach)
   const [watching, setWatching] = useState(false);
   const cb = useRef(onBreach);
   cb.current = onBreach;
-  const watcher = useRef<{ mouth: () => number } | null>(null);
+  const watcher = useRef<{ mouth: () => number; faceprint: () => number[] | null } | null>(null);
+  const { state } = useStore();
+  const cid = state.college?.cid;
+  const [face, setFace] = useState<"checking" | "ok" | "mismatch" | "unset" | "off">("checking");
   const { mic, hear } = useVoiceMatch(!!voice && watching, () => watcher.current?.mouth() ?? -1, voice?.paused ?? false, () => cb.current("voice"));
   useEffect(() => {
     let dead = false;
@@ -373,12 +381,62 @@ export function SelfView({ onBreach, className, voice }: { onBreach: (b: Breach)
       stream?.getTracks().forEach((t) => t.stop());
     };
   }, []);
+  // face check: every ~20 s, is this the account's owner? (see lib/faceprint.ts)
+  useEffect(() => {
+    if (!watching) return;
+    let misses = 0, busy = false, stopped = false;
+    const tick = async () => {
+      const print = watcher.current?.faceprint();
+      if (!print || busy || stopped) return;
+      busy = true;
+      try {
+        const r = await faceApi<FaceCheck>({ action: "check", print, cid, where: location.pathname });
+        if (stopped) return;
+        if (!r.enrolled) {
+          setFace("unset");
+          stopped = true;
+          return;
+        }
+        if (r.other) {
+          setFace("mismatch");
+          cb.current("impersonation");
+          stopped = true;
+          return;
+        }
+        if (r.own) {
+          misses = 0;
+          setFace("ok");
+        } else if (++misses >= 2) {
+          // two checks in a row (~40 s): one odd frame or bad light isn't enough
+          misses = 0;
+          setFace("mismatch");
+          cb.current("identity");
+        }
+      } catch {
+        setFace((f) => (f === "checking" ? "off" : f));
+      } finally {
+        busy = false;
+      }
+    };
+    const first = setTimeout(tick, 6000);
+    const t = setInterval(tick, 20000);
+    return () => {
+      stopped = true;
+      clearTimeout(first);
+      clearInterval(t);
+    };
+  }, [watching, cid]);
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border border-white/[0.08] bg-black", className)}>
       <video ref={video} muted playsInline aria-label="Your camera" className="aspect-[4/3] w-full -scale-x-100 object-cover" />
       <span className="absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
         {cam === "blocked" ? "Camera blocked: allow it to keep strict mode fair" : cam === "starting" ? "Starting camera…" : watching ? "Watching: keep your eyes on the screen" : "Camera on"}
       </span>
+      {watching && face !== "off" && (
+        <span className={cn("absolute top-2 right-2 rounded-md px-2 py-1 text-[10.5px] backdrop-blur", face === "mismatch" ? "bg-rose-500/70 text-white" : face === "unset" ? "bg-amber-500/70 text-black" : "bg-black/55 text-white/80")}>
+          {face === "ok" ? "Face check ✓" : face === "mismatch" ? "Face doesn’t match ⚠" : face === "unset" ? "Face check not set up" : "Face check…"}
+        </span>
+      )}
       {voice && watching && (
         <span className="absolute top-2 left-2 rounded-md bg-black/55 px-2 py-1 text-[10.5px] text-white/80 backdrop-blur">
           {mic === "blocked" ? "Mic blocked: voice check off" : mic !== "on" ? "Starting voice check…" : hear === "paused" ? "Voice check: interviewer speaking" : hear === "you" ? "Voice check: you’re speaking ✓" : hear === "other" ? "Voice check: lips not moving ⚠" : "Voice check on: only you answer"}

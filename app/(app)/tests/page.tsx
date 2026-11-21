@@ -5,6 +5,8 @@
    a question palette, mark-for-review and a countdown → result with topic-wise
    accuracy and explanations → saved, and every test feeds the analytics. */
 
+import { FaceNotice } from "@/components/interview/face-notice";
+import { useStrictRules } from "@/components/interview/strict-rules";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { PracticeHeader, type PracticeTab } from "@/components/practice/practice-header";
@@ -184,6 +186,7 @@ function Tests() {
   const [filter, setFilter] = useState<"all" | "wrong" | "skipped">("all");
   const done = useRef(false);
   const [strict, setStrict] = useState(true);
+  const rules = useStrictRules("test");
   const [breaches, setBreaches] = useState<Breach[] | null>(null);
   // strict mode: 3 warnings, then the test is submitted as it stands and closed
   const proctor = useProctor(strict && phase === "live", (log) => submit(false, log));
@@ -914,8 +917,10 @@ function Tests() {
                   <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", strict ? "left-[18px]" : "left-0.5")} />
                 </button>
               </label>
+              {strict && <FaceNotice className="mt-2" />}
+              {rules.modal}
               {error && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{error}</p>}
-              <button type="button" onClick={() => { setSetupOpen(false); void start(); }} disabled={!subject.trim()} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(251,191,36,0.7)] transition hover:brightness-110 disabled:opacity-50">
+              <button type="button" onClick={() => { const go = () => { setSetupOpen(false); void start(); }; if (strict) rules.ask(go); else go(); }} disabled={!subject.trim()} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-[14px] font-semibold text-[#ffffff] shadow-[0_10px_30px_-8px_rgba(251,191,36,0.7)] transition hover:brightness-110 disabled:opacity-50">
                 <PlayIcon size={15} /> Start Mock Test <ArrowRightIcon size={14} />
               </button>
             </Card>

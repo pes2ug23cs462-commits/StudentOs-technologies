@@ -6,6 +6,7 @@
    readiness in 3D, weak chapters, students who need help, sections, faculty,
    privacy and downloadable reports. */
 
+import { IdentityChecks } from "@/components/college/identity-checks";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -54,7 +55,7 @@ import { cn } from "@/lib/utils";
 import { Placements } from "./placements";
 import { Skyline3D, Tilt } from "./skyline-3d";
 
-type Tab = "overview" | "sections" | "chapters" | "placements" | "students" | "faculty" | "privacy" | "reports";
+type Tab = "overview" | "sections" | "chapters" | "placements" | "identity" | "students" | "faculty" | "privacy" | "reports";
 
 /* ---------------- small parts ---------------- */
 
@@ -264,6 +265,7 @@ const NAV: { key: Tab; label: string; Icon: typeof HomeIcon; school?: string; de
   { key: "sections", label: "Classes & sections", Icon: GridIcon },
   { key: "chapters", label: "Weak chapters", Icon: BookIcon, degree: "Placement readiness" },
   { key: "placements", label: "Placements", Icon: BriefcaseIcon, only: "degree" },
+  { key: "identity", label: "Identity checks", Icon: ShieldIcon, only: "degree" },
   { key: "students", label: "Students", Icon: UsersIcon },
   { key: "faculty", label: "Faculty", Icon: ShieldIcon },
   { key: "privacy", label: "Consent & privacy", Icon: LockIcon },
@@ -404,6 +406,7 @@ export function CollegeConsole() {
                 {tab === "sections" && <Sections members={members} type={type} />}
                 {tab === "chapters" && (type === "school" ? <Chapters members={members} /> : <Placement members={members} />)}
                 {tab === "placements" && type === "degree" && role !== "viewer" && <Placements college={college} uid={uid} sample={showSample} canEdit={canRunPlacements(role)} />}
+                {tab === "identity" && type === "degree" && role !== "viewer" && <IdentityChecks college={college} sample={showSample} />}
                 {tab === "students" && role !== "viewer" && <Students members={members} type={type} />}
                 {tab === "faculty" && <Faculty college={college} staff={staff} role={role} staffCode={staffCode} reload={load} uid={uid} />}
                 {tab === "privacy" && <Privacy members={members} sample={showSample} />}
@@ -438,7 +441,7 @@ function Pending({ college }: { college: College }) {
 }
 
 function Header({ college, tab, type, sample, setSample, realCount }: { college: College; tab: Tab; type: CollegeType; sample: boolean; setSample: (v: boolean) => void; realCount: number }) {
-  const title = { overview: college.name, sections: "Classes & sections", chapters: type === "school" ? "Weak chapters" : "Placement readiness", placements: "Placements", students: "Students", faculty: "Faculty", privacy: "Consent & privacy", reports: "Reports" }[tab];
+  const title = { overview: college.name, sections: "Classes & sections", chapters: type === "school" ? "Weak chapters" : "Placement readiness", placements: "Placements", identity: "Identity checks", students: "Students", faculty: "Faculty", privacy: "Consent & privacy", reports: "Reports" }[tab];
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>

@@ -5,6 +5,8 @@
    in its style, and questions students were really asked there (shown only after the
    StudentOS team checks them). We never present AI or bank problems as past questions. */
 
+import { FaceNotice } from "@/components/interview/face-notice";
+import { useStrictRules } from "@/components/interview/strict-rules";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -153,6 +155,7 @@ export default function CompanyCoding() {
   const [gen, setGen] = useState<{ level: Level; busy: string; error: string }>({ level: "Easy", busy: "", error: "" });
   const [mock, setMock] = useState(false);
   const [strict, setStrict] = useState(true);
+  const rules = useStrictRules("coding round");
   const [mocks, setMocks] = useState<MockResult[]>([]);
   const [form, setForm] = useState({ open: false, year: NOW, round: "Coding round", role: "", question: "", busy: false, msg: "", error: "" });
 
@@ -437,12 +440,18 @@ export default function CompanyCoding() {
                   </button>
                 </div>
                 {strict && <p className="mt-2 text-[11.5px] leading-relaxed text-white/45">Full screen, no other tabs, no copy or paste. The camera checks you look at the screen, are alone and have no phone in view; the mic checks for talking. {MAX_WARNINGS} warnings and the round closes. Nothing is recorded.</p>}
+                {strict && <FaceNotice className="mt-2" />}
+                {rules.modal}
                 <Button
                   variant="primary"
                   className="mt-3 w-full"
                   onClick={() => {
-                    if (strict) enterFullscreen();
-                    setMock(true);
+                    const go = () => {
+                      if (strict) enterFullscreen();
+                      setMock(true);
+                    };
+                    if (strict) rules.ask(go);
+                    else go();
                   }}
                 >
                   Start mock round

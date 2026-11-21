@@ -5,6 +5,8 @@
    looked away for a while, and how often they left the frame. No picture or video
    leaves the device. If the model can't load, the camera still shows a self-view. */
 
+import { averagePrint, faceprintOf } from "@/lib/faceprint";
+
 const VERSION = "0.10.33";
 const BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/vision_bundle.mjs`;
 const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/wasm`;
@@ -113,6 +115,48 @@ function facing(points: Point[], shapes: Category[] | undefined, base: { yaw: nu
   if (down && (s("eyeLookDownLeft") + s("eyeLookDownRight")) / 2 >= 0.6) return false;
   return true;
 }
+
+/**
+ * Takes the student's faceprint for the face check (lib/faceprint.ts): watches for up to
+ * `ms` and keeps frames with exactly one face looking roughly straight at the camera.
+ * Resolves to null if the model can't load or too few good frames were seen.
+ */
+export async function captureFaceprint(video: HTMLVideoElement, onProgress?: (share: number, hint: string) => void, ms = 7000): Promise<number[] | null> {
+  let lm: Landmarker;
+  try {
+    lm = await load();
+  } catch {
+    return null;
+  }
+  const prints: number[][] = [];
+  const end = performance.now() + ms;
+  let lastTs = 0;
+  while (performance.now() < end && prints.length < 24) {
+    await new Promise((r) => setTimeout(r, 120));
+    if (video.readyState < 2 || !video.videoWidth) continue;
+    try {
+      const ts = Math.max(performance.now(), lastTs + 1);
+      lastTs = ts;
+      const r = lm.detectForVideo(video, ts);
+      if (r.faceLandmarks.length !== 1) {
+        onProgress?.(prints.length / 24, r.faceLandmarks.length ? "Only you should be in the picture" : "Bring your face into the frame");
+        continue;
+      }
+      const p = pose(r.faceLandmarks[0]);
+      if (!p || Math.abs(p.yaw - 0.5) > 0.12) {
+        onProgress?.(prints.length / 24, "Look straight at the camera");
+        continue;
+      }
+      const fp = faceprintOf(r.faceLandmarks[0] as { x: number; y: number; z?: number }[], video.videoWidth, video.videoHeight);
+      if (fp) prints.push(fp);
+      onProgress?.(prints.length / 24, "Hold still…");
+    } catch {
+      /* skipped frame */
+    }
+  }
+  return prints.length >= 12 ? averagePrint(prints) : null;
+}
+
 const median = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 
 /**
@@ -155,6 +199,8 @@ export async function watchPresence(
   // Counted when it's in most of the last ~1.2 s (8 frames), so a brief flicker doesn't count
   const two: boolean[] = [];
   let twoWarned = false;
+  // faceprints from recent frames with one face, looking at the screen (for the face check)
+  const prints: number[][] = [];
   const flush = (next: "on" | "away" | "out") => {
     if (next === state) return;
     const secs = now() - since;
@@ -230,6 +276,13 @@ export async function watchPresence(
       // still learning where "straight" is: count it as on screen
       const next = !face ? "out" : seen.length < 15 || facing(face, r.faceBlendshapes?.[0]?.categories, base, !!warn?.down) ? "on" : "away";
       if (next === "on") onScreen++;
+      if (face && next === "on" && seen.length >= 15 && r.faceLandmarks.length === 1) {
+        const fp = faceprintOf(face as { x: number; y: number; z?: number }[], video.videoWidth, video.videoHeight);
+        if (fp) {
+          prints.push(fp);
+          if (prints.length > 20) prints.shift();
+        }
+      }
       flush(next);
       if (warn && state !== "on" && !warned && now() - since >= warn.secs) {
         warned = true;
@@ -245,6 +298,10 @@ export async function watchPresence(
       if (performance.now() - lastFaceAt > 800 || mouthHist.length < 3) return -1;
       const range = (k: "jaw" | "gap") => Math.max(...mouthHist.map((m) => m[k])) - Math.min(...mouthHist.map((m) => m[k]));
       return Math.max(range("jaw"), range("gap") * 4);
+    },
+    /** The faceprint of the last few seconds with the student looking at the screen, or null. */
+    faceprint(): number[] | null {
+      return averagePrint(prints);
     },
     stop(): PresenceSummary | null {
       clearInterval(timer);
