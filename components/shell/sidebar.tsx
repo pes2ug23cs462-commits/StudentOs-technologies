@@ -16,7 +16,7 @@ import { CollegeLogo } from "@/components/college/college-logo";
 import { showExamPrep } from "@/lib/exam-prep";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { NAV_GROUPS, isActive as activeFor } from "./nav";
+import { navGroups, isActive as activeFor } from "./nav";
 
 export function profileLine(p: Profile) {
   const degree = p.degree.replace(/,?\s*Computer Science(?: and Engineering)?/i, " CSE").trim();
@@ -143,7 +143,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
 
       <nav className="flex flex-col gap-4" aria-label="Main">
-        {NAV_GROUPS.map((g, i) => (
+        {navGroups(state.setup?.academic.type).map((g, i) => (
           <div key={i} className="flex flex-col gap-px">
             {g.title && <p className="mb-1 px-2.5 text-[10.5px] font-medium tracking-wide text-white/40">{g.title}</p>}
             {g.items.filter((n) => n.href !== "/exam-prep" || examPrep).map((n) => (

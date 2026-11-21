@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { MenuIcon, SearchIcon, XIcon } from "@/components/ui/icons";
 import { LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Toaster } from "@/components/ui/toaster";
+import { hiddenFor } from "@/lib/education";
 import { useStore } from "@/lib/store";
 import { CommandMenu, openCommandMenu } from "./command-menu";
 import { NotificationBell } from "./notification-bell";
@@ -37,6 +38,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+  // School students have no placement tools (lib/education.ts): a link to one goes to the dashboard.
+  const type = state.setup?.academic.type;
+  useEffect(() => {
+    if (status === "ready" && hiddenFor(type, pathname)) router.replace("/dashboard");
+  }, [status, type, pathname, router]);
   // the product look (globals.css “Product UI”) applies only inside the app
   useEffect(() => {
     document.documentElement.classList.add("app-ui");

@@ -55,6 +55,22 @@ export const NAV_GROUPS: { title: string; items: NavLink[] }[] = [
 
 export const NAV_ALL = NAV_GROUPS.flatMap((g) => g.items);
 
+/** The sidebar for this student: school students get practice, not placement. */
+export function navGroups(type: string | undefined): typeof NAV_GROUPS {
+  if (type !== "school") return NAV_GROUPS;
+  return NAV_GROUPS.map((g) =>
+    g.title === "Placement"
+      ? {
+          title: "Practice",
+          items: [
+            { href: "/tests", label: "Mock Tests", Icon: TargetIcon, match: ["/tests", "/code", "/premium"] },
+            { href: "/projects", label: "Projects", Icon: FolderIcon, match: ["/projects"] },
+          ],
+        }
+      : g,
+  );
+}
+
 /** Extra places the ⌘K search can jump to. */
 export const QUICK_LINKS: { href: string; label: string; hint: string }[] = [
   { href: "/learn?tab=materials&m=notes", label: "AI Notes", hint: "Learning" },

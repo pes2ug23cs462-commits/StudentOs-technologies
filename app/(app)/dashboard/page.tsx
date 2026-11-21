@@ -1,5 +1,6 @@
 "use client";
 
+import { finishingSchool } from "@/lib/education";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { goalProgress } from "@/lib/goal-progress";
 import { startSession } from "@/lib/start-session";
@@ -129,6 +130,16 @@ function FullDashboard({ first }: { first: string }) {
 
   return (
     <div className="px-6 py-7 lg:px-8">
+      {finishingSchool(state.setup?.academic) && (
+        <Link href="/settings/profile#education" className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.07] px-4 py-3 transition hover:border-emerald-400/60">
+          <span className="text-[20px]" aria-hidden>🎓</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14px] font-semibold text-white">Finished school? Update your education</span>
+            <span className="block text-[12.5px] text-white/60">Joined a college? Tell StudentOS, and placement prep opens for you. Nothing of yours is lost.</span>
+          </span>
+          <span className="text-[13px] font-semibold text-emerald-300">Update →</span>
+        </Link>
+      )}
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

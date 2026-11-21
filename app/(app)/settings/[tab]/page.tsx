@@ -1,5 +1,6 @@
 "use client";
 
+import { EducationPanel } from "@/components/settings/education-panel";
 import { JoinCollege } from "@/components/college/join-college";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import Link from "next/link";
@@ -182,6 +183,11 @@ function ProfileTab() {
           ))}
         </div>
       </Panel>
+      <div id="education">
+        <Panel title="Education" sub="Moved from school to college, or started working? Update it here; nothing of yours is lost.">
+          <EducationPanel />
+        </Panel>
+      </div>
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="ghost" disabled={!dirty} onClick={() => setDraft(state.profile)}>
           Cancel
