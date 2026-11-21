@@ -593,6 +593,38 @@ const PREP: { icon: FancyIconName; tone: FancyTone; title: string; text: string 
   { icon: "rocket", tone: "emerald", title: "Your college’s drives", text: "When your college runs drives on StudentOS, you apply and take the company’s rounds in the same place." },
 ];
 
+const READY_STEPS = [
+  { n: "1", title: "Measure", text: "One readiness score shows where each student stands." },
+  { n: "2", title: "Learn", text: "A weekly plan from the gaps, and Disha to explain." },
+  { n: "3", title: "Practise", text: "AI mock interviews and tests in strict mode." },
+  { n: "4", title: "Prove", text: "The college sees who is ready before the drive." },
+];
+
+/* A one-minute walk through the product: how a student gets placement-ready. */
+function ReadyVideo() {
+  return (
+    <section id="how-ready" className="mx-auto max-w-[1100px] scroll-mt-20 px-5 pt-24">
+      <div className="reveal mx-auto max-w-[720px] text-center">
+        <Eyebrow>See it in a minute</Eyebrow>
+        <h2 className="mt-3 text-[34px] leading-tight font-semibold tracking-tight sm:text-[44px]">How StudentOS gets a student placement-ready</h2>
+      </div>
+      <ol className="reveal mt-10 grid gap-3 sm:grid-cols-4">
+        {READY_STEPS.map((s) => (
+          <li key={s.n} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+            <span className="text-[12px] font-semibold tracking-[0.18em] text-amber-300 uppercase">Step {s.n}</span>
+            <h3 className="mt-1 text-[16px] font-semibold text-white">{s.title}</h3>
+            <p className="mt-1 text-[13px] leading-relaxed text-white/60">{s.text}</p>
+          </li>
+        ))}
+      </ol>
+      <div className="reveal mt-6 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_40px_120px_-40px_rgba(251,191,36,0.35)]">
+        <video className="block aspect-[16/10] w-full" src="/landing/how-it-works.mp4" poster="/landing/how-it-works.jpg" controls muted playsInline preload="none" aria-label="One-minute walk through StudentOS: measure, learn, practise, prove" />
+      </div>
+      <p className="mt-3 text-center text-[12px] text-white/40">Screens from the app with sample data.</p>
+    </section>
+  );
+}
+
 function PlacementPrep() {
   return (
     <section id="placement" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-24">
@@ -735,6 +767,7 @@ export function Landing() {
         </div>
       </section>
 
+      <ReadyVideo />
       <PlacementPrep />
       <MeetDisha />
       <Story />
