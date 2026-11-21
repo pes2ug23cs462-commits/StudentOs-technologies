@@ -251,6 +251,8 @@ export async function joinCollege(state: AppState, uid: string, college: College
   return link;
 }
 export async function pushSummary(state: AppState, uid: string, link: CollegeLink) {
+  // a demo account's numbers are made up, so they never reach a real college
+  if (state.demo) return;
   await setDoc(doc(db, "colleges", link.cid, "members", uid), buildSummary(state, { ...link, code: link.code ?? (await codeOf(link.cid)) }, uid));
 }
 /** The student join code of a college (for links saved before the code was kept). */

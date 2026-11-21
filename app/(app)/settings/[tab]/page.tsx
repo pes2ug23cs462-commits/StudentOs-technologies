@@ -16,6 +16,7 @@ import { SystemCheck } from "@/components/settings/system-check";
 import { Avatar, Card, ChipGroup, Input, Label, SwitchRow } from "@/components/ui/primitives";
 import { profileLine } from "@/components/shell/sidebar";
 import { HOURS_OPTIONS, REST_OPTIONS, SESSION_OPTIONS, TIME_OPTIONS } from "@/lib/labels";
+import { DEMO_KEYS, canDemo, demoStudent } from "@/lib/demo-student";
 import { authErrorText, deleteAccount, logOut, sendPasswordReset, type AuthErrorCode } from "@/lib/auth";
 import { useStore } from "@/lib/store";
 import type { AssistantSettings, NotificationSettings, Profile, StudyTime } from "@/lib/types";
@@ -334,7 +335,12 @@ function AccountTab() {
   const [error, setError] = useState<AuthErrorCode | null>(null);
 
   const download = () => {
-    const blob = new Blob([JSON.stringify({ profile: state.profile, goals: state.goals, sessions: state.sessions, prefs: state.prefs }, null, 2)], { type: "application/json" });
+    // everything stored for the account except the chat-lock hash and screen-only bits
+    const data: Partial<typeof state> = { ...state };
+    delete data.toasts;
+    delete data.chatLock;
+    delete data.chatMinimized;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -393,7 +399,7 @@ function AccountTab() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[13px] font-medium text-white">Download my data</p>
-              <p className="text-[11.5px] text-white/50">A copy of your profile, goals and sessions as JSON</p>
+              <p className="text-[11.5px] text-white/50">A copy of your profile, plan, tests, interviews, coding and other data as JSON</p>
             </div>
             <Button size="sm" onClick={download}>
               Download
@@ -422,6 +428,7 @@ function AccountTab() {
           </p>
         </div>
       </Panel>
+      {canDemo(state.profile.email) && <DemoPanel />}
       <Dialog
         open={!!confirm}
         onClose={() => setConfirm(null)}
@@ -441,5 +448,56 @@ function AccountTab() {
         {error && <p className="mt-3 text-rose-400">{authErrorText[error].title}. {authErrorText[error].body}</p>}
       </Dialog>
     </>
+  );
+}
+
+/* Team only (NEXT_PUBLIC_DEMO_EMAILS): fill this account with a made-up student for college demos. */
+function DemoPanel() {
+  const { state, actions } = useStore();
+  const [ask, setAsk] = useState(false);
+  const fill = () => {
+    actions.patch(demoStudent(state));
+    setAsk(false);
+    actions.toast("Sample data added. A “Demo account” band shows on every page.");
+  };
+  const clear = () => {
+    actions.patch({ demo: undefined, ...Object.fromEntries(DEMO_KEYS.map((k) => [k, undefined])) });
+    actions.toast("Sample data removed.");
+  };
+  return (
+    <Panel title="Demo account" sub="For showing StudentOS to colleges. Only team accounts see this.">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[13px] font-medium text-white">{state.demo ? "Sample data is on" : "Fill with sample data"}</p>
+          <p className="text-[11.5px] text-white/50">
+            {state.demo
+              ? "A made-up student with tests, interviews, coding and aptitude results. It is never sent to a college."
+              : "Use a separate demo account: this replaces its tests, interviews, coding, aptitude, resume and education with a made-up student."}
+          </p>
+        </div>
+        {state.demo ? (
+          <Button size="sm" onClick={clear}>
+            Remove sample data
+          </Button>
+        ) : (
+          <Button size="sm" variant="primary" onClick={() => setAsk(true)}>
+            Fill
+          </Button>
+        )}
+      </div>
+      {ask && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-3 py-2.5 text-[12px] text-amber-100">
+          <span>Replace this account’s data with the sample student?</span>
+          <span className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setAsk(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" variant="primary" onClick={fill}>
+              Yes, fill
+            </Button>
+          </span>
+        </div>
+      )}
+    </Panel>
   );
 }

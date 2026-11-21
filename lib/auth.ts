@@ -199,9 +199,8 @@ export async function logOut() {
   await signOut(auth);
 }
 
-/** Deletes the user’s data and their login. */
 /** Deletes the account and everything stored for it: the profile and app data,
- *  saved chats, study materials, shared chat links and public certificate records. */
+ *  saved chats, study materials, shared chat links, public certificate records and the faceprint. */
 export async function deleteAccount(): Promise<{ ok: true } | { ok: false; code: AuthErrorCode }> {
   const user = auth.currentUser;
   if (!user) return { ok: true };
@@ -222,6 +221,8 @@ export async function deleteAccount(): Promise<{ ok: true } | { ok: false; code:
       doc(db, "reviews", user.uid),
     ];
     await Promise.allSettled(refs.map((r) => deleteDoc(r)));
+    // The faceprint is server-only (the rules keep it closed), so the face API removes it.
+    await import("@/lib/faceprint").then((m) => m.faceApi({ action: "delete" })).catch(() => {});
     await deleteDoc(doc(db, "users", user.uid));
     await deleteUser(user);
     return { ok: true };

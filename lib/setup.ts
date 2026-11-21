@@ -15,6 +15,8 @@ export interface SetupData {
     field: string;
     specialization: string;
     graduation: string;
+    /** When a school student (under 18) confirmed a parent or guardian agreed. */
+    guardianConsent?: number;
   };
   goals: {
     primary: string;

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChoicePill, ErrorText, FieldLabel, IconInput, IconSelect, NextButton, SelectTile } from "@/components/setup/fields";
 import { QuoteCard, SetupShell, StepHeading } from "@/components/setup/shell";
+import { GuardianConsent } from "@/components/setup/guardian-consent";
 import { useSetup } from "@/components/setup/use-setup";
 import { InfoIcon } from "@/components/ui/icons";
 import { COLLEGE_SUGGESTIONS, STUDENT_TYPES, academicForm, graduationYears } from "@/lib/setup";
@@ -21,6 +22,7 @@ export default function AcademicPage() {
     course: form.course?.required && !a.course ? `Choose your ${form.course.label.toLowerCase()}.` : "",
     year: !a.year ? `Choose: ${form.year.label.replace("?", "").toLowerCase()}.` : "",
     specialization: form.specialization?.required && !a.specialization.trim() ? `Enter your ${form.specialization.label.toLowerCase()}.` : "",
+    guardian: a.type === "school" && !a.guardianConsent ? "A parent or guardian needs to agree before you continue." : "",
   };
   const valid = !Object.values(errors).some(Boolean);
 
@@ -138,6 +140,8 @@ export default function AcademicPage() {
               </div>
             </>
           )}
+
+          {a.type === "school" && <GuardianConsent checked={!!a.guardianConsent} onChange={(guardianConsent) => setAcademic({ guardianConsent })} error={tried ? errors.guardian : ""} />}
         </>
       )}
 

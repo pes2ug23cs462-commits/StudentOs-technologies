@@ -102,6 +102,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className={hideMiniChat ? "app-glow min-h-screen lg:pl-[228px]" : "app-glow min-h-screen pb-20 lg:pl-[228px]"}>
         {!fullScreen && <TopBar />}
+        {!fullScreen && state.demo && (
+          <div className="border-b border-amber-400/25 bg-amber-400/[0.08] px-6 py-2 text-center text-[12.5px] text-amber-100 lg:px-8">
+            <b>Demo account · sample data.</b> This student and their scores are made up, to show how StudentOS works.
+          </div>
+        )}
         {/* re-keyed per page so each page rises in */}
         <div key={pathname} className="page-enter">
           {children}

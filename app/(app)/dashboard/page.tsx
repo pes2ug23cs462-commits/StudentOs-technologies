@@ -1,6 +1,7 @@
 "use client";
 
 import { finishingSchool } from "@/lib/education";
+import { GuardianConsent } from "@/components/setup/guardian-consent";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import { goalProgress } from "@/lib/goal-progress";
 import { startSession } from "@/lib/start-session";
@@ -139,6 +140,11 @@ function FullDashboard({ first }: { first: string }) {
           </span>
           <span className="text-[13px] font-semibold text-emerald-300">Update →</span>
         </Link>
+      )}
+      {state.setup?.academic.type === "school" && !state.setup.academic.guardianConsent && (
+        <div className="mb-5">
+          <GuardianConsent className="" checked={false} onChange={(at) => at && state.setup && actions.setSetup({ academic: { ...state.setup.academic, guardianConsent: at } })} />
+        </div>
       )}
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">

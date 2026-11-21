@@ -5,6 +5,7 @@
    tests, notes, projects and certificates all stay. The sidebar and the placement tools
    follow the new status (lib/education.ts). */
 
+import { GuardianConsent } from "@/components/setup/guardian-consent";
 import { useState } from "react";
 import { ChoicePill, ErrorText, FieldLabel, IconInput, IconSelect, SelectTile } from "@/components/setup/fields";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export function EducationPanel() {
     course: form.course?.required && !a.course ? `Choose your ${form.course.label.toLowerCase()}.` : "",
     year: !a.year ? `Choose: ${form.year.label.replace("?", "").toLowerCase()}.` : "",
     specialization: form.specialization?.required && !a.specialization.trim() ? `Enter your ${form.specialization.label.toLowerCase()}.` : "",
+    guardian: a.type === "school" && !a.guardianConsent ? "A parent or guardian needs to agree." : "",
   };
   const valid = !Object.values(errors).some(Boolean);
   const wasSchool = now?.type === "school";
@@ -129,6 +131,8 @@ export function EducationPanel() {
           )}
         </div>
       )}
+
+      {a.type === "school" && !now?.guardianConsent && <GuardianConsent checked={!!a.guardianConsent} onChange={(guardianConsent) => set({ guardianConsent })} error={tried ? errors.guardian : ""} />}
 
       <p className="rounded-lg bg-white/[0.04] px-3 py-2.5 text-[12px] leading-relaxed text-white/60">
         Nothing of yours is deleted: your plan, tests, notes, projects and certificates all stay.

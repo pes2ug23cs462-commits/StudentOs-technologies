@@ -108,6 +108,8 @@ export interface AppState {
   placementNotify?: number;
   /** Placement prep: aptitude practice and mock results (newest first) */
   aptitude?: AptitudeState;
+  /** set while a team demo account holds sample data (lib/demo-student.ts) */
+  demo?: number;
   toasts: Toast[];
   chatMinimized: boolean;
   theme: "dark" | "light";

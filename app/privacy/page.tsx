@@ -58,6 +58,9 @@ const sections = [
             <B>Careers applicants</B> (people applying to work at StudentOS): name, email, phone, college, the resume link or PDF they upload (kept only for hiring, and deleted with the application), and for each round they take (online test, AI interview, AI HR interview, live interview) their answers and scores, the AI’s report, the strict-mode warnings and our team’s notes. Camera and mic are checked on the applicant’s device the same way as for students; nothing is recorded.
           </li>
           <li>
+            <B>Face check:</B> if you choose to set it up, a list of numbers describing the shape of your face (not a photo); see “Camera, microphone and live interviews” below.
+          </li>
+          <li>
             <B>Technical data:</B> basic data your browser sends to any website (such as IP address and browser type), which our hosting and Firebase use to deliver and protect the service.
           </li>
         </UL>
@@ -139,6 +142,11 @@ const sections = [
           <B>Strict mode:</B> the camera and microphone checks run in your browser, on your device. We keep only the result, such as “looked away” or “a second person”, never a photo, video or sound.
         </li>
         <li>
+          <B>Face check (optional, only with your consent):</B> if you set it up, we measure the shape of your face (distances between points such as the eyes, nose and jaw) and store only that list of numbers with your account, never a photo or video.
+          In strict rounds the camera, on your device, compares the face it sees with those numbers. If the face doesn’t match, you get a warning. If it closely matches another student of your college who is already placed, the round stops
+          and your college’s placement cell gets a note to check, which names the account that took the round but not the other student. You can delete your face measurements any time on the Face check page, and they are deleted with your account.
+        </li>
+        <li>
           <B>Mock interview recordings</B> you choose to save stay on your device and are never uploaded.
         </li>
         <li>
@@ -201,7 +209,7 @@ const sections = [
           us to keep them.
         </P>
         <P>
-          When you delete your account (Settings → Account &amp; privacy → Delete account), we delete your profile and app data, saved chats, study materials, shared chat links, your review and your public certificate records. Copies kept by our service providers
+          When you delete your account (Settings → Account &amp; privacy → Delete account), we delete your profile and app data, saved chats, study materials, shared chat links, your review, your public certificate records and your face measurements. Copies kept by our service providers
           for backup or security may take up to 30 days to disappear.
         </P>
       </>
@@ -233,7 +241,7 @@ const sections = [
     title: "Students under 18",
     body: (
       <P>
-        If you are under 18, you may use StudentOS only with the consent of a parent or guardian, who should read this policy with you. We do not knowingly use the data of anyone under 18 for tracking, behavioural monitoring or targeted advertising. If a
+        If you are under 18, you may use StudentOS only with the consent of a parent or guardian, who should read this policy with you. School students confirm this when they set up their account, and we keep the date they did. Placement tools and the face check are not offered to school students. We do not knowingly use the data of anyone under 18 for tracking, behavioural monitoring or targeted advertising. If a
         parent or guardian wants their child’s data removed, they can email us.
       </P>
     ),
