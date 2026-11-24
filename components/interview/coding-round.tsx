@@ -80,7 +80,7 @@ export function CodingRound({
   /** record the round's audio, kept on this device only */
   record: boolean;
   /** strict mode: told when the student looks away or leaves the frame for a few seconds */
-  onBreach?: (kind: "away" | "out" | "people" | "device" | "voice") => void;
+  onBreach?: (kind: "away" | "glance" | "out" | "people" | "device" | "voice") => void;
   onEnd: (r: RoundResult) => void;
   onQuit: () => void;
 }) {

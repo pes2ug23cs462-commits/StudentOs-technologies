@@ -139,7 +139,7 @@ const sections = [
     body: (
       <UL>
         <li>
-          <B>Strict mode:</B> the camera and microphone checks run in your browser, on your device. We keep only the result, such as “looked away” or “a second person”, never a photo, video or sound.
+          <B>Strict mode:</B> the camera and microphone checks run in your browser, on your device. They notice looking away, glancing away again and again, a phone or other device on camera, and a second person. We keep only the result, such as “looked away” or “a second person”, never a photo, video or sound.
         </li>
         <li>
           <B>Face check (optional, only with your consent):</B> if you set it up, we measure the shape of your face (distances between points such as the eyes, nose and jaw) and store only that list of numbers with your account, never a photo or video.

@@ -169,7 +169,7 @@ export async function watchPresence(
   now: () => number,
   onEvent: (e: PresenceEvent) => void,
   /** strict mode: called once per look-away (or a second face) as soon as it lasts `secs` */
-  warn?: { secs: number; on: (kind: "away" | "out" | "people" | "device") => void; down?: boolean },
+  warn?: { secs: number; on: (kind: "away" | "out" | "people" | "device" | "glance") => void; down?: boolean },
 ) {
   let lm: Landmarker;
   try {
@@ -201,9 +201,20 @@ export async function watchPresence(
   let twoWarned = false;
   // faceprints from recent frames with one face, looking at the screen (for the face check)
   const prints: number[][] = [];
+  // quick looks away, each too short to warn on its own (reading from a phone beside the screen):
+  // 4 in 30 seconds count as one breach
+  let glances: number[] = [];
   const flush = (next: "on" | "away" | "out") => {
     if (next === state) return;
     const secs = now() - since;
+    if (warn && state === "away" && next === "on" && secs >= 0.45 && secs < warn.secs) {
+      const t = now();
+      glances = [...glances.filter((g) => t - g < 30), t];
+      if (glances.length >= 4) {
+        glances = [];
+        warn.on("glance");
+      }
+    }
     if (state === "away" && secs >= 8) {
       away++;
       onEvent({ kind: "away", startedAt: since, secs });

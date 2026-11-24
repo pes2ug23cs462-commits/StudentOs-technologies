@@ -7,7 +7,7 @@ export type TestQ = { q: string; options: string[]; answer: number };
 export type CodeResult = { id: string; title: string; passed: number; total: number; lang: string; code: string };
 export const problem = (pid: string) => PROBLEMS.find((p) => p.id === pid);
 /** what strict mode can report */
-export const BREACHES = ["tab", "fullscreen", "away", "out", "people", "talk", "voice", "device", "identity", "impersonation"];
+export const BREACHES = ["tab", "fullscreen", "away", "glance", "out", "people", "talk", "voice", "device", "identity", "impersonation"];
 const s = (v: unknown, max = 200) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 
 /** Same comparison as the coding runner: numbers within 1e-6, arrays and objects by value. */

@@ -1,8 +1,9 @@
 "use client";
 
 /* Strict mode for mock interviews: the round runs full screen, and leaving it,
-   switching tabs, or looking away from the camera for a few seconds counts as a
-   breach. Three breaches get a warning each; the fourth ends the interview.
+   switching tabs, looking away from the camera for a few seconds, or glancing away
+   again and again (4 quick looks in 30 s, like reading from a phone beside the
+   screen) counts as a breach. Three breaches get a warning each; the fourth ends the interview.
    Everything is checked on the student's device; no picture leaves it. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,11 +17,12 @@ export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
 export const LOOK_SECS = 2;
 
-export type Breach = "tab" | "fullscreen" | "away" | "out" | "people" | "talk" | "voice" | "device" | "identity" | "impersonation";
+export type Breach = "tab" | "fullscreen" | "away" | "glance" | "out" | "people" | "talk" | "voice" | "device" | "identity" | "impersonation";
 export const BREACH_TEXT: Record<Breach, string> = {
   tab: "You switched to another tab or window.",
   fullscreen: "You left full screen.",
   away: "You looked away from the screen.",
+  glance: "You kept glancing away from the screen, again and again. Keep your eyes on the test.",
   out: "You moved out of the camera.",
   people: "Someone else appeared on the camera.",
   talk: "Talking was heard. Tests are taken in silence.",
