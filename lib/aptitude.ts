@@ -407,6 +407,22 @@ export function mockSet(focus: TopicId[] = []): Question[] {
 }
 export const MOCK_MINUTES = 30;
 
+/** A company-pattern mock: sections in order, each with its own count and timer (from public guides). */
+/** section "all": one block mixing quant, logical and verbal (some companies give one timer for everything) */
+export type PatternSection = { name: string; section: Section | "all"; count: number; mins: number; topics?: TopicId[] };
+export type MockSection = { name: string; start: number; end: number; mins: number };
+export function patternSet(sections: PatternSection[]): { qs: Question[]; sections: MockSection[] } {
+  const qs: Question[] = [];
+  const out: MockSection[] = [];
+  for (const sec of sections) {
+    const ids = sec.topics?.length ? sec.topics : TOPICS.filter((t) => sec.section === "all" || t.section === sec.section).map((t) => t.id);
+    const start = qs.length;
+    qs.push(...set(shuffle([...ids, ...ids]), sec.count));
+    out.push({ name: sec.name, start, end: qs.length, mins: sec.mins });
+  }
+  return { qs, sections: out };
+}
+
 /* ---------- results kept in the student's profile ---------- */
 
 export type AptitudeAttempt = {
@@ -421,6 +437,8 @@ export type AptitudeAttempt = {
   byTopic: Partial<Record<TopicId, [number, number]>>;
   /** strict mode closed the mock after 3 warnings */
   ended?: boolean;
+  /** company-pattern mock, e.g. "TCS NQT Foundation" */
+  pattern?: string;
 };
 export type AptitudeState = { attempts: AptitudeAttempt[] };
 

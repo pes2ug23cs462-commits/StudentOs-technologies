@@ -1,5 +1,5 @@
 /* POST /api/interview  (Premium)
-   { action: "questions", role, kind, level, count, profile? }
+   { action: "questions", role, kind, level, count, profile?, company? }   (company: how that company's interviews usually go)
      → { questions: [{ q, focus }] }
    { action: "evaluate", role, kind, level, items: [{ q, a }] }
      → { overall, verdict, summary, strengths[], tips[], items: [{ score, good, improve, better }] }
@@ -74,7 +74,8 @@ export async function POST(req: Request) {
       const count = Math.min(10, Math.max(3, Number(b.count) || 5));
       const prompt = `You are a friendly but realistic interviewer in India. Interview a candidate who is ${level}, for the role: "${role}".
 Candidate background: ${s(b.profile, 400) || "college student"}.
-Interview type: ${kindText}.
+Interview type: ${kindText}.${s(b.company, 500) ? `
+Company style: this is a practice interview in the style this company's campus interviews are commonly reported to follow: ${s(b.company, 500)} Ask the kinds of questions such interviews are known for, adapted to this candidate. Never say a question is a real past question from this company.` : ""}
 Tone: ${style.ask}
 
 Write exactly ${count} interview questions, in the order you would ask them. Questions must be clear, one at a time, answerable in 1–2 minutes, and right for this role and level (real questions Indian companies and campus placements ask). No multi-part essays.${hindi ? `

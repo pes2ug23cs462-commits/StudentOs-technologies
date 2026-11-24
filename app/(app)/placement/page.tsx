@@ -66,7 +66,7 @@ function Placement() {
       </div>
       <div key={tab} className="page-enter mt-6">
         {tab === "overview" && <Overview go={go} />}
-        {tab === "aptitude" && <Aptitude startTopic={(qs?.get("topic") as TopicId) || null} startMock={qs?.get("mock") === "1"} focus={(qs?.get("focus") ?? "").split(",").filter((t: string): t is TopicId => !!TOPIC[t as TopicId])} focusFor={qs?.get("for") || undefined} />}
+        {tab === "aptitude" && <Aptitude company={COMPANIES.find((c) => c.id === qs?.get("company"))} startTopic={(qs?.get("topic") as TopicId) || null} startMock={qs?.get("mock") === "1" || !!qs?.get("company")} focus={(qs?.get("focus") ?? "").split(",").filter((t: string): t is TopicId => !!TOPIC[t as TopicId])} focusFor={qs?.get("for") || undefined} />}
         {tab === "companies" && <Companies />}
         {tab === "drives" && <Drives />}
       </div>
@@ -254,6 +254,22 @@ function CompanyCard({ c }: { c: Company }) {
         ))}
       </ol>
       <p className="mt-4 rounded-lg bg-cyan-400/[0.06] px-3 py-2 text-[12.5px] leading-relaxed text-cyan-100/85">{c.tip}</p>
+      {(c.pattern || c.interview) && (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {c.pattern && (
+            <Link href={`/placement?tab=aptitude&company=${c.id}`} className="rounded-xl border border-accent/35 bg-accent/[0.06] px-3.5 py-2.5 transition hover:border-accent/70">
+              <span className="block text-[13px] font-semibold text-white">{c.name} pattern mock</span>
+              <span className="block text-[11.5px] text-white/55">{c.pattern.sections.reduce((n, x) => n + x.count, 0)} questions · {c.pattern.sections.reduce((n, x) => n + x.mins, 0)} min · {c.pattern.sections.length} timed sections</span>
+            </Link>
+          )}
+          {c.interview && (
+            <Link href={`/interview?company=${c.id}`} className="rounded-xl border border-violet-400/35 bg-violet-500/[0.07] px-3.5 py-2.5 transition hover:border-violet-400/70">
+              <span className="block text-[13px] font-semibold text-white">{c.name}-style mock interview</span>
+              <span className="block text-[11.5px] text-white/55">Disha asks the kind of questions {c.name} is known for</span>
+            </Link>
+          )}
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap gap-2">
         {c.practice.map((p) => (
           <Link key={p.label} href={p.href} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[12.5px] text-white/80 transition hover:border-accent/50 hover:text-white">

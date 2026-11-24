@@ -14,6 +14,8 @@ import { BREACH_TEXT, enterFullscreen, MAX_WARNINGS, ProctorWarning, STRICT_SHEL
 import {
   MOCK_MINUTES,
   SECTION_LABEL,
+  patternSet,
+  type MockSection,
   TOPIC,
   TOPICS,
   mockSet,
@@ -25,14 +27,16 @@ import {
   type TopicId,
 } from "@/lib/aptitude";
 import { useStore } from "@/lib/store";
+import type { Company } from "@/lib/placement-prep";
 import { cn, uid } from "@/lib/utils";
 
-type Run = { kind: "topic" | "mock"; topic?: TopicId; qs: Question[]; picks: (number | null)[]; flags: boolean[]; start: number };
+/** sections: a company-pattern mock, one timed section after another (no going back) */
+type Run = { kind: "topic" | "mock"; topic?: TopicId; qs: Question[]; picks: (number | null)[]; flags: boolean[]; start: number; sections?: MockSection[]; pattern?: string };
 const SECTIONS: Section[] = ["quant", "logical", "verbal"];
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`;
 const tone = (p: number) => (p >= 75 ? "text-emerald-300" : p >= 50 ? "text-amber-200" : "text-rose-300");
 
-export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { startTopic?: TopicId | null; startMock?: boolean; focus?: TopicId[]; focusFor?: string }) {
+export function Aptitude({ startTopic, startMock, focus = [], focusFor, company }: { startTopic?: TopicId | null; startMock?: boolean; focus?: TopicId[]; focusFor?: string; company?: Company }) {
   const { state, actions } = useStore();
   const attempts = state.aptitude?.attempts ?? [];
   const stats = useMemo(() => topicStats(state.aptitude), [state.aptitude]);
@@ -49,9 +53,10 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
   const begin = (kind: "topic" | "mock", topic?: TopicId) => {
     // full screen needs the click itself
     if (kind === "mock" && strict) enterFullscreen();
-    const qs = kind === "mock" ? mockSet(focus) : topicSet(topic!, 10);
+    const pat = kind === "mock" && company?.pattern ? patternSet(company.pattern.sections) : null;
+    const qs = pat ? pat.qs : kind === "mock" ? mockSet(focus) : topicSet(topic!, 10);
     setDone(null);
-    setRun({ kind, topic, qs, picks: qs.map(() => null), flags: qs.map(() => false), start: Date.now() });
+    setRun({ kind, topic, qs, picks: qs.map(() => null), flags: qs.map(() => false), start: Date.now(), ...(pat ? { sections: pat.sections, pattern: company!.pattern!.name } : {}) });
     window.scrollTo(0, 0);
   };
   // deep links from the plan and company cards
@@ -82,6 +87,7 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
       secs: Math.round((Date.now() - r.start) / 1000),
       byTopic,
       ...(breaches ? { ended: true } : {}),
+      ...(r.pattern ? { pattern: r.pattern } : {}),
     };
     actions.patch({ aptitude: { attempts: [attempt, ...attempts].slice(0, 60) } });
     setRun(null);
@@ -105,8 +111,18 @@ export function Aptitude({ startTopic, startMock, focus = [], focusFor }: { star
       <Card id="apt-mock" className="flex flex-wrap items-center gap-5 p-5">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-400/12 text-cyan-300"><ClockIcon size={22} /></span>
         <div className="min-w-[220px] flex-1">
-          <p className="text-[15px] font-semibold text-white">{focusFor ? `Aptitude mock for ${focusFor}` : "Full aptitude mock"}</p>
-          <p className="mt-0.5 text-[13px] text-white/55">30 questions in {MOCK_MINUTES} minutes: 12 quantitative, 10 logical, 8 verbal.{focus.length ? ` More questions on what ${focusFor ?? "this company"} asked your seniors: ${focus.map((t) => TOPIC[t]?.name).filter(Boolean).join(", ")}.` : " The mix most service-company tests use."}</p>
+          {company?.pattern ? (
+            <>
+              <p className="text-[15px] font-semibold text-white">{company.pattern.name} pattern mock</p>
+              <p className="mt-0.5 text-[13px] text-white/55">{company.pattern.sections.map((x) => `${x.name} ${x.count} in ${x.mins} min`).join(" → ")}. {company.pattern.note}</p>
+              <p className="mt-1 text-[11.5px] text-white/40">Our own practice questions in {company.name}’s pattern, from public guides. Not real {company.name} questions; patterns change between drives.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[15px] font-semibold text-white">{focusFor ? `Aptitude mock for ${focusFor}` : "Full aptitude mock"}</p>
+              <p className="mt-0.5 text-[13px] text-white/55">30 questions in {MOCK_MINUTES} minutes: 12 quantitative, 10 logical, 8 verbal.{focus.length ? ` More questions on what ${focusFor ?? "this company"} asked your seniors: ${focus.map((t) => TOPIC[t]?.name).filter(Boolean).join(", ")}.` : " The mix most service-company tests use."}</p>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-white/70" title={`Full screen, no other tabs, camera on. ${MAX_WARNINGS} warnings, then the mock closes.`}>
@@ -209,35 +225,54 @@ function Practice({ run, setRun, onFinish }: { run: Run; setRun: (r: Run | null)
 function Mock({ run, setRun, onFinish }: { run: Run; setRun: (r: Run | null) => void; onFinish: (r: Run) => void }) {
   const [i, setI] = useState(0);
   const [now, setNow] = useState(Date.now());
-  const left = Math.round(MOCK_MINUTES * 60 - (now - run.start) / 1000);
+  // company-pattern mock: one section at a time with its own timer; finished sections are locked
+  const secs = run.sections;
+  const [sec, setSec] = useState(0);
+  const [secStart, setSecStart] = useState(run.start);
+  const cur = secs?.[sec];
+  const left = Math.round((cur ? cur.mins : MOCK_MINUTES) * 60 - (now - (cur ? secStart : run.start)) / 1000);
   const ref = useRef(run);
   ref.current = run;
+  const nextSection = () => {
+    if (!secs || sec >= secs.length - 1) return onFinish(ref.current);
+    setSec(sec + 1);
+    setSecStart(Date.now());
+    setNow(Date.now());
+    setI(secs[sec + 1].start);
+  };
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
   useEffect(() => {
-    if (left <= 0) onFinish(ref.current);
+    if (left <= 0) {
+      if (cur) nextSection();
+      else onFinish(ref.current);
+    }
   }, [left <= 0]); // eslint-disable-line react-hooks/exhaustive-deps
   const q = run.qs[i];
   const answeredN = run.picks.filter((p) => p !== null).length;
   const set = (patch: Partial<Run>) => setRun({ ...run, ...patch });
   const sectionOf = (k: number) => TOPIC[run.qs[k].topic].section;
+  const lastInSection = cur ? i === cur.end - 1 : i === run.qs.length - 1;
+  const secAnswered = cur ? run.picks.slice(cur.start, cur.end).filter((p) => p !== null).length : 0;
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[13px] text-white/55">{SECTION_LABEL[sectionOf(i)]} · Question {i + 1} of {run.qs.length}</p>
+          <p className="text-[13px] text-white/55">{cur ? `${run.pattern} · ${cur.name} (section ${sec + 1} of ${secs!.length}) · Question ${i - cur.start + 1} of ${cur.end - cur.start}` : `${SECTION_LABEL[sectionOf(i)]} · Question ${i + 1} of ${run.qs.length}`}</p>
           <span className={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[13px] font-semibold tabular-nums", left < 120 ? "border-rose-400/40 text-rose-300" : "border-white/10 text-white")}><ClockIcon size={13} /> {mmss(left)}</span>
         </div>
         <QuestionCard q={q} pick={run.picks[i]} reveal={false} onPick={(k) => set({ picks: run.picks.map((p, j) => (j === i ? k : p)) })} />
         <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
           <div className="flex gap-2">
-            <Button variant="ghost" disabled={i === 0} onClick={() => setI(i - 1)}><ArrowLeftIcon size={14} /> Previous</Button>
+            <Button variant="ghost" disabled={i === (cur ? cur.start : 0)} onClick={() => setI(i - 1)}><ArrowLeftIcon size={14} /> Previous</Button>
             <Button variant="ghost" onClick={() => set({ flags: run.flags.map((f, j) => (j === i ? !f : f)) })}><FlagIcon size={13} /> {run.flags[i] ? "Unmark" : "Mark for review"}</Button>
           </div>
-          {i < run.qs.length - 1 ? (
+          {!lastInSection ? (
             <Button variant="primary" onClick={() => setI(i + 1)}>Save & next <ArrowRightIcon size={14} /></Button>
+          ) : cur && sec < secs!.length - 1 ? (
+            <Button variant="primary" onClick={() => window.confirm(`Finish “${cur.name}” and go to “${secs![sec + 1].name}”? You can’t come back to this section.${cur.end - cur.start - secAnswered ? ` ${cur.end - cur.start - secAnswered} unanswered here.` : ""}`) && nextSection()}>Next section <ArrowRightIcon size={14} /></Button>
           ) : (
             <Button variant="primary" onClick={() => window.confirm(`Submit the mock? ${run.qs.length - answeredN} question${run.qs.length - answeredN === 1 ? "" : "s"} unanswered.`) && onFinish(run)}>Submit</Button>
           )}
@@ -245,7 +280,22 @@ function Mock({ run, setRun, onFinish }: { run: Run; setRun: (r: Run | null) => 
       </div>
       <Card className="h-fit p-4">
         <p className="text-[13px] font-semibold text-white">{answeredN} of {run.qs.length} answered</p>
-        {SECTIONS.map((s) => (
+        {secs ? secs.map((x, si) => (
+          <div key={x.name} className="mt-3">
+            <p className={cn("text-[11.5px]", si === sec ? "font-semibold text-accent" : "text-white/45")}>{x.name} · {x.mins} min{si < sec ? " · done" : si > sec ? " · locked" : ""}</p>
+            <div className="mt-1.5 grid grid-cols-6 gap-1.5">
+              {run.qs.slice(x.start, x.end).map((_, j) => {
+                const k = x.start + j;
+                return (
+                  <button key={k} type="button" disabled={si !== sec} onClick={() => setI(k)} aria-label={`Question ${k + 1}`} className={cn("relative h-8 rounded-md text-[12px] font-medium tabular-nums transition disabled:cursor-not-allowed disabled:opacity-35", k === i ? "bg-accent text-[#120826]" : run.picks[k] !== null ? "bg-emerald-400/15 text-emerald-200" : "bg-white/[0.05] text-white/60 hover:bg-white/[0.09]")}>
+                    {j + 1}
+                    {run.flags[k] && <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-amber-300" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )) : SECTIONS.map((s) => (
           <div key={s} className="mt-3">
             <p className="text-[11.5px] text-white/45">{SECTION_LABEL[s]}</p>
             <div className="mt-1.5 grid grid-cols-6 gap-1.5">
@@ -309,7 +359,7 @@ function Result({ run, attempt, breaches, onAgain, onBack }: { run: Run; attempt
         </div>
       )}
       <Card className="p-6 text-center">
-        <p className="text-[13px] text-white/55">{run.kind === "mock" ? "Full mock" : TOPIC[run.topic!].name}</p>
+        <p className="text-[13px] text-white/55">{run.pattern ? `${run.pattern} pattern mock` : run.kind === "mock" ? "Full mock" : TOPIC[run.topic!].name}</p>
         <p className={cn("mt-2 text-[44px] font-semibold tabular-nums", tone(pct))}>{pct}%</p>
         <p className="text-[13.5px] text-white/65">{attempt.correct} of {attempt.total} right · {mmss(attempt.secs)} taken</p>
         {run.kind === "mock" && (

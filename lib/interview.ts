@@ -74,7 +74,7 @@ export function suggestRoles(setup: SetupData | undefined) {
   return [...new Set([...list, "Campus placement (HR round)"])].slice(0, 6);
 }
 
-export async function makeQuestions(o: { role: string; kind: InterviewKind; level: InterviewLevel; count: number; profile: string; topics?: string; lang?: InterviewLang; style?: InterviewStyle }) {
+export async function makeQuestions(o: { role: string; kind: InterviewKind; level: InterviewLevel; count: number; profile: string; topics?: string; lang?: InterviewLang; style?: InterviewStyle; company?: string }) {
   const j = await postAi<{ questions?: Question[] }>("/api/interview", { action: "questions", ...o });
   return j.questions ?? [];
 }

@@ -1,7 +1,7 @@
 /* Placement preparation: the student's readiness, a resume check, this week's
    plan, and how the big campus recruiters usually hire. */
 
-import { aptitudeScore, topicStats, TOPIC, TOPICS, type TopicId } from "@/lib/aptitude";
+import { aptitudeScore, topicStats, TOPIC, TOPICS, type PatternSection, type TopicId } from "@/lib/aptitude";
 import { readinessFromParts, type PlacementPart } from "@/lib/college";
 import { resumeCheck } from "@/lib/resume-check";
 export { resumeCheck, type ResumeCheck } from "@/lib/resume-check";
@@ -119,6 +119,10 @@ export type Company = {
   tip: string;
   url: string;
   sources: { title: string; url: string }[];
+  /** company-pattern aptitude mock: sections, counts and timers close to the public pattern (our own questions) */
+  pattern?: { name: string; sections: PatternSection[]; note: string };
+  /** company-style mock interview: the role to practise and what their interviews are commonly reported to cover */
+  interview?: { role: string; how: string };
 };
 const APT = (t: TopicId | "mock"): PracticeLink => (t === "mock" ? { label: "Aptitude mock", href: "/placement?tab=aptitude&mock=1" } : { label: TOPIC[t].name, href: `/placement?tab=aptitude&topic=${t}` });
 const CODE: PracticeLink = { label: "Coding problems", href: "/code" };
@@ -139,6 +143,16 @@ export const COMPANIES: Company[] = [
     practice: [APT("mock"), APT("series"), CODE, IV],
     tip: "The NQT is about 190 minutes with no negative marking, so attempt every question.",
     url: "https://www.tcs.com/careers",
+    pattern: {
+      name: "TCS NQT Foundation",
+      sections: [
+        { name: "Numerical ability", section: "quant", count: 20, mins: 25 },
+        { name: "Verbal ability", section: "verbal", count: 25, mins: 25 },
+        { name: "Reasoning ability", section: "logical", count: 20, mins: 25 },
+      ],
+      note: "No negative marking. Sections run one after another with their own timer.",
+    },
+    interview: { role: "Graduate Trainee (Ninja / Digital)", how: "TCS usually runs technical, managerial and HR questions in one sitting: your final-year project in depth, one programming language and OOP, DBMS and SQL basics, a short coding or logic question; managerial situations such as handling pressure, teamwork and willingness to work in shifts or relocate; and HR questions on yourself and your goals." },
     sources: [{ title: "FACE Prep: TCS NQT exam pattern 2026", url: "https://www.faceprep.in/article/tcs-exam-pattern/" }],
   },
   {
@@ -153,6 +167,16 @@ export const COMPANIES: Company[] = [
     practice: [APT("mock"), APT("profit"), CODE, IV],
     tip: "Pick your track early: the Systems Engineer route rewards aptitude, the higher tracks reward DSA.",
     url: "https://www.infosys.com/careers/",
+    pattern: {
+      name: "Infosys online test",
+      sections: [
+        { name: "Logical reasoning", section: "logical", count: 15, mins: 25 },
+        { name: "Mathematical ability", section: "quant", count: 10, mins: 35 },
+        { name: "Verbal ability", section: "verbal", count: 20, mins: 20 },
+      ],
+      note: "Infosys also has pseudocode and puzzle sections; this mock covers the aptitude part.",
+    },
+    interview: { role: "Systems Engineer", how: "Infosys technical interviews commonly go deep into your projects and one programming language you name, with OOP, DBMS/SQL and basic data structures; HR covers communication, relocation, shifts and the Mysuru training." },
     sources: [{ title: "FACE Prep: Infosys recruitment pattern 2026", url: "https://www.faceprep.in/article/infosys-recruitment-pattern-2018/" }],
   },
   {
@@ -167,6 +191,16 @@ export const COMPANIES: Company[] = [
     practice: [APT("mock"), APT("errors"), CODE, IV],
     tip: "Practise writing a short, clean essay: grammar and structure are marked.",
     url: "https://careers.wipro.com/",
+    pattern: {
+      name: "Wipro NLTH aptitude",
+      sections: [
+        { name: "Logical ability", section: "logical", count: 14, mins: 14 },
+        { name: "Quantitative ability", section: "quant", count: 16, mins: 16 },
+        { name: "English ability", section: "verbal", count: 22, mins: 18 },
+      ],
+      note: "The real test also has an essay and two coding problems; practise those separately.",
+    },
+    interview: { role: "Project Engineer", how: "Wipro interviews commonly ask about your final-year project, coding basics in one language, core CS subjects (OOP, DBMS, OS basics), and HR questions on location, the service agreement and documents." },
     sources: [{ title: "FACE Prep: Wipro recruitment process 2026", url: "https://faceprep.in/article/wipro-recruitment-process-2025-complete-guide-to-placement-rounds/" }],
   },
   {
@@ -182,6 +216,16 @@ export const COMPANIES: Company[] = [
     practice: [APT("syllogism"), APT("odd"), CODE, HR],
     tip: "The spoken English test catches many students. Practise answering out loud with the voice mock interview.",
     url: "https://www.accenture.com/in-en/careers",
+    pattern: {
+      name: "Accenture cognitive assessment",
+      sections: [
+        { name: "Verbal ability", section: "verbal", count: 17, mins: 17 },
+        { name: "Reasoning ability", section: "logical", count: 18, mins: 18 },
+        { name: "Numerical ability", section: "quant", count: 15, mins: 15 },
+      ],
+      note: "Some 2026 drives use game-based questions instead; the technical, coding and spoken English rounds are separate.",
+    },
+    interview: { role: "Associate Software Engineer", how: "Accenture interviews are commonly technical and HR together, with a strong focus on clear communication: your projects, OOP, cloud and networking basics, MS Office and pseudocode logic, plus behavioural questions on teamwork, learning and adapting to change." },
     sources: [{ title: "PlacementPreparation.io: Accenture recruitment process 2026", url: "https://www.placementpreparation.io/accenture/recruitment-process/" }],
   },
   {
@@ -197,6 +241,16 @@ export const COMPANIES: Company[] = [
     practice: [APT("mock"), APT("blanks"), CODE, HR],
     tip: "Every round eliminates, so don't skip the English practice.",
     url: "https://careers.cognizant.com/",
+    pattern: {
+      name: "Cognizant GenC aptitude",
+      sections: [
+        { name: "Quantitative aptitude", section: "quant", count: 25, mins: 35 },
+        { name: "Logical reasoning", section: "logical", count: 35, mins: 40 },
+        { name: "Verbal ability", section: "verbal", count: 20, mins: 20 },
+      ],
+      note: "No negative marking. Guides report different lengths for different drives; this is the longer one.",
+    },
+    interview: { role: "GenC Programmer Analyst Trainee", how: "Cognizant interviews commonly cover programming fundamentals in your language, SQL queries, OOP and your projects, with HR questions on relocation, shifts and why Cognizant; clear spoken English matters in every round." },
     sources: [{ title: "PlacementPreparation.io: Cognizant GenC recruitment 2026", url: "https://www.placementpreparation.io/cognizant-genc/recruitment-process/" }],
   },
   {
@@ -212,6 +266,84 @@ export const COMPANIES: Company[] = [
     practice: [APT("series"), APT("coding"), CODE, IV],
     tip: "The game-based round scores speed and accuracy together. Timed series and coding–decoding practice helps.",
     url: "https://www.capgemini.com/in-en/careers/",
+    pattern: {
+      name: "Capgemini aptitude and English",
+      sections: [
+        { name: "Quantitative aptitude", section: "quant", count: 15, mins: 20 },
+        { name: "English communication", section: "verbal", count: 30, mins: 30 },
+      ],
+      note: "Pseudocode and the game-based round aren’t in this mock; practise pseudocode in Coding.",
+    },
+    interview: { role: "Analyst (Exceller)", how: "Capgemini interviews commonly ask about your projects, OOP, DBMS and pseudocode-style logic in the technical part, and communication, teamwork and relocation in HR." },
     sources: [{ title: "FACE Prep: Capgemini 2026 recruitment pattern", url: "https://www.faceprep.in/article/capgemini-recruitment-pattern-and-about-the-company/" }],
+  },
+  {
+    id: "hcltech",
+    name: "HCLTech",
+    program: "Graduate Engineer Trainee",
+    steps: [
+      { name: "Online test", what: "Quantitative, logical, verbal and technical sections, each timed and scored on its own." },
+      { name: "Technical interview", what: "One-on-one: your projects, one programming language and CS basics." },
+      { name: "HR interview", what: "Fit, relocation and joining." },
+    ],
+    practice: [APT("mock"), APT("syllogism"), CODE, IV],
+    tip: "Guides report a cut-off in every section, so a strong quant score can’t make up for a weak verbal one.",
+    url: "https://www.hcltech.com/careers",
+    pattern: {
+      name: "HCLTech online test",
+      sections: [
+        { name: "Quantitative aptitude", section: "quant", count: 15, mins: 15 },
+        { name: "Logical reasoning", section: "logical", count: 15, mins: 15 },
+        { name: "Verbal ability", section: "verbal", count: 15, mins: 15 },
+      ],
+      note: "No negative marking. The real test also has a technical section (and coding on some drives); this mock covers the aptitude part.",
+    },
+    interview: { role: "Graduate Engineer Trainee", how: "HCLTech technical interviews are commonly a structured one-on-one on your projects, one programming language, OOP, DBMS and networking basics; HR asks about you, relocation and joining." },
+    sources: [{ title: "FACE Prep: HCL aptitude test 2026", url: "https://faceprep.in/article/hcl-aptitude-test-pattern-and-syllabus-face-prep/" }],
+  },
+  {
+    id: "techmahindra",
+    name: "Tech Mahindra",
+    program: "Entry Level Qualification (ELQ) test",
+    steps: [
+      { name: "Aptitude", what: "Quantitative, logical and verbal in one long timed block." },
+      { name: "Technical", what: "Programming MCQs and a coding problem." },
+      { name: "Communication", what: "An English test, then a non-eliminating psychometric test." },
+      { name: "Interviews", what: "Technical and HR." },
+    ],
+    practice: [APT("mock"), APT("blanks"), CODE, HR],
+    tip: "Each section has its own cut-off, so don’t ignore the English part.",
+    url: "https://careers.techmahindra.com/",
+    pattern: {
+      name: "Tech Mahindra ELQ aptitude",
+      sections: [{ name: "Aptitude (quant, logical, verbal)", section: "all", count: 75, mins: 142 }],
+      note: "One block with no time limit per section. Technical and communication sections are separate.",
+    },
+    interview: { role: "Associate Software Engineer", how: "Tech Mahindra interviews commonly cover programming fundamentals in your language, your projects and basic CS subjects in the technical round, and communication, relocation and shifts in HR." },
+    sources: [{ title: "FACE Prep: Tech Mahindra ELQ round 2026", url: "https://faceprep.in/article/tech-mahindra-elq-round-explained-2026/" }],
+  },
+  {
+    id: "ltimindtree",
+    name: "LTIMindtree",
+    program: "Campus hiring (Graduate Engineer Trainee)",
+    steps: [
+      { name: "Online test", what: "English, quantitative and logical sections, each with its own timer, plus technical or coding sections." },
+      { name: "Technical interview", what: "Projects, OOP, DBMS and pseudocode-style logic." },
+      { name: "HR interview", what: "Behaviour, relocation and joining." },
+    ],
+    practice: [APT("mock"), APT("errors"), CODE, IV],
+    tip: "Unused minutes don’t carry over to the next section, so pace each section on its own.",
+    url: "https://www.ltimindtree.com/careers/",
+    pattern: {
+      name: "LTIMindtree online test",
+      sections: [
+        { name: "English communication", section: "verbal", count: 20, mins: 20 },
+        { name: "Quantitative ability", section: "quant", count: 15, mins: 20 },
+        { name: "Logical reasoning", section: "logical", count: 15, mins: 20 },
+      ],
+      note: "Guides report different patterns for different drives; the coding and technical sections aren’t in this mock.",
+    },
+    interview: { role: "Graduate Engineer Trainee", how: "LTIMindtree technical interviews commonly cover your projects, OOP, DBMS and SQL, and pseudocode or output-guessing logic; HR covers behaviour, relocation and joining." },
+    sources: [{ title: "FACE Prep: LTIMindtree test pattern 2026", url: "https://www.faceprep.in/article/mindtree-test-pattern-and-mindtree-syllabus-2025-face-prep/" }],
   },
 ];

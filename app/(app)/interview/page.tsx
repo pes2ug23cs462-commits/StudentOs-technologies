@@ -33,6 +33,7 @@ import { saveRecording } from "@/lib/recordings";
 import { wantsCoding } from "@/lib/coding/use-coding";
 import { LANG_LABEL as CODE_LANG_LABEL, type Lang, type Level, type Problem } from "@/lib/coding/types";
 import type { StudySession } from "@/lib/types";
+import { COMPANIES } from "@/lib/placement-prep";
 
 type Phase = "setup" | "preparing" | "live" | "scoring" | "result" | "coding" | "coding-scoring" | "ended";
 
@@ -105,6 +106,8 @@ export default function InterviewPage() {
 
   const [phase, setPhase] = useState<Phase>("setup");
   const [role, setRole] = useState(roles[0] ?? "");
+  // a company-style mock (Placement → Companies): what that company's interviews commonly cover
+  const [companyStyle, setCompanyStyle] = useState<{ name: string; how: string } | null>(null);
   const [kind, setKind] = useState<InterviewKind>(() => (wantsCoding(state) ? "coding" : "technical"));
   const [level, setLevel] = useState<InterviewLevel>("beginner");
   const [topics, setTopics] = useState("");
@@ -263,6 +266,14 @@ export default function InterviewPage() {
     const r = p.get("role")?.trim().slice(0, 80);
     const k = p.get("kind");
     const co = p.get("company")?.trim().slice(0, 60);
+    // /interview?company=tcs from Placement → Companies: a mock in that company's usual style
+    const known = !r && co ? COMPANIES.find((c) => c.id === co && c.interview) : undefined;
+    if (known?.interview) {
+      setRole(`${known.interview.role} at ${known.name}`);
+      setCustomRole(true);
+      setCompanyStyle({ name: known.name, how: known.interview.how });
+      setKind("role");
+    }
     if (r) {
       setRole(co ? `${r} at ${co}` : r);
       setCustomRole(true);
@@ -294,7 +305,7 @@ export default function InterviewPage() {
     over.current = false;
     setPhase("preparing");
     try {
-      const qs = await makeQuestions({ role: role.trim(), kind, level, count, profile, style, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang });
+      const qs = await makeQuestions({ role: role.trim(), kind, level, count, profile, style, topics: kind === "custom" ? topics.trim() : undefined, lang: ilang, ...(companyStyle && role.includes(companyStyle.name) ? { company: companyStyle.how } : {}) });
       if (!qs.length) throw new AssistantError("Couldn’t prepare questions. Try again.");
       setQuestions(qs);
       setAnswers(qs.map(() => ""));
@@ -1034,6 +1045,11 @@ export default function InterviewPage() {
               </div>
               {customRole && (
                 <input autoFocus value={role} onChange={(e) => setRole(e.target.value)} aria-label="Your role" placeholder="e.g. Accounts executive, ML intern, Bank PO" className="mt-2 h-10 w-full max-w-[420px] rounded-lg border border-white/10 bg-field px-3.5 text-[13.5px] text-white outline-none focus:border-cyan-400/70" />
+              )}
+              {companyStyle && role.includes(companyStyle.name) && (
+                <p className="mt-2 max-w-[620px] rounded-lg border border-violet-400/25 bg-violet-500/[0.07] px-3 py-2 text-[12.5px] leading-relaxed text-white/70">
+                  <b className="text-violet-200">{companyStyle.name}-style interview.</b> Disha asks the kind of questions {companyStyle.name}’s campus interviews are known for, from public guides. Practice questions, not real {companyStyle.name} questions.
+                </p>
               )}
 
               {/* difficulty · duration · style */}
