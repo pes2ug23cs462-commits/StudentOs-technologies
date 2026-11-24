@@ -290,7 +290,7 @@ function ReadOnly() {
 
 /* ---------------- new / edit drive ---------------- */
 
-export function DriveForm({ initial, onSave, onCancel, isNew }: { initial: Drive; onSave: (d: Drive) => void; onCancel: () => void; isNew?: boolean }) {
+export function DriveForm({ initial, onSave, onCancel, isNew, submitLabel }: { initial: Drive; onSave: (d: Drive) => void; onCancel: () => void; isNew?: boolean; submitLabel?: string }) {
   const [d, setD] = useState<Drive>(initial);
   const [rounds, setRounds] = useState(initial.rounds.join("\n"));
   const [err, setErr] = useState("");
@@ -348,7 +348,7 @@ export function DriveForm({ initial, onSave, onCancel, isNew }: { initial: Drive
         {err && <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-300">{err}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="primary" onClick={submit}>{initial.company && !isNew ? "Save drive" : isNew ? "Send to colleges" : "Post drive"}</Button>
+          <Button variant="primary" onClick={submit}>{submitLabel ?? (initial.company && !isNew ? "Save drive" : isNew ? "Send to colleges" : "Post drive")}</Button>
         </div>
       </Card>
     </div>

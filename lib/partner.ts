@@ -38,6 +38,9 @@ export const PARTNER_ERROR: Record<string, string> = {
   done: "You have already submitted this test.",
   closed: "This test isn’t open yet. The company will open it at the test time.",
   "not-started": "Start the test first.",
+  sent: "StudentOS has already sent this drive to colleges, so it can’t be changed here. Write to us to change it.",
+  drive: "Add the role and at least one round.",
+  "no-drive": "This drive isn’t there any more.",
   "bad-test": "Add at least one question (with 2+ options and the right answer marked) or a coding problem.",
 };
 
@@ -55,11 +58,12 @@ export const partnerErrorText = (e: unknown) => {
 export type Whoami = { team: boolean; email?: string; verified?: boolean; teamSet?: boolean; company: { id: string; name: string; website: string; logo?: string } | null };
 export type PartnerCompany = { id: string; name: string; website: string; code: string };
 export type PartnerCollege = { id: string; name: string; type: string; city: string; status: "pending" | "approved" | "rejected"; createdAt: number; ownerName?: string; ownerEmail?: string };
-export type PartnerDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, "pending" | "approved" | "declined">; minInterview: number };
+export type PartnerDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, "pending" | "approved" | "declined">; minInterview: number; /** written by the company; the team picks colleges */ requested?: { by: string; at: number } };
 /** what a college sees in colleges/{cid}/partner/{pid} */
 export type OfferedDrive = Drive & { pid: string; companyId: string; status: "pending" | "approved" | "declined"; minInterview: number; sentAt: number };
 
-export type CompanyDrive = { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; colleges: number };
+/** sent: the team has sent it to colleges. Until then `drive` is there and the company can change or delete it. */
+export type CompanyDrive = { pid: string; role: string; kind: string; ctc: string; deadline: string; rounds: string[]; colleges: number; sent?: boolean; drive?: Drive };
 export type Applicant = {
   cid: string;
   college: string;

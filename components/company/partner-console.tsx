@@ -51,6 +51,8 @@ export function PartnerConsole() {
 
   const degree = useMemo(() => (data?.colleges ?? []).filter((c) => c.type === "degree" && c.status === "approved"), [data]);
   const pending = (data?.colleges ?? []).filter((c) => c.status === "pending");
+  // drives a company wrote that are waiting for the team to pick colleges
+  const asked = (data?.drives ?? []).filter((d) => d.requested && !(d.colleges ?? []).length);
   const nameOf = (cid: string) => data?.colleges.find((c) => c.id === cid)?.name ?? cid;
 
   if (status === "loading") return <div className="min-h-screen bg-ink" />;
@@ -96,7 +98,8 @@ export function PartnerConsole() {
     setBusy("drive");
     try {
       await partnerApi("team-drive", { drive, companyId: draft.companyId, colleges: [...draft.colleges], minInterview: draft.minInterview });
-      actions.toast(draft.editing ? "Drive updated. Colleges see the change." : `Sent to ${draft.colleges.size} college${draft.colleges.size === 1 ? "" : "s"} for approval.`);
+      const first = !(data?.drives.find((x) => x.pid === drive.id)?.colleges ?? []).length;
+      actions.toast(draft.editing && !first ? "Drive updated. Colleges see the change." : `Sent to ${draft.colleges.size} college${draft.colleges.size === 1 ? "" : "s"} for approval.`);
       setDraft(null);
       await load();
     } catch (e) {
@@ -106,8 +109,8 @@ export function PartnerConsole() {
     }
   };
   const edit = (d: PartnerDrive) => {
-    const { pid, companyId, colleges, statuses: _s, minInterview, ...rest } = d;
-    void _s;
+    const { pid, companyId, colleges, statuses: _s, minInterview, requested: _r, ...rest } = d;
+    void _s; void _r;
     setDraft({ companyId, colleges: new Set(colleges ?? []), minInterview: minInterview ?? 0, drive: { ...blank(rest.company), ...rest, id: pid, rounds: rest.rounds ?? [], elig: { ...blank("").elig, ...(rest.elig ?? {}) } } as Drive, editing: true });
   };
   const remove = async (d: PartnerDrive) => {
@@ -155,6 +158,7 @@ export function PartnerConsole() {
           {([["drives", "Partner drives"], ["colleges", "Colleges"], ["careers", "Careers"]] as const).map(([k, l]) => (
             <button key={k} type="button" onClick={() => setTab(k)} className={cn("flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium transition", tab === k ? "bg-[var(--color-plum)] text-white" : "text-white/60 hover:text-white")}>
               {l}
+              {k === "drives" && asked.length > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[10.5px] font-bold text-[#1a1306]">{asked.length}</span>}
               {k === "colleges" && pending.length > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-[10.5px] font-bold text-[#1a1306]">{pending.length}</span>}
             </button>
           ))}
@@ -247,14 +251,22 @@ export function PartnerConsole() {
             </div>
             {data.drives.length ? (
               <div className="mt-4 space-y-3">
-                {data.drives.map((d) => (
-                  <div key={d.pid} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+                {[...asked, ...data.drives.filter((d) => !asked.includes(d))].map((d) => (
+                  <div key={d.pid} className={cn("rounded-xl border p-4", asked.includes(d) ? "border-amber-400/30 bg-amber-400/[0.04]" : "border-white/[0.07] bg-white/[0.02]")}>
                     <div className="flex items-start gap-2">
-                      <p className="min-w-0 flex-1 text-[14.5px] font-semibold">{d.company} · {d.role}</p>
-                      <button type="button" onClick={() => edit(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[12.5px] font-medium text-white/75 transition hover:border-white/25 hover:text-white">Edit</button>
+                      <p className="min-w-0 flex-1 text-[14.5px] font-semibold">
+                        {d.company} · {d.role}
+                        {d.requested && <span className="ml-2 rounded-full bg-cyan-400/12 px-2 py-0.5 align-middle text-[11px] font-medium text-cyan-200">written by the company</span>}
+                      </p>
+                      {asked.includes(d) ? (
+                        <button type="button" onClick={() => edit(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-[12.5px] font-semibold text-[#1a1306] transition hover:brightness-110">Pick colleges</button>
+                      ) : (
+                        <button type="button" onClick={() => edit(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-[12.5px] font-medium text-white/75 transition hover:border-white/25 hover:text-white">Edit</button>
+                      )}
                       <button type="button" disabled={busy === `del-${d.pid}`} onClick={() => void remove(d)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-400/30 px-3 text-[12.5px] font-medium text-rose-300 transition hover:bg-rose-400/10 disabled:opacity-50"><XIcon size={13} /> Delete</button>
                     </div>
                     <p className="mt-0.5 text-[12px] text-white/50">{[d.kind, d.ctc, d.deadline ? `apply by ${d.deadline}` : "", d.minInterview ? `interview ${d.minInterview}+` : ""].filter(Boolean).join(" · ")}</p>
+                    {asked.includes(d) && <p className="mt-2 text-[12px] text-amber-200/90">Waiting for you to pick colleges{d.requested?.at ? ` · written ${new Date(d.requested.at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}{d.requested?.by ? ` by ${d.requested.by}` : ""}.</p>}
                     <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {Object.entries(d.statuses ?? {}).map(([cid, s]) => (
                         <span key={cid} className={cn("rounded-full px-2 py-0.5 text-[11px]", STATUS[s])}>{nameOf(cid)} · {s}</span>

@@ -10,12 +10,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useResumePrint } from "@/components/resume/resume-print";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { VideoIcon, ArrowLeftIcon, BriefcaseIcon, CheckIcon, DownloadIcon, FileIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
+import { VideoIcon, ArrowLeftIcon, BriefcaseIcon, PlusIcon, ClockIcon, CheckIcon, DownloadIcon, FileIcon, LogOutIcon, SendIcon, TrophyIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Textarea, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
 import { fallbackResume } from "@/lib/resume-snapshot";
 import { partnerApi, partnerErrorText, type Applicant, type CompanyDrive, type TestSummary, type Whoami } from "@/lib/partner";
 import { TestCard, TestCell } from "@/components/company/company-test";
+import { DriveForm } from "@/components/college/placements";
+import type { Drive } from "@/lib/placement";
 import { IvCard, IvCell, IvReportDrawer } from "@/components/company/company-iv";
 import type { IvSummary } from "@/lib/partner";
 import { useStore } from "@/lib/store";
@@ -97,6 +99,8 @@ export function CompanyPortal() {
   const [err, setErr] = useState("");
   const [drives, setDrives] = useState<CompanyDrive[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [writing, setWriting] = useState<Drive | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("app-ui");
@@ -109,15 +113,44 @@ export function CompanyPortal() {
   useEffect(() => {
     if (status === "ready") void loadWho();
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!who?.company) return;
+  const loadDrives = (pick?: string) =>
     partnerApi<{ drives: CompanyDrive[] }>("company-drives")
       .then((r) => {
         setDrives(r.drives);
-        setOpen((o) => o ?? r.drives[0]?.pid ?? null);
+        setOpen((o) => pick ?? o ?? r.drives[0]?.pid ?? null);
       })
       .catch((e) => actions.toast(partnerErrorText(e)));
+  useEffect(() => {
+    if (!who?.company) return;
+    void loadDrives();
   }, [who?.company?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* The company writes its own drive; StudentOS picks the partner colleges and sends it. */
+  const blankDrive = (): Drive => ({ id: "", company: who?.company?.name ?? "", role: "", kind: "Full-time", ctc: "", location: "", about: "", rounds: ["Online test", "Technical interview", "HR interview"], elig: { branches: [], minCgpa: 0, maxBacklogs: 0, batch: "" }, deadline: "", open: true, createdAt: Date.now(), createdBy: "" });
+  const saveDrive = async (d: Drive) => {
+    setSaving(true);
+    try {
+      const r = await partnerApi<{ pid: string }>("company-drive-save", { drive: d });
+      actions.toast(d.id ? "Drive updated." : "Drive sent to StudentOS. We’ll pick the colleges and send it to them.");
+      setWriting(null);
+      await loadDrives(r.pid);
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const deleteDrive = async (pid: string) => {
+    if (!window.confirm("Delete this drive? StudentOS hasn’t sent it to any college yet.")) return;
+    try {
+      await partnerApi("company-drive-delete", { pid });
+      actions.toast("Drive deleted.");
+      setOpen(null);
+      await loadDrives();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    }
+  };
 
   if (status === "loading") return <div className="min-h-screen bg-ink" />;
   if (status === "signed-out")
@@ -154,16 +187,16 @@ export function CompanyPortal() {
         <div className="mx-2 h-16 animate-pulse rounded-lg bg-white/[0.04]" />
       ) : drives.length ? (
         drives.map((d) => (
-          <button key={d.pid} type="button" onClick={() => setOpen(d.pid)} className={cn("rounded-lg px-3 py-2 text-left text-[13px] transition", open === d.pid ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#fbbf24]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
+          <button key={d.pid} type="button" onClick={() => { setWriting(null); setOpen(d.pid); }} className={cn("rounded-lg px-3 py-2 text-left text-[13px] transition", open === d.pid && !writing ? "bg-[var(--color-plum)] text-white shadow-[inset_2px_0_0_#fbbf24]" : "text-white/65 hover:bg-white/[0.04] hover:text-white")}>
             <span className="block truncate">{d.role}</span>
-            <span className="block text-[11px] text-white/40">{d.colleges} college{d.colleges === 1 ? "" : "s"}</span>
+            <span className={cn("block text-[11px]", d.sent === false ? "text-amber-200/80" : "text-white/40")}>{d.sent === false ? "Waiting for StudentOS" : `${d.colleges} college${d.colleges === 1 ? "" : "s"}`}</span>
           </button>
         ))
       ) : (
         <p className="px-3 text-[12px] text-white/45">No drives yet.</p>
       )}
       <div className="mt-auto space-y-1 pt-6">
-        <a href="mailto:?subject=New%20drive%20on%20StudentOS" className="block rounded-lg px-3 py-2 text-[12.5px] text-white/55 hover:text-white">+ Ask StudentOS for a new drive</a>
+        <button type="button" onClick={() => setWriting(blankDrive())} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium text-accent hover:bg-white/[0.04]"><PlusIcon size={14} /> Write a new drive</button>
         <button type="button" onClick={() => void logOut().then(() => (window.location.href = "/"))} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12.5px] text-white/55 hover:text-white"><LogOutIcon size={14} /> Log out</button>
       </div>
     </aside>
@@ -171,15 +204,58 @@ export function CompanyPortal() {
 
   return (
     <Shell side={side}>
-      {open ? (
+      {writing ? (
+        <div className="mx-auto max-w-[860px]">
+          <p className="mb-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] text-white/60">Fill in the role, pay, who can apply and the rounds. StudentOS then picks the partner colleges that fit and sends it to them; each college approves it before its students see it.</p>
+          <div className={cn(saving && "pointer-events-none opacity-60")}>
+            <DriveForm isNew={!writing.id} initial={writing} submitLabel={writing.id ? "Save changes" : "Send to StudentOS"} onCancel={() => setWriting(null)} onSave={(d) => void saveDrive(d)} />
+          </div>
+        </div>
+      ) : open && drives?.find((d) => d.pid === open)?.sent === false ? (
+        <Waiting d={drives.find((d) => d.pid === open)!} onEdit={(d) => setWriting(d)} onDelete={() => void deleteDrive(open)} />
+      ) : open ? (
         <Applicants key={open} pid={open} />
       ) : (
         <div className="mt-16 rounded-2xl border border-dashed border-white/15 p-10 text-center">
           <BriefcaseIcon size={26} className="mx-auto text-white/35" />
-          <p className="mt-3 text-[14px] text-white/70">No drives yet. StudentOS sets up your first drive with you and sends it to partner colleges.</p>
+          <p className="mt-3 text-[14px] text-white/70">No drives yet. Write your first drive; StudentOS picks the partner colleges and sends it to them.</p>
+          <Button variant="primary" className="mt-5" icon={<PlusIcon size={14} />} onClick={() => setWriting(blankDrive())}>Write a new drive</Button>
         </div>
       )}
     </Shell>
+  );
+}
+
+/* A drive the company wrote that StudentOS hasn't sent to colleges yet. */
+function Waiting({ d, onEdit, onDelete }: { d: CompanyDrive; onEdit: (d: Drive) => void; onDelete: () => void }) {
+  const dr = d.drive;
+  return (
+    <div className="mx-auto max-w-[860px]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[24px] font-semibold tracking-tight">{d.role}</h1>
+          <p className="mt-1 text-[13px] text-white/55">{[d.kind, d.ctc, dr?.location, d.deadline ? `apply by ${d.deadline}` : ""].filter(Boolean).join(" · ")}</p>
+        </div>
+        <div className="flex gap-2">
+          {dr && <Button size="sm" onClick={() => onEdit(dr)}>Edit</Button>}
+          <Button size="sm" variant="ghost" onClick={onDelete}>Delete</Button>
+        </div>
+      </div>
+      <div className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-400/25 bg-amber-400/[0.05] p-4">
+        <ClockIcon size={18} className="mt-0.5 shrink-0 text-amber-300" />
+        <div>
+          <p className="text-[14px] font-semibold text-amber-100">Waiting for StudentOS to pick colleges</p>
+          <p className="mt-0.5 text-[12.5px] text-white/60">We check the drive and send it to the partner colleges that fit. Each college approves it, then its students can apply and you see them here. You can change or delete the drive until then.</p>
+        </div>
+      </div>
+      {dr && (
+        <div className="mt-5 grid gap-4 rounded-2xl border border-white/[0.08] bg-[#0d152a] p-5 sm:grid-cols-2">
+          <div><p className="text-[11.5px] text-white/45 uppercase">Rounds</p><p className="mt-1 text-[13.5px]">{dr.rounds.join(" → ")}</p></div>
+          <div><p className="text-[11.5px] text-white/45 uppercase">Who can apply</p><p className="mt-1 text-[13.5px]">{[dr.elig.branches.length ? dr.elig.branches.join(", ") : "All branches", dr.elig.minCgpa ? `CGPA ${dr.elig.minCgpa}+` : "", dr.elig.batch ? `batch ${dr.elig.batch}` : "", `${dr.elig.maxBacklogs} backlog${dr.elig.maxBacklogs === 1 ? "" : "s"} max`].filter(Boolean).join(" · ")}</p></div>
+          {dr.about && <div className="sm:col-span-2"><p className="text-[11.5px] text-white/45 uppercase">About the role</p><p className="mt-1 text-[13.5px] whitespace-pre-line text-white/80">{dr.about}</p></div>}
+        </div>
+      )}
+    </div>
   );
 }
 

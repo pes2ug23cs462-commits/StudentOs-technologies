@@ -44,7 +44,8 @@ type Drive = {
   rounds: string[]; elig: { branches: string[]; minCgpa: number; maxBacklogs: number; batch: string };
   deadline: string; open: boolean; createdAt: number; createdBy: string;
 };
-type PDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, string>; minInterview: number };
+type PDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, string>; minInterview: number;
+  /** written by the company's recruiter; the team picks the colleges */ requested?: { by: string; at: number } };
 
 /** Take a partner drive back from one college. Returns true when the college keeps a closed copy because students already applied. */
 async function withdraw(cid: string, pid: string, status?: string): Promise<boolean> {
@@ -230,7 +231,7 @@ export async function POST(req: Request) {
         const colleges = (Array.isArray(b.colleges) ? b.colleges : []).map(id).filter(Boolean).slice(0, 200);
         const statuses: Record<string, string> = {};
         for (const c of colleges) statuses[c] = old?.statuses?.[c] ?? "pending";
-        const p: PDrive = { ...drive, pid, companyId, colleges, statuses, minInterview: num(b.minInterview, 0, 100) };
+        const p: PDrive = { ...drive, pid, companyId, colleges, statuses, minInterview: num(b.minInterview, 0, 100), ...(old?.requested ? { requested: old.requested } : {}) };
         // colleges taken off an edited drive lose the offer (an approved one with applications is closed, not deleted)
         await Promise.all((old?.colleges ?? []).filter((c) => !colleges.includes(c)).map((cid) => withdraw(cid, pid, old?.statuses?.[cid])));
         await adminSet(`partnerDrives/${pid}`, p);
@@ -495,8 +496,41 @@ export async function POST(req: Request) {
         return NextResponse.json({
           drives: all
             .sort((x, y) => y.createdAt - x.createdAt)
-            .map((d) => ({ pid: d.pid, role: d.role, kind: d.kind, ctc: d.ctc, deadline: d.deadline, rounds: d.rounds, colleges: Object.values(d.statuses ?? {}).filter((s) => s === "approved").length })),
+            .map((d) => {
+              const sent = (d.colleges ?? []).length > 0;
+              const { colleges: _c, statuses: _s, companyId: _co, minInterview: _m, ...drive } = d;
+              void _c; void _s; void _co; void _m;
+              return { pid: d.pid, role: d.role, kind: d.kind, ctc: d.ctc, deadline: d.deadline, rounds: d.rounds, colleges: Object.values(d.statuses ?? {}).filter((s) => s === "approved").length, sent, ...(sent ? {} : { drive: { ...drive, id: d.pid } }) };
+            }),
         });
+      }
+
+      /* The company writes its own drive; the StudentOS team then picks the colleges (team-drive).
+         It can change or delete it until the team has sent it to colleges. */
+      if (action === "company-drive-save") {
+        const raw = (b.drive ?? {}) as Record<string, unknown>;
+        const pid = id(raw.id) || `pd${Date.now().toString(36)}`;
+        const old = (await adminGet(`partnerDrives/${pid}`)) as PDrive | null;
+        if (old && old.companyId !== coid) return bad("not-allowed", 403);
+        if (old && (old.colleges ?? []).length) return bad("sent", 409);
+        const company = await adminGet(`companies/${coid}`);
+        const drive = cleanDrive({ ...raw, company: str(company?.name, 60), createdAt: old?.createdAt }, pid, me.uid);
+        if (!drive.role || drive.rounds.length === 0) return bad("drive");
+        const p: PDrive = { ...drive, pid, companyId: coid, colleges: [], statuses: {}, minInterview: 0, requested: { by: me.email || me.uid, at: Date.now() } };
+        await adminSet(`partnerDrives/${pid}`, p);
+        // tell the team a drive is waiting for colleges (best effort)
+        if (!old && team.length) {
+          const lines = [`${str(company?.name)} wrote a new drive: ${drive.role}${drive.ctc ? ` · ${drive.ctc}` : ""}${drive.deadline ? ` · apply by ${drive.deadline}` : ""}.`, "Pick the colleges to send it to in the team console."];
+          await sendMails(team.map((to) => ({ to, subject: `New drive from ${str(company?.name)}: ${drive.role}`, text: lines.join("\n\n"), html: mailHtml({ brand: "StudentOS · Team", heading: "A company wrote a drive", lines, button: "Pick colleges", url: `${origin}/partner`, foot: "You get this because you are on the StudentOS team." }) }))).catch(() => 0);
+        }
+        return NextResponse.json({ ok: true, pid });
+      }
+      if (action === "company-drive-delete") {
+        const p = await mine(id(b.pid));
+        if (!p) return bad("no-drive", 404);
+        if ((p.colleges ?? []).length) return bad("sent", 409);
+        await adminDelete(`partnerDrives/${p.pid}`);
+        return NextResponse.json({ ok: true });
       }
       if (action === "company-applicants") {
         const p = await mine(id(b.pid));
