@@ -43,6 +43,7 @@ import {
   type PracticeQ,
   type Status,
   type Subject,
+  numMatches,
 } from "@/lib/exam-prep";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -260,15 +261,15 @@ function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; c
   const vids = state.examPrep?.videos ?? {};
   const saveVid = (id: string, patch: Partial<{ done: number[]; notes: string }>) =>
     actions.patch({ examPrep: { ...(state.examPrep ?? {}), videos: { ...(state.examPrep?.videos ?? {}), [id]: { done: [], notes: "", ...(state.examPrep?.videos?.[id] ?? {}), ...patch } } } });
-  const entrance = exam === "neet" || exam === "kcet";
+  const entrance = exam === "neet" || exam === "jee" || exam === "kcet";
   const [kind, setKind] = useState<"oneshot" | "long">("oneshot");
   const board = exam === "sslc" ? "sslc class 10" : exam === "puc" ? (grade === 11 ? "1st puc" : "2nd puc") : `class ${grade} cbse`;
   const oneShot = entrance || kind === "oneshot";
-  const q = entrance ? `${chapter} one shot ${exam === "neet" ? "neet" : "kcet"} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class ${grade} ${subject} lecture 1 detailed explanation`;
+  const q = entrance ? `${chapter} one shot ${exam === "jee" ? "jee main" : exam} ${subject}` : oneShot ? `${chapter} one shot ${board} ${subject}` : `${chapter} class ${grade} ${subject} lecture 1 detailed explanation`;
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[12.5px] text-white/55">{entrance ? `One-shot videos made for ${exam === "neet" ? "NEET" : "KCET"}: the whole chapter in one go.` : kind === "oneshot" ? "The whole chapter in one video, for quick revision." : "Detailed lectures that teach the chapter from the start."}</p>
+        <p className="text-[12.5px] text-white/55">{entrance ? `One-shot videos made for ${exam === "neet" ? "NEET" : exam === "jee" ? "JEE Main" : "KCET"}: the whole chapter in one go.` : kind === "oneshot" ? "The whole chapter in one video, for quick revision." : "Detailed lectures that teach the chapter from the start."}</p>
         <div className="flex flex-wrap items-center gap-2">
         <VideoLangPicker />
         {!entrance && (
@@ -438,7 +439,9 @@ function Practice({ subject, chapter, grade, exam }: { subject: Subject; chapter
     return (
       <div className="ep-in rounded-2xl border border-white/[0.08] p-6 text-center">
         <p className="text-[15px] font-semibold text-white">10 questions in exam style</p>
-        <p className="mx-auto mt-1 max-w-sm text-[12.5px] text-white/55">Easy to hard, covering the whole chapter. You see the answer and why after each one.</p>
+        <p className="mx-auto mt-1 max-w-sm text-[12.5px] text-white/55">
+          {exam === "jee" ? "JEE Main level: 7 multiple-choice and 3 numerical-answer questions, covering the whole chapter." : "Easy to hard, covering the whole chapter."} You see the answer and why after each one.
+        </p>
         {sc && <p className="mt-3 text-[12.5px] text-white/60 tabular-nums">Last time {sc.last}% · best {sc.best}% · {sc.attempts} attempt{sc.attempts > 1 ? "s" : ""}</p>}
         <Button variant="primary" className="mt-5" icon={<PlayIcon size={12} />} onClick={() => void start()}>
           Start practice
@@ -471,7 +474,7 @@ function Practice({ subject, chapter, grade, exam }: { subject: Subject; chapter
                 picked[k] !== q.answer ? (
                   <li key={k} className="rounded-xl border border-white/[0.08] p-3.5">
                     <p className="text-[13px] font-medium text-white">{q.q}</p>
-                    <p className="mt-1 text-[12.5px] text-emerald-300">Answer: {q.options[q.answer]}</p>
+                    <p className="mt-1 text-[12.5px] text-emerald-300">Answer: {q.num != null ? q.num : q.options[q.answer]}</p>
                     {q.explain && <p className="mt-1 text-[12.5px] leading-relaxed text-white/60">{q.explain}</p>}
                   </li>
                 ) : null,
@@ -499,6 +502,9 @@ function Practice({ subject, chapter, grade, exam }: { subject: Subject; chapter
       <p key={i} className="ep-in mt-5 text-[15px] leading-relaxed font-medium text-white">
         {q.q}
       </p>
+      {q.num != null && (
+        <NumericalAnswer key={i} answered={answered} right={chosen === q.answer} num={q.num} onCheck={(ok) => setPicked((p) => Object.assign([...p], { [i]: ok ? q.answer : -1 }))} />
+      )}
       <div className="mt-4 space-y-2">
         {q.options.map((o, k) => {
           const right = k === q.answer;
@@ -533,6 +539,42 @@ function Practice({ subject, chapter, grade, exam }: { subject: Subject; chapter
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+/* JEE Main numerical-value question: type the number, then check. */
+function NumericalAnswer({ answered, right, num, onCheck }: { answered: boolean; right: boolean; num: number; onCheck: (ok: boolean) => void }) {
+  const [v, setV] = useState("");
+  return (
+    <div className="mt-4">
+      <p className="text-[11.5px] font-semibold tracking-wide text-white/50 uppercase">Numerical answer</p>
+      <form
+        className="mt-1.5 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!answered && v.trim()) onCheck(numMatches(v, num));
+        }}
+      >
+        <input
+          inputMode="decimal"
+          value={v}
+          disabled={answered}
+          onChange={(e) => setV(e.target.value)}
+          placeholder="Type your answer, e.g. 12"
+          aria-label="Your answer"
+          className={cn(
+            "h-10 w-[220px] rounded-xl border bg-white/[0.03] px-3.5 text-[14px] text-white tabular-nums outline-none focus:border-accent/60",
+            !answered ? "border-white/[0.12]" : right ? "border-emerald-400/50 bg-emerald-400/10" : "border-rose-400/50 bg-rose-500/10",
+          )}
+        />
+        {!answered && (
+          <Button type="submit" variant="primary" disabled={!v.trim()}>
+            Check
+          </Button>
+        )}
+      </form>
+      {answered && !right && <p className="mt-1.5 text-[12.5px] text-emerald-300">Correct answer: {num}</p>}
     </div>
   );
 }

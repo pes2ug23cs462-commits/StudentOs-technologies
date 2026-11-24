@@ -14,7 +14,7 @@ export function defaultGrade(setup: SetupData | undefined): Grade {
 /** Exam Prep is only for school students (Class 10, 11, 12 / PU). */
 export const showExamPrep = (setup: SetupData | undefined) => setup?.academic.type === "school";
 
-export type ExamId = "sslc" | "puc" | "cbse" | "neet" | "kcet";
+export type ExamId = "sslc" | "puc" | "cbse" | "neet" | "jee" | "kcet";
 export type Grade = 10 | 11 | 12;
 export type Subject =
   | "Physics"
@@ -49,6 +49,7 @@ export const EXAMS: { id: ExamId; label: string; sub: string; subjects: Subject[
   { id: "puc", label: "PUC", sub: "Karnataka board", subjects: ["Physics", "Chemistry", "Maths", "Biology"] },
   { id: "cbse", label: "CBSE", sub: "Board exam", subjects: ["Physics", "Chemistry", "Maths", "Biology"] },
   { id: "neet", label: "NEET", sub: "Medical entrance", subjects: ["Physics", "Chemistry", "Biology"] },
+  { id: "jee", label: "JEE Main", sub: "Engineering entrance", subjects: ["Physics", "Chemistry", "Maths"] },
   { id: "kcet", label: "KCET", sub: "Karnataka CET", subjects: ["Physics", "Chemistry", "Maths", "Biology"] },
 ];
 
@@ -463,7 +464,7 @@ const BY_STREAM: Record<Exclude<Stream, "science">, Subject[]> = {
   commerce: ["Accountancy", "Business Studies", "Economics", "Maths"],
   arts: ["History", "Political Science", "Economics", "Sociology"],
 };
-/** Exams for a class: SSLC / CBSE for Class 10; PUC / CBSE (+ NEET / KCET for Science) for 11 and 12. */
+/** Exams for a class: SSLC / CBSE for Class 10; PUC / CBSE (+ NEET / JEE Main / KCET for Science) for 11 and 12. */
 export const examsFor = (grade: Grade, stream: Stream = "science") =>
   EXAMS.filter((e) => (grade === 10 ? e.id === "sslc" || e.id === "cbse" : e.id !== "sslc" && (stream === "science" || e.id === "puc" || e.id === "cbse")));
 export const subjectsFor = (exam: ExamId, grade: Grade, stream: Stream = "science"): Subject[] =>
@@ -494,6 +495,15 @@ export interface PracticeQ {
   options: string[];
   answer: number;
   explain: string;
+  /** numerical-answer question (JEE Main section B): no options, the student types this number */
+  num?: number;
+}
+
+/** A typed numerical answer is right when it matches to 2 decimal places (or within 1%). */
+export function numMatches(typed: string, num: number) {
+  const v = Number(typed.trim().replace(/,/g, ""));
+  if (!typed.trim() || !Number.isFinite(v)) return false;
+  return Math.abs(v - num) <= Math.max(0.01, Math.abs(num) * 0.01);
 }
 export interface ChapterScore {
   best: number;
@@ -615,7 +625,11 @@ export function sanitizeQuestions(raw: unknown): PracticeQ[] {
   const arr = (raw as { questions?: unknown[] })?.questions;
   return (Array.isArray(arr) ? arr : [])
     .map((x) => (x ?? {}) as Record<string, unknown>)
-    .map((x) => ({ q: clean(x.q, 400), options: list(x.options, 4, 160), answer: Number(x.answer), explain: clean(x.explain, 400) }))
-    .filter((x) => x.q && x.options.length === 4 && Number.isInteger(x.answer) && x.answer >= 0 && x.answer < 4)
+    .map((x): PracticeQ => {
+      const num = x.value === "" || x.value == null ? NaN : Number(x.value);
+      if (x.type === "numerical" && Number.isFinite(num)) return { q: clean(x.q, 400), options: [], answer: 0, explain: clean(x.explain, 400), num };
+      return { q: clean(x.q, 400), options: list(x.options, 4, 160), answer: Number(x.answer), explain: clean(x.explain, 400) };
+    })
+    .filter((x) => x.q && (x.num != null || (x.options.length === 4 && Number.isInteger(x.answer) && x.answer >= 0 && x.answer < 4)))
     .slice(0, 10);
 }

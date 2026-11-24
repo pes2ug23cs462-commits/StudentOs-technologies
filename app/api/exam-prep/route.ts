@@ -1,7 +1,7 @@
 /* POST /api/exam-prep  (free, normal AI limit)
    { action: "notes" | "quiz", exam, subject, chapter }
      notes → { summary, points[], formulas[], mistakes[] }
-     quiz  → { questions: [{ q, options[4], answer, explain }] }
+     quiz  → { questions: [{ q, options[4], answer, explain } | { q, num, explain }] }   (num: JEE numerical-value)
    Short revision notes and exam-style practice for one Class 10, 11 or 12 chapter. */
 
 import { NextResponse } from "next/server";
@@ -26,6 +26,7 @@ const STYLE: Record<string, string> = {
   puc: "Karnataka PUC board exam (NCERT syllabus): 1-mark definitions, 2/3-mark short answers and 5-mark derivations or problems",
   cbse: "CBSE board exam (NCERT): MCQs, assertion–reason and case-based questions",
   neet: "NEET (NCERT-based MCQs, conceptual and numerical, NEET difficulty)",
+  jee: "JEE Main (NCERT syllabus, JEE Main difficulty: multi-step problems, quick tricks and formulas, MCQs and numerical-value answers)",
   kcet: "Karnataka CET (NCERT-based MCQs, quick conceptual and numerical)",
 };
 
@@ -54,9 +55,15 @@ ${lang} a ${cls} student understands. Only what is in the NCERT chapter; accurat
 - "mistakes": 2–4 common mistakes students make in this chapter.
 Reply with JSON only: {"summary":"...","points":["..."],"formulas":["..."],"mistakes":["..."]}`
     : `You are setting a practice test for a ${gradeLabel(exam.id, grade)} student on the NCERT ${cls} ${subject} chapter “${chapter}” in the style of the ${STYLE[exam.id]}.
-Write 10 multiple-choice questions${subject === "Hindi" ? " in Hindi (Devanagari)" : ""} that cover the whole chapter, from easy to hard, the kind that come in this exam. Use only NCERT content; every answer must be correct; numericals must have correctly worked values. Do not claim any question is from a real past paper.
+${exam.id === "jee"
+  ? `Write 10 questions that cover the whole chapter, from medium to hard, at JEE Main level: 7 multiple-choice questions and then 3 numerical-value questions (like JEE Main section B: the answer is a single number, an integer where possible). Use only the NCERT syllabus; every answer must be correct and worked out carefully. Do not claim any question is from a real past paper.
+Multiple-choice: {"type":"mcq","q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."} ("answer" is the index 0–3 of the correct option).
+Numerical: {"type":"numerical","q":"... (say the unit the answer should be in)","value":12,"explain":"..."}.
+"explain": the short working, 1–3 sentences.
+Reply with JSON only: {"questions":[ ... ]}`
+  : `Write 10 multiple-choice questions${subject === "Hindi" ? " in Hindi (Devanagari)" : ""} that cover the whole chapter, from easy to hard, the kind that come in this exam. Use only NCERT content; every answer must be correct; numericals must have correctly worked values. Do not claim any question is from a real past paper.
 Each: "q", 4 "options", "answer" (index 0–3 of the correct option), "explain" (1–2 sentences on why; show the working for numericals).
-Reply with JSON only: {"questions":[{"q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}]}`;
+Reply with JSON only: {"questions":[{"q":"...","options":["...","...","...","..."],"answer":0,"explain":"..."}]}`}`;
 
   try {
     for (let i = 0; i < 2; i++) {
