@@ -998,7 +998,7 @@ html.light :where(.bg-\[\#0b0a12\]) {
 }
 
 /* ---------- Lite effects (html.lite) ----------
-   Set before paint on low-end laptops (≤ 4 cores / ≤ 4 GB), Data Saver, reduced motion,
+   Set before paint on very low-end laptops (≤ 2 cores / ≤ 2 GB), Data Saver,
    or Settings → Appearance → "Reduce effects". Blur, looping animation, glows and big
    decorative gradients are the costly parts on weak GPUs, so they go; layout stays the same. */
 html.lite *,

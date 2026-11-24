@@ -271,7 +271,7 @@ function EffectsPanel() {
         value={pref}
         onChange={pick}
       />
-      <p className="mt-2 text-[11.5px] text-white/45">Automatic reduces effects on laptops with 4 cores or 4 GB of memory or less, and when Data Saver or “reduce motion” is on.</p>
+      <p className="mt-2 text-[11.5px] text-white/45">Automatic reduces effects only on very slow laptops (2 cores or 2 GB of memory) and when Data Saver is on.</p>
     </Panel>
   );
 }
