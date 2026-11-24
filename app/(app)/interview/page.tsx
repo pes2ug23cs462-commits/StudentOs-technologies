@@ -643,7 +643,7 @@ export default function InterviewPage() {
         <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
           <div className="min-w-0">
             {/* video */}
-            <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/9] lg:aspect-auto lg:h-[min(40vh,420px)] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(217,119,6,0.6)]">
+            <div className="relative aspect-[16/9] overflow-hidden lg:aspect-auto lg:h-[min(46vh,460px)] rounded-2xl border border-white/[0.08] bg-[#0b0a14] shadow-[0_20px_60px_-30px_rgba(217,119,6,0.6)]">
               <Interviewer talker={talker} listening={status === "listening"} />
               <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} />
               <div className="absolute top-3 left-3 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 backdrop-blur">

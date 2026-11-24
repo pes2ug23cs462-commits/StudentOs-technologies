@@ -306,7 +306,7 @@ export function IvRun({ io, kind = "technical" }: { io: IvIO; kind?: IvKind }) {
         </div>
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0b0a14]">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0b0a14]">
               <Interviewer talker={talker} listening={listening} />
               <span className="absolute bottom-3 left-3 rounded-lg bg-black/55 px-2.5 py-1 text-[12px] text-white">Disha · {speaking ? "asking" : listening ? "listening" : "waiting for your answer"}</span>
             </div>

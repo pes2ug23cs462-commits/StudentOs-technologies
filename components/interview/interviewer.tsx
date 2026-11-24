@@ -57,7 +57,15 @@ export function Interviewer({ talker, listening }: { talker: Talker | null; list
   }, [talker, listening]);
 
   return (
-    <svg viewBox="64 76 512 288" preserveAspectRatio="xMidYMid slice" className="h-full w-full" role="img" aria-label="AI interviewer">
+    <svg
+      viewBox="64 76 512 288"
+      // "meet": the whole face always shows, however wide or short the stage is (a wide stage used to
+      // crop her head and chin); the stage's background continues the room on the sides
+      preserveAspectRatio="xMidYMid meet"
+      className="h-full w-full bg-[linear-gradient(#15112a,#0b0a14)]"
+      role="img"
+      aria-label="AI interviewer"
+    >
       <defs>
         <linearGradient id="iv-room" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#15112a" />
