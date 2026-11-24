@@ -116,7 +116,7 @@ export function AddGoalDrawer({ open, onClose }: { open: boolean; onClose: () =>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>{kind === "exam" ? "Exam date" : "Target date"}</Label>
-            <DatePicker value={target} onChange={setTarget} min={addDays(TODAY, 1)} display={fmt.medium} invalid={touched && !!errors.target} />
+            <DatePicker value={target} onChange={setTarget} min={TODAY} display={fmt.medium} invalid={touched && !!errors.target} />
             {touched && <FieldError>{errors.target}</FieldError>}
           </div>
           <div>

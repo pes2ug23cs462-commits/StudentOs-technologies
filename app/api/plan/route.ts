@@ -1,4 +1,5 @@
-/* POST /api/plan  { goal, course, progress, degree, year, target, weeks, perWeek, minutes, language? }
+/* POST /api/plan  { goal, course, progress, degree, year, target, weeks, perWeek, minutes, crash?, daysLeft?, hours? }
+   crash: the exam is under a week away, so it is one list of `perWeek` sessions before the exam.
    The AI writes a week-by-week study plan. Dates and times are fitted in the browser
    (lib/planner.ts) so they always respect the student's commitments.
    Returns { weeks: [{ title, sessions: [{ title, objective, tasks[] }] }] }. */
@@ -29,7 +30,9 @@ export async function POST(req: Request) {
   if (!uid) return NextResponse.json({ error: "signed-out" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const weeks = Math.min(12, Math.max(1, Number(b.weeks) || 8));
-  const perWeek = Math.min(7, Math.max(1, Number(b.perWeek) || 3));
+  const crash = b.crash === true;
+  const perWeek = Math.min(crash ? 12 : 7, Math.max(1, Number(b.perWeek) || 3));
+  const daysLeft = Number.isFinite(Number(b.daysLeft)) ? Math.max(0, Math.round(Number(b.daysLeft))) : null;
   const minutes = [45, 60, 90].includes(Number(b.minutes)) ? Number(b.minutes) : 60;
   if (!s(b.goal) && !s(b.course)) return NextResponse.json({ error: "failed" }, { status: 400 });
   const quota = await takeQuota(uid);
@@ -42,15 +45,22 @@ Course or exam: ${s(b.course) || "not given"}.
 Where they are now: ${s(b.progress) || "just starting"}.
 Target date: ${s(b.target, 20) || "none"}.
 
-Make exactly ${weeks} weeks, each with exactly ${perWeek} sessions of ${minutes} minutes.
+${crash ? `The exam is ${daysLeft === 0 ? "today" : daysLeft === 1 ? "tomorrow" : `in ${daysLeft} days`}. This is a last-minute plan.
+Make exactly 1 week with exactly ${perWeek} sessions of ${minutes} minutes, in the order the student should do them.
+Last-minute rules:
+- Do not pretend the whole syllabus fits. Pick the topics that carry the most marks or come up most in exams, and the student's weakest areas, first.
+- The last 1–2 sessions are revision: formulas, key points and past exam questions.
+- In "note", tell the student honestly and kindly what this time can and cannot cover (one or two sentences).` : `Make exactly ${weeks} weeks, each with exactly ${perWeek} sessions of ${minutes} minutes. That is ${weeks * perWeek} sessions, about ${Math.round((weeks * perWeek * minutes) / 60)} hours in total.
+- Be realistic about workload: one session covers one or two topics, never a whole unit or syllabus. Estimate how long the course really needs.
+- If ${Math.round((weeks * perWeek * minutes) / 60)} hours is not enough to cover everything properly, put the most important topics first, keep time for revision, and say so honestly in "note" (one or two sentences). Otherwise leave "note" empty.`}
 Rules:
-- Follow the real order of topics for this course/exam/skill, starting from where the student is now. Use the real names of topics, chapters or lectures where you know them.
-- The last session of each week is practice or revision. The final week finishes the goal (revision, mock test or final project).
+- Follow the real order of topics for this course/exam/skill, starting from where the student is now. Use the real names of topics, chapters or lectures where you know them.${crash ? " In a last-minute plan, importance comes before order." : ""}
+${crash ? "" : "- The last session of each week is practice or revision. The final week finishes the goal (revision, mock test or final project).\n"}
 - Session titles are short (under 45 characters), e.g. "Week 3 · Loops and lists".
 - Each session has a one-sentence objective and 2–3 short concrete tasks that fit in ${minutes} minutes.
 - Write in English.
 Reply with JSON only, no other text:
-{"weeks":[{"title":"short week theme","sessions":[{"title":"...","objective":"...","tasks":["...","..."]}]}]}`;
+{"note":"","weeks":[{"title":"short week theme","sessions":[{"title":"...","objective":"...","tasks":["...","..."]}]}]}`;
 
   try {
     for (let attempt = 0; attempt < 2; attempt++) {

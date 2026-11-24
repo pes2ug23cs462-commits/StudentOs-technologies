@@ -4,7 +4,7 @@ import { parseActions } from "@/lib/assistant-actions";
 import { parseStudy } from "@/lib/assistant-study";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WeekCalendar } from "@/components/calendar/week-calendar";
 import { MilestoneList, PlanStats, SessionRows, WeekNav } from "@/components/plan/plan-parts";
 import { Button, IconButton } from "@/components/ui/button";
@@ -31,6 +31,10 @@ export default function PlanReviewPage() {
   const [tab, setTab] = useState<Tab>("week");
   const [draft, setDraft] = useState<StudySession[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [planNote, setPlanNote] = useState("");
+  useEffect(() => {
+    try { setPlanNote(sessionStorage.getItem("sos.plan-note") ?? ""); } catch {}
+  }, []);
 
   const sessions = editing ? (draft ?? state.sessions) : state.sessions;
   const planStart = state.planStart ?? weekStart(state.sessions[0]?.date ?? TODAY);
@@ -86,6 +90,12 @@ export default function PlanReviewPage() {
           <h1 className="text-[26px] font-semibold tracking-tight text-white">
             {accepted ? "Your study plan is on your schedule" : editing ? "Edit your schedule" : "Review your study plan"}
           </h1>
+
+          {planNote && !accepted && (
+            <Notice tone="info" title="About the time you have" className="mt-4 max-w-[720px]">
+              {planNote}
+            </Notice>
+          )}
 
           <div className="mt-5">
             <PlanStats goal={goal} />

@@ -8,13 +8,24 @@ import { TODAY, addDays, daysBetween, toMinutes, weekStart, weekdayIndex as week
 
 export type OutlineSession = { title: string; objective: string; tasks: string[] };
 export type OutlineWeek = { title: string; sessions: OutlineSession[] };
-export type PlanOutline = { weeks: OutlineWeek[] };
+/** `note`: the AI's honest word when the time left can't cover everything (shown on the plan review). */
+export type PlanOutline = { weeks: OutlineWeek[]; note?: string };
 
 const HOURS: Record<HoursRange, number> = { "under-3": 2.5, "3-5": 4, "5-8": 6.5, "8-plus": 9 };
+
+/** Days from today to the target (0 = today). A target under a week away gets a last-minute plan. */
+export function daysLeft(a: OnboardingAnswers) {
+  return a.target ? daysBetween(TODAY, a.target) : null;
+}
+export function isCrash(a: OnboardingAnswers) {
+  const d = daysLeft(a);
+  return d != null && d >= 0 && d < 7;
+}
 
 /** Monday of the plan's first week: this week, or next week if this week is nearly over. */
 export function planStartFor(a: OnboardingAnswers) {
   const thisWeek = weekStart(TODAY);
+  if (isCrash(a)) return thisWeek;
   const perWeek = sessionsPerWeek(a);
   return weekSlots(thisWeek, a, perWeek).length >= Math.ceil(perWeek / 2) ? thisWeek : addDays(thisWeek, 7);
 }
@@ -26,9 +37,35 @@ function sessionsPerWeek(a: OnboardingAnswers) {
 
 /** How many weeks and sessions per week this student's plan needs. */
 export function planShape(a: OnboardingAnswers, start = planStartFor(a)) {
+  // last-minute: one list of sessions, as many as fit before the exam
+  if (isCrash(a)) return { weeks: 1, perWeek: Math.max(1, crashSlots(a).length), crash: true as const, daysLeft: daysLeft(a) ?? 0 };
   const days = a.target ? daysBetween(start, a.target) : 56;
   const weeks = Math.min(12, Math.max(2, Math.ceil((days > 0 ? days : 56) / 7)));
-  return { weeks, perWeek: sessionsPerWeek(a) };
+  return { weeks, perWeek: sessionsPerWeek(a), crash: false as const, daysLeft: daysLeft(a) };
+}
+
+/** Free slots from now until the exam (the exam day itself only when the exam is today), up to 2 a day. */
+export function crashSlots(a: OnboardingAnswers) {
+  const d = daysLeft(a) ?? 0;
+  const last = d === 0 ? TODAY : addDays(a.target, -1);
+  const b = { ...a, target: last };
+  const monday = weekStart(TODAY);
+  const all = [...weekSlots(monday, b, 21), ...weekSlots(addDays(monday, 7), b, 21)];
+  const perDay = new Map<string, number>();
+  const picked = all
+    .filter((x) => x.date >= TODAY && x.date <= last)
+    .sort((x, y) => (x.date + x.start).localeCompare(y.date + y.start))
+    .filter((x) => {
+      const n = perDay.get(x.date) ?? 0;
+      if (n >= 2) return false;
+      perDay.set(x.date, n + 1);
+      return true;
+    })
+    .slice(0, 12);
+  if (picked.length) return picked;
+  // nothing free in their usual times: still give one session, as soon as possible
+  const h = new Date().getHours();
+  return h < 21 ? [{ date: TODAY, start: `${String(Math.min(21, h + 1)).padStart(2, "0")}:00` }] : [{ date: d === 0 ? TODAY : addDays(TODAY, 1), start: "07:00" }];
 }
 
 /* ---------- slots ---------- */
@@ -95,6 +132,36 @@ export function scheduleOutline(outline: PlanOutline, a: OnboardingAnswers, goal
   const sessions: StudySession[] = [];
   const milestones: Milestone[] = [];
   let n = 0;
+  if (isCrash(a)) {
+    // last-minute plan: the sessions in order, one after another, in the free slots before the exam
+    const slots = crashSlots(a);
+    const list = outline.weeks.flatMap((w) => w.sessions).slice(0, slots.length);
+    list.forEach((s, si) => {
+      n++;
+      const title = clean(s.title, 80) || `Session ${si + 1}`;
+      const tasks = (s.tasks ?? []).map((t) => clean(t, 90)).filter(Boolean).slice(0, 4);
+      sessions.push({
+        id: `p${n}`,
+        goalId,
+        title,
+        short: title.length > 34 ? `${title.slice(0, 33)}…` : title,
+        summary: tasks.slice(0, 2).join(" · ") || "Study session",
+        objective: clean(s.objective, 200),
+        week: 1,
+        date: slots[si].date,
+        start: slots[si].start,
+        minutes: a.sessionLength,
+        priority: si >= list.length - 2 ? "High" : "Core",
+        status: "planned",
+        tasks: tasks.map((label, ti) => ({ id: `p${n}t${ti}`, label, done: false })),
+        notes: "",
+        countsToward: "Get ready for the exam",
+        ...(courseId ? { courseId } : {}),
+      });
+    });
+    if (a.target) milestones.push({ id: "m1", label: "Exam", title: clean(a.course || a.goal, 60) || "Exam", due: a.target });
+    return { sessions, milestones };
+  }
   outline.weeks.forEach((w, wi) => {
     const monday = addDays(start, wi * 7);
     const slots = weekSlots(monday, a, w.sessions.length);
@@ -138,6 +205,20 @@ export function scheduleOutline(outline: PlanOutline, a: OnboardingAnswers, goal
 /** Simple plan used when the AI can't be reached. */
 export function fallbackOutline(a: OnboardingAnswers, weeks: number, perWeek: number): PlanOutline {
   const topic = a.course.split(" — ")[0].trim() || a.goal || "your course";
+  if (isCrash(a)) {
+    const n = Math.max(1, perWeek);
+    return {
+      note: `There isn't time to cover all of ${topic} before the exam, so this plan puts the most important topics first and keeps the last sessions for revision.`,
+      weeks: [{
+        title: "Last-minute preparation",
+        sessions: Array.from({ length: n }, (_, j) =>
+          j >= n - Math.min(2, Math.ceil(n / 3))
+            ? { title: `Revision ${j + 1}`, objective: `Revise formulas, key points and past questions of ${topic}.`, tasks: ["Go through your short notes", "Solve past exam questions"] }
+            : { title: `Important topic ${j + 1}`, objective: `Cover one of the topics that carries the most marks in ${topic}.`, tasks: ["Read the key points", "Do 5 practice questions"] },
+        ),
+      }],
+    };
+  }
   return {
     weeks: Array.from({ length: weeks }, (_, i) => {
       const final = i === weeks - 1;
@@ -169,7 +250,8 @@ export function sanitizeOutline(raw: unknown, weeks: number, perWeek: number): P
     return { title: clean(ww.title, 60) || `Week ${i + 1}`, sessions };
   });
   const good = out.filter((w) => w.sessions.length);
-  return good.length >= Math.min(2, weeks) ? { weeks: good } : null;
+  const note = clean((raw as { note?: unknown })?.note, 300);
+  return good.length >= Math.min(2, weeks) ? { weeks: good, ...(note ? { note } : {}) } : null;
 }
 
 

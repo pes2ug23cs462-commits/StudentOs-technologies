@@ -195,6 +195,10 @@ export async function sendPasswordReset(email: string): Promise<{ ok: true } | {
 
 export async function logOut() {
   setChatsUnlocked(false);
+  // the next login opens the assistant again (Settings → "Open the assistant after I log in")
+  try {
+    sessionStorage.removeItem("sos.chat-auto-opened");
+  } catch {}
   setRemember(false);
   await signOut(auth);
 }

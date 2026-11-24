@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshIcon } from "@/components/ui/icons";
 import { LEVEL_INFO } from "@/lib/setup";
 import { PopularVideos } from "@/components/learn/popular-videos";
+import { AddCourseButton } from "@/components/learn/add-course";
 import { usePremium } from "@/lib/premium";
 
 type Tab = "for-you" | "mine";
@@ -133,7 +134,7 @@ function Learn() {
         </Card>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <FilterPills
           value={tab}
           onChange={setTab}
@@ -142,6 +143,7 @@ function Learn() {
             { value: "mine", label: "My courses", count: started.length },
           ]}
         />
+        <AddCourseButton />
       </div>
       {tab === "for-you" && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -160,7 +162,7 @@ function Learn() {
         </div>
       ) : list.length === 0 ? (
         <EmptyState icon={<VideoIcon size={15} />} title="No courses started yet" className="mt-6 py-12">
-          Pick a course from For you and press Start.
+          Pick a course from For you and press Start, or press Add course to add any YouTube course.
         </EmptyState>
       ) : (
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

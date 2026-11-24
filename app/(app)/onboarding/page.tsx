@@ -86,6 +86,11 @@ export default function OnboardingPage() {
     const res = await generatePlan(answers);
     if (!res.ok || !res.sessions.length) return setBuild("failed");
     actions.suggestPlan({ sessions: res.sessions, milestones: res.milestones });
+    // shown once on the plan review: an honest word when the time can't cover everything
+    try {
+      if (res.note) sessionStorage.setItem("sos.plan-note", res.note);
+      else sessionStorage.removeItem("sos.plan-note");
+    } catch {}
     router.push("/plan/review");
   };
 
@@ -198,7 +203,9 @@ export default function OnboardingPage() {
               </>
             ) : (
               <>
-                Building your plan now — I’ll fit {shape.weeks} weeks of {answers.course.split(" — ")[0] || "your course"} around{" "}
+                {shape.crash
+                  ? `Your exam is ${shape.daysLeft === 0 ? "today" : shape.daysLeft === 1 ? "tomorrow" : `in ${shape.daysLeft} days`}, so I’m building a last-minute plan for ${answers.course.split(" — ")[0] || "your course"}: the topics that matter most first, then revision. I’ll fit it around `
+                  : `Building your plan now — I’ll fit ${shape.weeks} weeks of ${answers.course.split(" — ")[0] || "your course"} around `}
                 {answers.commitments.length ? answers.commitments.map((c) => (c.name === "College" ? "college" : `the ${c.name.toLowerCase()}`)).join(", ") : "your week"}
                 {answers.restDay !== "none" ? ` and your ${answers.restDay === "sunday" ? "Sunday" : "Saturday"} rest` : ""}.
                 <BuildProgress answers={answers} />

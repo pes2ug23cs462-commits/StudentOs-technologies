@@ -7,6 +7,7 @@ import { CheckIcon, PlayIcon } from "@/components/ui/icons";
 import { LogoMark, Wordmark } from "@/components/ui/primitives";
 import { Typewriter } from "@/components/ui/typewriter";
 import { usePathname } from "next/navigation";
+import { isLite } from "@/lib/lite";
 
 /* Left illustration panel on the auth screens.
    - Cards rise in one after another, then float.
@@ -109,7 +110,7 @@ export function HeroPanel() {
   // Parallax: write the pointer position (-1…1) into CSS variables; layers read them.
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || isLite()) return;
     let frame = 0;
     const onMove = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();

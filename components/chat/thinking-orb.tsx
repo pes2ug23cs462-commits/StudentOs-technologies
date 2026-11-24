@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/ui/primitives";
+import { isLite } from "@/lib/lite";
 
 const LABELS = ["Thinking", "Searching", "Analyzing", "Composing"];
 const SIZE = 132; // css px of the canvas
@@ -59,7 +60,7 @@ export function ThinkingOrb({ done = false }: { done?: boolean }) {
     const cv = canvas.current;
     const ctx = cv?.getContext("2d");
     if (!cv || !ctx) return;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const still = isLite();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = SIZE * dpr;
     cv.height = SIZE * dpr;

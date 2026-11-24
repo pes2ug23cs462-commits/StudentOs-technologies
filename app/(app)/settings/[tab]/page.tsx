@@ -5,7 +5,7 @@ import { JoinCollege } from "@/components/college/join-college";
 import { FancyIcon } from "@/components/site/fancy-icon";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { loadPhoto } from "@/lib/photo";
 import { PhotoCropper } from "@/components/settings/photo-cropper";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { authErrorText, deleteAccount, logOut, sendPasswordReset, type AuthError
 import { useStore } from "@/lib/store";
 import type { AssistantSettings, NotificationSettings, Profile, StudyTime } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { getEffectsPref, setEffectsPref } from "@/lib/lite";
 
 const TABS = [
   { key: "profile", label: "Profile", Icon: UserIcon },
@@ -242,11 +243,36 @@ function StudyTab() {
         <div className="-mt-2 divide-y divide-white/[0.07]">
           <SwitchRow title="Session reminders" description={`${n.howEarly === 60 ? "1 hour" : `${n.howEarly} minutes`} before each study session`} checked={n.beforeSession} onChange={(v) => actions.setNotifications({ beforeSession: v })} />
           <SwitchRow title="Missed-session suggestions" description="Suggest a new time when a session is missed" checked={n.missedSuggestions} onChange={(v) => actions.setNotifications({ missedSuggestions: v })} />
-          <SwitchRow title="Open the assistant after I log in" description="Show the chat first on the dashboard" checked={a.openOnLogin} onChange={(v) => actions.setAssistant({ openOnLogin: v })} />
+          <SwitchRow title="Open the assistant after I log in" description="Opens the assistant beside the first page you see after logging in" checked={a.openOnLogin} onChange={(v) => actions.setAssistant({ openOnLogin: v })} />
           <SwitchRow title="Weekly summary" description="A short recap every Sunday evening" checked={n.weeklySummary} onChange={(v) => actions.setNotifications({ weeklySummary: v })} />
         </div>
       </Panel>
+      <EffectsPanel />
     </>
+  );
+}
+
+/* Settings → Effects: turn animations, blur and glows off on a slow laptop (lib/lite.ts). */
+function EffectsPanel() {
+  const [pref, setPref] = useState<"auto" | "lite" | "full">("auto");
+  useEffect(() => setPref(getEffectsPref()), []);
+  const pick = (v: "auto" | "lite" | "full") => {
+    setPref(v);
+    setEffectsPref(v);
+  };
+  return (
+    <Panel title="Effects" sub="If StudentOS feels slow on your laptop, reduce effects. Animations, blur and glows turn off; everything else works the same.">
+      <ChipGroup
+        options={[
+          { value: "auto", label: "Automatic" },
+          { value: "lite", label: "Reduce effects" },
+          { value: "full", label: "All effects" },
+        ]}
+        value={pref}
+        onChange={pick}
+      />
+      <p className="mt-2 text-[11.5px] text-white/45">Automatic reduces effects on laptops with 4 cores or 4 GB of memory or less, and when Data Saver or “reduce motion” is on.</p>
+    </Panel>
   );
 }
 

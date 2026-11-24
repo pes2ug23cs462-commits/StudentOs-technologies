@@ -69,14 +69,14 @@ export async function askAssistant(message: string, opts: { history?: ChatTurn[]
 }
 
 export type PlanResult =
-  | { ok: true; sessions: StudySession[]; milestones: Milestone[]; fromAi: boolean }
+  | { ok: true; sessions: StudySession[]; milestones: Milestone[]; fromAi: boolean; note?: string }
   | { ok: false; reason: "offline" | "signed-out" };
 
 /** Real planner: the AI writes the plan, then it is fitted into the student's week.
  *  If the AI is busy or has no key, a simple plan is built locally instead. */
 export async function generatePlan(answers: OnboardingAnswers): Promise<PlanResult> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return { ok: false, reason: "offline" };
-  const { weeks, perWeek } = planShape(answers);
+  const { weeks, perWeek, crash, daysLeft } = planShape(answers);
   let outline: PlanOutline | null = null;
   try {
     const j = await postAi<PlanOutline>("/api/plan", {
@@ -89,14 +89,18 @@ export async function generatePlan(answers: OnboardingAnswers): Promise<PlanResu
       weeks,
       perWeek,
       minutes: answers.sessionLength,
+      crash,
+      daysLeft,
+      hours: answers.hours,
     });
     outline = sanitizeOutline(j, weeks, perWeek);
   } catch (e) {
     if (e instanceof AssistantError && e.message === MESSAGES["signed-out"]) return { ok: false, reason: "signed-out" };
   }
   const fromAi = !!outline;
-  const plan = scheduleOutline(outline ?? fallbackOutline(answers, weeks, perWeek), answers, "");
-  return { ok: true, ...plan, fromAi };
+  const used = outline ?? fallbackOutline(answers, weeks, perWeek);
+  const plan = scheduleOutline(used, answers, "");
+  return { ok: true, ...plan, fromAi, ...(used.note ? { note: used.note } : {}) };
 }
 
 /* ---------- other AI calls (study materials) ---------- */

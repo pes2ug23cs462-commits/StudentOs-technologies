@@ -25,6 +25,7 @@ import { StudyCard } from "@/components/chat/study-card";
 import { parseStudy } from "@/lib/assistant-study";
 import { applyAction, docSource, markApplied, parseActions } from "@/lib/assistant-actions";
 import { starterResume } from "@/lib/resume-starter";
+import { isLite } from "@/lib/lite";
 
 type Msg = { id: number; role: "user" | "assistant"; text: string; time: string; failed?: boolean; files?: Attachment[]; error?: boolean };
 
@@ -158,7 +159,7 @@ export default function AssistantPage() {
         .filter((m) => !m.failed && !m.error && m.id !== id)
         .map((m) => ({ role: m.role, content: m.text + (m.files?.length ? `\n[Attached earlier: ${m.files.map((f) => f.name).join(", ")}]` : "") }));
       const reply = await askAssistant(text, { history, context: buildContext(state), tone: state.assistant.tone, files });
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (!isLite()) {
         setOrbDone(true);
         await new Promise((r) => setTimeout(r, 750));
       }

@@ -18,7 +18,12 @@ export function BuildProgress({ answers }: { answers: OnboardingAnswers }) {
   }, []);
   const steps = [
     { title: "Reading your week", sub: `${answers.commitments.map((c) => c.name).join(", ") || "Your commitments"}, rest day and ${hoursLabel(answers.hours) || "free"} free hours`.replace(", rest", ", rest") },
-    { title: `Writing ${planShape(answers).weeks} weeks of topics with AI`, sub: `Around ${planShape(answers).perWeek} sessions a week` },
+    (() => {
+      const sh = planShape(answers);
+      return sh.crash
+        ? { title: `Writing a last-minute plan with AI`, sub: `${sh.perWeek} session${sh.perWeek === 1 ? "" : "s"} before your exam, most important topics first` }
+        : { title: `Writing ${sh.weeks} weeks of topics with AI`, sub: `Around ${sh.perWeek} sessions a week` };
+    })(),
     { title: "Adding buffer time", sub: "So a missed session doesn’t push your date" },
     { title: "Setting milestones", sub: "Checkpoints you can track" },
   ];

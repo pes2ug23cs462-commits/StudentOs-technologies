@@ -14,9 +14,8 @@ import { useStore } from "@/lib/store";
 import type { Goal } from "@/lib/types";
 import { VideoTile } from "./popular-videos";
 import { useTopVideos } from "./use-top-videos";
+import { sessionTopic } from "@/lib/session-topic";
 
-/** "Week 3 · Loops and lists" → "Loops and lists" */
-const topicOf = (title: string) => title.replace(/^week\s*\d+\s*[·:\-–]\s*/i, "").replace(/\b(practice|revision|review|session \d+|learn \d+)\b/gi, "").trim();
 
 export function PlanVideos({ goal }: { goal: Goal }) {
   const { state } = useStore();
@@ -27,12 +26,15 @@ export function PlanVideos({ goal }: { goal: Goal }) {
     const seen = new Set<string>();
     return state.sessions
       .filter((s) => s.goalId === goal.id && s.status === "planned" && !isPast(s))
-      .map((s) => topicOf(s.title))
+      .map((s) => sessionTopic(s, subject))
       .filter((t) => t.length > 2 && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()))
       .slice(0, 4);
-  }, [state.sessions, goal.id]);
+  }, [state.sessions, goal.id, subject]);
 
-  const [pick, setPick] = useState("all");
+  // start on the next session's topic, not the whole course
+  const [chosen, setChosen] = useState<string | null>(null);
+  const pick = chosen ?? topics[0] ?? "all";
+  const setPick = setChosen;
   const q = pick === "all" ? `${subject} full course` : `${subject} ${pick}`;
   const { loading, videos, available } = useTopVideos(q, pick === "all" ? 20 : 5);
   const course = courseForGoal(goal, state.learning);

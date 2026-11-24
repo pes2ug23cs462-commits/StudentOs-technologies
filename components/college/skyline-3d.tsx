@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent as RPE } from "react";
 import { cn } from "@/lib/utils";
+import { isLite } from "@/lib/lite";
 
 /* rose (weak) → amber → blue (strong), blended smoothly so small differences show */
 const STOPS: [number, [number, number, number]][] = [
@@ -56,7 +57,7 @@ export function Skyline3D({ rows, cols, values, height: h0 = 380 }: { rows: stri
 
   // gentle idle sway until the user turns it themselves
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (isLite()) return;
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {

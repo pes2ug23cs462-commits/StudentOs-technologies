@@ -157,8 +157,21 @@ export function MiniChat() {
 
 /* Done with setup: the widget opens the assistant as a side panel on this page. */
 function AskWidget() {
+  const { state, status } = useStore();
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  // Settings → "Open the assistant after I log in": open it once per browser session, on the first app page
+  const openOnLogin = state.assistant?.openOnLogin;
+  useEffect(() => {
+    if (status !== "ready" || !openOnLogin) return;
+    try {
+      if (sessionStorage.getItem("sos.chat-auto-opened")) return;
+      sessionStorage.setItem("sos.chat-auto-opened", "1");
+    } catch {
+      return;
+    }
+    if (!document.fullscreenElement) setOpen(true);
+  }, [status, openOnLogin]);
   // a strict test or interview goes full screen: never offer the assistant there
   useEffect(() => {
     const onFs = () => document.fullscreenElement && setOpen(false);

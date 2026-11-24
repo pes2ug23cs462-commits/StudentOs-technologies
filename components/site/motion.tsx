@@ -5,9 +5,10 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { cn } from "@/lib/utils";
+import { isLite } from "@/lib/lite";
 
 export const delay = (s: number) => ({ "--d": `${s}s` }) as CSSProperties;
-export const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const reducedMotion = () => isLite();
 
 /** Adds data-shown to every .reveal element inside `root` once it scrolls into view,
  *  including ones that appear later (e.g. reviews loaded from the database). */

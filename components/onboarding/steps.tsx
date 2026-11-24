@@ -119,10 +119,13 @@ const PROGRESS = ["Not started yet", ...Array.from({ length: 9 }, (_, i) => `Fin
 
 export function targetHint(target: string) {
   if (!target) return null;
-  const weeks = Math.round(daysBetween(TODAY, target) / 7);
-  if (weeks < 1) return { tone: "bad" as const, text: "That date has passed or is this week — pick a later one." };
-  if (weeks < 9) return { tone: "warn" as const, text: `About ${weeks} weeks away — tight for 9 weeks of material.` };
-  return { tone: "ok" as const, text: `About ${weeks} weeks away — comfortable for 9 weeks of material.` };
+  const days = daysBetween(TODAY, target);
+  if (days < 0) return { tone: "bad" as const, text: "That date has passed. Pick today or a later date." };
+  if (days < 7)
+    return { tone: "warn" as const, text: `${days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`}: you’ll get a last-minute plan with the most important topics first, then revision.` };
+  const weeks = Math.round(days / 7);
+  if (weeks < 4) return { tone: "warn" as const, text: `About ${weeks} weeks away. The plan will put the most important topics first.` };
+  return { tone: "ok" as const, text: `About ${weeks} weeks away. The plan spreads the work across them.` };
 }
 
 export function CourseStep({ answers, set, onNext, onBack }: StepProps) {

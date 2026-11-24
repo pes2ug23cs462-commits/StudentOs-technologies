@@ -14,21 +14,14 @@ import { goalSubject } from "@/lib/catalog";
 import type { Goal, StudySession } from "@/lib/types";
 import { compact, hms } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
-
-/** "Week 3 · Lecture 3 · Loops practice" → "Lecture 3 Loops" */
-const topicOf = (title: string) =>
-  title
-    .replace(/^week\s*\d+\s*[·:\-–]\s*/i, "")
-    .replace(/\b(practice|revision|review|session \d+|learn \d+|shorts?)\b/gi, "")
-    .replace(/[·:|–-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+import { isGenericTopic, sessionTopic } from "@/lib/session-topic";
 
 const TECH = /python|java|c\+\+|\bc\b|javascript|react|sql|dbms|data structure|algorithm|operating system|network|web|cs50|programming|coding|machine learning/i;
 
 export function SessionResources({ session, goal }: { session: StudySession; goal?: Goal }) {
   const subject = goal ? goalSubject(goal) : "";
-  const topic = topicOf(session.title) || session.short || subject;
+  // the session's real topic (title, else objective), never a bare "Week 2 · Learn 1"
+  const topic = sessionTopic(session, subject) || subject || session.short;
   const query = `${subject} ${topic}`.replace(/\s+/g, " ").trim().slice(0, 90);
   const [mode, setMode] = useState<"topic" | "full">("topic");
   const q = mode === "topic" ? `${query} explained` : `${subject || topic} full course`;
@@ -37,7 +30,7 @@ export function SessionResources({ session, goal }: { session: StudySession; goa
   const tech = TECH.test(`${subject} ${topic}`);
 
   // “Lecture 3”, “Week 2”… mean nothing to a search site: use the subject instead
-  const generic = /^(lecture|week|unit|chapter|module|part|session|day)\s*\d+$/i.test(topic);
+  const generic = isGenericTopic(topic);
   const readTopic = generic && subject ? subject : topic;
   const read = useMemo(() => {
     const term = encodeURIComponent(readTopic === subject ? subject : `${readTopic} ${subject}`.trim());

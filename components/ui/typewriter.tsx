@@ -5,6 +5,7 @@
    Shows the full text at once when the OS asks for reduced motion. */
 
 import { useEffect, useState } from "react";
+import { isLite } from "@/lib/lite";
 
 export interface TypewriterProps {
   text: string | string[];
@@ -25,7 +26,7 @@ export function Typewriter({ text, speed = 100, cursor = "|", loop = false, dele
   const [still, setStill] = useState(false);
   const current = lines[line] || "";
 
-  useEffect(() => setStill(window.matchMedia("(prefers-reduced-motion: reduce)").matches), []);
+  useEffect(() => setStill(isLite()), []);
 
   useEffect(() => {
     if (!current || still) return;

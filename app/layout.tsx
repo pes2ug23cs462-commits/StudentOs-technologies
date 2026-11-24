@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { SITE_URL } from "@/lib/site";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
+import { LITE_SCRIPT } from "@/lib/lite";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 // Used on certificates, to match the certificate design.
@@ -61,6 +62,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         {/* Apply the saved theme before the page paints, so light mode doesn’t flash dark. */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("studentos:theme")==="light")document.documentElement.classList.add("light")}catch(e){}` }} />
+        {/* Low-end device, Data Saver, reduced motion or "Reduce effects": turn heavy effects off before paint. */}
+        <script dangerouslySetInnerHTML={{ __html: LITE_SCRIPT }} />
       </head>
       <body className="font-sans">
         <StoreProvider>{children}</StoreProvider>

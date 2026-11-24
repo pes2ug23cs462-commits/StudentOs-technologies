@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Talker } from "@/lib/talker";
+import { isLite } from "@/lib/lite";
 
 const MX = 320;
 const MY = 250;
@@ -26,7 +27,7 @@ export function Interviewer({ talker, listening }: { talker: Talker | null; list
   const brows = useRef<SVGGElement>(null);
 
   useEffect(() => {
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const still = isLite();
     let raf = 0;
     let nextBlink = performance.now() + 2500;
     let blinkAt = -1;

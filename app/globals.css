@@ -996,3 +996,33 @@ html.light :where(.bg-\[\#08070d\]) {
 html.light :where(.bg-\[\#0b0a12\]) {
   background-color: #f1f2fb;
 }
+
+/* ---------- Lite effects (html.lite) ----------
+   Set before paint on low-end laptops (≤ 4 cores / ≤ 4 GB), Data Saver, reduced motion,
+   or Settings → Appearance → "Reduce effects". Blur, looping animation, glows and big
+   decorative gradients are the costly parts on weak GPUs, so they go; layout stays the same. */
+html.lite *,
+html.lite *::before,
+html.lite *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation-duration: 0.001ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.08s !important;
+  scroll-behavior: auto !important;
+}
+/* big soft glow blobs (blur-2xl/3xl) are the most expensive paint; hide them */
+html.lite [class~="blur-2xl"],
+html.lite [class~="blur-3xl"] { display: none !important; }
+html.lite [class*="bg-gradient"][aria-hidden="true"],
+html.lite [class*="radial-gradient"][aria-hidden="true"],
+html.lite .glow,
+html.lite [data-decor] { display: none !important; }
+html.lite [class*="shadow-[0_0"] { box-shadow: none !important; }
+/* glass panels keep a readable solid background once blur is gone */
+html.lite [class*="backdrop-blur"] { background-color: rgb(16 16 20 / 0.96) !important; }
+html.light.lite [class*="backdrop-blur"] { background-color: rgb(255 255 255 / 0.97) !important; }
+html.lite .hero-in,
+html.lite .hero-pop { opacity: 1 !important; animation: none !important; }
+html.lite .reveal { opacity: 1 !important; translate: none !important; filter: none !important; }
