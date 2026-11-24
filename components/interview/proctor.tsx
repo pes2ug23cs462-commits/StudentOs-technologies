@@ -12,6 +12,7 @@ import { faceApi, type FaceCheck } from "@/lib/faceprint";
 import { watchPresence } from "@/lib/presence";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { Watermark } from "./watermark";
 
 export const MAX_WARNINGS = 3;
 /** seconds of looking away (or leaving the frame) before it counts */
@@ -233,9 +234,11 @@ function useTalkWatch(on: boolean, onTalk: () => void) {
 }
 
 /** A small camera, the mic check and the warnings left, pinned to a corner of a strict test. */
-export function StrictDock({ left, onBreach, listen = true }: { left: number; onBreach: (b: Breach) => void; listen?: boolean }) {
+export function StrictDock({ left, onBreach, listen = true, mark }: { left: number; onBreach: (b: Breach) => void; listen?: boolean; /** watermark text; the signed-in email by default */ mark?: string }) {
   const mic = useTalkWatch(listen, () => onBreach("talk"));
   return (
+    <>
+    <Watermark text={mark} />
     <div className="fixed right-4 bottom-4 z-[70] w-[210px] space-y-2">
       <SelfView onBreach={onBreach} className="shadow-2xl" />
       {listen && <p className="rounded-lg bg-[#0b0b0d]/90 px-2.5 py-1.5 text-[11px] text-white/70 backdrop-blur">{mic === "on" ? "Mic on: stay silent during the test" : mic === "blocked" ? "Mic blocked: allow it to keep strict mode fair" : "Starting mic…"}</p>}
@@ -243,6 +246,7 @@ export function StrictDock({ left, onBreach, listen = true }: { left: number; on
         <ProctorBadge left={left} />
       </div>
     </div>
+    </>
   );
 }
 

@@ -68,6 +68,9 @@ export function TestRun({ io }: { io: TestIO }) {
   const [work, setWork] = useState<Record<string, CodeWork>>({});
   const [ran, setRan] = useState<Record<string, RunResult | "running">>({});
   const [at, setAt] = useState(0);
+  // questions marked "review later" (only for the student; not sent to the company)
+  const [review, setReview] = useState<number[]>([]);
+  const toggleReview = (i: number) => setReview((r) => (r.includes(i) ? r.filter((x) => x !== i) : [...r, i]));
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<null | { ended: boolean; warnings: Breach[] }>(null);
@@ -248,7 +251,7 @@ export function TestRun({ io }: { io: TestIO }) {
           <span className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[15px] font-semibold tabular-nums", left < 60_000 ? "border-rose-400/40 text-rose-300" : "border-white/15 text-white")}>
             <ClockIcon size={14} /> {mmss(left)}
           </span>
-          <Button variant="primary" size="sm" loading={busy} onClick={() => window.confirm(`Submit now?${nQ - answered ? ` ${nQ - answered} unanswered.` : ""}`) && (proctor.stop(), void submit(proctor.log, false))}>Submit</Button>
+          <Button variant="primary" size="sm" loading={busy} onClick={() => window.confirm(`Submit now?${nQ - answered ? ` ${nQ - answered} unanswered.` : ""}${review.length ? ` ${review.length} marked for review.` : ""}`) && (proctor.stop(), void submit(proctor.log, false))}>Submit</Button>
         </div>
 
         {q && (
@@ -263,9 +266,15 @@ export function TestRun({ io }: { io: TestIO }) {
                 </button>
               ))}
             </div>
-            <div className="mt-6 flex justify-between">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <Button size="sm" variant="ghost" disabled={at === 0} onClick={() => setAt(at - 1)}>← Previous</Button>
-              <Button size="sm" disabled={at === total - 1} onClick={() => setAt(at + 1)}>Next →</Button>
+              <span className="flex flex-wrap gap-2">
+                <button type="button" aria-pressed={review.includes(at)} onClick={() => toggleReview(at)} className={cn("inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-[12.5px] font-medium transition", review.includes(at) ? "border-violet-400/60 bg-violet-500/15 text-violet-200" : "border-white/10 text-white/65 hover:border-white/25 hover:text-white")}>
+                  <span className={cn("h-2 w-2 rounded-full", review.includes(at) ? "bg-violet-400" : "border border-white/40")} /> {review.includes(at) ? "Marked for review" : "Mark for review"}
+                </button>
+                {picks[at] < 0 && at < total - 1 && <Button size="sm" variant="ghost" onClick={() => setAt(at + 1)}>Skip</Button>}
+                <Button size="sm" disabled={at === total - 1} onClick={() => setAt(at + 1)}>{picks[at] >= 0 ? "Save & next →" : "Next →"}</Button>
+              </span>
             </div>
           </div>
         )}
@@ -326,12 +335,22 @@ export function TestRun({ io }: { io: TestIO }) {
 
         <div className="mt-4 flex flex-wrap gap-1.5">
           {run.questions.map((_, i) => (
-            <button key={i} type="button" onClick={() => setAt(i)} aria-label={`Question ${i + 1}`} className={cn("h-8 w-8 rounded-lg border text-[12px] font-medium tabular-nums", i === at ? "border-accent text-white" : picks[i] >= 0 ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-white/10 text-white/50")}>{i + 1}</button>
+            <button key={i} type="button" onClick={() => setAt(i)} aria-label={`Question ${i + 1}${picks[i] >= 0 ? ", answered" : ""}${review.includes(i) ? ", marked for review" : ""}`} className={cn("relative h-8 w-8 rounded-lg border text-[12px] font-medium tabular-nums", i === at ? "border-accent text-white" : review.includes(i) ? "border-violet-400/50 bg-violet-500/15 text-violet-200" : picks[i] >= 0 ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-white/10 text-white/50")}>
+              {i + 1}
+              {review.includes(i) && picks[i] >= 0 && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-[#0b0b0d] bg-emerald-400" />}
+            </button>
           ))}
           {run.coding.map((c, k) => (
             <button key={c.id} type="button" onClick={() => setAt(nQ + k)} className={cn("h-8 rounded-lg border px-2.5 text-[12px] font-medium", at === nQ + k ? "border-accent text-white" : "border-cyan-400/30 bg-cyan-400/[0.06] text-cyan-100")}>{"</>"} {k + 1}</button>
           ))}
         </div>
+        {nQ > 0 && (
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-white/45">
+            <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm border border-emerald-400/50 bg-emerald-400/20 align-middle" />Answered {answered}</span>
+            <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm border border-violet-400/50 bg-violet-500/20 align-middle" />For review {review.length}</span>
+            <span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm border border-white/20 align-middle" />Not answered {nQ - answered}</span>
+          </p>
+        )}
       </div>
       <StrictDock left={proctor.left} onBreach={proctor.report} />
       <ProctorWarning warn={proctor.warn} count={proctor.log.length} onResume={proctor.resume} what="test" />
