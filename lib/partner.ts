@@ -41,6 +41,7 @@ export const PARTNER_ERROR: Record<string, string> = {
   sent: "StudentOS has already sent this drive to colleges, so it can’t be changed here. Write to us to change it.",
   drive: "Add the role and at least one round.",
   "no-drive": "This drive isn’t there any more.",
+  "no-college": "This college isn’t there any more.",
   "bad-test": "Add at least one question (with 2+ options and the right answer marked) or a coding problem.",
 };
 

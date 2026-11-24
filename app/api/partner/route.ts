@@ -7,6 +7,7 @@
      from the colleges that approved, rounds, links, offers
    Everything is written with the service account; students' applications stay in each
    college's own drive (colleges/{cid}/drives/{pid}/apps), so the college sees them too.
+   The team can also delete a college or a company for good (team-college-delete, team-company-delete).
    Data: partnerDrives/{pid}, companies/{coid}, companyCodes/{code}, companyStaff/{uid},
    colleges/{cid}/partner/{pid} (read by the college's staff). */
 
@@ -46,6 +47,21 @@ type Drive = {
 };
 type PDrive = Drive & { pid: string; companyId: string; colleges: string[]; statuses: Record<string, string>; minInterview: number;
   /** written by the company's recruiter; the team picks the colleges */ requested?: { by: string; at: number } };
+
+/** Deletes every document in a collection (and the given sub-collections of each), in batches. */
+async function wipe(collection: string, subs: string[] = []): Promise<number> {
+  let n = 0;
+  for (let round = 0; round < 20; round++) {
+    const docs = await adminList(collection, 300).catch(() => []);
+    if (!docs.length) break;
+    for (const d of docs) {
+      for (const sub of subs) n += await wipe(`${collection}/${d.id}/${sub}`);
+      await adminDelete(`${collection}/${d.id}`);
+      n++;
+    }
+  }
+  return n;
+}
 
 /** Take a partner drive back from one college. Returns true when the college keeps a closed copy because students already applied. */
 async function withdraw(cid: string, pid: string, status?: string): Promise<boolean> {
@@ -261,6 +277,48 @@ export async function POST(req: Request) {
           emailed = (await sendMails([{ to, subject: ok ? `${str(c.name)} is live on StudentOS` : `About ${str(c.name)} on StudentOS`, text: lines.join("\n\n"), replyTo: "support@student-os.in", html: mailHtml({ brand: "StudentOS · Colleges", heading: ok ? "Your college is live" : "About your college request", lines, button: ok ? "Open the college dashboard" : "Visit StudentOS", url: ok ? `${origin}/college` : origin, foot: "You get this because you created a college on StudentOS." }) }])) > 0;
         }
         return NextResponse.json({ ok: true, emailed });
+      }
+      /* Delete a college for good: its staff, students' shared summaries, drives with their
+         applications, offers from partner drives, its join code; partner drives forget it.
+         Students and faculty keep their own accounts; their link to the college simply stops working. */
+      if (action === "team-college-delete") {
+        const cid = id(b.cid);
+        const c = cid ? await adminGet(`colleges/${cid}`) : null;
+        if (!c) return bad("no-college", 404);
+        let n = 0;
+        for (const sub of ["staff", "members", "private", "partner", "experiences", "identityFlags"]) n += await wipe(`colleges/${cid}/${sub}`);
+        n += await wipe(`colleges/${cid}/drives`, ["apps"]);
+        if (str(c.code)) await adminDelete(`collegeCodes/${str(c.code)}`).catch(() => {});
+        const drives = (await adminList("partnerDrives", 500)).map((d) => d.data as PDrive).filter((d) => (d.colleges ?? []).includes(cid));
+        await Promise.all(
+          drives.map((d) => {
+            const statuses = { ...(d.statuses ?? {}) };
+            delete statuses[cid];
+            return adminSet(`partnerDrives/${d.pid}`, { ...d, colleges: d.colleges.filter((x) => x !== cid), statuses });
+          }),
+        );
+        await adminDelete(`colleges/${cid}`);
+        return NextResponse.json({ ok: true, removed: n, drives: drives.length });
+      }
+      /* Delete a company for good: its recruiters' access, its join code, and every drive it has
+         (taken back from colleges the same way as deleting one drive). */
+      if (action === "team-company-delete") {
+        const coid = id(b.coid);
+        const co = coid ? await adminGet(`companies/${coid}`) : null;
+        if (!co) return bad("no-company", 404);
+        const drives = (await adminList("partnerDrives", 500)).map((d) => d.data as PDrive).filter((d) => d.companyId === coid);
+        let kept = 0;
+        for (const p of drives) {
+          kept += (await Promise.all((p.colleges ?? []).map((cid) => withdraw(cid, p.pid, p.statuses?.[cid])))).filter(Boolean).length;
+          for (const sub of ["tests", "attempts", "ivAttempts"]) await wipe(`partnerDrives/${p.pid}/${sub}`);
+          await wipe(`partnerDrives/${p.pid}/live`, ["sig"]);
+          await adminDelete(`partnerDrives/${p.pid}`);
+        }
+        const staff = (await adminList("companyStaff", 2000)).filter((x) => str(x.data.coid, 80) === coid);
+        await Promise.all(staff.map((x) => adminDelete(`companyStaff/${x.id}`)));
+        if (str(co.code)) await adminDelete(`companyCodes/${str(co.code)}`).catch(() => {});
+        await adminDelete(`companies/${coid}`);
+        return NextResponse.json({ ok: true, drives: drives.length, recruiters: staff.length, kept });
       }
       if (action === "team-drive-delete") {
         const pid = id(b.pid);

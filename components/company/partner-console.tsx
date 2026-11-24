@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DriveForm } from "@/components/college/placements";
 import { CareersEditor } from "@/components/company/careers-editor";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { CopyIcon, LogOutIcon, PlusIcon, XIcon } from "@/components/ui/icons";
+import { CopyIcon, LogOutIcon, PlusIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Input, Label, LogoMark, Wordmark } from "@/components/ui/primitives";
 import { logOut } from "@/lib/auth";
 import { partnerApi, partnerErrorText, type PartnerCollege, type PartnerCompany, type PartnerDrive, type Whoami } from "@/lib/partner";
@@ -139,6 +139,38 @@ export function PartnerConsole() {
       setBusy("");
     }
   };
+  /* Deleting a college or company is for good, so the name has to be typed to confirm. */
+  const deleteCollege = async (c: PartnerCollege) => {
+    const typed = window.prompt(`Delete ${c.name} for good?\n\nIts faculty list, students’ shared progress, its drives with all applications and its join code are deleted, and partner drives forget it. Students and faculty keep their own StudentOS accounts.\n\nType the college name to confirm:`);
+    if (typed == null) return;
+    if (typed.trim().toLowerCase() !== c.name.trim().toLowerCase()) return actions.toast("The name didn’t match. Nothing was deleted.");
+    setBusy(`col-${c.id}`);
+    try {
+      await partnerApi("team-college-delete", { cid: c.id });
+      actions.toast(`${c.name} was deleted.`);
+      await load();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
+  const deleteCompany = async (c: PartnerCompany) => {
+    const n = (data?.drives ?? []).filter((d) => d.companyId === c.id).length;
+    const typed = window.prompt(`Delete ${c.name} for good?\n\nIts recruiters lose access, its code stops working${n ? `, and its ${n} drive${n === 1 ? " is" : "s are"} taken back from every college (colleges where students applied keep a closed copy)` : ""}.\n\nType the company name to confirm:`);
+    if (typed == null) return;
+    if (typed.trim().toLowerCase() !== c.name.trim().toLowerCase()) return actions.toast("The name didn’t match. Nothing was deleted.");
+    setBusy(`co-${c.id}`);
+    try {
+      await partnerApi("team-company-delete", { coid: c.id });
+      actions.toast(`${c.name} was deleted.`);
+      await load();
+    } catch (e) {
+      actions.toast(partnerErrorText(e));
+    } finally {
+      setBusy("");
+    }
+  };
   const blank = (companyName: string): Drive => ({ id: `pd${Date.now().toString(36)}`, company: companyName, role: "", kind: "Full-time", ctc: "", location: "", about: "", rounds: ["Online test", "Technical interview", "HR interview"], elig: { branches: [], minCgpa: 0, maxBacklogs: 0, batch: "" }, deadline: "", open: true, createdAt: Date.now(), createdBy: "" });
 
   return (
@@ -199,6 +231,7 @@ export function PartnerConsole() {
                   <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{c.name}</span><span className="block text-[11px] text-white/40">{[c.type === "degree" ? "Degree" : "PU / school", c.city].filter(Boolean).join(" · ")}</span></span>
                   <span className={cn("rounded-full px-2 py-0.5 text-[11px]", c.status === "approved" ? STATUS.approved : c.status === "pending" ? STATUS.pending : "bg-rose-400/12 text-rose-300")}>{c.status === "approved" ? "live" : c.status}</span>
                   {c.status === "rejected" && <button type="button" disabled={busy === `col-${c.id}`} onClick={() => void decideCollege(c, "approved")} className="text-[11.5px] text-accent hover:underline">Approve</button>}
+                  <button type="button" disabled={busy === `col-${c.id}`} onClick={() => void deleteCollege(c)} title={`Delete ${c.name}`} aria-label={`Delete ${c.name}`} className="rounded-md p-1 text-white/35 transition hover:bg-rose-400/10 hover:text-rose-300 disabled:opacity-40"><TrashIcon size={14} /></button>
                 </div>
               ))}
             </div>
@@ -289,6 +322,7 @@ export function PartnerConsole() {
                   <button type="button" onClick={() => void navigator.clipboard.writeText(`Join ${c.name} on StudentOS: ${window.location.origin}/company · code ${c.code}`).then(() => actions.toast("Invite copied."))} title="Copy recruiter invite" className="flex items-center gap-1.5 rounded-lg border border-white/10 px-2 py-1 font-mono text-[12px] tracking-wider text-white/75 hover:text-white">
                     {c.code} <CopyIcon size={12} />
                   </button>
+                  <button type="button" disabled={busy === `co-${c.id}`} onClick={() => void deleteCompany(c)} title={`Delete ${c.name}`} aria-label={`Delete ${c.name}`} className="rounded-md p-1 text-white/35 transition hover:bg-rose-400/10 hover:text-rose-300 disabled:opacity-40"><TrashIcon size={14} /></button>
                 </div>
               ))}
             </div>
