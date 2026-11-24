@@ -46,7 +46,7 @@ const toVideo = (v: Item): YtVideo => {
     title: v.snippet?.title ?? "",
     channel: v.snippet?.channelTitle ?? "",
     ...(v.snippet?.channelId ? { channelId: v.snippet.channelId } : {}),
-    ...((v.snippet?.defaultAudioLanguage || v.snippet?.defaultLanguage) ? { lang: (v.snippet.defaultAudioLanguage || v.snippet.defaultLanguage)!.slice(0, 2).toLowerCase() } : {}),
+    ...(spokenIn(v) ? { lang: spokenIn(v) } : {}),
     views: Number(v.statistics?.viewCount ?? 0),
     likes: Number(v.statistics?.likeCount ?? 0),
     seconds,
@@ -67,18 +67,37 @@ export type VideoLang = "any" | "en" | "hi" | "kn";
 
 const DEVANAGARI = /[\u0900-\u097F]/;
 const KANNADA = /[\u0C80-\u0CFF]/;
-/** The language a video is taught in: YouTube's audio language when the creator set it, else from the title. */
-function langOf(v: YtVideo): string {
-  if (v.lang) return v.lang;
-  if (KANNADA.test(v.title) || /\bkannada\b/i.test(v.title)) return "kn";
-  if (DEVANAGARI.test(v.title) || /\b(hindi|हिंदी)\b/i.test(v.title)) return "hi";
-  return "en";
+const HINDI_WORDS = /\b(hindi|hinglish|हिंदी|हिन्दी)\b|हिंदी|हिन्दी/i;
+const KANNADA_WORDS = /\bkannada\b/i;
+const ENGLISH_WORDS = /\b(in english|english medium|english explanation|explained in english)\b/i;
+
+/** Language the teacher speaks: YouTube's audio language when the creator set it, else signs in
+    the title and description ("in Hindi", Devanagari, "Kannada", "in English"). "" = not known. */
+function spokenIn(v: Item): string {
+  const audio = (v.snippet?.defaultAudioLanguage ?? "").slice(0, 2).toLowerCase();
+  if (audio) return audio;
+  const title = v.snippet?.title ?? "";
+  const desc = (v.snippet?.description ?? "").slice(0, 600);
+  if (KANNADA.test(title) || KANNADA_WORDS.test(title)) return "kn";
+  if (DEVANAGARI.test(title) || HINDI_WORDS.test(title)) return "hi";
+  if (ENGLISH_WORDS.test(title)) return "en";
+  if (KANNADA.test(desc) || KANNADA_WORDS.test(desc)) return "kn";
+  if (DEVANAGARI.test(desc) || HINDI_WORDS.test(desc)) return "hi";
+  if (ENGLISH_WORDS.test(desc)) return "en";
+  return "";
 }
-/** Only videos in the student's language, when at least two are; otherwise all (better than nothing). */
+
+/** Only videos taught in the student's language. English: videos known to be in English first;
+    if too few, add the ones with no sign of another language. Never videos known to be in another language,
+    unless nothing else is left. */
 function inLanguage(videos: YtVideo[], lang: VideoLang) {
   if (lang === "any") return videos;
-  const mine = videos.filter((v) => langOf(v) === lang);
-  return mine.length >= 2 ? mine : videos;
+  const sure = videos.filter((v) => v.lang === lang);
+  if (sure.length >= 2) return sure;
+  const maybe = videos.filter((v) => v.lang === lang || !v.lang);
+  if (lang === "en" && maybe.length) return maybe;
+  if (maybe.length >= 2 && sure.length) return maybe;
+  return sure.length ? sure : maybe.length ? maybe : videos;
 }
 const ONE_SHOT = /one[\s-]*shot|1[\s-]*shot|oneshot|in one video|complete chapter in/i;
 
@@ -109,7 +128,7 @@ function onTopic(videos: YtVideo[], q: string) {
 async function search(q: string, minMinutes: number, kind: VideoKind = "any", lang: VideoLang = "any"): Promise<YtVideo[]> {
   const sj = await get<{ items?: { id?: { videoId?: string } }[] }>("search", {
     part: "snippet",
-    q: lang === "hi" ? `${q} in hindi` : lang === "kn" ? `${q} in kannada` : q,
+    q: lang === "hi" ? `${q} in hindi` : lang === "kn" ? `${q} in kannada` : lang === "en" ? `${q} in english` : q,
     type: "video",
     order: "relevance",
     videoEmbeddable: "true",
@@ -133,6 +152,9 @@ async function search(q: string, minMinutes: number, kind: VideoKind = "any", la
 }
 
 export const searchVideos = unstable_cache(search, ["yt-search-v3"], { revalidate: YT_KEEP_SECONDS });
+/** Searches in one language (English / Hindi / Kannada) get their own cache, so a change to the
+    language rules doesn't wait for old results to expire. */
+export const searchVideosIn = unstable_cache((q: string, minMinutes: number, kind: VideoKind, lang: VideoLang) => search(q, minMinutes, kind, lang), ["yt-search-lang-v2"], { revalidate: YT_KEEP_SECONDS });
 // checked daily, so a deleted or private video is noticed quickly
 export const videoDetails = unstable_cache(details, ["yt-details-v1"], { revalidate: 24 * 60 * 60 });
 

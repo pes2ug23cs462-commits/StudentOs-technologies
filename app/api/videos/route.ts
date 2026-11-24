@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/server/auth";
-import { YtError, searchChannel, searchVideos, validChannel } from "@/lib/server/youtube";
+import { YtError, searchChannel, searchVideos, searchVideosIn, validChannel } from "@/lib/server/youtube";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     const kind = k === "oneshot" || k === "lecture" ? k : "any";
     // &lang=en|hi|kn: the student's video language (Exam Prep, Settings)
     const l = url.searchParams.get("lang");
-    if (l === "en" || l === "hi" || l === "kn") return NextResponse.json({ videos: await searchVideos(q, minMinutes, kind, l) });
+    if (l === "en" || l === "hi" || l === "kn") return NextResponse.json({ videos: await searchVideosIn(q, minMinutes, kind, l) });
     // "any" keeps the old two-argument call so cached searches are reused
     return NextResponse.json({ videos: await (kind === "any" ? searchVideos(q, minMinutes) : searchVideos(q, minMinutes, kind)) });
   } catch (e) {
