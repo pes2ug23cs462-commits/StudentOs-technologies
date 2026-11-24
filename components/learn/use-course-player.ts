@@ -6,9 +6,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLearning } from "@/components/learn/use-learning";
-import { useTopVideos } from "@/components/learn/use-top-videos";
+import { useTeacherVideos } from "@/components/learn/teacher";
 import { useYtRefresh } from "@/components/learn/use-yt-refresh";
-import { WATCHED_SHARE, courseStats, moduleKey, moduleLessons, parseLength, type Course } from "@/lib/learn";
+import { WATCHED_SHARE, courseStats, moduleKey, moduleLessons, parseLength, teacherFor, type Course } from "@/lib/learn";
 
 export function useCoursePlayer(course: Course | undefined) {
   const { learning, setModule, setCourse, actions, blankModule, getModule } = useLearning();
@@ -22,8 +22,9 @@ export function useCoursePlayer(course: Course | undefined) {
   const key = course ? moduleKey(course.id, active) : "";
   const mp = learning.modules[key] ?? blankModule;
   const activeModule = course?.modules.find((m) => m.id === active) ?? course?.modules[0];
-  // Most viewed videos for this module’s topic (empty when no YouTube API key is set).
-  const top = useTopVideos(activeModule?.topic);
+  // Most viewed videos for this module’s topic (empty when no YouTube API key is set),
+  // from the teacher the student follows for this subject when that teacher has one.
+  const top = useTeacherVideos(activeModule?.topic || undefined, 20, activeModule?.topic ? teacherFor(learning, `${course?.title ?? ""} ${activeModule.topic}`) : undefined);
   const best = top.videos[0];
   // A video kept from an older, looser search is dropped if the student has barely started it
   // and it is no longer among the videos for this topic (so a wrong video doesn't stick).

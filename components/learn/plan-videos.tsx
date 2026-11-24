@@ -8,12 +8,12 @@ import { useMemo, useState } from "react";
 import { FilterPills } from "@/components/free/parts";
 import { PlayIcon, VideoIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
-import { courseForGoal, coursePercent, emptyLearning } from "@/lib/learn";
+import { courseForGoal, coursePercent, emptyLearning, teacherFor } from "@/lib/learn";
 import { isPast } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { Goal } from "@/lib/types";
 import { VideoTile } from "./popular-videos";
-import { useTopVideos } from "./use-top-videos";
+import { useTeacherVideos } from "./teacher";
 import { sessionTopic } from "@/lib/session-topic";
 
 
@@ -36,7 +36,8 @@ export function PlanVideos({ goal }: { goal: Goal }) {
   const pick = chosen ?? topics[0] ?? "all";
   const setPick = setChosen;
   const q = pick === "all" ? `${subject} full course` : `${subject} ${pick}`;
-  const { loading, videos, available } = useTopVideos(q, pick === "all" ? 20 : 5);
+  const teacher = teacherFor(state.learning, `${subject} ${goal.title}`);
+  const { loading, videos, available, fromTeacher } = useTeacherVideos(q, pick === "all" ? 20 : 5, teacher);
   const course = courseForGoal(goal, state.learning);
   const pct = course ? coursePercent(course, state.learning ?? emptyLearning()) : 0;
 
@@ -47,7 +48,10 @@ export function PlanVideos({ goal }: { goal: Goal }) {
           <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
             <VideoIcon size={15} className="text-accent" /> Videos for your plan
           </p>
-          <p className="mt-1 text-[12px] text-white/55">Most viewed and liked videos for {subject}, picked for your next sessions. They play inside StudentOS.</p>
+          <p className="mt-1 text-[12px] text-white/55">
+            {fromTeacher && teacher ? `From your teacher ${teacher.channel}, picked for your next sessions.` : `Most viewed and liked videos for ${subject}, picked for your next sessions.`} They play inside StudentOS.
+          </p>
+          {teacher && !fromTeacher && !loading && <p className="mt-1 text-[11.5px] text-amber-300/90">{teacher.channel} has no video on this yet, so these are from other popular teachers.</p>}
         </div>
         {course && (
           <Link href={`/learn/${course.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[12.5px] font-semibold text-black hover:bg-accent-hover">

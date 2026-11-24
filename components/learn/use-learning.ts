@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { emptyLearning, type Course, type CourseProgress, type Learning, type ModuleProgress, type VideoMeta } from "@/lib/learn";
+import { emptyLearning, type Course, type CourseProgress, type Learning, type ModuleProgress, type Teacher, type VideoMeta } from "@/lib/learn";
 import { useStore } from "@/lib/store";
 
 const blankModule: ModuleProgress = { t: 0, d: 0, done: false, notes: "" };
@@ -54,12 +54,34 @@ export function useLearning() {
     commit({ ...l, videos, modules, courses });
   };
 
+  /** Follow a teacher for a subject (null stops following). */
+  const setTeacher = (subject: string, t: Omit<Teacher, "subject" | "at"> | null) => {
+    const l = latest.current;
+    const key = subject.trim().toLowerCase();
+    const teachers = { ...l.teachers };
+    if (t) teachers[key] = { ...t, subject: subject.trim(), at: Date.now() };
+    else delete teachers[key];
+    commit({ ...l, teachers });
+  };
+
+  /** Adds (or replaces) a course made from a teacher's playlist. */
+  const addCustom = (course: Course) => {
+    const l = latest.current;
+    commit({ ...l, custom: [course, ...(l.custom ?? []).filter((c) => c.id !== course.id)], courses: { ...l.courses, [course.id]: { ...fresh(), ...l.courses[course.id] } } });
+  };
+
   /** Removes a course from My courses with its progress and notes. A certificate is never removed. */
   const removeCourse = (id: string) => {
     if (id.startsWith("yt-")) return removeVideo(id.slice(3));
     const l = latest.current;
     const cp = l.courses[id];
     if (cp?.certId) return;
+    if (id.startsWith("tc-")) {
+      const modules = Object.fromEntries(Object.entries(l.modules).filter(([k]) => !k.startsWith(`${id}/`)));
+      const courses = { ...l.courses };
+      delete courses[id];
+      return commit({ ...l, modules, courses, custom: (l.custom ?? []).filter((c) => c.id !== id) });
+    }
     const modules = Object.fromEntries(Object.entries(l.modules).filter(([k]) => !k.startsWith(`${id}/`)));
     commit({ ...l, modules, courses: { ...l.courses, [id]: { startedAt: cp?.startedAt ?? new Date().toISOString(), attempts: 0, best: 0, hidden: true, ...(cp?.quizPool ? { quizPool: cp.quizPool } : {}) } } });
   };
@@ -67,5 +89,5 @@ export function useLearning() {
   /** Saves the courses suggested for this student’s profile. */
   const setCatalog = (catalog: Course[], catalogFor: string) => commit({ ...latest.current, catalog, catalogFor });
 
-  return { state, actions, learning, setModule, setCourse, setVideo, removeVideo, removeCourse, setCatalog, getModule, blankModule };
+  return { state, actions, learning, setModule, setCourse, setVideo, removeVideo, removeCourse, setCatalog, setTeacher, addCustom, getModule, blankModule };
 }

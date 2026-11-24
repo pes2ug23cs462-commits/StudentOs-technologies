@@ -6,6 +6,8 @@ export interface YtVideo {
   id: string;
   title: string;
   channel: string;
+  /** YouTube channel id, for "same teacher" searches */
+  channelId?: string;
   views: number;
   likes: number;
   /** length in seconds */

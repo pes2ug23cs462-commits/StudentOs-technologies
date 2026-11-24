@@ -17,7 +17,7 @@ export class YtError extends Error {
 
 type Item = {
   id: string;
-  snippet?: { title?: string; channelTitle?: string; description?: string };
+  snippet?: { title?: string; channelTitle?: string; channelId?: string; description?: string };
   statistics?: { viewCount?: string; likeCount?: string };
   contentDetails?: { duration?: string };
   status?: { embeddable?: boolean; privacyStatus?: string };
@@ -45,6 +45,7 @@ const toVideo = (v: Item): YtVideo => {
     id: v.id,
     title: v.snippet?.title ?? "",
     channel: v.snippet?.channelTitle ?? "",
+    ...(v.snippet?.channelId ? { channelId: v.snippet.channelId } : {}),
     views: Number(v.statistics?.viewCount ?? 0),
     likes: Number(v.statistics?.likeCount ?? 0),
     seconds,
@@ -116,3 +117,44 @@ async function search(q: string, minMinutes: number, kind: VideoKind = "any"): P
 export const searchVideos = unstable_cache(search, ["yt-search-v3"], { revalidate: YT_KEEP_SECONDS });
 // checked daily, so a deleted or private video is noticed quickly
 export const videoDetails = unstable_cache(details, ["yt-details-v1"], { revalidate: 24 * 60 * 60 });
+
+/* ---------- "same teacher": one channel's videos and playlists ---------- */
+
+const CHANNEL = /^UC[\w-]{22}$/;
+export const validChannel = (id: string) => CHANNEL.test(id);
+
+/** Videos on a topic from one channel, most relevant first (100 units, cached). */
+async function inChannel(q: string, channelId: string): Promise<YtVideo[]> {
+  const sj = await get<{ items?: { id?: { videoId?: string } }[] }>("search", { part: "snippet", q, channelId, type: "video", order: "relevance", videoEmbeddable: "true", safeSearch: "strict", maxResults: "15" });
+  const ids = (sj.items ?? []).map((i) => i.id?.videoId).filter(Boolean) as string[];
+  const byId = new Map((await details(ids)).map((v) => [v.id, v]));
+  // keep YouTube's relevance order, only videos about the topic
+  return onTopic(ids.map((id) => byId.get(id)).filter((v): v is YtVideo => !!v), q).slice(0, 8);
+}
+
+export type YtPlaylist = { id: string; title: string; channel: string; count: number };
+
+/** A channel's playlists for a subject, e.g. "1st PUC Physics" (100 + 1 units, cached). */
+async function channelPlaylists(channelId: string, q: string): Promise<YtPlaylist[]> {
+  const sj = await get<{ items?: { id?: { playlistId?: string } }[] }>("search", { part: "snippet", q, channelId, type: "playlist", order: "relevance", safeSearch: "strict", maxResults: "10" });
+  const ids = (sj.items ?? []).map((i) => i.id?.playlistId).filter(Boolean) as string[];
+  if (!ids.length) return [];
+  const pj = await get<{ items?: { id: string; snippet?: { title?: string; channelTitle?: string }; contentDetails?: { itemCount?: number }; status?: { privacyStatus?: string } }[] }>("playlists", { part: "snippet,contentDetails,status", id: ids.join(",") });
+  const byId = new Map((pj.items ?? []).map((p) => [p.id, p]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((p) => p && p.status?.privacyStatus !== "private" && (p.contentDetails?.itemCount ?? 0) >= 2)
+    .map((p) => ({ id: p!.id, title: p!.snippet?.title ?? "", channel: p!.snippet?.channelTitle ?? "", count: p!.contentDetails?.itemCount ?? 0 }));
+}
+
+/** First 50 playable videos of a playlist, in playlist order (2 units, cached). */
+async function playlistVideos(playlistId: string): Promise<YtVideo[]> {
+  const j = await get<{ items?: { contentDetails?: { videoId?: string } }[] }>("playlistItems", { part: "contentDetails", playlistId, maxResults: "50" });
+  const ids = (j.items ?? []).map((i) => i.contentDetails?.videoId).filter(Boolean) as string[];
+  const byId = new Map((await details(ids)).map((v) => [v.id, v]));
+  return ids.map((id) => byId.get(id)).filter((v): v is YtVideo => !!v);
+}
+
+export const searchChannel = unstable_cache(inChannel, ["yt-channel-v1"], { revalidate: YT_KEEP_SECONDS });
+export const searchPlaylists = unstable_cache(channelPlaylists, ["yt-playlists-v1"], { revalidate: YT_KEEP_SECONDS });
+export const playlistItems = unstable_cache(playlistVideos, ["yt-playlist-items-v1"], { revalidate: 24 * 60 * 60 });

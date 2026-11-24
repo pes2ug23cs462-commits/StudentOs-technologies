@@ -338,7 +338,27 @@ export interface Learning {
   catalog?: Course[];
   /** profile the catalog was made for; a change makes new suggestions */
   catalogFor?: string;
+  /** "Follow this teacher": a YouTube channel the student picked for a subject, keyed by subject (lower case) */
+  teachers?: Record<string, Teacher>;
+  /** courses the student made from a teacher's playlist (Learning → Follow this teacher) */
+  custom?: Course[];
 }
+
+export interface Teacher {
+  subject: string;
+  channelId: string;
+  channel: string;
+  at: number;
+}
+
+/** The teacher the student follows for whatever `text` is about ("Physics · Units and measurement"). */
+export function teacherFor(l: Learning | undefined, text: string): Teacher | undefined {
+  const t = text.toLowerCase();
+  return Object.values(l?.teachers ?? {}).find((x) => x.subject && new RegExp(`\\b${x.subject.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(t));
+}
+
+/** A course from a teacher's playlist: one module per video, in playlist order. */
+export const teacherCourseId = (playlistId: string) => `tc-${playlistId}`;
 
 export interface VideoMeta {
   title: string;
@@ -347,6 +367,7 @@ export interface VideoMeta {
   chapters?: { t: number; title: string }[];
   /** search it came from, for “more like this” */
   q?: string;
+  channelId?: string;
   addedAt: number;
   /** when the details were last fetched from YouTube (ms); refreshed after 30 days */
   refreshedAt?: number;
@@ -422,7 +443,7 @@ export const isVideoCourse = (c: Course) => c.id.startsWith("yt-");
 
 /** Any course this student can open: personalised, built-in, or a popular video they added. */
 export function findCourse(id: string, l: Learning | undefined) {
-  const own = l?.catalog?.find((c) => c.id === id);
+  const own = l?.catalog?.find((c) => c.id === id) ?? l?.custom?.find((c) => c.id === id);
   if (own) return own;
   const c = courseById(id);
   if (c) return c;

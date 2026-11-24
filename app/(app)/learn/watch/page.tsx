@@ -25,7 +25,7 @@ function Watch() {
     done.current = true;
     const info = videos.find((v) => v.id === id);
     const saved = learning.videos?.[id];
-    if (info) setVideo(id, { title: info.title, channel: info.channel, secs: saved?.secs || info.seconds, chapters: saved?.chapters ?? info.chapters, q: saved?.q ?? q, refreshedAt: Date.now(), gone: false });
+    if (info) setVideo(id, { title: info.title, channel: info.channel, ...(info.channelId ? { channelId: info.channelId } : {}), secs: saved?.secs || info.seconds, chapters: saved?.chapters ?? info.chapters, q: saved?.q ?? q, refreshedAt: Date.now(), gone: false });
     else if (!saved) setVideo(id, { q });
     if (!learning.courses[videoCourseId(id)]) setCourse(videoCourseId(id), {});
     router.replace(`/learn/${videoCourseId(id)}`);

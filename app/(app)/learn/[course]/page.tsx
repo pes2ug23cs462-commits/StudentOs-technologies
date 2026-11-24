@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCoursePlayer } from "@/components/learn/use-course-player";
+import { FollowTeacher } from "@/components/learn/teacher";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, EyeIcon, ThumbUpIcon, CheckCircleIcon, CheckIcon, ChevronDownIcon, FileIcon, LockIcon, PlayIcon, TrophyIcon } from "@/components/ui/icons";
 import { Card, EmptyState, Pill } from "@/components/ui/primitives";
@@ -40,7 +41,7 @@ export default function CoursePage() {
       </Link>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <h1 className="text-[24px] font-semibold tracking-tight text-white">{course.title}</h1>
-        {isVideoCourse(course) ? <Pill tone="cyan">Popular video</Pill> : <Pill tone="green">{LEVEL_INFO[course.level].label}</Pill>}
+        {isVideoCourse(course) ? <Pill tone="cyan">Popular video</Pill> : course.id.startsWith("tc-") ? <Pill tone="violet">Your teacher</Pill> : <Pill tone="green">{LEVEL_INFO[course.level].label}</Pill>}
       </div>
       {isVideoCourse(course) && learning.videos?.[course.id.slice(3)]?.gone && (
         <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/[0.08] p-3 text-[12.5px] text-amber-300">
@@ -113,6 +114,9 @@ export default function CoursePage() {
               )}
             </div>
           </div>
+          {video?.key.startsWith("v:") && video.channel && (
+            <FollowTeacher videoId={video.key.slice(2)} channel={video.channel} hint={`${course.title} ${mod.title} ${learning.videos?.[course.id.slice(3)]?.q ?? ""} ${video.title}`} />
+          )}
           <p className="mt-3 text-[13px] leading-relaxed text-white/65">{mod.about}</p>
 
           <Card className="mt-4 p-4">

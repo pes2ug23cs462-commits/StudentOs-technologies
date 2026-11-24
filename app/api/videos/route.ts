@@ -1,4 +1,4 @@
-/* GET /api/videos?q=python+full+course&min=20
+/* GET /api/videos?q=python+full+course&min=20   (&channel=UC… for one teacher's videos)
    Most viewed embeddable videos on a topic, with views, likes, length and chapters.
    Needs YOUTUBE_API_KEY in .env.local (free: YouTube Data API v3).
    Results are shared by all students and refreshed every 29 days (lib/server/youtube.ts),
@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { verifyIdToken } from "@/lib/server/auth";
-import { YtError, searchVideos } from "@/lib/server/youtube";
+import { YtError, searchChannel, searchVideos, validChannel } from "@/lib/server/youtube";
 
 /** AI calls can take a while; 60 s is the most Vercel's free plan allows. */
 export const maxDuration = 60;
@@ -20,6 +20,12 @@ export async function GET(req: Request) {
   const minMinutes = Math.min(Math.max(Number(url.searchParams.get("min") ?? 20) || 0, 0), 600);
   if (!q || q.length > 100) return NextResponse.json({ error: "bad query", videos: [] }, { status: 400 });
   try {
+    // &channel=UC…: only that teacher's videos (Learning → "same teacher")
+    const channel = url.searchParams.get("channel") ?? "";
+    if (channel) {
+      if (!validChannel(channel)) return NextResponse.json({ error: "bad channel", videos: [] }, { status: 400 });
+      return NextResponse.json({ videos: await searchChannel(q, channel) });
+    }
     const k = url.searchParams.get("kind");
     const kind = k === "oneshot" || k === "lecture" ? k : "any";
     // "any" keeps the old two-argument call so cached searches are reused

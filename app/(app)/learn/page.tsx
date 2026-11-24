@@ -59,7 +59,7 @@ function Learn() {
     .map(([id, v]) => videoCourse(id, v));
   // Pinned first, then most recently watched.
   const rank = (id: string) => [learning.courses[id]?.pinned ? 1 : 0, learning.courses[id]?.lastAt ?? learning.videos?.[id.slice(3)]?.addedAt ?? 0] as const;
-  const started = [...catalog.courses.filter((c) => begun(c.id) || goalCourses.has(c.id)), ...COURSES.filter((c) => begun(c.id) || goalCourses.has(c.id)), ...videoCourses].sort((a, b) => {
+  const started = [...catalog.courses.filter((c) => begun(c.id) || goalCourses.has(c.id)), ...COURSES.filter((c) => begun(c.id) || goalCourses.has(c.id)), ...(learning.custom ?? []), ...videoCourses].sort((a, b) => {
     const [pa, ta] = rank(a.id);
     const [pb, tb] = rank(b.id);
     return pb - pa || tb - ta;
@@ -190,7 +190,7 @@ function Learn() {
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex flex-wrap items-center gap-2">
                     {isVideoCourse(c) && learning.videos?.[c.id.slice(3)]?.gone && <Pill tone="amber">Removed from YouTube</Pill>}
-                    {isVideoCourse(c) ? <Pill tone="cyan">Popular video</Pill> : <Pill tone={LEVEL_TONE[c.level]}>{LEVEL_INFO[c.level].label}</Pill>}
+                    {isVideoCourse(c) ? <Pill tone="cyan">Popular video</Pill> : c.id.startsWith("tc-") ? <Pill tone="violet">Your teacher</Pill> : <Pill tone={LEVEL_TONE[c.level]}>{LEVEL_INFO[c.level].label}</Pill>}
                     {s.progress?.certId ? (
                       <Pill tone="green" dot>Certified</Pill>
                     ) : s.progress?.passedAt ? (

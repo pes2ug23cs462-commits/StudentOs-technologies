@@ -9,7 +9,9 @@ import { useMemo, useState } from "react";
 import { YouTubePlayer } from "@/components/videos/player";
 import { ArrowRightIcon, BookIcon, ChatIcon, EyeIcon, PlayIcon, SparkleIcon, VideoIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
-import { useTopVideos } from "@/components/learn/use-top-videos";
+import { FollowTeacher, useTeacherVideos } from "@/components/learn/teacher";
+import { useStore } from "@/lib/store";
+import { teacherFor } from "@/lib/learn";
 import { goalSubject } from "@/lib/catalog";
 import type { Goal, StudySession } from "@/lib/types";
 import { compact, hms } from "@/lib/youtube";
@@ -25,7 +27,9 @@ export function SessionResources({ session, goal }: { session: StudySession; goa
   const query = `${subject} ${topic}`.replace(/\s+/g, " ").trim().slice(0, 90);
   const [mode, setMode] = useState<"topic" | "full">("topic");
   const q = mode === "topic" ? `${query} explained` : `${subject || topic} full course`;
-  const { loading, videos, available } = useTopVideos(q.toLowerCase(), mode === "topic" ? 4 : 20);
+  const { state } = useStore();
+  const teacher = teacherFor(state.learning, `${subject} ${goal?.title ?? ""} ${session.title}`);
+  const { loading, videos, available, fromTeacher } = useTeacherVideos(q.toLowerCase(), mode === "topic" ? 4 : 20, teacher);
   const [playing, setPlaying] = useState<string | null>(null);
   const tech = TECH.test(`${subject} ${topic}`);
 
@@ -55,7 +59,9 @@ export function SessionResources({ session, goal }: { session: StudySession; goa
             <p className="flex items-center gap-2 text-[14px] font-semibold text-white">
               <VideoIcon size={15} className="text-[var(--cyan)]" /> Videos for this session
             </p>
-            <p className="mt-0.5 truncate text-[12px] text-white/50">Most viewed on YouTube for “{mode === "topic" ? query : subject || topic}”. They play here.</p>
+            <p className="mt-0.5 truncate text-[12px] text-white/50">
+              {fromTeacher && teacher ? `From your teacher ${teacher.channel}` : "Most viewed on YouTube"} for “{mode === "topic" ? query : subject || topic}”. They play here.
+            </p>
           </div>
           <div role="radiogroup" aria-label="Video length" className="inline-flex rounded-lg border border-white/10 p-0.5">
             {(
@@ -82,6 +88,7 @@ export function SessionResources({ session, goal }: { session: StudySession; goa
                 <XIcon size={14} />
               </button>
             </div>
+            <FollowTeacher videoId={current.id} channel={current.channel} hint={`${subject} ${goal?.title ?? ""} ${current.title}`} />
           </div>
         )}
 
