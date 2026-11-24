@@ -28,6 +28,9 @@ export async function GET(req: Request) {
     }
     const k = url.searchParams.get("kind");
     const kind = k === "oneshot" || k === "lecture" ? k : "any";
+    // &lang=en|hi|kn: the student's video language (Exam Prep, Settings)
+    const l = url.searchParams.get("lang");
+    if (l === "en" || l === "hi" || l === "kn") return NextResponse.json({ videos: await searchVideos(q, minMinutes, kind, l) });
     // "any" keeps the old two-argument call so cached searches are reused
     return NextResponse.json({ videos: await (kind === "any" ? searchVideos(q, minMinutes) : searchVideos(q, minMinutes, kind)) });
   } catch (e) {

@@ -8,6 +8,8 @@ export interface YtVideo {
   channel: string;
   /** YouTube channel id, for "same teacher" searches */
   channelId?: string;
+  /** language it is taught in ("en", "hi", "kn"), when YouTube knows it */
+  lang?: string;
   views: number;
   likes: number;
   /** length in seconds */

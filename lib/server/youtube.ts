@@ -17,7 +17,7 @@ export class YtError extends Error {
 
 type Item = {
   id: string;
-  snippet?: { title?: string; channelTitle?: string; channelId?: string; description?: string };
+  snippet?: { title?: string; channelTitle?: string; channelId?: string; description?: string; defaultAudioLanguage?: string; defaultLanguage?: string };
   statistics?: { viewCount?: string; likeCount?: string };
   contentDetails?: { duration?: string };
   status?: { embeddable?: boolean; privacyStatus?: string };
@@ -46,6 +46,7 @@ const toVideo = (v: Item): YtVideo => {
     title: v.snippet?.title ?? "",
     channel: v.snippet?.channelTitle ?? "",
     ...(v.snippet?.channelId ? { channelId: v.snippet.channelId } : {}),
+    ...((v.snippet?.defaultAudioLanguage || v.snippet?.defaultLanguage) ? { lang: (v.snippet.defaultAudioLanguage || v.snippet.defaultLanguage)!.slice(0, 2).toLowerCase() } : {}),
     views: Number(v.statistics?.viewCount ?? 0),
     likes: Number(v.statistics?.likeCount ?? 0),
     seconds,
@@ -62,6 +63,23 @@ async function details(ids: string[]): Promise<YtVideo[]> {
 }
 
 export type VideoKind = "any" | "oneshot" | "lecture";
+export type VideoLang = "any" | "en" | "hi" | "kn";
+
+const DEVANAGARI = /[\u0900-\u097F]/;
+const KANNADA = /[\u0C80-\u0CFF]/;
+/** The language a video is taught in: YouTube's audio language when the creator set it, else from the title. */
+function langOf(v: YtVideo): string {
+  if (v.lang) return v.lang;
+  if (KANNADA.test(v.title) || /\bkannada\b/i.test(v.title)) return "kn";
+  if (DEVANAGARI.test(v.title) || /\b(hindi|हिंदी)\b/i.test(v.title)) return "hi";
+  return "en";
+}
+/** Only videos in the student's language, when at least two are; otherwise all (better than nothing). */
+function inLanguage(videos: YtVideo[], lang: VideoLang) {
+  if (lang === "any") return videos;
+  const mine = videos.filter((v) => langOf(v) === lang);
+  return mine.length >= 2 ? mine : videos;
+}
 const ONE_SHOT = /one[\s-]*shot|1[\s-]*shot|oneshot|in one video|complete chapter in/i;
 
 /* Searching by view count makes YouTube return popular videos that only loosely fit
@@ -88,21 +106,21 @@ function onTopic(videos: YtVideo[], q: string) {
 /** Most viewed, embeddable videos for a topic (100 quota units, so it is cached).
     kind "oneshot": only videos whose title says one shot; "lecture": chapter
     lectures ranked by relevance, one-shot videos left out. */
-async function search(q: string, minMinutes: number, kind: VideoKind = "any"): Promise<YtVideo[]> {
+async function search(q: string, minMinutes: number, kind: VideoKind = "any", lang: VideoLang = "any"): Promise<YtVideo[]> {
   const sj = await get<{ items?: { id?: { videoId?: string } }[] }>("search", {
     part: "snippet",
-    q,
+    q: lang === "hi" ? `${q} in hindi` : lang === "kn" ? `${q} in kannada` : q,
     type: "video",
     order: "relevance",
     videoEmbeddable: "true",
     videoSyndicated: "true",
     videoDuration: minMinutes >= 20 ? "long" : "any",
-    relevanceLanguage: "en",
+    relevanceLanguage: lang === "any" ? "en" : lang,
     safeSearch: "strict",
     maxResults: "25",
   });
   const ids = (sj.items ?? []).map((i) => i.id?.videoId).filter(Boolean) as string[];
-  let videos = onTopic((await details(ids)).filter((v) => v.seconds >= minMinutes * 60), q);
+  let videos = inLanguage(onTopic((await details(ids)).filter((v) => v.seconds >= minMinutes * 60), q), lang);
   if (kind === "oneshot") {
     const shots = videos.filter((v) => ONE_SHOT.test(v.title));
     if (shots.length >= 2) videos = shots;

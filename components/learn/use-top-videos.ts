@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { ytFetch, type YtVideo } from "@/lib/youtube";
+import { useStore } from "@/lib/store";
 
 type State = { loading: boolean; videos: YtVideo[]; available: boolean };
 const memo = new Map<string, { videos: YtVideo[]; available: boolean }>();
 
 /** Most viewed videos for a topic, from /api/videos (cached in memory and for the browser session). */
 export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "oneshot" | "lecture" = "any", channel?: string): State {
-  const key = q ? `${q}|${min}|${kind}${channel ? `|${channel}` : ""}` : "";
+  // the student's video language (not for a followed teacher: they picked that teacher)
+  const { state: app } = useStore();
+  const lang = channel ? undefined : app.learning?.videoLang;
+  const key = q ? `${q}|${min}|${kind}${channel ? `|${channel}` : ""}${lang ? `|${lang}` : ""}` : "";
   const [state, setState] = useState<State>(() => {
     const hit = key ? memo.get(key) : undefined;
     return hit ? { loading: false, ...hit } : { loading: !!key, videos: [], available: true };
@@ -30,7 +34,7 @@ export function useTopVideos(q: string | undefined, min = 20, kind: "any" | "one
     }
     let alive = true;
     setState((s) => ({ ...s, loading: true }));
-    ytFetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}${kind !== "any" ? `&kind=${kind}` : ""}${channel ? `&channel=${channel}` : ""}`)
+    ytFetch(`/api/videos?q=${encodeURIComponent(q!)}&min=${min}${kind !== "any" ? `&kind=${kind}` : ""}${channel ? `&channel=${channel}` : ""}${lang ? `&lang=${lang}` : ""}`)
       .then((r) => (r.headers.get("content-type")?.includes("json") ? r.json() : { videos: [], reason: "no-api" }))
       .then((j: { videos?: YtVideo[]; reason?: string }) => {
         const v = { videos: j.videos ?? [], available: !j.reason };

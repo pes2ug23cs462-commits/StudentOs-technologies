@@ -22,6 +22,7 @@ import { useStore } from "@/lib/store";
 import type { AssistantSettings, NotificationSettings, Profile, StudyTime } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getEffectsPref, setEffectsPref } from "@/lib/lite";
+import { VideoLangPicker } from "@/components/videos/video-lang";
 
 const TABS = [
   { key: "profile", label: "Profile", Icon: UserIcon },
@@ -246,6 +247,9 @@ function StudyTab() {
           <SwitchRow title="Open the assistant after I log in" description="Opens the assistant beside the first page you see after logging in" checked={a.openOnLogin} onChange={(v) => actions.setAssistant({ openOnLogin: v })} />
           <SwitchRow title="Weekly summary" description="A short recap every Sunday evening" checked={n.weeklySummary} onChange={(v) => actions.setNotifications({ weeklySummary: v })} />
         </div>
+      </Panel>
+      <Panel title="Video language" sub="Videos in Exam Prep, Learning and your study plan come in this language first, most viewed and liked at the top.">
+        <VideoLangPicker />
       </Panel>
       <EffectsPanel />
     </>

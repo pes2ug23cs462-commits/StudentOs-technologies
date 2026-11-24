@@ -13,6 +13,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { ArrowRightIcon, ChatIcon, CheckIcon, PlayIcon, RefreshIcon, TargetIcon, XIcon } from "@/components/ui/icons";
 import { Card } from "@/components/ui/primitives";
 import { VideoGrid } from "@/components/videos/video-grid";
+import { VideoLangPicker } from "@/components/videos/video-lang";
 import { ExamProgress } from "@/components/exam/exam-progress";
 import { FileIcon, VideoIcon } from "@/components/ui/icons";
 import { AssistantError, postAi } from "@/lib/assistant";
@@ -45,6 +46,7 @@ import {
 } from "@/lib/exam-prep";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { teacherFor } from "@/lib/learn";
 
 const TONE: Record<Status, string> = {
   new: "text-white/45 ring-white/12",
@@ -267,6 +269,8 @@ function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; c
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[12.5px] text-white/55">{entrance ? `One-shot videos made for ${exam === "neet" ? "NEET" : "KCET"}: the whole chapter in one go.` : kind === "oneshot" ? "The whole chapter in one video, for quick revision." : "Detailed lectures that teach the chapter from the start."}</p>
+        <div className="flex flex-wrap items-center gap-2">
+        <VideoLangPicker />
         {!entrance && (
           <div role="radiogroup" aria-label="Video type" className="inline-flex rounded-lg border border-white/10 p-0.5">
             {(
@@ -281,6 +285,7 @@ function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; c
             ))}
           </div>
         )}
+        </div>
       </div>
       <div className="mt-4">
         <VideoGrid
@@ -290,6 +295,8 @@ function Videos({ subject, chapter, grade, exam, onNext }: { subject: Subject; c
           kind={oneShot ? "oneshot" : "lecture"}
           empty="No videos found for this chapter."
           onPlay={() => markSeen("video")}
+          teacher={teacherFor(state.learning, subject)}
+          follow={subject}
           modules={{
             done: (id) => vids[id]?.done ?? [],
             notes: (id) => vids[id]?.notes ?? "",

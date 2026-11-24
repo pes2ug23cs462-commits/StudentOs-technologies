@@ -340,6 +340,8 @@ export interface Learning {
   catalogFor?: string;
   /** "Follow this teacher": a YouTube channel the student picked for a subject, keyed by subject (lower case) */
   teachers?: Record<string, Teacher>;
+  /** language for video searches: English, Hindi or Kannada (unset: any) */
+  videoLang?: "en" | "hi" | "kn";
   /** courses the student made from a teacher's playlist (Learning → Follow this teacher) */
   custom?: Course[];
 }
@@ -354,7 +356,10 @@ export interface Teacher {
 /** The teacher the student follows for whatever `text` is about ("Physics · Units and measurement"). */
 export function teacherFor(l: Learning | undefined, text: string): Teacher | undefined {
   const t = text.toLowerCase();
-  return Object.values(l?.teachers ?? {}).find((x) => x.subject && new RegExp(`\\b${x.subject.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(t));
+  const esc = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // "Maths" and "Mathematics" are the same subject
+  const names = (s: string) => (/^math(s|ematics)?$/i.test(s) ? ["maths", "mathematics", "math"] : [s.toLowerCase()]);
+  return Object.values(l?.teachers ?? {}).find((x) => x.subject && names(x.subject).some((n) => new RegExp(`\\b${esc(n)}\\b`).test(t)));
 }
 
 /** A course from a teacher's playlist: one module per video, in playlist order. */

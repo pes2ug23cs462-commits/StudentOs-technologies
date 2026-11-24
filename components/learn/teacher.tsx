@@ -12,7 +12,7 @@ import { CheckIcon, SpinnerIcon, UserIcon, XIcon } from "@/components/ui/icons";
 import { Card, Input } from "@/components/ui/primitives";
 import { useLearning } from "./use-learning";
 import { useTopVideos } from "./use-top-videos";
-import { teacherCourseId, type Course, type Teacher } from "@/lib/learn";
+import { teacherCourseId, teacherFor, type Course, type Teacher } from "@/lib/learn";
 import type { SetupData } from "@/lib/setup";
 import { hms, ytFetch, type YtVideo } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
@@ -40,12 +40,12 @@ export function levelLabel(a: SetupData["academic"] | undefined) {
 }
 
 /** Card under the player: follow the teacher of this video for a subject. */
-export function FollowTeacher({ videoId, channel, hint }: { videoId: string; channel: string; hint: string }) {
+export function FollowTeacher({ videoId, channel, hint, subject: fixed }: { videoId: string; channel: string; hint: string; /** known subject (Exam Prep): no subject picker */ subject?: string }) {
   const { state, learning, setTeacher } = useLearning();
   const academic = state.setup?.academic;
-  const choices = subjectChoices(academic);
-  const following = Object.values(learning.teachers ?? {}).filter((t) => t.channel === channel);
-  const guess = choices.find((c) => new RegExp(`\\b${c}\\b`, "i").test(hint)) ?? "";
+  const choices = fixed ? [] : subjectChoices(academic);
+  const following = Object.values(learning.teachers ?? {}).filter((t) => t.channel === channel && (!fixed || teacherFor(learning, fixed)?.channel === channel));
+  const guess = fixed ?? choices.find((c) => new RegExp(`\\b${c}\\b`, "i").test(hint)) ?? "";
   const [subject, setSubject] = useState(guess);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -117,13 +117,13 @@ export function FollowTeacher({ videoId, channel, hint }: { videoId: string; cha
                     {subject === c && <CheckIcon size={12} />} {c}
                   </button>
                 ))}
-                <Input
+                {!fixed && <Input
                   aria-label="Subject"
                   value={choices.includes(subject) ? "" : subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder={choices.length ? "Other subject" : "Subject, e.g. DBMS"}
                   className="h-8 w-[160px] text-[12.5px]"
-                />
+                />}
                 <Button size="sm" variant="primary" loading={busy} onClick={() => void follow()}>
                   Follow for {subject.trim() || "this subject"}
                 </Button>

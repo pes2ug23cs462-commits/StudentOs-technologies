@@ -7,7 +7,8 @@ import { useState } from "react";
 import { YouTubePlayer } from "@/components/videos/player";
 import { ModulePlayer } from "@/components/videos/module-player";
 import { EyeIcon, PlayIcon, XIcon } from "@/components/ui/icons";
-import { useTopVideos } from "@/components/learn/use-top-videos";
+import { FollowTeacher, useTeacherVideos } from "@/components/learn/teacher";
+import type { Teacher } from "@/lib/learn";
 import { compact, hms } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
@@ -18,15 +19,31 @@ export interface VideoProgress {
   onNotes: (videoId: string, text: string) => void;
 }
 
-export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay, modules }: { q: string; min?: number; kind?: "any" | "oneshot" | "lecture"; count?: number; empty?: string; onPlay?: (id: string) => void; /** split videos into modules with notes */ modules?: VideoProgress }) {
-  const { loading, videos, available } = useTopVideos(q.toLowerCase().slice(0, 100), min, kind);
+export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay, modules, teacher, follow }: {
+  q: string;
+  min?: number;
+  kind?: "any" | "oneshot" | "lecture";
+  count?: number;
+  empty?: string;
+  onPlay?: (id: string) => void;
+  /** split videos into modules with notes */ modules?: VideoProgress;
+  /** the teacher the student follows for this subject: their videos first */ teacher?: Teacher;
+  /** show "Follow this teacher" under the playing video, for this subject */ follow?: string;
+}) {
+  const { loading, videos, available, fromTeacher } = useTeacherVideos(q.toLowerCase().slice(0, 100), min, teacher, kind);
   const [playing, setPlaying] = useState<string | null>(null);
   const current = videos.find((v) => v.id === playing);
   return (
     <div>
+      {teacher && !loading && (
+        <p className={cn("mb-3 text-[12px]", fromTeacher ? "text-violet-300" : "text-amber-300/90")}>
+          {fromTeacher ? `From your teacher ${teacher.channel}.` : `${teacher.channel} has no video on this yet, so these are from other popular teachers.`}
+        </p>
+      )}
       {current && modules && (
         <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/[0.015] p-3.5">
           <ModulePlayer key={current.id} video={current} done={modules.done(current.id)} notes={modules.notes(current.id)} onDone={(k) => modules.onDone(current.id, k)} onNotes={(t) => modules.onNotes(current.id, t)} onClose={() => setPlaying(null)} />
+          {follow && <FollowTeacher videoId={current.id} channel={current.channel} hint={`${follow} ${current.title}`} subject={follow} />}
         </div>
       )}
       {current && !modules && (
@@ -40,6 +57,7 @@ export function VideoGrid({ q, min = 20, kind = "any", count = 4, empty, onPlay,
               <XIcon size={14} />
             </button>
           </div>
+          {follow && <FollowTeacher videoId={current.id} channel={current.channel} hint={`${follow} ${current.title}`} subject={follow} />}
         </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
