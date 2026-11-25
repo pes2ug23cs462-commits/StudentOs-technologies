@@ -166,7 +166,7 @@ export function SetupShell({
 }) {
   return (
     <div className="setup-bg min-h-screen p-3 sm:p-5 lg:p-7">
-      <div className="mx-auto grid min-h-[calc(100vh-56px)] max-w-[1440px] overflow-hidden rounded-[22px] border border-white/[0.07] bg-panel shadow-[0_20px_60px_rgb(40_30_100/0.10)] lg:grid-cols-[minmax(320px,380px)_1fr]">
+      <div className="mx-auto grid min-h-[calc(100vh-56px)] max-w-[1440px] grid-cols-[minmax(0,1fr)] overflow-hidden rounded-[22px] border border-white/[0.07] bg-panel shadow-[0_20px_60px_rgb(40_30_100/0.10)] lg:grid-cols-[minmax(320px,380px)_1fr]">
         {/* Left panel */}
         <aside className="setup-left hidden flex-col gap-6 border-r border-white/[0.06] px-8 pt-9 pb-7 lg:flex">
           <Brand />

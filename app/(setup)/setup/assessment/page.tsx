@@ -92,7 +92,7 @@ export default function AssessmentPage() {
 
   return (
     <div className="setup-bg min-h-screen">
-      <div className="grid min-h-screen lg:grid-cols-[minmax(300px,360px)_1fr]">
+      <div className="grid min-h-screen grid-cols-[minmax(0,1fr)] pb-24 lg:grid-cols-[minmax(300px,360px)_1fr] lg:pb-0">
         {/* Left */}
         <aside className="setup-left hidden flex-col gap-6 border-r border-white/[0.06] px-7 pt-9 pb-6 lg:flex">
           <Brand />
@@ -130,7 +130,7 @@ export default function AssessmentPage() {
               <SearchIcon size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-white/50" />
               <input placeholder="Search for courses, projects, internships…" aria-label="Search" className="h-11 w-full rounded-xl bg-white/[0.05] pr-4 pl-11 text-[14px] text-white placeholder:text-white/45 outline-none focus:ring-2 focus:ring-accent/30" />
             </label>
-            <div className="ml-auto flex items-center gap-4">
+            <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
               <ThemeToggle />
               <button type="button" aria-label="Notifications" className="relative rounded-lg p-2 text-white/70 hover:bg-white/[0.06]">
                 <BellIcon size={20} />

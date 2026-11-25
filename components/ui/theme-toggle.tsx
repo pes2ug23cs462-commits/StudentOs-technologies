@@ -29,7 +29,7 @@ export function ThemeToggle({ className, stretch }: { className?: string; stretc
     { key: "light", label: "Light", Icon: SunIcon },
   ] as const;
   return (
-    <div className={cn("flex rounded-full border border-white/10 bg-white/[0.04] p-[3px]", stretch && "w-full", className)} role="group" aria-label="Theme">
+    <div className={cn("flex shrink-0 rounded-full border border-white/10 bg-white/[0.04] p-[3px]", stretch && "w-full", className)} role="group" aria-label="Theme">
       {items.map(({ key, label, Icon }) => {
         const active = state.theme === key;
         return (
@@ -37,6 +37,7 @@ export function ThemeToggle({ className, stretch }: { className?: string; stretc
             key={key}
             type="button"
             aria-pressed={active}
+            aria-label={label}
             onClick={() => actions.setTheme(key)}
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] transition",
@@ -45,7 +46,7 @@ export function ThemeToggle({ className, stretch }: { className?: string; stretc
             )}
           >
             <Icon size={12} />
-            {label}
+            <span className={cn(!stretch && "hidden sm:inline")}>{label}</span>
           </button>
         );
       })}

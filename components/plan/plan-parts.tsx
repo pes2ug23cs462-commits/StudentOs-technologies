@@ -67,17 +67,20 @@ export function SessionRows({ sessions, onSelect, selectedId }: { sessions: Stud
           <button
             type="button"
             onClick={() => onSelect?.(s)}
-            className={cn("grid w-full grid-cols-[150px_1fr_auto_auto] items-center gap-4 px-4 py-3 text-left transition hover:bg-white/[0.03]", selectedId === s.id && "bg-white/[0.04]")}
+            // phones: date and time on top, the title on its own full-width line
+            className={cn("grid w-full grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1 px-4 py-3 text-left transition hover:bg-white/[0.03] sm:grid-cols-[150px_1fr_auto_auto] sm:gap-4", selectedId === s.id && "bg-white/[0.04]")}
           >
-            <span className="text-[12px] text-white/55">
+            <span className="text-[12px] text-white/55 max-sm:col-start-1 max-sm:row-start-1">
               {fmt.short(s.date).replace(/^(\w+) /, "$1 ")} · {fmt.time(s.start)}
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 max-sm:col-span-3 max-sm:row-start-2">
               <span className="block truncate text-[13px] font-semibold text-white">{s.status === "suggested" ? `${s.title} (suggested)` : s.title}</span>
               <span className="block truncate text-[11px] text-white/45">{s.summary}</span>
             </span>
-            <span className="text-[12px] text-white/60">{s.minutes} min</span>
-            <Pill tone={s.priority === "High" ? "amber" : "gray"}>{s.priority}</Pill>
+            <span className="text-[12px] text-white/60 max-sm:row-start-1">{s.minutes} min</span>
+            <span className="max-sm:row-start-1">
+              <Pill tone={s.priority === "High" ? "amber" : "gray"}>{s.priority}</Pill>
+            </span>
           </button>
         </li>
       ))}

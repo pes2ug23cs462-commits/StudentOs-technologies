@@ -151,9 +151,9 @@ export default function PlanReviewPage() {
 
         {/* Action bar */}
         {!accepted && (
-          <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-3 border-t border-white/[0.07] bg-ink/90 px-6 py-3.5 backdrop-blur lg:px-8">
+          <div className="sticky bottom-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/[0.07] bg-ink/90 px-4 py-3 backdrop-blur sm:px-6 sm:py-3.5 lg:px-8">
             <p className="text-[12px] text-white/50">{editing ? "Changes are saved when you press Save." : `${total} sessions · nothing is saved until you accept.`}</p>
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex w-full flex-wrap justify-end gap-2 sm:w-auto">
               {editing ? (
                 <>
                   <Button size="sm" variant="ghost" onClick={() => (setDraft(null), setSelectedId(null), router.push("/plan/review"))}>

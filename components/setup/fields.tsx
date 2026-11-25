@@ -297,18 +297,19 @@ export function NextButton({ children, onClick, className }: { children: ReactNo
       type="button"
       onClick={onClick}
       className={cn(
-        "group inline-flex h-[54px] items-center justify-center gap-3 rounded-xl bg-accent px-7 text-[16px] font-semibold text-black shadow-[0_10px_24px_rgb(22_163_74/0.28)] transition hover:bg-accent-hover",
+        // grows with its label on narrow phones instead of spilling out of a fixed height
+        "group inline-flex min-h-[50px] min-w-0 items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-center text-[14.5px] leading-tight font-semibold text-black shadow-[0_10px_24px_rgb(22_163_74/0.28)] transition hover:bg-accent-hover sm:min-h-[54px] sm:gap-3 sm:px-7 sm:text-[16px]",
         className,
       )}
     >
-      {children}
-      <ArrowRightIcon size={18} className="transition group-hover:translate-x-0.5" />
+      <span className="min-w-0">{children}</span>
+      <ArrowRightIcon size={18} className="shrink-0 transition group-hover:translate-x-0.5" />
     </button>
   );
 }
 export function BackButton({ onClick, children = "Back" }: { onClick: () => void; children?: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="inline-flex h-[50px] items-center gap-3 rounded-xl bg-white/[0.06] px-7 text-[16px] font-medium text-white transition hover:bg-white/[0.1]">
+    <button type="button" onClick={onClick} className="inline-flex h-[50px] shrink-0 items-center gap-2 rounded-xl bg-white/[0.06] px-4 text-[14.5px] font-medium text-white transition hover:bg-white/[0.1] sm:gap-3 sm:px-7 sm:text-[16px]">
       <ArrowLeftIcon size={18} /> {children}
     </button>
   );

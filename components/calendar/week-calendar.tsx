@@ -57,7 +57,9 @@ export function WeekCalendar({
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
 
   return (
-    <div className={cn("overflow-hidden rounded-xl border border-white/[0.08] bg-black/25", className)}>
+    // on phones the week scrolls sideways instead of squeezing seven days into 40 px columns
+    <div className={cn("overflow-x-auto overflow-y-hidden rounded-xl border border-white/[0.08] bg-black/25", className)}>
+      <div className="min-w-[640px]">
       {/* Header */}
       <div className="grid grid-cols-[52px_repeat(7,minmax(0,1fr))] border-b border-white/[0.07]">
         <div />
@@ -211,6 +213,7 @@ export function WeekCalendar({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

@@ -285,14 +285,22 @@ const ALL_QUESTIONS: Question[] = [
   { id: "q22", category: "Motivation", icon: "bulb", prompt: "What motivates you the most?", help: "Pick the strongest one.", options: [o("career", "A good career", "Jobs, salary and growth.", "briefcase", "blue"), o("curiosity", "Curiosity", "Learning for its own sake.", "bulb", "violet"), o("impact", "Making an impact", "Helping people and society.", "users", "green"), o("recognition", "Recognition", "Certificates, ranks and praise.", "trophy", "indigo")] },
   { id: "q23", category: "Motivation", icon: "bulb", prompt: "How do you usually react to a missed study day?", help: "This shapes how the assistant nudges you.", options: [o("catchup", "Catch up quickly", "Make it up the next day.", "repeat", "green"), o("move", "Move on", "Just continue the plan.", "arrow", "blue"), o("stress", "Feel stressed", "It throws me off.", "bulb", "violet"), o("quit", "Lose momentum", "Hard to restart.", "clock", "indigo")] },
   { id: "q24", category: "Motivation", icon: "bulb", prompt: "Where do you see yourself in 3 years?", help: "Dream a little — this helps us plan long-term.", options: [o("job", "Working at a great company", "In a role I enjoy.", "building", "blue"), o("higher", "Higher studies", "Master’s or research, in India or abroad.", "cap", "indigo"), o("startup", "Running my own startup", "Building something of my own.", "rocket", "violet"), o("unsure", "Still figuring it out", "Open to possibilities.", "compass", "green")] },
+
+  /* School / PU students: about exams, subjects and study, not jobs and internships */
+  { id: "s1", category: "Goals", icon: "target", prompt: "What do you want most from this year?", help: "Select the one that matters most right now.", options: [o("boards", "Score well in board exams", "PUC, CBSE or state board marks.", "cap", "blue"), o("entrance", "Crack an entrance exam", "JEE, NEET, KCET or CUET.", "target", "violet"), o("understand", "Understand my subjects better", "Fewer doubts, stronger basics.", "bulb", "indigo"), o("choose", "Choose the right course after 12th", "Engineering, medical, commerce, arts and more.", "compass", "green")] },
+  { id: "s2", category: "Subjects", icon: "book", prompt: "Which subject feels hardest for you?", help: "We’ll give it more time in your plan.", options: [o("maths", "Maths", "Problems, formulas and practice.", "chart", "blue"), o("physics", "Physics", "Concepts and numericals.", "bulb", "violet"), o("chemistry", "Chemistry", "Reactions, equations and theory.", "cube", "indigo"), o("other", "Biology, languages or others", "Lots of reading and remembering.", "book", "green")] },
+  { id: "s3", category: "Subjects", icon: "book", prompt: "How were your marks in your last exams?", help: "Roughly is fine. This stays private to you.", options: [o("top", "85% or more", "Doing well, want to stay on top.", "trophy", "green"), o("good", "70–85%", "Good, can do better.", "check", "blue"), o("mid", "50–70%", "Need to improve in some subjects.", "chart", "indigo"), o("low", "Below 50%", "I need help catching up.", "sprout", "violet")] },
+  { id: "s4", category: "Study", icon: "clock", prompt: "How do you study outside your school or PU college classes?", help: "Pick the one you do most.", options: [o("coaching", "Coaching institute", "Regular coaching classes.", "users", "blue"), o("tuition", "Home tuition", "A teacher at home or nearby.", "user", "indigo"), o("online", "Online classes", "YouTube or paid online courses.", "video", "violet"), o("self", "On my own", "Textbooks and notes.", "book", "green")] },
 ];
 
 /** The quick assessment: 10 questions. The six skill/experience ones decide the level. */
 const PICK = ["q1", "q4", "q8", "q13", "q14", "q15", "q16", "q17", "q18", "q22"];
 export const QUESTIONS: Question[] = PICK.map((id) => ALL_QUESTIONS.find((q) => q.id === id)!);
-/** School students get study questions in place of the job and resume ones. */
+/** School / PU students get their own 6: goal, hardest subject, marks, when they study, how long they focus,
+    and what stops them (no internships, resumes or hackathons). */
+const SCHOOL_PICK = ["s1", "s2", "s3", "q8", "q6", "q10"];
 export function questionsFor(type: StudentType | ""): Question[] {
-  const ids = type === "school" ? PICK.map((id) => (id === "q16" ? "q19" : id === "q17" ? "q21" : id)) : PICK;
+  const ids = type === "school" ? SCHOOL_PICK : PICK;
   return ids.map((id) => ALL_QUESTIONS.find((q) => q.id === id)!);
 }
 export const ASSESSMENT_SECONDS = 5 * 60;
@@ -305,6 +313,7 @@ const SCORE: Record<string, Record<string, number>> = {
   q15: { love: 3, ok: 2, struggle: 0, avoid: 1 },
   q16: { no: 0, parttime: 1, intern: 2, full: 3 },
   q18: { no: 0, once: 1, often: 2, won: 3 },
+  s3: { low: 0, mid: 1, good: 2, top: 3 },
 };
 const SELF: Record<string, number> = { beginner: 0, intermediate: 1.5, advanced: 2.5, expert: 3 };
 
