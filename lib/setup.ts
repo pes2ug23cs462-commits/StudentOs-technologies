@@ -293,8 +293,9 @@ const ALL_QUESTIONS: Question[] = [
   { id: "s4", category: "Study", icon: "clock", prompt: "How do you study outside your school or PU college classes?", help: "Pick the one you do most.", options: [o("coaching", "Coaching institute", "Regular coaching classes.", "users", "blue"), o("tuition", "Home tuition", "A teacher at home or nearby.", "user", "indigo"), o("online", "Online classes", "YouTube or paid online courses.", "video", "violet"), o("self", "On my own", "Textbooks and notes.", "book", "green")] },
 ];
 
-/** The quick assessment: 10 questions. The six skill/experience ones decide the level. */
-const PICK = ["q1", "q4", "q8", "q13", "q14", "q15", "q16", "q17", "q18", "q22"];
+/** The quick assessment: 6 questions (goal, study time, and the four that decide the level:
+    computer comfort, projects built, maths, work experience). */
+const PICK = ["q1", "q8", "q13", "q14", "q15", "q16"];
 export const QUESTIONS: Question[] = PICK.map((id) => ALL_QUESTIONS.find((q) => q.id === id)!);
 /** School / PU students get their own 6: goal, hardest subject, marks, when they study, how long they focus,
     and what stops them (no internships, resumes or hackathons). */
